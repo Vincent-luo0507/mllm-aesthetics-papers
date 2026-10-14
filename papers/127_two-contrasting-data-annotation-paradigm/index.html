@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>面向主观性 NLP 任务的两种对照数据标注范式 | 双语对照</title>
+<script>
+window.MathJax={
+  tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']],processEscapes:true},
+  svg:{fontCache:'global'},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}
+};
+</script>
+<script src="../../assets/mathjax/es5/tex-mml-chtml.js" async></script>
+<style>
+:root{--fg:#1f2937;--pri:#1e3a8a;--bd:#e2e8f0;--alt:#f8fafc;}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+color:var(--fg);background:#fff;line-height:1.85;font-size:15.5px;}
+.wrap{max-width:1500px;margin:0 auto;padding:0 20px 80px;}
+header.paperhead{border-bottom:2px solid var(--pri);padding:24px 0 18px;margin-bottom:18px;}
+.zh-title{font-size:25px;font-weight:700;color:var(--pri);line-height:1.35;margin:0 0 8px;}
+.en-title{font-size:16px;color:#4b5563;line-height:1.5;margin:0 0 12px;font-style:italic;}
+.meta{font-size:13px;color:#4b5563;display:flex;flex-wrap:wrap;gap:14px;}
+.meta a{color:#2563eb;}
+.toolbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);border-bottom:1px solid var(--bd);
+padding:9px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;backdrop-filter:blur(6px);}
+.toolbar button{border:1px solid var(--bd);background:#fff;color:var(--pri);border-radius:5px;
+padding:5px 13px;font-size:13px;cursor:pointer;font-family:inherit;}
+.toolbar button.on{background:var(--pri);color:#fff;border-color:var(--pri);}
+.toolbar .sp{flex:1;}
+.abs{background:var(--alt);border:1px solid var(--bd);border-radius:6px;padding:14px 18px;margin:16px 0 24px;font-size:14.5px;}
+.abs h4{margin:0 0 6px;font-size:14px;color:var(--pri);}
+.blk{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid #f1f5f9;}
+.blk>div{padding:10px 16px;}
+.blk>.en{border-right:1px solid var(--bd);color:#334155;}
+.blk>.zh{background:#fff;}
+.blk.atomic{grid-template-columns:1fr;background:var(--alt);}
+.blk.atomic>div{padding:12px 16px;text-align:center;}
+h1,h2,h3,h4{color:var(--pri);line-height:1.45;}
+.blk h2{font-size:19px;margin:16px 0 8px;}
+.blk h3{font-size:16.5px;margin:12px 0 6px;}
+.blk h4{font-size:15px;margin:10px 0 5px;}
+p{margin:0 0 10px;text-align:justify;}
+img{max-width:100%;height:auto;display:block;margin:10px auto;border:1px solid var(--bd);}
+table{border-collapse:collapse;margin:10px auto;font-size:13.5px;background:#fff;}
+td,th{border:1px solid #dbe2ea;padding:5px 9px;}
+figure{margin:8px 0;} figcaption{font-size:13px;color:#4b5563;text-align:center;margin-top:6px;}
+body.view-zh .blk{grid-template-columns:1fr;} body.view-zh .blk>.en{display:none;}
+body.view-en .blk{grid-template-columns:1fr;} body.view-en .blk>.zh{display:none;}
+.mathwarn{background:#fef2f2;border-left:4px solid #b91c1c;padding:8px 12px;font-size:13px;color:#7f1d1d;}
+</style>
+</head><body class="view-both">
+<div class="wrap">
+<header class="paperhead">
+<h1 class="zh-title">面向主观性 NLP 任务的两种对照数据标注范式</h1>
+<p class="en-title">Two Contrasting Data Annotation Paradigms for Subjective NLP Tasks</p>
+<div class="meta"><span>arXiv:2112.07475</span> · <span>作者：Paul Röttger, Bertie Vidgen, Dirk Hovy, Janet B. Pierrehumbert</span> · <span>发布：2021-12-14</span> · <a href="https://arxiv.org/abs/2112.07475" target="_blank">arXiv 页面</a> · <a href="paper.pdf" target="_blank">原版 PDF</a> · <a href="orig.html" target="_blank">原文 HTML</a></div>
+</header>
+<div class="toolbar">
+<button data-v="view-both" class="on">中英双栏</button>
+<button data-v="view-zh">仅中文</button>
+<button data-v="view-en">仅英文</button>
+<span class="sp"></span>
+<a href="../index.html" style="font-size:13px;color:#2563eb;">← 返回总目录</a>
+</div>
+<div class="abs">
+<h4>中文摘要</h4><div>带标签的数据是大多数自然语言处理任务的基础。然而，给数据打标签并不容易，而且对于正确的数据标签应当是什么，往往存在多种同样成立的信念。迄今为止，数据集构建者已经意识到标注者的主观性，却很少在标注流程中主动加以管理，由此产生了半主观的数据集，无法服务于明确的下游用途。为解决这一问题，我们提出两种相互对照的数据标注范式：描述性（descriptive）范式鼓励标注者主观性，规定性（prescriptive）范式则抑制它。描述性标注能够调查并建模不同的信念，规定性标注则能够训练一贯地贯彻某一种信念的模型。我们讨论了实施两种范式各自的收益与挑战，并主张数据集构建者应当明确地以其中一种为目标，以便利数据集预期用途的实现。最后，我们用仇恨言论数据开展了一项标注实验，直观地展示了两种范式之间的对照。</div>
+<h4 style="margin-top:10px;">Abstract (原文)</h4><div style="color:#475569;">Labelled data is the foundation of most natural language processing tasks. However, labelling data is difficult and there often are diverse valid beliefs about what the correct data labels should be. So far, dataset creators have acknowledged annotator subjectivity, but rarely actively managed it in the annotation process. This has led to partly-subjective datasets that fail to serve a clear downstream use. To address this issue, we propose two contrasting paradigms for data annotation. The descriptive paradigm encourages annotator subjectivity, whereas the prescriptive paradigm discourages it. Descriptive annotation allows for the surveying and modelling of different beliefs, whereas prescriptive annotation enables the training of models that consistently apply one belief. We discuss benefits and challenges in implementing both paradigms, and argue that dataset creators should explicitly aim for one or the other to facilitate the intended use of their dataset. Lastly, we conduct an annotation experiment using hate speech data that illustrates the contrast between the two paradigms.</div>
+</div>
+<div id="body">
+<div class="blk atomic"><div><p class="ltx_p" id="abstract1.1">Labelled data is the foundation of most natural language processing tasks.
+However, labelling data is difficult and there often are diverse valid beliefs about what the correct data labels should be.
+So far, dataset creators have acknowledged annotator subjectivity, but rarely actively managed it in the annotation process.
+This has led to partly-subjective datasets that fail to serve a clear downstream use.
+To address this issue, we propose two contrasting paradigms for data annotation.
+The <span class="ltx_text ltx_font_italic" id="abstract1.1.1">descriptive</span> paradigm encourages annotator subjectivity, whereas the <span class="ltx_text ltx_font_italic" id="abstract1.1.2">prescriptive</span> paradigm discourages it.
+Descriptive annotation allows for the surveying and modelling of different beliefs, whereas prescriptive annotation enables the training of models that consistently apply one belief.
+We discuss benefits and challenges in implementing both paradigms, and argue that dataset creators should explicitly aim for one or the other to facilitate the intended use of their dataset.
+Lastly, we conduct an annotation experiment using hate speech data that illustrates the contrast between the two paradigms.</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2></div><div class="zh"><h2>1 引言</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p1.1">Many natural language processing (NLP) tasks are <span class="ltx_text ltx_font_italic" id="S1.p1.1.1">subjective</span>, in the sense that there are diverse valid beliefs about what the correct data labels should be.
+Some tasks, like hate speech detection, are highly subjective:
+different people have very different beliefs about what should or should not be labelled as hateful <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib45" title="">Talat, 2016</a>; <a class="ltx_ref" href="#bib.bib41" title="">Salminen et al., 2019</a>; <a class="ltx_ref" href="#bib.bib14" title="">Davani et al., 2021a</a>)</cite>, and while some beliefs are more widely accepted than others, there is no single objective truth.
+Other examples include toxicity <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib42" title="">Sap et al., 2019</a>; <a class="ltx_ref" href="#bib.bib43" title="">Sap et al., 2021</a>)</cite>, harassment <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib3" title="">Al Kuwatly et al., 2020</a>)</cite>, harmful content <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib26" title="">Jiang et al., 2021</a>)</cite> and stance detection <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib31" title="">Luo et al., 2020</a>; <a class="ltx_ref" href="#bib.bib4" title="">AlDayel and Magdy, 2021</a>)</cite> as well as sentiment analysis <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib28" title="">Kenyon-Dean et al., 2018</a>; <a class="ltx_ref" href="#bib.bib37" title="">Poria et al., 2020</a>)</cite>.
+But even for seemingly objective tasks like part-of-speech tagging, there is subjective disagreement between annotators <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib36" title="">Plank et al., 2014b</a>)</cite>.</p></div><div class="zh"><p>许多自然语言处理（NLP）任务都具有主观性，也就是说，对于哪些才是正确的数据标签，存在多种同样成立的信念。有些任务主观性极强，例如仇恨言论检测：不同的人对于什么应当、什么不应当被标为仇恨内容，持有截然不同的看法（Talat，2016；Salminen 等，2019；Davani 等，2021a），虽然某些信念比另一些得到更广泛的接受，却并不存在唯一的客观真理。其他例子包括毒性检测（Sap 等，2019；Sap 等，2021）、骚扰（Al Kuwatly 等，2020）、有害内容（Jiang 等，2021）、立场检测（Luo 等，2020；AlDayel 与 Magdy，2021）以及情感分析（Kenyon-Dean 等，2018；Poria 等，2020）。然而即便是词性标注这类看似客观的任务，标注者之间也存在主观分歧（Plank 等，2014b）。</p></div></div>
+<div class="blk atomic"><div><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="131" id="S1.F1.g1" src="figures/questions.jpg" style="aspect-ratio:229/131;" width="229"/></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Two key questions for dataset creators.</figcaption></div><div class="zh"><p>图 1：数据集构建者需要回答的两个关键问题。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p2.1">In this article, we argue that dataset creators should consider the role of annotator subjectivity in the annotation process and either explicitly encourage it or discourage it.
+Annotators may subjectively disagree about labels (e.g., for hate speech) but dataset creators can and should decide, based on the intended downstream use of their dataset, whether they want to a) capture <span class="ltx_text ltx_font_italic" id="S1.p2.1.1">different beliefs</span> or b) encode <span class="ltx_text ltx_font_italic" id="S1.p2.1.2">one specific belief</span> in their data.</p></div><div class="zh"><p>在本文中，我们认为数据集构建者应当在标注流程中考虑标注者主观性所扮演的角色，并明确地要么鼓励它、要么抑制它。标注者可能在标签上产生主观分歧（例如仇恨言论的情形），但数据集构建者能够且应当依据数据集的预期下游用途，决定是要 a）捕捉不同的信念，还是 b）在数据中编码某一种特定信念。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p3.1">As a framework, we propose two contrasting data annotation paradigms.
+Each paradigm facilitates a clear and distinct downstream use.
+The <span class="ltx_text ltx_font_bold" id="S1.p3.1.1">descriptive</span> paradigm encourages annotator subjectivity to create datasets as granular surveys of individual beliefs.
+Descriptive data annotation thus allows for the capturing and modelling of different beliefs.
+The <span class="ltx_text ltx_font_bold" id="S1.p3.1.2">prescriptive</span> paradigm, on the other hand, discourages annotator subjectivity and instead tasks annotators with encoding one specific belief, formulated in the annotation guidelines.
+Prescriptive data annotation thus enables the training of models that seek to consistently apply one belief.
+A researcher may, for example, want to model different beliefs about hate speech (<math alttext="\rightarrow" class="ltx_Math" display="inline" id="S1.p3.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> descriptive paradigm), while a content moderation engineer at a social media company may need models that apply their content policy (<math alttext="\rightarrow" class="ltx_Math" display="inline" id="S1.p3.m2" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> prescriptive paradigm).</p></div><div class="zh"><p>作为一个框架，我们提出两种相互对照的数据标注范式，每种范式都服务于一种清晰而独特的下游用途。描述性（descriptive）范式鼓励标注者主观性，把数据集构建为对个人信念的细粒度调查，因此描述性数据标注能够捕捉并建模不同的信念。规定性（prescriptive）范式则相反，它抑制标注者主观性，转而让标注者去编码一种在标注指南中加以阐明的特定信念；因此规定性数据标注能够训练出力求一贯地贯彻某一种信念的模型。举例来说，一位研究者可能希望建模关于仇恨言论的不同信念（<math alttext="\rightarrow" class="ltx_Math" display="inline" id="S1.p3.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> 描述性范式），而一家社交媒体公司的内容审核工程师需要的，则是能够执行其内容政策的模型（<math alttext="\rightarrow" class="ltx_Math" display="inline" id="S1.p3.m2" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> 规定性范式）。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p4.1">Neither paradigm is inherently superior, but explicitly aiming for one or the other is beneficial because it makes clear what an annotated dataset can and should be used for.
+For example, data annotated under the descriptive paradigm can provide insights into different beliefs (§<a class="ltx_ref" href="#S2.SS1" title="2.1 Key Benefits ‣ 2 The Descriptive Annotation Paradigm: Encouraging Annotator Subjectivity ‣ Two Contrasting Data Annotation Paradigms for Subjective NLP Tasks"><span class="ltx_text ltx_ref_tag">2.1</span></a>), but it cannot easily be used to train models with one pre-specified behaviour (§<a class="ltx_ref" href="#S3.SS1" title="3.1 Key Benefits ‣ 3 The Prescriptive Annotation Paradigm: Discouraging Annotator Subjectivity ‣ Two Contrasting Data Annotation Paradigms for Subjective NLP Tasks"><span class="ltx_text ltx_ref_tag">3.1</span></a>).
+By contrast, leaving annotator subjectivity unaddressed, as has mostly been the case in NLP so far, leads to datasets that neither capture an interpretable diversity of beliefs nor consistently encode one specific belief; an undesirable middle ground without a clear downstream use.<span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup>
+<span class="ltx_tag ltx_tag_note">1</span>
+            
+            
+            
+          See Appx. <a class="ltx_ref" href="#A1" title="Appendix A Overview of Subjective Task Datasets ‣ Two Contrasting Data Annotation Paradigms for Subjective NLP Tasks"><span class="ltx_text ltx_ref_tag">A</span></a> for a selective overview of existing datasets.</span></span></span></p></div><div class="zh"><p>两种范式本身并无高下之分，但明确以其中之一为目标是有益的，因为它厘清了标注数据集能够且应当被用于什么。例如，在描述性范式下标注的数据可以揭示不同的信念（§2.1），却难以用来训练具备某种预设行为的模型（§3.1）。相反，若像迄今 NLP 中常见的那样对标注者主观性不加处理，得到的数据集既没有捕捉到可解释的信念多样性，也没有一贯地编码某一种特定信念，这是一种缺乏明确下游用途、并不理想的中间状态。11 1 已有数据集的选择性概览见附录 A。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p5.1">The two paradigms are applicable to all data annotation.
+They can be used to compare existing datasets, and to make and communicate decisions about how new datasets are annotated as well as how annotator disagreement can be interpreted.
+We hope that by naming and explaining the two paradigms, and by discussing key benefits and challenges in their implementation, we can support more intentional annotation process design, which will result in more useful NLP datasets.</p></div><div class="zh"><p>这两种范式适用于一切数据标注。它们既可以用来比较现有数据集，也可以用来做出并传达关于新数据集如何标注、以及标注者分歧应如何解释的决策。我们希望，通过为这两种范式命名并加以阐释、讨论其实施过程中的关键收益与挑战，能够促成更有意识的标注流程设计，从而产出更有用的 NLP 数据集。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Terminology</h4></div><div class="zh"><h4>术语</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.SS0.SSS0.Px1.p1.1">Our use of the terms <span class="ltx_text ltx_font_italic" id="S1.SS0.SSS0.Px1.p1.1.1">descriptive</span> and <span class="ltx_text ltx_font_italic" id="S1.SS0.SSS0.Px1.p1.1.2">prescriptive</span> aligns with their use in both linguistics and ethics.
+In linguistics, descriptivism studies how language <span class="ltx_text ltx_font_italic" id="S1.SS0.SSS0.Px1.p1.1.3">is</span> used, whereas prescriptive grammar declares how language <span class="ltx_text ltx_font_italic" id="S1.SS0.SSS0.Px1.p1.1.4">should</span> be used <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib27" title="">Justice, 2006</a>)</cite>.
+Descriptive ethics studies the moral judgments that people make, while prescriptive ethics considers how people ought to act <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib47" title="">Thiroux and Krasemann, 2015</a>)</cite>.
+Accordingly, descriptive data annotation surveys annotators’ beliefs, whereas prescriptive data annotation aims to encode one specific belief, which is formulated in the annotation guidelines.</p></div><div class="zh"><p>我们对“描述性”与“规定性”这两个术语的用法，与它们在语言学和伦理学中的用法一致。在语言学中，描写主义（descriptivism）研究语言实际如何被使用，而规定语法（prescriptive grammar）则规定语言应当如何使用（Justice，2006）。描述伦理学研究人们实际做出的道德判断，而规定伦理学考察人们应当如何行动（Thiroux 与 Krasemann，2015）。相应地，描述性数据标注调查标注者的信念，而规定性数据标注则力求编码一种在标注指南中加以阐明的特定信念。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">2 </span>The Descriptive Annotation Paradigm: Encouraging Annotator Subjectivity</h2></div><div class="zh"><h2>2 描述性标注范式：鼓励标注者主观性</h2></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.1 </span>Key Benefits</h3></div><div class="zh"><h3>2.1 主要收益</h3></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Insights into Diverse Beliefs</h4></div><div class="zh"><h4>洞察多元信念</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS1.SSS0.Px1.p1.1">Descriptive data annotation captures a multiplicity of beliefs in data labels, much like a very granular survey would.
+The distribution of data labels across annotators and examples can therefore provide insights into the beliefs of annotators, or the larger population they may represent.
+For example, descriptive data annotation has shown that non-Black annotators are more likely to rate African American English as toxic <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib42" title="">Sap et al., 2019</a>; <a class="ltx_ref" href="#bib.bib43" title="">Sap et al., 2021</a>)</cite>, and that people who identify as LGBTQ+ or young adults are more likely to rate random social media comments as toxic <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib29" title="">Kumar et al., 2021</a>)</cite>.
+Similar correlations between sociodemographic characteristics and annotation outcomes have been found in stance <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib31" title="">Luo et al., 2020</a>)</cite>, sentiment <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib17" title="">Diaz et al., 2018</a>)</cite> and hate speech detection <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib45" title="">Talat, 2016</a>)</cite>.</p></div><div class="zh"><p>描述性数据标注在数据标签中捕捉到信念的多样性，其方式很像一份极为细粒度的调查。因此，标签在标注者与样本上的分布，能够揭示标注者的信念，或他们所代表的更大人群的信念。例如，描述性数据标注已表明：非黑人标注者更可能把非裔美国英语评为有毒（Sap 等，2019；Sap 等，2021）；自认为属于 LGBTQ+ 群体的人或年轻人更可能把随机的社交媒体评论评为有毒（Kumar 等，2021）。在立场检测（Luo 等，2020）、情感分析（Diaz 等，2018）与仇恨言论检测（Talat，2016）中，也发现了社会人口学特征与标注结果之间的类似相关性。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS1.SSS0.Px1.p2.1">Even very subjective tasks may have clear-cut entries on which most annotators agree.
+For example, crowd workers tend to agree more on the extremes of a hate rating scale <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib41" title="">Salminen et al., 2019</a>)</cite>, and datasets which consist of clear hate and non-hate can have very high levels of inter-annotator agreement, even with minimal guidelines <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib40" title="">Röttger et al., 2021</a>)</cite>.
+Descriptive data annotation can help to identify which entries are more subjective.
+<cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib26" title="">Jiang et al. (2021)</a></cite>, for instance, find that perceptions about the harmfulness of sexually explicit language vary strongly across the eight countries in their sample, whereas support for mass murder or human trafficking is seen as very harmful across all countries.</p></div><div class="zh"><p>即便是主观性很强的任务，也可能存在多数标注者意见一致的明确条目。例如，众包工作者在仇恨评分量表的两端往往更容易达成一致（Salminen 等，2019）；而由明确属于仇恨与非仇恨内容构成的数据集，即便指南极为简略，也可以达到很高的标注者间一致性（Röttger 等，2021）。描述性数据标注有助于识别哪些条目的主观性更强。例如 Jiang 等（2021）发现，在其抽样的八个国家中，对于露骨性语言之危害程度的看法差异极大，而对于大规模谋杀或人口贩卖的支持，在所有国家都被视为极具危害性。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Learning from Disagreement</h4></div><div class="zh"><h4>从分歧中学习</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS1.SSS0.Px2.p1.1">Annotator-level labels from descriptive data annotation have been shown to be a rich source of information for model training.
+First, they can be used to separately model annotators’ beliefs.
+For less subjective tasks such as question answering, this has served to mitigate undesirable annotator biases <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib20" title="">Geva et al., 2019</a>)</cite>.
+<cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib15" title="">Davani et al. (2021b)</a></cite> reframe and expand on this idea for more subjective tasks like abuse detection, showing that multi-annotator model architectures outperform standard single-label approaches on single label prediction.
+Second, instead of modelling each annotator separately, other work has grouped them into clusters based on sociodemographic attributes <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib3" title="">Al Kuwatly et al., 2020</a>)</cite> or polarisation measures derived from annotator labels <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib1" title="">Akhtar et al., 2020</a>; <a class="ltx_ref" href="#bib.bib2" title="">Akhtar et al., 2021</a>)</cite>, with similar results.
+Third, models can be trained directly on <span class="ltx_text ltx_font_italic" id="S2.SS1.SSS0.Px2.p1.1.1">soft</span> labels (i.e., distributions of labels given by annotators), rather than <span class="ltx_text ltx_font_italic" id="S2.SS1.SSS0.Px2.p1.1.2">hard</span> one-hot ground truth vectors <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib35" title="">Plank et al., 2014a</a>; <a class="ltx_ref" href="#bib.bib25" title="">Jamison and Gurevych, 2015</a>; <a class="ltx_ref" href="#bib.bib49" title="">Uma et al., 2020</a>; <a class="ltx_ref" href="#bib.bib18" title="">Fornaciari et al., 2021</a>)</cite>.</p></div><div class="zh"><p>已有研究表明，描述性数据标注得到的标注者级标签是模型训练的丰富信息来源。第一，它们可用于分别建模各个标注者的信念；在问答这类主观性较弱的任务上，这种做法已被用于缓解不受欢迎的标注者偏见（Geva 等，2019）。Davani 等（2021b）在辱骂检测等主观性更强的任务上重述并拓展了这一思路，表明多标注者模型架构在单标签预测上优于标准的单标签方法。第二，另一些工作并不逐个建模标注者，而是依据社会人口学属性（Al Kuwatly 等，2020）或由标注者标签导出的极化度量（Akhtar 等，2020；Akhtar 等，2021）把他们聚成簇，也得到了类似结果。第三，模型可以直接在软标签（即标注者给出的标签分布）上训练，而不必使用硬的 one-hot 真值向量（Plank 等，2014a；Jamison 与 Gurevych，2015；Uma 等，2020；Fornaciari 等，2021）。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Evaluating with Disagreement</h4></div><div class="zh"><h4>借助分歧进行评测</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS1.SSS0.Px3.p1.1">Descriptive data annotation facilitates model evaluation that accounts for different beliefs about how a model should behave <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib10" title="">Basile et al., 2021b</a>; <a class="ltx_ref" href="#bib.bib48" title="">Uma et al., 2021</a>)</cite>.
+This is particularly relevant when deploying NLP systems for practical tasks such as content moderation, where <span class="ltx_text ltx_font_italic" id="S2.SS1.SSS0.Px3.p1.1.1">user-facing</span> performance needs to be considered <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib22" title="">Gordon et al., 2021</a>)</cite>.
+To this end, comparing a model prediction to a descriptive label distribution, the <span class="ltx_text ltx_font_italic" id="S2.SS1.SSS0.Px3.p1.1.2">crowd truth</span> <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib7" title="">Aroyo and Welty, 2015</a>)</cite>, can help estimate how <span class="ltx_text ltx_font_italic" id="S2.SS1.SSS0.Px3.p1.1.3">acceptable</span> the prediction would be to users <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib5" title="">Alm, 2011</a>)</cite>.
+<cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib21" title="">Gordon et al. (2022)</a></cite> operationalise this idea by introducing <span class="ltx_text ltx_font_italic" id="S2.SS1.SSS0.Px3.p1.1.4">jury learning</span>, a recommender system approach to predicting how a group of annotators with specified sociodemographic characteristics would judge different pieces of content.</p></div><div class="zh"><p>描述性数据标注有助于开展这样一种模型评测：它把关于模型应当如何表现的不同信念都纳入考虑（Basile 等，2021b；Uma 等，2021）。这一点在为内容审核等实际任务部署 NLP 系统时尤为紧要，因为必须顾及面向用户的表现（Gordon 等，2021）。为此，把模型预测与描述性的标签分布即众包真值（crowd truth）（Aroyo 与 Welty，2015）相比较，有助于估计该预测对用户的可接受程度（Alm，2011）。Gordon 等（2022）将这一思路操作化，提出了陪审团学习（jury learning）——一种推荐系统式的方法，用于预测具有特定社会人口学特征的一组标注者会如何评判不同的内容。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.2 </span>Key Challenges</h3></div><div class="zh"><h3>2.2 主要挑战</h3></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Representativeness of Annotators</h4></div><div class="zh"><h4>标注者的代表性</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS2.SSS0.Px1.p1.1">The survey-like benefits of descriptive data annotation correspond to survey-like challenges.
+First, dataset creators must decide who their data aims to represent, by establishing a clear population of interest.
+<cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib6" title="">Arora et al. (2020)</a></cite>, for example, ask women journalists to annotate harassment targeted at them.
+<cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib45" title="">Talat (2016)</a></cite> recruits feminist activists as well as crowd workers.
+Second, dataset creators must consider whether representativeness can practically be achieved.
+To capture a representative distribution of beliefs for each entry requires dozens, if not hundreds of annotators recruited from the population of interest.
+<cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib43" title="">Sap et al. (2021)</a></cite>, for example, collect toxicity labels from 641 annotators, but only for 15 examples.
+Other datasets generally use much fewer annotators per entry (see Appx. <a class="ltx_ref" href="#A1" title="Appendix A Overview of Subjective Task Datasets ‣ Two Contrasting Data Annotation Paradigms for Subjective NLP Tasks"><span class="ltx_text ltx_ref_tag">A</span></a>) and therefore cannot be considered representative in the sense that large (i.e., many-participant) surveys are.
+A potential approach to mitigating this issue in modelling annotator beliefs is by introducing information sharing across groups of annotators (e.g. based on sociodemographics), where annotator behaviour updates group-specific priors rather than being considered in isolation, and thus fewer annotations are needed from each annotator <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib21" title="">Gordon et al., 2022</a>)</cite>.</p></div><div class="zh"><p>描述性数据标注带来的调查式收益，也伴随着调查式的挑战。第一，数据集构建者必须通过明确界定目标人群，来决定其数据要代表谁。例如，Arora 等（2020）请女性记者来标注针对她们的骚扰；Talat（2016）同时招募女权主义活动者与众包工作者。第二，数据集构建者必须考虑代表性在实践中是否可达成。要为每个条目捕捉到具有代表性的信念分布，需要从目标人群中招募数十乃至数百名标注者。例如，Sap 等（2021）收集了 641 名标注者的毒性标签，但只覆盖 15 个样本。其他数据集每个条目通常使用的标注者要少得多（见附录 A），因而无法在大规模（即参与者众多）调查的意义上被视为具有代表性。在建模标注者信念时，一种可能的缓解办法是在标注者群体之间引入信息共享（例如按社会人口学特征分组），让标注者的行为更新各组的先验，而不是孤立地看待每一次标注，这样每位标注者所需的标注量就会减少（Gordon 等，2022）。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Interpretation of Disagreement</h4></div><div class="zh"><h4>分歧的解读</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS2.SSS0.Px2.p1.1">In the descriptive paradigm, the absence of a (specified) ground truth label complicates the interpretation of any observed annotator disagreement:
+it may be due to a genuine difference in beliefs, which is desirable in this paradigm, or due to undesirable annotator error <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib34" title="">Pavlick and Kwiatkowski, 2019</a>; <a class="ltx_ref" href="#bib.bib9" title="">Basile et al., 2021a</a>; <a class="ltx_ref" href="#bib.bib30" title="">Leonardelli et al., 2021</a>)</cite>.
+The same issue applies to inter-annotator agreement metrics like Fleiss’ Kappa.
+When subjectivity is encouraged, such metrics can at best measure task subjectiveness, but not task difficulty, annotator performance, or dataset quality <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib53" title="">Zaenen, 2006</a>; <a class="ltx_ref" href="#bib.bib5" title="">Alm, 2011</a>)</cite>.</p></div><div class="zh"><p>在描述性范式下，由于不存在（被指定的）真值标签，对观察到的任何标注者分歧的解读都变得复杂：它可能源于信念的真实差异——这在该范式中正是所期望的——也可能源于不受欢迎的标注者错误（Pavlick 与 Kwiatkowski，2019；Basile 等，2021a；Leonardelli 等，2021）。同样的问题也适用于 Fleiss’ Kappa 这类标注者间一致性指标。当主观性被鼓励时，此类指标至多只能度量任务的主观程度，而无法度量任务难度、标注者表现或数据集质量（Zaenen，2006；Alm，2011）。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Label Aggregation</h4></div><div class="zh"><h4>标签聚合</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS2.SSS0.Px3.p1.1">Descriptive annotation has clear downstream uses (§<a class="ltx_ref" href="#S2.SS1" title="2.1 Key Benefits ‣ 2 The Descriptive Annotation Paradigm: Encouraging Annotator Subjectivity ‣ Two Contrasting Data Annotation Paradigms for Subjective NLP Tasks"><span class="ltx_text ltx_ref_tag">2.1</span></a>) but it is fundamentally misaligned with standard NLP methods that rely on single gold standard labels.
+When datasets are constructed to be granular surveys of beliefs, reducing those beliefs to a single label, through majority voting or otherwise, goes directly against that purpose.
+Aggregating labels conceals informative disagreements <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib30" title="">Leonardelli et al., 2021</a>; <a class="ltx_ref" href="#bib.bib10" title="">Basile et al., 2021b</a>)</cite> and risks discarding minority beliefs <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib38" title="">Prabhakaran et al., 2021</a>; <a class="ltx_ref" href="#bib.bib9" title="">Basile et al., 2021a</a>)</cite>.</p></div><div class="zh"><p>描述性标注虽有清晰的下游用途（§2.1），却与依赖单一金标准标签的常规 NLP 方法在根本上不相契合。当数据集被构建为信念的细粒度调查时，通过多数投票或其他方式把这些信念压缩成单一标签，便与该目的背道而驰。聚合标签会掩盖富有信息量的分歧（Leonardelli 等，2021；Basile 等，2021b），并有丢弃少数派信念的风险（Prabhakaran 等，2021；Basile 等，2021a）。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">3 </span>The Prescriptive Annotation Paradigm: Discouraging Annotator Subjectivity</h2></div><div class="zh"><h2>3 规定性标注范式：抑制标注者主观性</h2></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.1 </span>Key Benefits</h3></div><div class="zh"><h3>3.1 主要收益</h3></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Specified Model Behaviour</h4></div><div class="zh"><h4>明确规定的模型行为</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS1.SSS0.Px1.p1.1">Encoding one specific belief in a dataset through data annotation is difficult (§<a class="ltx_ref" href="#S3.SS2" title="3.2 Key Challenges ‣ 3 The Prescriptive Annotation Paradigm: Discouraging Annotator Subjectivity ‣ Two Contrasting Data Annotation Paradigms for Subjective NLP Tasks"><span class="ltx_text ltx_ref_tag">3.2</span></a>) but advantageous for many practical applications.
+Social media companies, for example, moderate content on their platforms according to specific and extensive content policies.<span class="ltx_note ltx_role_footnote" id="footnote2"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup>
+<span class="ltx_tag ltx_tag_note">2</span>
+                
+                
+                
+              In March 2021, a whistleblower shared 300-page content guidelines used by Facebook moderators <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib23" title="">Hern, 2021</a>)</cite>.</span></span></span>
+Therefore, they need data annotated in accordance with those policies to train their content moderation models.
+This illustrates that even for highly subjective tasks, where different model behaviours are plausible and valid, one specific behaviour may be practically desirable.
+Prescriptive data annotation specifies such desired behaviours in datasets for model training and evaluation.</p></div><div class="zh"><p>通过数据标注把某一种特定信念编码进数据集是困难的（§3.2），但对许多实际应用而言却很有价值。例如，社交媒体公司依据具体而详尽的内容政策来审核平台上的内容。22 2 2021 年 3 月，一名举报人公开了 Facebook 审核人员所使用的长达 300 页的内容指南（Hern，2021）。因此，它们需要依照这些政策标注的数据来训练内容审核模型。这说明，即便在主观性很强、多种模型行为都合理且成立的任务上，某一种特定行为在实践中仍可能是所期望的。规定性数据标注正是把这类期望行为在数据集里明确规定出来，供模型训练与评测使用。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Quality Assurance</h4></div><div class="zh"><h4>质量保证</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS1.SSS0.Px2.p1.1">In the prescriptive paradigm, annotator disagreements are a call to action because they indicate that a) the annotation guidelines were not correctly applied by annotators or b) the guidelines themselves were inadequate.
+Annotator errors can be found using noise identification techniques <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib24" title="">Hovy et al., 2013</a>; <a class="ltx_ref" href="#bib.bib56" title="">Zhang et al., 2017</a>; <a class="ltx_ref" href="#bib.bib33" title="">Paun et al., 2018</a>; <a class="ltx_ref" href="#bib.bib32" title="">Northcutt et al., 2021</a>, e.g.,)</cite>, corrected by expert annotators <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib50" title="">Vidgen and Derczynski, 2020</a>; <a class="ltx_ref" href="#bib.bib51" title="">Vidgen et al., 2021a</a>)</cite> or their impact mitigated by label aggregation.
+Guidelines which are unclear or incomplete need to be clarified or expanded by dataset creators, which may require iterative approaches to annotation <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib19" title="">Founta et al., 2018</a>; <a class="ltx_ref" href="#bib.bib55" title="">Zeinert et al., 2021</a>)</cite>.
+Therefore, quality assurance under the prescriptive paradigm is a laborious but structured process, with inter-annotator agreement as a useful, albeit noisy, measure of dataset quality.</p></div><div class="zh"><p>在规定性范式下，标注者分歧是一种行动信号，它表明：a）标注者没有正确执行标注指南，或 b）指南本身有缺陷。标注者错误可以用噪声识别技术发现（例如 Hovy 等，2013；Zhang 等，2017；Paun 等，2018；Northcutt 等，2021），由专家标注者加以纠正（Vidgen 与 Derczynski，2020；Vidgen 等，2021a），或通过标签聚合来减轻其影响。不清楚或不完整的指南则需要由数据集构建者澄清或扩充，这可能需要迭代式的标注方法（Founta 等，2018；Zeinert 等，2021）。因此，规定性范式下的质量保证虽费力，却是一个有章可循的过程；标注者间一致性作为数据集质量的度量虽带有噪声，却仍然有用。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Visibility of Encoded Belief</h4></div><div class="zh"><h4>所编码信念的可见性</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS1.SSS0.Px3.p1.1">In the prescriptive paradigm, the one belief that annotators are tasked with applying is made visible and explicit in the annotation guidelines.
+Well-formulated guidelines should give clear instructions on how to decide between different classes, along with explanations and illustrative examples.
+This creates accountability, in that people can review, challenge and disagree with the formulated belief.
+Like data statements <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib11" title="">Bender and Friedman, 2018</a>)</cite>, prescriptive annotation guidelines can provide detailed insights into how datasets were created, which can then inform their downstream use.</p></div><div class="zh"><p>在规定性范式下，标注者被要求贯彻的那一种信念，在标注指南中被明确地显明出来。表述良好的指南应当就如何在不同类别之间做出判断给出清晰指令，并附带解释与示例。这就形成了一种可问责性：人们可以审阅、质疑并反对这一被阐明的信念。与数据说明（data statements）（Bender 与 Friedman，2018）类似，规定性标注指南能够提供关于数据集如何构建的详细说明，从而为下游使用提供依据。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.2 </span>Key Challenges</h3></div><div class="zh"><h3>3.2 主要挑战</h3></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Creation of Annotation Guidelines</h4></div><div class="zh"><h4>标注指南的制定</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS2.SSS0.Px1.p1.1">Creating guidelines for prescriptive data annotation is difficult because it requires topical knowledge and familiarity with the data that is to be annotated.
+Guidelines would ideally provide a clear judgment on every possible entry, but in practice, such perfectly comprehensive guidelines can only be approximated.
+Even extensive legal definitions of hate speech leave some room for subjective interpretation <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib44" title="">Sellars, 2016</a>)</cite>.
+Further, creating guidelines for prescriptive data annotation requires deciding which one belief to encode in the dataset.
+This can be a complex process that risks disregarding non-majority beliefs if marginalised people are not included in it <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib39" title="">Raji et al., 2020</a>)</cite>.</p></div><div class="zh"><p>为规定性数据标注制定指南很困难，因为它需要关于待标注数据的专业知识与熟悉程度。理想的指南会对每一个可能出现的条目给出明确判断，但在实践中，这种完美周全的指南只能被逼近。即便是仇恨言论的详尽法律定义，也留有一定的主观解释空间（Sellars，2016）。此外，为规定性数据标注制定指南，还需要决定把哪一种信念编码进数据集。这可能是一个复杂的过程，若边缘化群体未被纳入其中，便有忽视非多数派信念的风险（Raji 等，2020）。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Application of Annotation Guidelines</h4></div><div class="zh"><h4>标注指南的执行</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS2.SSS0.Px2.p1.1">Annotators need to be familiar with annotation guidelines to apply them correctly, which may require additional training, especially if guidelines are long and complex.
+This is reflected in an increasing shift in the literature towards using annotators with task-relevant experience over non-trained crowd workers <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib8" title="">Basile et al., 2019</a>; <a class="ltx_ref" href="#bib.bib40" title="">Röttger et al., 2021</a>; <a class="ltx_ref" href="#bib.bib51" title="">Vidgen et al., 2021a</a>, e.g.)</cite>.
+During annotation, annotators will need to refer back to the guidelines, which requires giving them sufficient time per entry and providing a well-designed annotation interface.</p></div><div class="zh"><p>标注者需要熟悉标注指南才能正确执行它们，这可能要求额外的培训，尤其当指南冗长而复杂时。这一点反映在文献中的一个日益增长的趋势上：相比未经培训的众包工作者，人们更倾向于选用具备任务相关经验的标注者（例如 Basile 等，2019；Röttger 等，2021；Vidgen 等，2021a）。在标注过程中，标注者需要反复查阅指南，这就要求为每个条目留出充足时间，并提供设计良好的标注界面。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Persistent Subjectivity</h4></div><div class="zh"><h4>挥之不去的主观性</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS2.SSS0.Px3.p1.1">Annotator subjectivity can be discouraged, but not eliminated.
+Inevitable gaps in guidelines leave annotators no choice but to apply their personal judgement for some entries, and even when there is explicit guidance, implicit biases may persist.
+<cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib42" title="">Sap et al. (2019)</a></cite>, for example, demonstrate racial biases in hate speech annotation, and show that targeted annotation prompts can reduce these biases but not definitively eliminate them.
+To address this issue, dataset creators should work with groups of annotators that are diverse in terms of sociodemographic characteristics and personal experiences, even when annotator subjectivity is discouraged.</p></div><div class="zh"><p>标注者主观性可以被抑制，却无法被消除。指南中不可避免的空白，使得标注者在面对某些条目时只能诉诸个人判断；即便有明确的指引，隐性偏见仍可能持续存在。例如，Sap 等（2019）揭示了仇恨言论标注中的种族偏见，并表明有针对性的标注提示语可以减轻却无法彻底消除这些偏见。针对这一问题，即便在抑制标注者主观性的情形下，数据集构建者也应当与社会人口学特征和个人经历各不相同的标注者群体合作。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">4 </span>An Illustrative Annotation Experiment</h2></div><div class="zh"><h2>4 一项示例性标注实验</h2></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Experimental Design</h4></div><div class="zh"><h4>实验设计</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS0.SSS0.Px1.p1.1">To illustrate the contrast between the two paradigms, we conducted an annotation experiment.
+60 annotators were randomly assigned to one of three groups of 20.
+Each group was given different guidelines to label the same 200 Twitter posts, taken from a corpus annotated for hate speech by <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib16" title="">Davidson et al. (2017)</a></cite>, as either <span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p1.1.1">hateful</span> or <span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p1.1.2">non-hateful</span>.
+<span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px1.p1.1.3">G1</span>, the descriptive group, received a short prompt which directed them to apply their subjective judgement (‘Do you personally feel this post is hateful?’).
+<span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px1.p1.1.4">G2</span>, the prescriptive group, received a short prompt which discouraged subjectivity (‘Does this post meet the criteria for hate speech?’), along with detailed annotation guidelines.
+<span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px1.p1.1.5">G3</span>, the control group, received the prescriptive prompt and a short definition of hate speech but no further guidelines.
+This is to control for the difference in length and complexity of annotation guidelines between <span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px1.p1.1.6">G1</span> and <span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px1.p1.1.7">G2</span>.</p></div><div class="zh"><p>为说明两种范式之间的对照，我们开展了一项标注实验。60 名标注者被随机分入三个 20 人小组。每组拿到不同的指南，对取自 Davidson 等（2017）仇恨言论标注语料库的 200 条 Twitter 帖文作“仇恨”或“非仇恨”的二分类标注。G1 为描述性组，收到一段简短提示语，引导其运用主观判断（“你自己是否觉得这条帖子属于仇恨内容？”）。G2 为规定性组，收到一段抑制主观性的简短提示语（“这条帖子是否符合仇恨言论的判定标准？”），并附有详细的标注指南。G3 为对照组，收到规定性提示语与仇恨言论的简短定义，但没有更多指南。这样设置是为了控制 G1 与 G2 之间在标注指南长度与复杂度上的差异。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Results</h4></div><div class="zh"><h4>结果</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS0.SSS0.Px2.p1.1">We evaluate average percentage agreement and Fleiss’ <math alttext="\kappa" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p1.m1" intent=":literal"><semantics><mi>κ</mi><annotation encoding="application/x-tex">\kappa</annotation></semantics></math> to measure dataset-level inter-annotator agreement in each group (Table <a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ Results ‣ 4 An Illustrative Annotation Experiment ‣ Two Contrasting Data Annotation Paradigms for Subjective NLP Tasks"><span class="ltx_text ltx_ref_tag">1</span></a>).
+To test for significant differences in agreement between groups, we use confidence intervals computed with a 1000-sample bootstrap.</p></div><div class="zh"><p>我们用平均百分比一致率与 Fleiss’ <math alttext="\kappa" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p1.m1" intent=":literal"><semantics><mi>κ</mi><annotation encoding="application/x-tex">\kappa</annotation></semantics></math> 来衡量各组在数据集层面的标注者间一致性（表 1）。为检验组间一致性的显著差异，我们使用以 1000 次抽样自助法计算出的置信区间。</p></div></div>
+<div class="blk atomic"><div><table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S4.T1.2">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T1.2.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row" id="S4.T1.2.1.1"><span class="ltx_text ltx_font_bold" id="S4.T1.2.1.1.1">Group</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column" id="S4.T1.2.1.2">
+<span class="ltx_inline-block ltx_align_top" id="S4.T1.2.1.2.1">
+<span class="ltx_p ltx_align_center" id="S4.T1.2.1.2.1.1"><span class="ltx_text ltx_font_bold" id="S4.T1.2.1.2.1.1.1">Avg. % Agree.</span></span>
+</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column" id="S4.T1.2.1.3">
+<span class="ltx_inline-block ltx_align_top" id="S4.T1.2.1.3.1">
+<span class="ltx_p ltx_align_center" id="S4.T1.2.1.3.1.1"><span class="ltx_text ltx_font_bold" id="S4.T1.2.1.3.1.1.1">Fleiss’ <math alttext="\kappa" class="ltx_Math" display="inline" id="S4.T1.m1" intent=":literal"><semantics><mi>κ</mi><annotation encoding="application/x-tex">\kappa</annotation></semantics></math></span></span>
+</span></th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T1.2.2">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_tt" id="S4.T1.2.2.1"><span class="ltx_text ltx_font_bold" id="S4.T1.2.2.1.1">G1</span> - Descriptive</th>
+<td class="ltx_td ltx_align_left ltx_border_tt" id="S4.T1.2.2.2">
+<span class="ltx_inline-block ltx_align_top" id="S4.T1.2.2.2.1">
+<span class="ltx_p ltx_align_center" id="S4.T1.2.2.2.1.1">73.90</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_border_tt" id="S4.T1.2.2.3">
+<span class="ltx_inline-block ltx_align_top" id="S4.T1.2.2.3.1">
+<span class="ltx_p ltx_align_center" id="S4.T1.2.2.3.1.1">0.20</span>
+</span></td></tr>
+<tr class="ltx_tr" id="S4.T1.2.3">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" id="S4.T1.2.3.1"><span class="ltx_text ltx_font_bold" id="S4.T1.2.3.1.1">G2</span> - Prescriptive</th>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T1.2.3.2">
+<span class="ltx_inline-block ltx_align_top" id="S4.T1.2.3.2.1">
+<span class="ltx_p ltx_align_center" id="S4.T1.2.3.2.1.1"><span class="ltx_text ltx_font_bold" id="S4.T1.2.3.2.1.1.1">93.72</span></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T1.2.3.3">
+<span class="ltx_inline-block ltx_align_top" id="S4.T1.2.3.3.1">
+<span class="ltx_p ltx_align_center" id="S4.T1.2.3.3.1.1"><span class="ltx_text ltx_font_bold" id="S4.T1.2.3.3.1.1.1">0.78</span></span>
+</span></td></tr>
+<tr class="ltx_tr" id="S4.T1.2.4">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S4.T1.2.4.1"><span class="ltx_text ltx_font_bold" id="S4.T1.2.4.1.1">G3</span> - Control</th>
+<td class="ltx_td ltx_align_left ltx_border_bb ltx_border_t" id="S4.T1.2.4.2">
+<span class="ltx_inline-block ltx_align_top" id="S4.T1.2.4.2.1">
+<span class="ltx_p ltx_align_center" id="S4.T1.2.4.2.1.1">72.50</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_border_bb ltx_border_t" id="S4.T1.2.4.3">
+<span class="ltx_inline-block ltx_align_top" id="S4.T1.2.4.3.1">
+<span class="ltx_p ltx_align_center" id="S4.T1.2.4.3.1.1">0.15</span>
+</span></td></tr>
+</tbody>
+</table></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 1: </span>Inter-annotator agreement metrics for the three groups of 20 annotators on our 200-post binary dataset.</figcaption></div><div class="zh"><p>表 1：三个 20 人标注者小组在 200 条帖文二分类数据集上的标注者间一致性指标。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS0.SSS0.Px2.p2.1">Agreement is very low in the descriptive group <span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px2.p2.1.1">G1</span> (<math alttext="\kappa=0.20" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p2.m1" intent=":literal"><semantics><mrow><mi>κ</mi><mo>=</mo><mn>0.20</mn></mrow><annotation encoding="application/x-tex">\kappa=0.20</annotation></semantics></math>), which suggests that annotators hold varied beliefs about which posts are hateful.
+However, agreement is significantly higher (<math alttext="p&lt;0.001" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p2.m2" intent=":literal"><semantics><mrow><mi>p</mi><mo>&lt;</mo><mn>0.001</mn></mrow><annotation encoding="application/x-tex">p&lt;0.001</annotation></semantics></math>) in <span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px2.p2.1.2">G2</span> (<math alttext="\kappa=0.78" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p2.m3" intent=":literal"><semantics><mrow><mi>κ</mi><mo>=</mo><mn>0.78</mn></mrow><annotation encoding="application/x-tex">\kappa=0.78</annotation></semantics></math>), which suggests that a prescriptive approach with detailed annotation guidelines can successfully induce annotators to apply a specified belief rather than their subjective view.
+Further, agreement in the control group <span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px2.p2.1.3">G3</span> (<math alttext="\kappa=0.15" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p2.m4" intent=":literal"><semantics><mrow><mi>κ</mi><mo>=</mo><mn>0.15</mn></mrow><annotation encoding="application/x-tex">\kappa=0.15</annotation></semantics></math>) is as low as in descriptive <span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px2.p2.1.4">G1</span>, which suggests that comprehensive guidelines are instrumental in facilitating high agreement in the prescriptive paradigm.
+<span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px2.p2.1.5">G1</span> and <span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px2.p2.1.6">G3</span> also do not differ systematically on which posts annotators disagree on, which suggests that annotators with little prescriptive instruction (<span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px2.p2.1.7">G3</span>) tend to apply their subjective views (like <span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px2.p2.1.8">G1</span>).</p></div><div class="zh"><p>描述性组 G1 的一致率很低（<math alttext="\kappa=0.20" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p2.m1" intent=":literal"><semantics><mrow><mi>κ</mi><mo>=</mo><mn>0.20</mn></mrow><annotation encoding="application/x-tex">\kappa=0.20</annotation></semantics></math>），这说明标注者对于哪些帖子属于仇恨内容持有各不相同的信念。然而，一致率在 G2 中显著更高（<math alttext="p&lt;0.001" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p2.m2" intent=":literal"><semantics><mrow><mi>p</mi><mo>&lt;</mo><mn>0.001</mn></mrow><annotation encoding="application/x-tex">p&lt;0.001</annotation></semantics></math>），达到 <math alttext="\kappa=0.78" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p2.m3" intent=":literal"><semantics><mrow><mi>κ</mi><mo>=</mo><mn>0.78</mn></mrow><annotation encoding="application/x-tex">\kappa=0.78</annotation></semantics></math>，这说明带有详细标注指南的规定性做法能够成功地引导标注者贯彻某一被指定的信念，而非诉诸个人主观看法。此外，对照组 G3（<math alttext="\kappa=0.15" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p2.m4" intent=":literal"><semantics><mrow><mi>κ</mi><mo>=</mo><mn>0.15</mn></mrow><annotation encoding="application/x-tex">\kappa=0.15</annotation></semantics></math>）的一致率与描述性组 G1 一样低，这说明完备的指南在规定性范式下对促成高一致性起着关键作用。G1 与 G3 在标注者产生分歧的帖子上也没有系统性差异，这说明几乎没有得到规定性指引的标注者（G3）往往会像 G1 那样诉诸主观看法。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">Reproducibility</h4></div><div class="zh"><h4>可复现性</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS0.SSS0.Px3.p1.1">For details on our dataset and annotators, see the data statement <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib11" title="">Bender and Friedman, 2018</a>)</cite> in Appendix <a class="ltx_ref" href="#A2" title="Appendix B Data Statement ‣ Two Contrasting Data Annotation Paradigms for Subjective NLP Tasks"><span class="ltx_text ltx_ref_tag">B</span></a>.
+Annotation prompts are given in Appendix <a class="ltx_ref" href="#A3" title="Appendix C Annotation Prompts ‣ Two Contrasting Data Annotation Paradigms for Subjective NLP Tasks"><span class="ltx_text ltx_ref_tag">C</span></a>.
+Full guidelines, annotated data and code are available <a class="ltx_ref ltx_href" href="https://github.com/paul-rottger/annotation-paradigms" title="">on GitHub</a>.</p></div><div class="zh"><p>关于我们的数据集与标注者的细节，见附录 B 中的数据说明（Bender 与 Friedman，2018）。标注提示语见附录 C。完整指南、标注数据与代码已在 GitHub 上公开。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">5 </span>Conclusion</h2></div><div class="zh"><h2>5 结论</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S5.p1.1">In this article, we named and explained two contrasting paradigms for data annotation.
+The <span class="ltx_text ltx_font_bold" id="S5.p1.1.1">descriptive</span> paradigm encourages annotator subjectivity to create datasets as granular surveys of individual beliefs, which can then be analysed and modelled.
+The <span class="ltx_text ltx_font_bold" id="S5.p1.1.2">prescriptive</span> paradigm tasks annotators with encoding one specific belief formulated in the annotation guidelines, to enable the training of models that seek to apply that one belief to unseen data.
+Dataset creators should explicitly aim for one paradigm or the other to facilitate the intended downstream use of their dataset, and to document for the benefit of others how exactly their dataset was annotated.
+We discussed benefits and challenges in implementing both paradigms, and conducted an annotation experiment that illustrates the contrast between them.
+We hope that the two paradigms can support more intentional annotation process design and thus facilitate the creation of more useful NLP datasets.</p></div><div class="zh"><p>在本文中，我们为两种相互对照的数据标注范式命名并加以阐释。描述性范式鼓励标注者主观性，把数据集构建为对个人信念的细粒度调查，从而可供分析与建模。规定性范式则要求标注者编码一种在标注指南中加以阐明的特定信念，以训练出力求将该信念贯彻到未见数据上的模型。数据集构建者应当明确地以两种范式之一为目标，以促进数据集预期下游用途的实现，并把数据集的具体标注方式记录下来以利他人。我们讨论了实施两种范式的收益与挑战，并开展了一项标注实验来展示二者之间的对照。我们希望这两种范式能促成更有意识的标注流程设计，进而推动更有用的 NLP 数据集的构建。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section">Acknowledgments</h2></div><div class="zh"><h2>致谢</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="Sx1.p1.1">Paul Röttger was funded by the German Academic Scholarship Foundation.
+Bertie Vidgen and Paul Röttger were both supported by The Alan Turing Institute and Towards Turing 2.0 under the EPSRC Grant EP/W037211/1.
+Dirk Hovy received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation program (grant agreement No. 949944). He is a member of the Data and Marketing Insights (DMI) Unit of the Bocconi Institute for Data Science and Analysis (BIDSA).
+Janet B. Pierrehumbert was supported by EPSRC Grant EP/T023333/1.
+We thank the Milan NLP Group, the Groningen Computational Linguistics Group as well as the Pierrehumbert Language Modelling Group for helpful comments and all reviewers for their constructive feedback.</p></div><div class="zh"><p>Paul Röttger 由德国国家学术基金会（German Academic Scholarship Foundation）资助。Bertie Vidgen 与 Paul Röttger 均受艾伦·图灵研究所及 EPSRC 资助项目 EP/W037211/1 下的 Towards Turing 2.0 支持。Dirk Hovy 获得欧洲研究理事会（ERC）在欧盟“地平线 2020”研究与创新计划下的资助（协议号 949944）。他是博科尼数据科学与分析研究所（BIDSA）数据与营销洞察（DMI）部门的成员。Janet B. Pierrehumbert 受 EPSRC 资助项目 EP/T023333/1 支持。我们感谢米兰 NLP 小组、格罗宁根计算语言学小组以及 Pierrehumbert 语言建模小组提出的有益意见，也感谢所有评审者的建设性反馈。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_bibliography">References</h2></div><div class="zh"><h2>参考文献</h2></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib1"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Akhtar et al. (2020)</span>
+<span class="ltx_bibblock">
+Sohail Akhtar, Valerio Basile, and Viviana Patti. 2020.
+
+</span>
+<span class="ltx_bibblock">Modeling annotator perspective and polarized opinions to improve hate
+speech detection.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib1.1">Proceedings of the AAAI Conference on Human Computation and
+Crowdsourcing</em>, volume 8, pages 151–154.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib2"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Akhtar et al. (2021)</span>
+<span class="ltx_bibblock">
+Sohail Akhtar, Valerio Basile, and Viviana Patti. 2021.
+
+</span>
+<span class="ltx_bibblock">Whose opinions matter? perspective-aware models to identify opinions
+of hate speech victims in abusive language detection.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib2.1">arXiv preprint arXiv:2106.15896</em>.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib3"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Al Kuwatly et al. (2020)</span>
+<span class="ltx_bibblock">
+Hala Al Kuwatly, Maximilian Wich, and Georg Groh. 2020.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2020.alw-1.21" title="">Identifying and
+measuring annotator bias based on annotators’ demographic characteristics</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib3.1">Proceedings of the Fourth Workshop on Online Abuse and
+Harms</em>, pages 184–190, Online. Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib4"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">AlDayel and Magdy (2021)</span>
+<span class="ltx_bibblock">
+Abeer AlDayel and Walid Magdy. 2021.
+
+</span>
+<span class="ltx_bibblock">Stance detection on social media: State of the art and trends.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib4.1">Information Processing &amp; Management</em>, 58(4):102597.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib5"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Alm (2011)</span>
+<span class="ltx_bibblock">
+Cecilia Ovesdotter Alm. 2011.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://aclanthology.org/P11-2019" title="">Subjective natural
+language problems: Motivations, applications, characterizations, and
+implications</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib5.1">Proceedings of the 49th Annual Meeting of the Association
+for Computational Linguistics: Human Language Technologies</em>, pages 107–112,
+Portland, Oregon, USA. Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib6"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Arora et al. (2020)</span>
+<span class="ltx_bibblock">
+Ishaan Arora, Julia Guo, Sarah Ita Levitan, Susan McGregor, and Julia
+Hirschberg. 2020.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2020.alw-1.2" title="">A novel methodology
+for developing automatic harassment classifiers for Twitter</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib6.1">Proceedings of the Fourth Workshop on Online Abuse and
+Harms</em>, pages 7–15, Online. Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib7"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Aroyo and Welty (2015)</span>
+<span class="ltx_bibblock">
+Lora Aroyo and Chris Welty. 2015.
+
+</span>
+<span class="ltx_bibblock">Truth is a lie: Crowd truth and the seven myths of human annotation.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib7.1">AI Magazine</em>, 36(1):15–24.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib8"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Basile et al. (2019)</span>
+<span class="ltx_bibblock">
+Valerio Basile, Cristina Bosco, Elisabetta Fersini, Debora Nozza, Viviana
+Patti, Francisco Manuel Rangel Pardo, Paolo Rosso, and Manuela Sanguinetti.
+2019.
+
+</span>
+<span class="ltx_bibblock">Semeval-2019 task 5: Multilingual detection of hate speech against
+immigrants and women in Twitter.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib8.1">Proceedings of the 13th International Workshop on Semantic
+Evaluation</em>, pages 54–63.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib9"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Basile et al. (2021a)</span>
+<span class="ltx_bibblock">
+Valerio Basile, Federico Cabitza, Andrea Campagner, and Michael Fell.
+2021a.
+
+</span>
+<span class="ltx_bibblock">Toward a perspectivist turn in ground truthing for predictive
+computing.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib9.1">Conference of the Italian Chapter of the Association for
+Intelligent Systems (ItAIS 2021)</em>.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib10"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Basile et al. (2021b)</span>
+<span class="ltx_bibblock">
+Valerio Basile, Michael Fell, Tommaso Fornaciari, Dirk Hovy, Silviu Paun,
+Barbara Plank, Massimo Poesio, and Alexandra Uma. 2021b.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.bppf-1.3" title="">We need to
+consider disagreement in evaluation</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib10.1">Proceedings of the 1st Workshop on Benchmarking: Past,
+Present and Future</em>, pages 15–21, Online. Association for Computational
+Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib11"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bender and Friedman (2018)</span>
+<span class="ltx_bibblock">
+Emily M. Bender and Batya Friedman. 2018.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.1162/tacl_a_00041" title="">Data statements for
+natural language processing: Toward mitigating system bias and enabling
+better science</a>.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib11.1">Transactions of the Association for Computational Linguistics</em>,
+6:587–604.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib12"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Caselli et al. (2020)</span>
+<span class="ltx_bibblock">
+Tommaso Caselli, Valerio Basile, Jelena Mitrović, Inga Kartoziya, and
+Michael Granitzer. 2020.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://aclanthology.org/2020.lrec-1.760" title="">I feel offended,
+don’t be abusive! implicit/explicit messages in offensive and abusive
+language</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib12.1">Proceedings of the 12th Language Resources and Evaluation
+Conference</em>, pages 6193–6202, Marseille, France. European Language Resources
+Association.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib13"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Cercas Curry et al. (2021)</span>
+<span class="ltx_bibblock">
+Amanda Cercas Curry, Gavin Abercrombie, and Verena Rieser. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://aclanthology.org/2021.emnlp-main.587" title="">ConvAbuse:
+Data, analysis, and benchmarks for nuanced detection in conversational AI</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib13.1">Proceedings of the 2021 Conference on Empirical Methods in
+Natural Language Processing</em>, pages 7388–7403, Online and Punta Cana,
+Dominican Republic. Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib14"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Davani et al. (2021a)</span>
+<span class="ltx_bibblock">
+Aida Mostafazadeh Davani, Mohammad Atari, Brendan Kennedy, and Morteza
+Dehghani. 2021a.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="http://arxiv.org/abs/2110.14839" title="">Hate speech classifiers
+learn human-like social stereotypes</a>.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib15"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Davani et al. (2021b)</span>
+<span class="ltx_bibblock">
+Aida Mostafazadeh Davani, Mark Díaz, and Vinodkumar Prabhakaran.
+2021b.
+
+</span>
+<span class="ltx_bibblock">Dealing with disagreements: Looking beyond the majority vote in
+subjective annotations.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib15.1">arXiv preprint arXiv:2110.05719</em>.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib16"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Davidson et al. (2017)</span>
+<span class="ltx_bibblock">
+Thomas Davidson, Dana Warmsley, Michael Macy, and Ingmar Weber. 2017.
+
+</span>
+<span class="ltx_bibblock">Automated hate speech detection and the problem of offensive
+language.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib16.1">Proceedings of the 11th International AAAI Conference on Web
+and Social Media</em>, pages 512–515. Association for the Advancement of
+Artificial Intelligence.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib17"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Diaz et al. (2018)</span>
+<span class="ltx_bibblock">
+Mark Diaz, Isaac Johnson, Amanda Lazar, Anne Marie Piper, and Darren Gergle.
+2018.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.1145/3173574.3173986" title=""><em class="ltx_emph ltx_font_italic">Addressing
+Age-Related Bias in Sentiment Analysis</em></a>, page 1–14. Association for
+Computing Machinery, New York, NY, USA.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib18"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Fornaciari et al. (2021)</span>
+<span class="ltx_bibblock">
+Tommaso Fornaciari, Alexandra Uma, Silviu Paun, Barbara Plank, Dirk Hovy, and
+Massimo Poesio. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.naacl-main.204" title="">Beyond black
+&amp; white: Leveraging annotator disagreement via soft-label multi-task
+learning</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib18.1">Proceedings of the 2021 Conference of the North American
+Chapter of the Association for Computational Linguistics: Human Language
+Technologies</em>, pages 2591–2597, Online. Association for Computational
+Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib19"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Founta et al. (2018)</span>
+<span class="ltx_bibblock">
+Antigoni Maria Founta, Constantinos Djouvas, Despoina Chatzakou, Ilias
+Leontiadis, Jeremy Blackburn, Gianluca Stringhini, Athena Vakali, Michael
+Sirivianos, and Nicolas Kourtellis. 2018.
+
+</span>
+<span class="ltx_bibblock">Large scale crowdsourcing and characterization of Twitter abusive
+behavior.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib19.1">Proceedings of the 12th International AAAI Conference on Web
+and Social Media</em>, pages 491–500. Association for the Advancement of
+Artificial Intelligence.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib20"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Geva et al. (2019)</span>
+<span class="ltx_bibblock">
+Mor Geva, Yoav Goldberg, and Jonathan Berant. 2019.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/D19-1107" title="">Are we modeling the
+task or the annotator? an investigation of annotator bias in natural language
+understanding datasets</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib20.1">Proceedings of the 2019 Conference on Empirical Methods in
+Natural Language Processing and the 9th International Joint Conference on
+Natural Language Processing (EMNLP-IJCNLP)</em>, pages 1161–1166, Hong Kong,
+China. Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib21"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gordon et al. (2022)</span>
+<span class="ltx_bibblock">
+Mitchell L Gordon, Michelle S Lam, Joon Sung Park, Kayur Patel, Jeffrey T
+Hancock, Tatsunori Hashimoto, and Michael S Bernstein. 2022.
+
+</span>
+<span class="ltx_bibblock">Jury learning: Integrating dissenting voices into machine learning
+models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib21.1">arXiv preprint arXiv:2202.02950</em>.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib22"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gordon et al. (2021)</span>
+<span class="ltx_bibblock">
+Mitchell L Gordon, Kaitlyn Zhou, Kayur Patel, Tatsunori Hashimoto, and
+Michael S Bernstein. 2021.
+
+</span>
+<span class="ltx_bibblock">The disagreement deconvolution: Bringing machine learning performance
+metrics in line with reality.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib22.1">Proceedings of the 2021 CHI Conference on Human Factors in
+Computing Systems</em>, pages 1–14.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib23"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hern (2021)</span>
+<span class="ltx_bibblock">
+Alex Hern. 2021.
+
+</span>
+<span class="ltx_bibblock">Decoding emojis and defining ’support’: Facebook’s rules for content
+revealed.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib23.1">The Guardian</em>.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib24"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hovy et al. (2013)</span>
+<span class="ltx_bibblock">
+Dirk Hovy, Taylor Berg-Kirkpatrick, Ashish Vaswani, and Eduard Hovy. 2013.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://aclanthology.org/N13-1132" title="">Learning whom to trust
+with MACE</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib24.1">Proceedings of the 2013 Conference of the North American
+Chapter of the Association for Computational Linguistics: Human Language
+Technologies</em>, pages 1120–1130, Atlanta, Georgia. Association for
+Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib25"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Jamison and Gurevych (2015)</span>
+<span class="ltx_bibblock">
+Emily Jamison and Iryna Gurevych. 2015.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/D15-1035" title="">Noise or additional
+information? leveraging crowdsource annotation item agreement for natural
+language tasks.</a>
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib25.1">Proceedings of the 2015 Conference on Empirical Methods in
+Natural Language Processing</em>, pages 291–297, Lisbon, Portugal. Association
+for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib26"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Jiang et al. (2021)</span>
+<span class="ltx_bibblock">
+Jialun Aaron Jiang, Morgan Klaus Scheuerman, Casey Fiesler, and Jed R Brubaker.
+2021.
+
+</span>
+<span class="ltx_bibblock">Understanding international perceptions of the severity of harmful
+content online.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib26.1">PloS one</em>, 16(8):e0256762.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib27"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Justice (2006)</span>
+<span class="ltx_bibblock">
+Paul Justice. 2006.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib27.1">Relevant Linguistics</em>, 2nd edition.
+
+</span>
+<span class="ltx_bibblock">Center for the Study of Language and Information, Stanford
+University.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib28"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kenyon-Dean et al. (2018)</span>
+<span class="ltx_bibblock">
+Kian Kenyon-Dean, Eisha Ahmed, Scott Fujimoto, Jeremy Georges-Filteau,
+Christopher Glasz, Barleen Kaur, Auguste Lalande, Shruti Bhanderi, Robert
+Belfer, Nirmal Kanagasabai, Roman Sarrazingendron, Rohit Verma, and Derek
+Ruths. 2018.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/N18-1171" title="">Sentiment analysis:
+It’s complicated!</a>
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib28.1">Proceedings of the 2018 Conference of the North American
+Chapter of the Association for Computational Linguistics: Human Language
+Technologies, Volume 1 (Long Papers)</em>, pages 1886–1895, New Orleans,
+Louisiana. Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib29"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kumar et al. (2021)</span>
+<span class="ltx_bibblock">
+Deepak Kumar, Patrick Gage Kelley, Sunny Consolvo, Joshua Mason, Elie
+Bursztein, Zakir Durumeric, Kurt Thomas, and Michael Bailey. 2021.
+
+</span>
+<span class="ltx_bibblock">Designing toxic content classification for a diversity of
+perspectives.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib29.1">Seventeenth Symposium on Usable Privacy and Security (SOUPS
+2021)</em>, pages 299–318.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib30"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Leonardelli et al. (2021)</span>
+<span class="ltx_bibblock">
+Elisa Leonardelli, Stefano Menini, Alessio Palmero Aprosio, Marco Guerini, and
+Sara Tonelli. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://aclanthology.org/2021.emnlp-main.822" title="">Agreeing to
+disagree: Annotating offensive language datasets with annotators’
+disagreement</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib30.1">Proceedings of the 2021 Conference on Empirical Methods in
+Natural Language Processing</em>, pages 10528–10539, Online and Punta Cana,
+Dominican Republic. Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib31"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Luo et al. (2020)</span>
+<span class="ltx_bibblock">
+Yiwei Luo, Dallas Card, and Dan Jurafsky. 2020.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2020.findings-emnlp.296" title="">Detecting stance in media on global warming</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib31.1">Findings of the Association for Computational Linguistics:
+EMNLP 2020</em>, pages 3296–3315, Online. Association for Computational
+Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib32"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Northcutt et al. (2021)</span>
+<span class="ltx_bibblock">
+Curtis Northcutt, Lu Jiang, and Isaac Chuang. 2021.
+
+</span>
+<span class="ltx_bibblock">Confident learning: Estimating uncertainty in dataset labels.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib32.1">Journal of Artificial Intelligence Research</em>, 70:1373–1411.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib33"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Paun et al. (2018)</span>
+<span class="ltx_bibblock">
+Silviu Paun, Bob Carpenter, Jon Chamberlain, Dirk Hovy, Udo Kruschwitz, and
+Massimo Poesio. 2018.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.1162/tacl_a_00040" title="">Comparing Bayesian
+models of annotation</a>.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib33.1">Transactions of the Association for Computational Linguistics</em>,
+6:571–585.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib34"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Pavlick and Kwiatkowski (2019)</span>
+<span class="ltx_bibblock">
+Ellie Pavlick and Tom Kwiatkowski. 2019.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.1162/tacl_a_00293" title="">Inherent disagreements
+in human textual inferences</a>.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib34.1">Transactions of the Association for Computational Linguistics</em>,
+7:677–694.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib35"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Plank et al. (2014a)</span>
+<span class="ltx_bibblock">
+Barbara Plank, Dirk Hovy, and Anders Søgaard. 2014a.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.3115/v1/E14-1078" title="">Learning part-of-speech
+taggers with inter-annotator agreement loss</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib35.1">Proceedings of the 14th Conference of the European Chapter
+of the Association for Computational Linguistics</em>, pages 742–751,
+Gothenburg, Sweden. Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib36"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Plank et al. (2014b)</span>
+<span class="ltx_bibblock">
+Barbara Plank, Dirk Hovy, and Anders Søgaard. 2014b.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.3115/v1/P14-2083" title="">Linguistically debatable
+or just plain wrong?</a>
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib36.1">Proceedings of the 52nd Annual Meeting of the Association
+for Computational Linguistics (Volume 2: Short Papers)</em>, pages 507–511,
+Baltimore, Maryland. Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib37"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Poria et al. (2020)</span>
+<span class="ltx_bibblock">
+Soujanya Poria, Devamanyu Hazarika, Navonil Majumder, and Rada Mihalcea. 2020.
+
+</span>
+<span class="ltx_bibblock">Beneath the tip of the iceberg: Current challenges and new directions
+in sentiment analysis research.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib37.1">IEEE Transactions on Affective Computing</em>.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib38"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Prabhakaran et al. (2021)</span>
+<span class="ltx_bibblock">
+Vinodkumar Prabhakaran, Aida Mostafazadeh Davani, and Mark Diaz. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://aclanthology.org/2021.law-1.14" title="">On releasing
+annotator-level labels and information in datasets</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib38.1">Proceedings of The Joint 15th Linguistic Annotation Workshop
+(LAW) and 3rd Designing Meaning Representations (DMR) Workshop</em>, pages
+133–138, Punta Cana, Dominican Republic. Association for Computational
+Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib39"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Raji et al. (2020)</span>
+<span class="ltx_bibblock">
+Inioluwa Deborah Raji, Andrew Smart, Rebecca N. White, Margaret Mitchell,
+Timnit Gebru, Ben Hutchinson, Jamila Smith-Loud, Daniel Theron, and Parker
+Barnes. 2020.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.1145/3351095.3372873" title="">Closing the ai
+accountability gap: Defining an end-to-end framework for internal algorithmic
+auditing</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib39.1">Proceedings of the 2020 Conference on Fairness,
+Accountability, and Transparency</em>, FAT* ’20, page 33–44, New York, NY, USA.
+Association for Computing Machinery.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib40"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Röttger et al. (2021)</span>
+<span class="ltx_bibblock">
+Paul Röttger, Bertie Vidgen, Dong Nguyen, Zeerak Talat, Helen Margetts, and
+Janet Pierrehumbert. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.acl-long.4" title="">HateCheck:
+Functional tests for hate speech detection models</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib40.1">Proceedings of the 59th Annual Meeting of the Association
+for Computational Linguistics and the 11th International Joint Conference on
+Natural Language Processing (Volume 1: Long Papers)</em>, pages 41–58, Online.
+Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib41"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Salminen et al. (2019)</span>
+<span class="ltx_bibblock">
+Joni Salminen, Hind Almerekhi, Ahmed Mohamed Kamel, Soon-gyo Jung, and
+Bernard J. Jansen. 2019.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.1145/3295750.3298954" title="">Online hate ratings
+vary by extremes: A statistical analysis</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib41.1">Proceedings of the 2019 Conference on Human Information
+Interaction and Retrieval</em>, CHIIR ’19, page 213–217, New York, NY, USA.
+Association for Computing Machinery.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib42"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sap et al. (2019)</span>
+<span class="ltx_bibblock">
+Maarten Sap, Dallas Card, Saadia Gabriel, Yejin Choi, and Noah A. Smith. 2019.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/P19-1163" title="">The risk of racial bias
+in hate speech detection</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib42.1">Proceedings of the 57th Annual Meeting of the Association
+for Computational Linguistics</em>, pages 1668–1678, Florence, Italy.
+Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib43"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sap et al. (2021)</span>
+<span class="ltx_bibblock">
+Maarten Sap, Swabha Swayamdipta, Laura Vianna, Xuhui Zhou, Yejin Choi, and
+Noah A. Smith. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="http://arxiv.org/abs/2111.07997" title="">Annotators with attitudes:
+How annotator beliefs and identities bias toxic language detection</a>.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib44"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sellars (2016)</span>
+<span class="ltx_bibblock">
+Andrew Sellars. 2016.
+
+</span>
+<span class="ltx_bibblock">Defining hate speech.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib44.1">Berkman Klein Center Research Publication</em>, 20(2016):16–48.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib45"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Talat (2016)</span>
+<span class="ltx_bibblock">
+Zeerak Talat. 2016.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/W16-5618" title="">Are you a racist or am
+I seeing things? Annotator influence on hate speech detection on
+Twitter</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib45.1">Proceedings of the First Workshop on NLP and Computational
+Social Science</em>, pages 138–142, Austin, Texas. Association for Computational
+Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib46"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Talat and Hovy (2016)</span>
+<span class="ltx_bibblock">
+Zeerak Talat and Dirk Hovy. 2016.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/N16-2013" title="">Hateful symbols or
+hateful people? Predictive features for hate speech detection on
+Twitter</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib46.1">Proceedings of the NAACL Student Research Workshop</em>, pages
+88–93, San Diego, California. Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib47"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Thiroux and Krasemann (2015)</span>
+<span class="ltx_bibblock">
+Jacques P Thiroux and Keith W Krasemann. 2015.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib47.1">Ethics: Theory and Practice</em>, 11th edition.
+
+</span>
+<span class="ltx_bibblock">Pearson.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib48"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Uma et al. (2021)</span>
+<span class="ltx_bibblock">
+Alexandra Uma, Tommaso Fornaciari, Anca Dumitrache, Tristan Miller, Jon
+Chamberlain, Barbara Plank, Edwin Simpson, and Massimo Poesio. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.semeval-1.41" title="">SemEval-2021 task 12: Learning with disagreements</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib48.1">Proceedings of the 15th International Workshop on Semantic
+Evaluation (SemEval-2021)</em>, pages 338–347, Online. Association for
+Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib49"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Uma et al. (2020)</span>
+<span class="ltx_bibblock">
+Alexandra Uma, Tommaso Fornaciari, Dirk Hovy, Silviu Paun, Barbara Plank, and
+Massimo Poesio. 2020.
+
+</span>
+<span class="ltx_bibblock">A case for soft loss functions.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib49.1">Proceedings of the AAAI Conference on Human Computation and
+Crowdsourcing</em>, 8(1):173–177.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib50"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Vidgen and Derczynski (2020)</span>
+<span class="ltx_bibblock">
+Bertie Vidgen and Leon Derczynski. 2020.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.1371/journal.pone.0243300" title="">Directions in
+abusive language training data, a systematic review: Garbage in, garbage
+out</a>.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib50.1">PLOS ONE</em>, 15(12):e0243300.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib51"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Vidgen et al. (2021a)</span>
+<span class="ltx_bibblock">
+Bertie Vidgen, Dong Nguyen, Helen Margetts, Patricia Rossini, and Rebekah
+Tromble. 2021a.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.naacl-main.182" title="">Introducing
+CAD: the contextual abuse dataset</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib51.1">Proceedings of the 2021 Conference of the North American
+Chapter of the Association for Computational Linguistics: Human Language
+Technologies</em>, pages 2289–2303, Online. Association for Computational
+Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib52"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Vidgen et al. (2021b)</span>
+<span class="ltx_bibblock">
+Bertie Vidgen, Tristan Thrush, Zeerak Talat, and Douwe Kiela.
+2021b.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.acl-long.132" title="">Learning from
+the worst: Dynamically generated datasets to improve online hate detection</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib52.1">Proceedings of the 59th Annual Meeting of the Association
+for Computational Linguistics and the 11th International Joint Conference on
+Natural Language Processing (Volume 1: Long Papers)</em>, pages 1667–1682,
+Online. Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib53"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zaenen (2006)</span>
+<span class="ltx_bibblock">
+Annie Zaenen. 2006.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.1162/coli.2006.32.4.577" title="">Mark-up barking
+up the wrong tree</a>.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib53.1">Comput. Linguist.</em>, 32(4):577–580.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib54"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zampieri et al. (2019)</span>
+<span class="ltx_bibblock">
+Marcos Zampieri, Shervin Malmasi, Preslav Nakov, Sara Rosenthal, Noura Farra,
+and Ritesh Kumar. 2019.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/N19-1144" title="">Predicting the type and
+target of offensive posts in social media</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib54.1">Proceedings of the 2019 Conference of the North American
+Chapter of the Association for Computational Linguistics: Human Language
+Technologies, Volume 1 (Long and Short Papers)</em>, pages 1415–1420,
+Minneapolis, Minnesota. Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib55"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zeinert et al. (2021)</span>
+<span class="ltx_bibblock">
+Philine Zeinert, Nanna Inie, and Leon Derczynski. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.acl-long.247" title="">Annotating
+online misogyny</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib55.1">Proceedings of the 59th Annual Meeting of the Association
+for Computational Linguistics and the 11th International Joint Conference on
+Natural Language Processing (Volume 1: Long Papers)</em>, pages 3181–3197,
+Online. Association for Computational Linguistics.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib56"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang et al. (2017)</span>
+<span class="ltx_bibblock">
+Jing Zhang, Victor S Sheng, Tao Li, and Xindong Wu. 2017.
+
+</span>
+<span class="ltx_bibblock">Improving crowdsourced label quality using noise correction.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib56.1">IEEE transactions on neural networks and learning systems</em>,
+29(5):1675–1688.
+
+</span></li></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix A </span>Overview of Subjective Task Datasets</h2></div><div class="zh"><h2>附录 A 主观性任务数据集概览</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A1.p1.1">This appendix gives a selective overview of how existing NLP dataset work has (or has not) engaged with annotator subjectivity.
+For reasons of scope, we focus on 11 English-language datasets annotated for hate speech and other forms of abuse.
+Entries are sorted from most descriptive to most prescriptive annotation, based on our assessment of information made available by the dataset creators.</p></div><div class="zh"><p>本附录选择性地概览了现有 NLP 数据集工作在多大程度上处理了标注者主观性。受篇幅所限，我们聚焦于 11 个面向仇恨言论及其他形式辱骂内容标注的英语数据集。依据我们对数据集构建者所公开信息的评估，条目按从最偏描述性到最偏规定性的顺序排列。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A1.p2.1"><cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib42" title="">Sap et al. (2019)</a></cite> and <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib43" title="">Sap et al. (2021)</a></cite> annotate toxicity.
+They do not state explicitly that they encourage annotator subjectivity, but their annotation prompts clearly do.
+Each entry is labelled by up to 641 annotators.
+Overall, they are <span class="ltx_text ltx_font_bold" id="A1.p2.1.1">very aligned with the descriptive paradigm</span>.</p></div><div class="zh"><p>Sap 等（2019）与 Sap 等（2021）标注毒性。他们并未明言鼓励标注者主观性，但其标注提示语显然如此。每个条目最多由 641 名标注者标注。总体上，它们与描述性范式高度契合。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A1.p3.1"><cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib29" title="">Kumar et al. (2021)</a></cite> annotate toxicity and types of toxicity.
+They do not state explicitly that they encourage annotator subjectivity, but their annotation prompts clearly do.
+Each entry is labelled by five annotators.
+Overall, they are <span class="ltx_text ltx_font_bold" id="A1.p3.1.1">very aligned with the descriptive paradigm</span>.</p></div><div class="zh"><p>Kumar 等（2021）标注毒性及毒性类型。他们并未明言鼓励标注者主观性，但其标注提示语显然如此。每个条目由五名标注者标注。总体上，它们与描述性范式高度契合。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A1.p4.1"><cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib13" title="">Cercas Curry et al. (2021)</a></cite> annotate abuse.
+They gather ‘views of expert annotators’ based on guidelines that allow for significant subjectivity and do not attempt to resolve disagreements, but also do not explicitly encourage annotator subjectivity.
+On average, each entry is labelled by around three annotators.
+Overall, they are <span class="ltx_text ltx_font_bold" id="A1.p4.1.1">moderately aligned with the descriptive paradigm</span>.</p></div><div class="zh"><p>Cercas Curry 等（2021）标注辱骂内容。他们依据容许较大主观性的指南收集“专家标注者的看法”，并不试图消解分歧，但也没有明确鼓励标注者主观性。平均而言，每个条目由约三名标注者标注。总体上，它们与描述性范式中等程度契合。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A1.p5.1"><cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib46" title="">Talat and Hovy (2016)</a></cite> annotate hate speech.
+They provide annotators with 11 fine-grained criteria for hate speech, but several criteria invite subjective responses (e.g., ‘uses a <span class="ltx_text ltx_font_italic" id="A1.p5.1.1">problematic</span> hashtag’).
+Each entry is labelled by up to three annotators.
+Overall, they are <span class="ltx_text ltx_font_bold" id="A1.p5.1.2">not clearly aligned with either paradigm</span>.</p></div><div class="zh"><p>Talat 与 Hovy（2016）标注仇恨言论。他们为标注者提供了 11 条细粒度的仇恨言论判定标准，但其中若干标准会引出主观回答（例如“使用了有问题的标签”）。每个条目最多由三名标注者标注。总体上，它们与两种范式都算不上明确契合。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A1.p6.1"><cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib16" title="">Davidson et al. (2017)</a></cite> annotate hate speech.
+They provide annotators with a brief definition of hate speech and an explanatory paragraph, but their definition also includes subjective criteria like perceived ‘intent’.
+Most entries are labelled by three annotators.
+Overall, they are <span class="ltx_text ltx_font_bold" id="A1.p6.1.1">not clearly aligned with either paradigm</span>.</p></div><div class="zh"><p>Davidson 等（2017）标注仇恨言论。他们为标注者提供了仇恨言论的简要定义与一段说明文字，但其定义中也包含“意图”这类主观标准。多数条目由三名标注者标注。总体上，它们与两种范式都算不上明确契合。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A1.p7.1"><cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib54" title="">Zampieri et al. (2019)</a></cite> annotate offensive content.
+They provide annotators with some formal criteria for offensiveness (e.g., ‘use of profanity’), but as a whole their guidelines are very brief.
+Each entry is labelled by up to three annotators.
+Overall, they are <span class="ltx_text ltx_font_bold" id="A1.p7.1.1">moderately aligned with the prescriptive paradigm</span>.</p></div><div class="zh"><p>Zampieri 等（2019）标注冒犯性内容。他们为标注者提供了一些关于冒犯性的形式化标准（例如“使用脏话”），但总体而言其指南非常简略。每个条目最多由三名标注者标注。总体上，它们与规定性范式中等程度契合。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A1.p8.1"><cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib19" title="">Founta et al. (2018)</a></cite> annotate abuse.
+They provide annotators with fine-grained definitions for each category and iterate on their taxonomy to facilitate more agreement, but do not share comprehensive guidelines.
+Each entry is labelled by five annotators.
+Overall, they are <span class="ltx_text ltx_font_bold" id="A1.p8.1.1">moderately aligned with the prescriptive paradigm</span>.</p></div><div class="zh"><p>Founta 等（2018）标注辱骂内容。他们为每个类别提供了细粒度定义，并迭代调整其分类体系以促成更高的一致性，但没有公开完整的指南。每个条目由五名标注者标注。总体上，它们与规定性范式中等程度契合。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A1.p9.1"><cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib12" title="">Caselli et al. (2020)</a></cite> annotate abuse.
+They provide annotators with a brief fine-grained decision tree with the explicit intent of reducing annotator subjectivity, and discuss disagreements to resolve them.
+Each entry is labelled by up to three annotators.
+Overall, they are <span class="ltx_text ltx_font_bold" id="A1.p9.1.1">moderately aligned with the prescriptive paradigm</span>.</p></div><div class="zh"><p>Caselli 等（2020）标注辱骂内容。他们为标注者提供了一棵简短的细粒度决策树，明确意在降低标注者主观性，并通过讨论分歧加以消解。每个条目最多由三名标注者标注。总体上，它们与规定性范式中等程度契合。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A1.p10.1"><cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib52" title="">Vidgen et al. (2021b)</a></cite> annotate hate speech.
+They provide annotators with fine-grained definitions for each category as well as very detailed annotation guidelines, and disagreements are resolved by an expert.
+Each entry is labelled by up to three annotators.
+Overall, they are <span class="ltx_text ltx_font_bold" id="A1.p10.1.1">very aligned with the prescriptive paradigm</span>.</p></div><div class="zh"><p>Vidgen 等（2021b）标注仇恨言论。他们为每个类别提供了细粒度定义以及非常详细的标注指南，分歧由专家裁决。每个条目最多由三名标注者标注。总体上，它们与规定性范式高度契合。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A1.p11.1"><cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib51" title="">Vidgen et al. (2021a)</a></cite> annotate abuse.
+They provide annotators with fine-grained definitions for each category as well as very detailed annotation guidelines, and they use expert-driven group adjudication to resolve disagreements.
+Each entry is labelled by up to three annotators.
+Overall, they are <span class="ltx_text ltx_font_bold" id="A1.p11.1.1">very aligned with the prescriptive paradigm</span>.
+<br class="ltx_break"/></p></div><div class="zh"><p>Vidgen 等（2021a）标注辱骂内容。他们为每个类别提供了细粒度定义以及非常详细的标注指南，并采用专家主导的小组裁定来消解分歧。每个条目最多由三名标注者标注。总体上，它们与规定性范式高度契合。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix B </span>Data Statement</h2></div><div class="zh"><h2>附录 B 数据说明</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.p1.1">Following <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib11" title="">Bender and Friedman (2018)</a></cite>, we provide a data statement, which documents the generation and provenance of the dataset used for our annotation experiment.</p></div><div class="zh"><p>遵循 Bender 与 Friedman（2018），我们提供一份数据说明，记录标注实验所用数据集的生成过程与来源。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">A. CURATION RATIONALE</h4></div><div class="zh"><h4>A. 语料构建理由</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.SS0.SSS0.Px1.p1.1">To create our dataset, we sampled 200 Twitter posts from a larger corpus annotated for hateful content by <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib16" title="">Davidson et al. (2017)</a></cite>.
+Of the posts we sampled, 100 were originally annotated as hateful and 100 as non-hateful by majority vote between three annotators.
+We sampled only from those posts that had some disagreement among their annotators (i.e., two out of three rather than unanimous agreement), to encourage disagreement in our experiment.
+The purpose of our 200-post dataset is to enable the annotation experiment presented in §<a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ Results ‣ 4 An Illustrative Annotation Experiment ‣ Two Contrasting Data Annotation Paradigms for Subjective NLP Tasks"><span class="ltx_text ltx_ref_tag">1</span></a>, which illustrates the contrast between the descriptive and prescriptive data annotation paradigms.</p></div><div class="zh"><p>为构建我们的数据集，我们从 Davidson 等（2017）标注了仇恨内容的更大规模语料库中抽样了 200 条 Twitter 帖文。在我们抽样的帖文中，100 条最初由三名标注者以多数投票标为仇恨内容，100 条标为非仇恨。我们只从那些标注者之间存在一定分歧（即三人中有两人意见一致，而非全票一致）的帖子中抽样，以在实验中鼓励分歧的产生。这 200 条帖文数据集的用途，是支撑 §1 所介绍的标注实验，该实验展示了描述性与规定性数据标注范式之间的对照。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">B. LANGUAGE VARIETY</h4></div><div class="zh"><h4>B. 语言变体</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.SS0.SSS0.Px2.p1.1">The dataset contains English-language text posts only.</p></div><div class="zh"><p>数据集仅包含英语文本帖文。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">C. SPEAKER DEMOGRAPHICS</h4></div><div class="zh"><h4>C. 发言者人口统计</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.SS0.SSS0.Px3.p1.1">All speakers are Twitter users.
+<cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib16" title="">Davidson et al. (2017)</a></cite> do not share any information on their demographics.</p></div><div class="zh"><p>所有发言者均为 Twitter 用户。Davidson 等（2017）未公开任何关于其人口统计特征的信息。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">D. ANNOTATOR RECRUITMENT</h4></div><div class="zh"><h4>D. 标注者招募</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.SS0.SSS0.Px4.p1.1">We recruited three groups of 20 annotators using Amazon’s Mechanical Turk crowdsourcing marketplace.<span class="ltx_note ltx_role_footnote" id="footnote3"><sup class="ltx_note_mark">3</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">3</sup>
+<span class="ltx_tag ltx_tag_note">3</span>
+<a class="ltx_ref ltx_href" href="https://www.mturk.com" title="">https://www.mturk.com/</a></span></span></span>.
+Annotators were made aware that the task contained instances of offensive language before starting their work, and they could withdraw at any point throughout the work.</p></div><div class="zh"><p>我们通过 Amazon 的 Mechanical Turk 众包平台招募了三组各 20 名标注者。33 3 https://www.mturk.com/. 标注者在开始工作前已被告知任务中包含攻击性语言的实例，且可在工作全程随时退出。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">E. ANNOTATOR DEMOGRAPHICS</h4></div><div class="zh"><h4>E. 标注者人口统计</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.SS0.SSS0.Px5.p1.1">All annotators were at least 18 years old when they started their work, and we recruited only annotators that were based in the UK.
+This was to facilitate comparability across groups of annotators.
+For each group, we recruited 10 male and 10 female annotators, based on self-reported gender.
+This was to encourage disagreement within groups, based on the assumption that men would on average disagree more about hateful content with women than with other men, and vice versa. No further annotator demographics were recorded.</p></div><div class="zh"><p>所有标注者在开始工作时均已年满 18 岁，且我们只招募身处英国的标注者，这是为了便于在标注者小组之间进行比较。每个小组我们招募了 10 名男性与 10 名女性标注者，性别依据自我报告确定。这样做是为了鼓励组内分歧，其假设是：男性与女性在仇恨内容上的平均分歧程度，会高于男性与男性之间的分歧，反之亦然。除此以外，未记录更多标注者人口统计信息。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">F. ANNOTATOR COMPENSATION</h4></div><div class="zh"><h4>F. 标注者报酬</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.SS0.SSS0.Px6.p1.1">All annotators were compensated for their work at a rate of at least £16 per hour. The rate was set 50% above the London living wage (£10.85), although all work was completed remotely.</p></div><div class="zh"><p>所有标注者获得的报酬不低于每小时 16 英镑。该标准被设定为比伦敦生活工资（10.85 英镑）高出 50%，尽管全部工作都是远程完成的。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">G. SPEECH SITUATION</h4></div><div class="zh"><h4>G. 发言情境</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.SS0.SSS0.Px7.p1.1">All entries in our dataset were originally posted to Twitter and then collected by <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib16" title="">Davidson et al. (2017)</a></cite>, who do not share when the posts were made.</p></div><div class="zh"><p>我们数据集中的所有条目最初都发布于 Twitter，随后由 Davidson 等（2017）收集，而他们并未公开这些帖文的发布时间。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">H. TEXT CHARACTERISTICS</h4></div><div class="zh"><h4>H. 文本特征</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.SS0.SSS0.Px8.p1.1">All entries in our dataset are individual Twitter text posts, with a length of 140 characters or less.
+We perform only minimal text cleaning, replacing user mentions (e.g., "@Obama") with "[USER]" and URLs with "[URL]".</p></div><div class="zh"><p>我们数据集中的所有条目均为单条 Twitter 文本帖文，长度不超过 140 个字符。我们只做了最低限度的文本清洗，把用户提及（例如 “@Obama”）替换为 “[USER]”，把 URL 替换为 “[URL]”。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">I. LICENSE</h4></div><div class="zh"><h4>I. 许可</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.SS0.SSS0.Px9.p1.1"><cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib16" title="">Davidson et al. (2017)</a></cite> make the Twitter data they collected available for further research use via GitHub under an MIT license.<span class="ltx_note ltx_role_footnote" id="footnote4"><sup class="ltx_note_mark">4</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">4</sup>
+<span class="ltx_tag ltx_tag_note">4</span>
+<a class="ltx_ref ltx_href" href="https://github.com/t-davidson/hate-speech-and-offensive-language" title="">https://github.com/t-davidson/hate-speech-and-offensive-language</a></span></span></span>
+Our re-annotated subset of the data is made available under CC0-1.0 license at <a class="ltx_ref ltx_href" href="https://github.com/paul-rottger/annotation-paradigms" title="">github.com/paul-rottger/annotation-paradigms</a>, so that the results of our experiment can be reproduced.</p></div><div class="zh"><p>Davidson 等（2017）以 MIT 许可通过 GitHub 公开其收集的 Twitter 数据，供进一步研究使用。44 4 https://github.com/t-davidson/hate-speech-and-offensive-language 我们重新标注的数据子集以 CC0-1.0 许可发布于 github.com/paul-rottger/annotation-paradigms，以便复现实验结果。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">J. ETHICS APPROVAL</h4></div><div class="zh"><h4>J. 伦理审批</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.SS0.SSS0.Px10.p1.1">We received approval for our experiment and the data annotation it entailed from our institution’s ethics review board.
+<br class="ltx_break"/></p></div><div class="zh"><p>我们的实验及其所涉及的数据标注已获得本单位伦理审查委员会的批准。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix C </span>Annotation Prompts</h2></div><div class="zh"><h2>附录 C 标注提示语</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A3.p1.1">The three groups of annotators in our experiment all annotated the same data in the same order, but each group received different annotation prompts.
+The full annotation guidelines for <span class="ltx_text ltx_font_bold" id="A3.p1.1.1">G2</span> are available at <a class="ltx_ref ltx_href" href="https://github.com/paul-rottger/annotation-paradigms" title="">github.com/paul-rottger/annotation-paradigms</a>.</p></div><div class="zh"><p>实验中三组标注者以相同顺序标注同一批数据，但各组收到的标注提示语不同。G2 的完整标注指南见 github.com/paul-rottger/annotation-paradigms。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">G1 - Descriptive Group</h4></div><div class="zh"><h4>G1——描述性组</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A3.SS0.SSS0.Px1.p1.1">“Imagine you come across the post below on social media.
+<span class="ltx_text ltx_font_bold" id="A3.SS0.SSS0.Px1.p1.1.1">Do you personally feel this post is hateful?</span>
+We want to understand your own opinions, so try to disregard any impressions you might have about whether other people would find it hateful.”</p></div><div class="zh"><p>“想象你在社交媒体上看到下面这条帖子。你自己是否觉得这条帖子属于仇恨内容？我们想了解你自己的看法，因此请尽量不去考虑别人会不会觉得它属于仇恨内容。”</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">G2 - Prescriptive Group</h4></div><div class="zh"><h4>G2——规定性组</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A3.SS0.SSS0.Px2.p1.1">“Imagine you come across the post below on social media.
+<span class="ltx_text ltx_font_bold" id="A3.SS0.SSS0.Px2.p1.1.1">Does this post meet the criteria for hate speech?</span>
+We are trying to collect objective judgments, so try to disregard any feelings you might have about whether you personally find it hateful.</p></div><div class="zh"><p>“想象你在社交媒体上看到下面这条帖子。这条帖子是否符合仇恨言论的判定标准？我们试图收集客观的判断，因此请尽量不去理会你自己是否觉得它属于仇恨内容。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A3.SS0.SSS0.Px2.p2.1">Click here to view the criteria: LINK”</p></div><div class="zh"><p>点击此处查看判定标准：链接”</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_paragraph">G3 - Control Group</h4></div><div class="zh"><h4>G3——对照组</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A3.SS0.SSS0.Px3.p1.1">“Imagine you come across the post below on social media.
+<span class="ltx_text ltx_font_bold" id="A3.SS0.SSS0.Px3.p1.1.1">Does this post meet the criteria for hate speech?</span>
+A post is considered hate speech if it is 1) abusive and 2) targeted against a protected group (e.g., women) or at its members for being a part of that group.”</p></div><div class="zh"><p>“想象你在社交媒体上看到下面这条帖子。这条帖子是否符合仇恨言论的判定标准？一条帖子若 1）具有辱骂性且 2）针对某一受保护群体（例如女性）或其成员之所以属于该群体，则被视为仇恨言论。”</p></div></div>
+</div></div>
+<script>
+document.querySelectorAll('.toolbar button').forEach(function(b){{
+  b.addEventListener('click',function(){{
+    document.querySelectorAll('.toolbar button').forEach(function(x){{x.classList.remove('on');}});
+    b.classList.add('on');
+    document.body.className=b.dataset.v;
+  }});
+}});
+</script>
+</body></html>

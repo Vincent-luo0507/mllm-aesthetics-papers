@@ -1,0 +1,1138 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "MLLM as a UI Judge: Benchmarking Multimodal LLMs for Predicting Human Perception of User Interfaces"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract."
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "In an ideal design pipeline, user interface (UI) design is intertwined with user research to validate decisions, yet studies are often resource-constrained during early exploration. Recent advances in"
+  },
+  {
+   "id": "b0003",
+   "t": "text",
+   "w": "h6",
+   "en": "Keywords:"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1. Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Design choices are inseparable from usability and experience. Nowhere is this more evident than in interface design, which shapes user perception of product usability and trustworthiness (Reinecke et al. 2013). It can even profoundly impact user productivity, and their emotional responses to products (Bhandari et al. 2017; Bailey et al. 1988). For this reason, user experience research to evaluate interface design is crucial for development (Steen et al. 2007; Baxter et al. 2015). Through research-informed iterations upon design choices, products can be refined to be more usable, engaging, and trustworthy."
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "However, many organizations face a persistent bottleneck, where too few researchers are available to keep pace with the growing scale of design and evaluation needs. In fact, according to a report from the Nielsen Norman Group, there is only one researcher for every five designers (Kaplan 2020). As a result, many organizations are forced to allocate their limited research capacity selectively, testing only a small subset of ideas rather than engaging in rapid, iterative evaluation, which has long been shown to significantly enhance design quality (Medlock 2018)."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "Existing work in this space simulates human behavior in domains like e-commerce and solely focuses on user metrics like click-through and conversion rates (Wang 2025), which can be limited because such metrics capture only general user outcomes and fail to provide diagnostic insights into design quality, usability, or user experience. To address this gap, artificial intelligence offers a promising avenue for building more efficient and scalable evaluation pipelines. Several existing works have examined how large language models (LLMs) can be used to evaluate UIs, such as generating feedback based on critiques and quality ratings from professional designers (Duan et al. 2024a; Duan et al. 2024b). While LLMs can be trained to generate feedback on UIs, prior work shows that they often struggle to faithfully capture human responses to visual interfaces (Wang et al. 2024; Stokes et al. 2025). We build on this work by systematically comparing LLM evaluations with human-generated UI evaluation data, in order to identify both reliable alignments and critical misalignments that highlight future research opportunities. Through this comparison, we identify the LLM prompting approach that most effectively approximates human judgments."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "Further, the analysis presented in this paper, specifically how state-of-the-art models perform moderately well in UI judging tasks, can lay the groundwork for using multimodal large language models (MLLMs) to supplement early-stage user research. The results produced can be summarized in the following way: 1) Task 1, the Likert-scale task produced human and MLLM evaluation scores that, when compared to one another, show promise for MLLMs as UI judge approximators. The models we use (Claude 3.5 Sonnet, GPT-4o, and Llama-3.2-11B-Vision-Instruct) all have an accuracy ⟦SLOT_0⟧ score greater than 75%. Further, we evaluated performance using Pearson, Spearman, and Kendall tau correlation statistics that signify a moderately strong correlation between MLLM and human scores. 2) Task 2, the pairwise comparison task, reflected that MLLMs, when given questions that have large human score differences, can accurately simulate human data. In these pairwise experiments, we saw largely that models’ performance improved as the degree of difference between two screens increased. Given this, MLLMs are not at a stage where they should be seen as replacements for real-life human evaluation, but instead can be used to supplement early UI evaluations, especially in scenarios where UIs would remain untested."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Summary of Main Contributions. The key contributions of this work are as follows:"
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "li",
+   "en": "• Novel MLLM as a judge evaluation tasks: We introduce a new task that can be used to evaluate whether large language multimodal models can approximate human preferences and provide reasonable justifications of those preferences in Likert scale evaluations of UIs and pairwise comparisons of real-world interfaces—moving beyond behavioral simulation to subjective UI alignment."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "li",
+   "en": "• Absolute Human/MLLM UI judgments benchmark11 1 See supplementary materials for benchmark data: Task 1 (Section 4.1) produced a benchmark dataset of user interface evaluations, derived from both MLLM and human evaluators. This dataset was created by showing humans and three state-of-the-art MLLMs (Claude 3.5 Sonnet, GPT-4o, and Llama-3.2-11B-Vision-Instruct) the same set of UIs and then asking them to use a list of cognitive, perceptual, and emotional factors to evaluate them on a scale from 1-7."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "li",
+   "en": "• Pairwise Human/MLLM UI judgments benchmark1: Task 2 (Section 4.2) produced a benchmark of pairwise MLLM and human evaluations of user interfaces. To create this data, we showed the same three state-of-the-art MLLMs two UIs at a time and prompted them to choose their preferred screen based on the same list of factors. The MLLM data was then compared to human pairwise data (generation techniques shown in Section 4.2) to calculate another dataset of agreement scores."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "li",
+   "en": "• MLLM training data: The data produced in this study can be used as the benchmark to create a fine-tuned model. Training MLLMs and LLMs with novel datasets, such as the one created in this study, has proven to increase human accuracy in MLLM as a judge tasks (Kim et al. 2024; Ziegler et al. 2020; Lee et al. 2024)."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "li",
+   "en": "• MLLM as a UI judge use cases: Data analysis that suggests that MLLMs are a capable tool to supplement user interface testing for both absolute score testing and pairwise comparison to gauge perception at early stages. Our data suggest that teams with limited resources can use MLLMs to supplement, rather than fully replace, human UI testing."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "The novelty of this research lies in the exploration of whether or not multimodal LLMs can evaluate visual user interfaces, not just text or other behavioral logs. Past LLM as a judge work has largely centered on comparing human and LLM textual evaluations (Das et al. 2025); we instead focus our work on visual UI evaluation. Through this study, we evaluate whether or not MLLMs are capable of emulating human UI judgments and report when they do so well and when they fail. In doing so, we explore to what degree MLLMs can be used as early-stage, low-cost approximators that act as a supplement, not as a replacement, to existing user research."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "h2",
+   "en": "2. Related Work"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1. LLM-as-a-Judge"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "Extensive work has been done in the field of ’LLM as a Judge’, and within this paper, we aim to build upon the existing literature. LLM as a judge is a concept that can be applied to a myriad of different domains (Gu et al. 2024) and consists of using LLMs to evaluate the outcomes of complex tasks. They can do so effectively because they can quickly and efficiently process extensive datasets that can then be used to make an informed decision (Achiam et al. 2023). LLMs have been used as judges to evaluate everything from other models (Li et al. 2023; Wang et al. 2023; Zhang et al. 2023; Zheng et al. 2023), natural language and information (Wang et al. 2022; Ramamurthy et al. 2022; Ouyang et al. 2022), charts (Kim et al. 2025), and reasoning and thinking (Achiam et al. 2023; Team et al. 2023; Guo et al. 2025). Despite this, related literature suggests that using LLMs as judges can offer cost-cutting and a flexible alternative to human evaluation, but warns that they often lack consistency while suffering from issues pertaining to bias and reliability (Gu et al. 2024)."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "Across all studied domains, larger state-of-the art models (e.g., GPT-4o, Claude, etc.) perform better in LLM as a judge tasks than smaller models (Thakur et al. 2025; Zheng et al. 2023). Nonetheless, even well-performing models deviate by up to five points on a 10-point scale, and LLM evaluators are often excessively verbose, biased towards the existing positions, and prefer their own outputs (Liu et al. 2024; Panickssery et al. 2024). Given these limitations, LLMs often are capable as approximators, but are far from being human replacements in evaluation tasks."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "We aim to distinguish our work by using a method that specifically explores how MLLMs can be used to evaluate two distinct UIs. In the context of this paper, we use a pairwise MLLM evaluation method (Liu et al. 2024), which consists of having the MLLM compare two different options and selecting which is better aligned with a predetermined criterion (Gu et al. 2024; Qin et al. 2024). This method closely aligns with A/B testing, commonly used in user research to compare two interfaces. We aim to run a pairwise test with human users looking at UIs and a Likert-scale LLM evaluation with the same interfaces to explore how close LLMs are to simulating human results."
+  },
+  {
+   "id": "b0021",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1. User interfaces split by domains: An overview of a sample of the UIs evaluated by humans and MLLMs can be divided into three domains: landing pages, digital receipts, and catalogs. Here we present low-fidelity versions of the screens that we presented to the users. The users saw high-fidelity, branded, and in-product versions of these screens that have been anonymized."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2. MLLMs in User Research and Design"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "As in many other domains, AI is becoming increasingly intertwined with user interface design and research (Bertão and Joo 2021; Luera et al. 2024). Designers and researchers alike are using MLLM to create and explore different interfaces for their respective products. Specifically in design research, LLMs are being used as assistants that are able to collaborate during UX evaluation sessions (Kuang et al. 2024). LLMs are occasionally being used to create synthetic data that emulates human users (Cao et al. 2025; Rosala and Moran 2024; Luera et al. 2025). For instance, Jansen et al. 2023 explain how LLMs can use simulated respondents to supplement the creation and analysis of survey research. Further, Hämäläinen et al. 2023 demonstrates that LLMs are capable of simulating user survey responses and creating responses that humans found plausible. Similarly, Li et al. 2024 found that in larger-scale market research surveys, LLM-generated survey responses achieved about a 75%-85% agreement with results from actual humans. However, this paper also highlights the importance of these models being trained on human data, as they cannot yet capture all of the nuances of human users."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "There have been some work focused on some aspect of UI evaluations (Duan et al. 2024b; Duan et al. 2024a; Wu et al. 2024; Schoop et al. 2022). In Duan et al. 2024b, a Figma plugin was created by assessing GPT-4’s alignment with a set of design heuristics. Similarly, Duan et al. 2024a utilized a dataset of design critiques from several experienced designers to improve LLM-generated UI feedback by 55%. Meanwhile Wu et al. 2024 creates a design tool based on several datasets and shows it performs closely to human ground truth. In addition, Xiang et al. 2024 created an LLM tool used to evaluate smartwatch interfaces using simulated users. Our work differs from these works as we create a benchmark that compares several different state-of-the-art MLLMs to each other and to the human judgments. Further, the benchmark reflects how MLLMs perform in both pairwise and absolute scoring tasks based on a list of nine UI factors. Agent A/B (Wang 2025) asks a similar question and explores whether or not its own model can complete A/B UX tests. They train their agent specifically on UX click-through rate, focusing solely on the filters and menus of e-commerce websites. We aim to focus on a broader question, exploring UI judgments at a higher level while testing an assortment of widely used MLLMs (e.g., GPT-4o, Claude, Gemini) on an assortment of UI screens from different domains."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h2",
+   "en": "3. Study Methodology"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1. UI Collection"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "In order to quickly curate a diverse set of user interfaces, we used pre-made interfaces from a professional UI dataset22 2 https://reallygoodemails.com/. We selectively identified 30 UIs (24 professionally made and 6 made from scratch) across three different categories: browsing & discovery, confirmation & feedback, and communication & engagement (Figure 1) to cover a diverse set of UI components, aesthetic styles, content complexity, quality, and purposes. For instance, communication & engagement UIs typically have large images and eye-catching text in order to grab the attention of the user. Meanwhile, screens from the confirmation & feedback category typically have more text because their purpose is to quickly provide payment information, and catalogs often have pairs of images and text. We aimed to choose UIs that could work on both mobile and desktop devices and put constraints on the height so that most screens were about similar dimensions. For the most part, all UIs were extracted as is from the dataset. Since these screens were made by professional designers, we reduced the build quality of some screens to maintain a diverse dataset of both high and low quality designs. Since the UIs were collected from a professionally made dataset, we anticipated that most scores, both human and AI, would skew higher and more positively. For this reason, we designed our pairwise and ranking tasks with stronger granularity to detect signals in our measurements."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2. Factors"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1. UI factors and corresponding statements."
+  },
+  {
+   "id": "b0031",
+   "t": "keep",
+   "w": "table",
+   "en": "Category Factor Question Ease of Use The UI looks easy to use. Cognitive Clarity The layout is uncluttered . Visual Hierarchy The UI has a clear visual hierarchy . Memorable The UI is easily remembere"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "The UIs we gathered will be judged on nine UI factors on a Likert Scale from 1-7 (Kim et al. 2025). These factors were decided upon after consulting literature that explains how people react to designs and visualizations (Seeley 2012; Wang et al. 2019). The nine factors are clustered into three themes: Cognitive, Perceptual, and Emotional, following the design framework described by Seeley et al. (Seeley 2012)."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "h4",
+   "en": "3.2.1. Cognitive Factors:"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "li",
+   "en": "• Ease of use refers to how easy an interface appears to be. Ease of use can depend on factors like UI element placement, layout of a design, and design heuristics like the match between the system and the real world (Kumar et al. 2004; Nielsen 2005). A screen with high ease of use often does not make users think; its function is straightforward and obvious."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "li",
+   "en": "• Clarity pertains how clear and uncluttered an interface looks. For example, if an interface has too many UI elements, it can overwhelm the user by increasing their cognitive load (Oviatt 2006; Darejeh et al. 2024). For this reason, (Nielsen 2005) highlights the importance of ensuring that designs remain minimalist in nature with enough white space. Doing so ensures the creation of a screen that is uncluttered and does not overwhelm the users. Visual Hierarchy consists of ensuring that there is a clear order of importance between all of the UI elements on a screen (Wang 2024; Still 2018). Doing so decreases the user’s cognitive load, as their attention is caught quickly by whatever is largest, most central, and most important. An interface with good visual hierarchy will have elements that are sized and placed based on their perceived importance and relevance to the user."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h4",
+   "en": "3.2.2. Perceptual Factors:"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "li",
+   "en": "• Memorable pertains to how easily a UI can be remembered and speaks to the impact that a design has on a user. Memorability can be both negative and positive, and can be a result of attributes like color or recognizable elements (Borkin et al. 2013). Further, does the UI have a certain uniqueness that makes it stand out for the user. These elements, in total, contribute to making an interface memorable to the user."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "li",
+   "en": "• Trust pertains to the amount of confidence that the user interface elicits within the user. Headlines, text content, as well as even how well an interface is put together, strongly contribute to trust in interface design. A trustworthy interface will make users feel confident in the content, often because they are designed intentionally and carefully (Zieglmeier and Lehene 2021)."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "li",
+   "en": "• Intuitive refers to how functional an interface looks to a user. Intuitiveness and functionality often are intertwined with user experience, so intuitiveness is a crucial factor when judging interfaces. An intuitive screen would be defined as one that users can look at and immediately understand the natural purpose and function (Bærentsen 2000; Blackler et al. 2005; Macaranas et al. 2015)"
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "h4",
+   "en": "3.2.3. Emotional Factors:"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "li",
+   "en": "• Aesthetic Pleasure refers to how visually attractive an interface is to a specific user. It is a largely subjective factor that often differs from user to user. For the most part, aesthetic pleasure is tightly tied by choices pertaining to color, font, content density, and overall structure. An aesthetically pleasing interface is able to integrate these elements well to create a larger design (Bollini 2017; Hartmann et al. 2008)."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "li",
+   "en": "• Interest in terms of UIs, pertains to how eye-catching, inviting, and captivating an interface is. Interesting interfaces are capable of catching a user’s attention and keeping it. An interesting interface may have UI elements such as unique fonts, mood-inducing colors, or sensational text headlines (Shneiderman 2004)."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "li",
+   "en": "• Comfort pertains to the overall satisfaction and degree to which an interface makes a user feel at ease while in use (Dave et al. 2023). Designs and interfaces can increase comfort by maintaining a clean, straightforward, and low cognitive load design. A comfortable design may be more tonally consistent and use common fonts and colors."
+  },
+  {
+   "id": "b0044",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2. Example survey question shown to users. Consists of instructions on top, the UI on the left, and the nine factor, Likert scale questions on the right."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3. Participants and Procedure"
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "In total, we collected 15,000 responses from 500 participants using the online crowdsourcing platform Amazon’s Mechanical Turk. To ensure the quality of the dataset, we filtered for participants who had a greater than 98% approval rating and at least 500 responses to take part in our study. In total, we received feedback on 30 UIs and we asked for 500 unique responses from each. From there, we asked participants to evaluate each UI based on the nine UI Factors (Table 1). Each evaluation was expected to take about 45 seconds to a minute to complete. In total, it cost $75 to get 500 human evaluations for each UI. Before taxes and fees, the total cost of this part of the study was $2,250."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "Each UI was presented as a standalone task to minimize order effects, and participants evaluated each UI in two stages. First, participants responded to nine Likert scale questions, one corresponding to each of the UI Factors (see Table 1). Each question asked participants to indicate their level of agreement on a 7-point scale (1 = strongly disagree, 7 = strongly agree). To support their evaluation, participants were able to resize the UI during this stage, allowing them to view it while responding to the questions. Next, participants were asked to provide a textual explanation describing the rationale behind their ratings. This qualitative input allowed for deeper insight into participants’ reactions to each UI."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "h3",
+   "en": "3.4. Result of the Human Data Collection"
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "We compiled a dataset containing each worker’s ID, the corresponding image ID, the UI’s domain, and the participant’s scores for each of the nine evaluation factors. To ensure consistency across the benchmark, factor and domain names were standardized to align with the terminology used throughout the paper. We applied several data pre-processing steps to ensure data quality. We excluded responses that were completed in less than 45 seconds, based on the rationale that a thoughtful engagement with the task requires at least that amount of time. Additionally, we removed responses that were incomplete or that contained duplicate scores submitted by the same user. Further, we removed data for screens that were not professionally made to maintain consistent data. After the exclusion procedure, we are left with 9,296 human responses. Table 2 presents the mean scores and standard deviations for each of the nine UI factors, as rated by human participants, split by domain. The rightmost column shows the overall average score for each factor across all domains, while the bottom row reports the average score for each domain across all factors. We then compared these human-generated ratings to scores produced by multimodal large language models (MLLMs) to evaluate alignment and divergence in trust-related perceptions."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2. Individual human and MLLM scores for all factors and domains. We report the average score over all UIs in the last column and over all factors in the last row. The closest MLLM score to the human is in bold. When the score is closer than ⟦SLOT_1⟧ (⟦SLOT_2⟧), its background is green (light green). The gray text is the standard deviation of the scores from which the average is computed."
+  },
+  {
+   "id": "b0052",
+   "t": "keep",
+   "w": "table",
+   "en": "Domains Factor Evaluator Browsing & Disc. Conf. & Feedback Comm. & Engage. All UIs Ease of Use Human 6.20 (1.08) 6.21 (1.10) 6.21 (1.07) 6.21 (1.09) Claude-3.5 7.00 (0.00) 6.90 (0.32) 6.78 (0.67) 6.89"
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "h2",
+   "en": "4. Evaluation of MLLM Judges for UIs"
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate the efficacy of MLLMs in assessing UIs by comparing their judgments to human evaluations collected through a crowdsourcing study (Section 3). Our analysis proceeds in two parts. In Section 4.1, we examine how well MLLMs predict absolute human scores (prompt shown in Figure 7), assessing both the accuracy of these predictions and their utility for estimating user preferences. In Section 4.2, we analyze pairwise comparisons of UIs based on human data, and evaluate how closely MLLM predictions of these comparisons align with human preferences (prompt shown in Figure 8). The analysis is conducted over all UI factors in Table 1. To avoid bias, and ensure generality and robustness of our findings, we leverage three diverse MLLMs, including GPT-4o, Claude 3.5 Sonnet, and Llama-3.2-11B-Vision."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1. Task 1: Absolute Score Prediction"
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "We conduct three studies evaluating how closely MLLMs’ responses to UIs resemble those of humans. In Section 4.1.1, we first analyze MLLM and human scores separately. Results suggest that MLLMs are mostly well aligned to humans, with a few factors where they may significantly under or over predict human scores. In Section 4.1.2, we analyze prediction errors of MLLMs using four metrics: MSE, MAE, accuracy, and ⟦SLOT_3⟧-accuracy. Results suggest that MLLMs well-predict human responses, with Claude being the best judge overall. MLLMs on average overestimated factors like Ease of Use. While consistently underestimating factors like Aesthetic Pleasure, Interesting, and Comfort. Meanwhile, models showed they could reasonably predict scores (within 0.50 Likert points) for factors such as Clarity, Visual Hierarchy, Memorable, and Trustworthy, Intuitive. Finally in Section 4.1.3, we analyze how well MLLM scores predict the ranking of UIs by humans. The factor scan be well predicted, and the best judge overall is Llama. To reduce the randomness in our analysis due to random MLLM scores, we evaluate each UI and factor by each MLLM ⟦SLOT_4⟧ times and then take the median score. Our MLLM prompt is reported in Figure 7 in the Appendix."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "h4",
+   "en": "4.1.1. Individual Scores"
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "We start by comparing individual human and MLLM scores. For each UI and factor, we report averaged human scores and median MLLM scores. These averages represent an average perception of a given UI in a given factor. We also included average scores from humans and MLLMs aggregated by the three domains and all UIs, see Table 2."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "We make several observations. First, MLLM judges align reasonably well with humans. As an example, note the average human and MLLM scores over all factors and UIs in Table 2 (last four rows and last column). The human score is ⟦SLOT_5⟧, whereas Claude predicts ⟦SLOT_6⟧, GPT-4o predicts ⟦SLOT_7⟧, and Llama predicts ⟦SLOT_8⟧. Therefore, all MLLM scores are within ⟦SLOT_9⟧ of the human scores. Since this is significantly less than the range of our ⟦SLOT_10⟧-point Likert scale, we conclude that MLLMs reasonably mimic human scores. Second, MLLM scores are often closer to each other than those of humans, as indicated by smaller standard deviations of the scores in Table 2. We note this specifically for Claude and Llama. GPT-4o has sometimes a larger standard deviation and sometimes smaller."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "When considering individual factors in Table 2, MLLMs tend to perform well on cognitive and perceptual factors. For instance, the human score for Trustworthy is ⟦SLOT_11⟧, whereas Claude predicts ⟦SLOT_12⟧, GPT-4o predicts ⟦SLOT_13⟧, and Llama predicts ⟦SLOT_14⟧. This is the only factor where all MLLM scores are within ⟦SLOT_15⟧ of the human score. MLLMs also perform well on Visual Hierarchy, where all MLLM scores are within ⟦SLOT_16⟧ of the human scores. The human score is ⟦SLOT_17⟧, while Claude predicts ⟦SLOT_18⟧, GPT-4o predicts ⟦SLOT_19⟧, and Llama predicts ⟦SLOT_20⟧. Overall, MLLMs likely approximate these scores effectively because the factors have concrete cues in the UI. These factors are correlated with layout, reassuring designs and phrases, and spacing; all of which MLLMs can gather from the UI screenshots."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "p",
+   "en": "MLLMs struggle with some emotional factors, such as Interesting. Specifically, all MLLM scores of this factor underestimate human scores. The human score is ⟦SLOT_21⟧, whereas Claude predicts ⟦SLOT_22⟧, GPT-4o predicts ⟦SLOT_23⟧, and Llama predicts ⟦SLOT_24⟧. The MLLMs likely struggle with this and other factors like Ease of Use because they are more difficult to quantify for MLLMs. Factors like ease of use are highly tied a users technical literacy and cannot be inferred from visual cues alone (Muzaffar et al. 2011; Hinton 2012)."
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3. We report seven error metrics for all factors and MLLM judges. Four metrics measure the ability to predict scores (MSE, MAE, accuracy, and ⟦SLOT_25⟧-accuracy) and three measure their utility for ranking (Pearson correlation coefficient, Spearman’s ⟦SLOT_26⟧, and Kendall’s ⟦SLOT_27⟧). The last row contains metric values for all factors jointly. Higher correlation coefficients than ⟦SLOT_28⟧ are reported in bold."
+  },
+  {
+   "id": "b0063",
+   "t": "keep",
+   "w": "table",
+   "en": "Factor Model MSE ↓ \\downarrow MAE ↓ \\downarrow Acc. ↑ \\uparrow Acc. ± 1 \\pm 1 Pearson ↑ \\uparrow Spearman ↑ \\uparrow Kendall ↑ \\uparrow Cognitive Ease of Use Claude-3.5 0.83 0.87 0.42 0.76 -0.05 (0.82"
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "h4",
+   "en": "4.1.2. Score Prediction"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "Next we analyze how well MLLMs predict human scores. We consider four error metrics: mean squared error (MSE), mean absolute error (MAE), accuracy, and ⟦SLOT_29⟧-accuracy. All metrics are computed on average human and median MLLM scores, for each UI and factor, as in Section 4.1.1. The MSE is the mean of squared differences between MLLM and human scores, over all UIs and for a given factor. The MAE is the mean of absolute differences between MLLM and human scores, over all UIs and for a given factor. The accuracy is the fraction of MLLM scores that matches rounded human scores, over all UIs and for a given factor. The ⟦SLOT_30⟧-accuracy is the fraction of MLLM scores that matches rounded human scores within ⟦SLOT_31⟧, over all UIs and for a given factor. The four metrics provide different views on our results. The MSE and MAE measure mean deviations in the MLLM and human scores, with the former penalizing larger deviations more. The accuracy measures the probability that the MLLM score matches the human score. The ⟦SLOT_32⟧-accuracy measures the probability of a sufficiently close match. All metrics are reported in Table 3."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "MSE and MAE of some factors are low, which indicates predictability. For instance, all MSEs of Comfort are lower than ⟦SLOT_33⟧ and the lowest of all factors, and all its MAEs are lower than ⟦SLOT_34⟧ and the lowest of all factors. On the other hand, MSE and MAE of some factors are high, which indicates unpredictability. For instance, both MSEs and MAEs of Interesting are higher than those of the other factors. Most other scores fall somewhere in the middle, with factors like Aesthetic Pleasure having lower errors and factors like Ease of Use having higher errors."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "The average accuracy of MLLMs over all factors ranges from ⟦SLOT_35⟧ to ⟦SLOT_36⟧, with Claude having the highest accuracy of ⟦SLOT_37⟧. The average ⟦SLOT_38⟧-accuracy is significantly higher, from ⟦SLOT_39⟧ to ⟦SLOT_40⟧. Again, the highest value is achieved by Claude. While the accuracy can vary a lot between different factors, we note that the ⟦SLOT_41⟧-accuracy is relatively stable. In terms of individual factors, Claude is either the best MLLM or performs similarly to it. The model is followed by Llama while GPT-4o performs slightly worse."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "h4",
+   "en": "4.1.3. Ranking Prediction"
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "Next, we analyze how well MLLMs predict the ranking of UIs by humans. All metrics are computed on average human and median MLLM scores, for each UI and factor, as in Section 4.1.1. The average scores are calculated by aggregating all evaluator scores by factor and UI, and taking the mean of those values. For ranking scores, we consider three most popular metrics of correlation: Pearson correlation coefficient, Spearman’s ⟦SLOT_42⟧, and Kendall’s ⟦SLOT_43⟧. The Pearson correlation coefficient is the covariance of MLLM and human scores divided by their standard deviations, over all UIs and for a given factor. The metric is in ⟦SLOT_44⟧, where ⟦SLOT_45⟧ is the maximum positive correlation, ⟦SLOT_46⟧ is the maximum negative correlation, and ⟦SLOT_47⟧ means no correlations. Spearman’s ⟦SLOT_48⟧ is the Pearson correlation coefficient applied to ranks of MLLM and human scores. Finally, Kendall’s ⟦SLOT_49⟧ measures the pairwise agreement between scores ordered by MLLMs and humans, over all pairs of UIs and for a given factor. The metric is in ⟦SLOT_50⟧, where ⟦SLOT_51⟧ is the maximum positive correlation, ⟦SLOT_52⟧ is the maximum negative correlation, and ⟦SLOT_53⟧ means no correlations. All metrics are reported in Table 3."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "Table 3 shows high correlation coefficients for multiple factors: Memorable, Aesthetic Pleasure, and Interesting. On average, Llama has the highest correlation coefficients, followed by Claude and then GPT-4o. Some results are quite strong. For instance, the Kendall’s ⟦SLOT_54⟧ of ⟦SLOT_55⟧, ⟦SLOT_56⟧, and ⟦SLOT_57⟧ means that the MLLM agrees with the human pairwise ranking ⟦SLOT_58⟧, ⟦SLOT_59⟧, and ⟦SLOT_60⟧ of the time, respectively."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "Interestingly, high correlation metrics do not necessarily correlate with low prediction errors. As an example, factor Interesting has the highest MSE and MAE of all factors, and also low accuracy and ⟦SLOT_61⟧-accuracy. At the same time, it has the highest correlation metrics for all MLLMs. This reveals that although MLLMs cannot reliably predict the human score, they are effective at capturing relative preferences and thus useful for ranking UIs. This observation motivated us to take a deeper look at pairwise UI comparisons to examine whether these models are genuinely useful for ranking or preference-based tasks (Section 4.2). The opposite can also be true. Factor Comfort has the lowest MSE and MAE of all factors, and also high ⟦SLOT_62⟧-accuracy. At the same time, all correlation metrics are close to zero. To conclude, both prediction errors and ranking metrics provide different views on predicted scores, and therefore we discuss both."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2. Task 2: Pairwise Preference Prediction"
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "In Section 4.1, we evaluated the ability of MLLMs to predict human scores and their utility for estimating human preferences. In this section, we evaluate the ability of MLLMs to directly estimate human preferences. In Section 4.2.1, we show that MLLMs can predict human preferences in some factors better than in others, as in Table 3. In Section 4.2.2, we show that human preferences are easier to predict if the compared UIs are judged as more different by humans."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4. Accuracy in predicting pairwise human preferences over UIs, for all factors and MLLM judges. The last column shows the overall accuracy, averaged over all factors. The highest accuracy, for both individual factors and overall, is reported in bold."
+  },
+  {
+   "id": "b0075",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Ease Clar Vis Mem Trust Intui Aesth Intrst Comf ALL Claude-3.5 47.01 54.98 61.35 61.75 61.75 58.17 68.53 78.49 47.81 59.98 GPT-4o 50.99 54.55 56.92 64.82 58.89 59.68 64.03 75.10 51.38 59.60 Llam"
+  },
+  {
+   "id": "b0076",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3. Accuracy in predicting pairwise human preferences over UIs as a function of the absolute difference of their average human scores. A higher accuracy generally correlates with a larger difference in the human scores. The score-difference bin values were calculated as the difference between the average human ratings of the two UIs. This number is used to infer the difficulty of the question: smaller values indicate more difficult questions, while larger values imply easier ones."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "h4",
+   "en": "4.2.1. Preference Prediction"
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "This experiment is conducted as follows. First, we estimate the ground-truth human preference using the average human scores in Section 4.1.1. Specifically, for each pair of UIs for a given factor, we take the average human scores and say that UI ⟦SLOT_63⟧ is preferred to UI ⟦SLOT_64⟧ if the average score of the former is higher than that of the latter. Second, we obtain the preference of the MLLM judge. Specifically, for each pair of UIs, we run the judge with the prompt in Figure 8 and record its preference in each of the nine UI factors. Finally, we say that the judge agrees with the human preference over two UIs in a given factor if it prefers the same UI. The accuracy of the MLLM judge in a given factor is the percentage of UI pairs with agreement, and the overall accuracy is the average of these accuracies."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "p",
+   "en": "All accuracies are reported in Table 4. They can vary drastically among the factors. GPT-4o and Claude both perform best when asked which UI is more Interesting, with accuracies around ⟦SLOT_65⟧ and ⟦SLOT_66⟧, respectively. This is similar to Table 3, where factor Interesting has the highest correlation coefficients and thus is highly predictable. All models perform poorly when judging Ease of Use, with the accuracies around ⟦SLOT_67⟧ and effectively indicating unpredictability. This is similar to Table 3, where factor Ease of Use has near-zero correlation coefficients. Both Claude and GPT-4o stand out in some areas while falling short in others. Llama is close to random across all factors. The overall accuracy reflects this, with both Claude and GPT-4o being close to ⟦SLOT_68⟧ and Llama being close to a random ⟦SLOT_69⟧."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "h4",
+   "en": "4.2.2. Hardness of Preference Prediction"
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "Although many of our UIs are professionally designed, humans can judge them very differently depending on the factor. This motivated us to study whether human preferences are easier to predict if the compared UIs are judged as more different by humans. Specifically, for all UI pairs and factors, we compute the absolute difference of their average human scores and bin them. For each bin, we report the accuracy of the MLLM judge to predict the human preference. We expect MLLMs to struggle more when predicting preferences for UI pairs that humans judged as more similar, but to perform more accurately when humans expressed a clear preference with larger rating differences."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "Our results are reported in Figure 3. When the difference in human preferences between UI pairs is small, the accuracy of all MLLM judges is only slightly above ⟦SLOT_70⟧. This suggests that when humans expressed similar levels of preference for the two UIs, their choices were effectively unpredictable by MLLMs. However, as the human preference score difference increases, suggesting that the UIs are more distinguishable for humans, the accuracy of the MLLM judges increases. GPT-4o and Claude have the largest increases, starting near ⟦SLOT_71⟧ and ending close to ⟦SLOT_72⟧ and ⟦SLOT_73⟧, respectively. Llama performs poorly, and its accuracy increases to only about ⟦SLOT_74⟧."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "h2",
+   "en": "5. Discussion"
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1. MLLMs as Approximators"
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "Across all three models, the benchmark data illustrate that models can achieve reasonably high accuracy within ⟦SLOT_75⟧ for absolute score tasks (Table 4) and GPT and Claude perform reasonably well in pairwise tasks where the two UIs have a significant degree of difference (Figure 3). However, the same models perform less effectively in terms of exact accuracy (Claude 48% and GPT 40%) and when there is a small degree of difference in pairwise tasks. In fact, the models performed near random on pairwise tasks with small degrees of difference. Further, MAE scores ranged from 0.53 to 0.64, and MSE scores ranged from 0.44 to 0.66. While these scores are moderate, they are also significant enough to reflect that state of the art models cannot fully replace human evaluation."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "For this reason, it is recommended that MLLMs be seen as UI testing approximators, not replacements. Essentially, given the results, MLLMs should be used to supplement existing research or be used in scenarios where research would not otherwise be used. The results of this study reflect that MLLMs struggled on fine-grained UI evaluation tasks. However, MLLMs have reasonable accuracy and reliability in generalized evaluations and when comparing UIs with larger disparities. Furthermore, results should be seen as approximations and are capable of giving designers general direction. However, they are not capable of acting as complete replacements for real human research."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2. MLLMs’ Role in the Design Process"
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "Given the moderate strength in human emulating UI tasks, MLLMs show decent promise in acting as a proxy for early user testing. Given that overall correlation coefficients across all models (Table 4) were relatively decent, MLLMs show moderate promise for low-stakes user research. More specifically, designers should use them early in the design process in situations where they may be rapidly iterating through several different designs and not have the research resources to test and compare every single design. As seen in the results, MLLMs perform moderately well in these use cases as they can accurately score designs within ⟦SLOT_76⟧ Likert scale point. Furthermore, as seen in the pairwise testing, they are also able to strongly predict human preferences when there is a large difference in human scores. For this reason, MLLMs can responsibly be used in these early design process situations in order to get a sense of direction on early UI iterations."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "However, these results also suggest that MLLMs are not accurate enough to be used as a permanent or effective standout when exact results are needed. There was significant variation when looking at the results on the factor level, and it is clear that these models are not precise across most factors. For this reason, it is not recommended that these models be used for validation testing towards the end of the design process or high-stakes user research scenarios."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "h3",
+   "en": "5.3. Benchmark for Fine-Tuned Models"
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "Another future direction for this work would be to create a fine-tuned model with stronger factor sensitivity than the state-of-the-art models presented in this study. Considering that the state-of-the-art models mostly struggled with several traits like ease-of-use and even clarity, there is clearly a gap in how these models handle different traits. This gap suggests an opportunity to create a fine-tuned model based on the benchmark scores that will be better able to predict and replicate human scores. This benchmark can be utilized in tandem with reinforcement learning with human feedback (RLHF) on factor-specific data or even chain of thought prompting. Given this, the fine-tuned tool would be more useful in general, being more applicable and reliable in the design process. Furthermore, the data could be used to fine-tune prompts used. Doing so would require less lift than creating a fine-tuned model while also potentially making a significant difference in the evaluation quality."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "h3",
+   "en": "5.4. Ethical Considerations"
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "While these results show encouraging reasons for using MLLMs as a UI judge, it should not be used to justify the complete replacement of human testing. In fact, it should do the opposite and reinforce the need for real human testing. The results presented expose key limitation that should give any design team pause when asking whether they should completely rely on MLLMs for user interface validation."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "p",
+   "en": "Again, we emphasize that these results reflect that MLLMs should be used solely for supplemental use. It should be used to fill gaps where no user research exists, not to replace real human research and testing. MLLMs should be seen as a source of low-cost, rapid iterative evaluations when it is not feasible to perform extensive user research. This will enable designers to identify common trends and larger flaws earlier on in the design process."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "Despite the seemingly negative ethical considerations, there is a strong reason for why this method should be adopted. There is significant potential for using this dataset to increase design democratization for junior designers with little to no access to high-end design research. Specifically, there is a large opportunity for designers to use MLLMs to \"fine-tune\" their designs, using MLLMs as a sanity check of their design intuitions and a learning opportunity."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "h3",
+   "en": "5.5. Future Work & Limitations"
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "Building on our benchmark, we are extremely excited by the opportunities to expand AI’s capabilities as a judge for interface testing. Most notably, this benchmark can support fine-tuned models or alignment training—particularly reinforcement learning from human feedback (RLHF). Whether used alone or with similar datasets, it can help create models that better supplement user research. There is also the opportunity to expand the benchmark by adding more screens and tasks. For instance, this study focused on mobile and desktop UIs, but future work could include tablets, TVs, consoles, and more. A broader set of UIs would enable a more holistic benchmark. We also see potential to study more models and prompting methods—this work focused on GPT-4o, Claude 3.5 Sonnet, and Llama 3.2, but future studies could explore Gemini, Qwen, GPT-4o mini, and others using the same framework. Prompting strategies like chain-of-thought and few-shot learning also merit further exploration. Finally, because UI design is iterative, future work could compare versions of the same design, measuring how small changes—like color, text, or layout—affect human and MLLM judgments."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "p",
+   "en": "While our findings reveal MLLM’s capability to emulate human UI perceptions to a moderate degree, several limitations of this study still persist. Firstly, the entirety of both the human and Firstly, the entirety of both the human and MLLMs tasks was performed on static user interfaces. Secondly, the screens used in the study were primarily professionally made within the context of Western design standards. We leave it to future extending our line of work to the diverse, dynamic interactions that usually occur in user research."
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "h2",
+   "en": "6. Conclusion"
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "p",
+   "en": "To evaluate the effectiveness of MLLMs as UI judges, this study facilitated the collection and testing of a set of user interfaces. The same UI studies were given to both human and MLLM evaluators, and the results were compared to analyze to what degree MLLM evaluators can emulate human results. This study was conducted using two unique tasks: 1) an absolute scoring task using a 1-7 Likert scale and 2) a pairwise evaluation. For task 1, the findings reveal that when asked to evaluate screens at an overall level, MLLMs do moderately well. However, when asked to judge them based on specific factors or criteria, they tend to struggle. For task 2, the MLLMs again performed reasonably on the pairwise comparisons. Naturally, MLLM evaluators performed better on pairwise questions that compared two screens that have a higher degree of difference. Lastly, we accumulated the results from these tests into a benchmark to be used in future studies. Future work offers the opportunity to use the benchmark to create a fine-tuned model that would perform better at UI judgment tasks compared to state-of-the-art models. For this reason, we recommend that MLLMs are used to supplement early, low stakes user research – not replace it. Finally, the benchmark provided in this paper is capable of laying the groundwork for future studies that can better explore MLLM as a UI judge."
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "(1)"
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Achiam et al . (2023) Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia Leoni Aleman, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shyamal Anadkat, et al . 2023. Gpt-4 "
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bærentsen (2000) Klaus B Bærentsen. 2000. Intuitive user interfaces. Scandinavian Journal of Information Systems 12, 1 (2000), 4."
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bailey et al . (1988) Wayne A Bailey, Stephen T Knox, and Eugene F Lynch. 1988. Effects of interface design upon user productivity. In Proceedings of the SIGCHI conference on Human factors in computin"
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Baxter et al . (2015) Kathy Baxter, Catherine Courage, and Kelly Caine. 2015. Understanding your users: a practical guide to user research methods . Morgan Kaufmann."
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bertão and Joo (2021) Renato Antonio Bertão and Jaewoo Joo. 2021. Artificial intelligence in UX/UI design: a survey on current adoption and [future] practices. Safe Harbors for Design Research (2021),"
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bhandari et al . (2017) Upasna Bhandari, Tillmann Neben, Klarissa Chang, and Wen Yong Chua. 2017. Effects of interface design factors on affective responses and quality evaluations in mobile applicati"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Blackler et al . (2005) Alethea Blackler, Vesna Popovic, and Douglas Mahar. 2005. Intuitive interaction applied to interface design. In New Design Paradigms: Proceedings of International Design Congre"
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bollini (2017) Letizia Bollini. 2017. Beautiful interfaces. From user experience to user interface design. The Design Journal 20, sup1 (2017), S89–S101."
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Borkin et al . (2013) Michelle A. Borkin, Azalea A. Vo, Zoya Bylinskii, Phillip Isola, Shashank Sunkavalli, Aude Oliva, and Hanspeter Pfister. 2013. What Makes a Visualization Memorable? IEEE Transact"
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cao et al . (2025) Renjie Cao, Mei Zhang, and Yu Huang. 2025. Learning to Simulate Survey Distributions with Fine-Tuned LLMs. In Proceedings of the 2025 Conference of the North American Chapter of the"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Darejeh et al . (2024) Ali Darejeh, Nadine Marcusa, Gelareh Mohammadi, and John Sweller. 2024. A critical analysis of cognitive load measurement methods for evaluating the usability of different types"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Das et al . (2025) Amit Kumar Das, Cindy Xiong Bearfield, and Klaus Mueller. 2025. Leveraging Large Language Models for Personalized Public Messaging. In Proceedings of the Extended Abstracts of the C"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dave et al . (2023) Anjali Dave, Ankur Saxena, and Avdhesh Jha. 2023. Understanding User comfort and Expectations in AI-based Systems. (2023)."
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Duan et al . (2024a) Peitong Duan, Chin-Yi Cheng, Gang Li, Bjoern Hartmann, and Yang Li. 2024a. UICrit: Enhancing Automated Design Evaluation with a UI Critique Dataset. In Proceedings of the 37th Ann"
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Duan et al . (2024b) Peitong Duan, Jeremy Warner, Yang Li, and Bjoern Hartmann. 2024b. Generating automatic feedback on ui mockups with large language models. In Proceedings of the 2024 CHI Conference"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gu et al . (2024) Jiawei Gu, Xuhui Jiang, Zhichao Shi, Hexiang Tan, Xuehao Zhai, Chengjin Xu, Wei Li, Yinghan Shen, Shengjie Ma, Honghao Liu, et al . 2024. A survey on llm-as-a-judge. arXiv preprint a"
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Guo et al . (2025) Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin Xu, Qihao Zhu, Shirong Ma, Peiyi Wang, Xiao Bi, et al . 2025. Deepseek-r1: Incentivizing reasoning capability "
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hämäläinen et al . (2023) Perttu Hämäläinen, Mikke Tavast, and Anton Kunnari. 2023. Evaluating Large Language Models in Generating Synthetic HCI Research Data: a Case Study. In Proceedings of the 2023"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hartmann et al . (2008) Jan Hartmann, Alistair Sutcliffe, and Antonella De Angeli. 2008. Towards a theory of user judgment of aesthetics and user interface quality. ACM Transactions on Computer-Human "
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hinton (2012) Stephen Hinton. 2012. Using Recursive Distance Vector Methodology to Review Remote Desktop Solutions in the Small Business Consulting Environment. Issues in Information Systems 13, 1 (20"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jansen et al . (2023) Bernard J. Jansen, Soon-Gyo Jung, and Joni Salminen. 2023. Employing large language models in survey research. Nat. Lang. Process. J. 4 (2023), 100020. https://doi.org/10.1016/j."
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kaplan (2020) Kate Kaplan. 2020. Typical Designer–to–Developer and Researcher–to–Designer Ratios. https://www.nngroup.com/articles/ux-developer-ratio/"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kim et al . (2024) Seungone Kim, Juyoung Suk, Shayne Longpre, Bill Yuchen Lin, Jamin Shin, Sean Welleck, Graham Neubig, Moontae Lee, Kyungjae Lee, and Minjoon Seo. 2024. Prometheus 2: An open source l"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kim et al . (2025) Seon Gyeom Kim, Jae Young Choi, Ryan Rossi, Eunyee Koh, and Tak Yeon Lee. 2025. Chart-to-Experience: Benchmarking Multimodal LLMs for Predicting Experiential Impact of Charts. In 20"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kuang et al . (2024) Emily Kuang, Minghao Li, Mingming Fan, and Kristen Shinohara. 2024. Enhancing UX Evaluation Through Collaboration with Conversational AI Assistants: Effects of Proactive Dialogue "
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kumar et al . (2004) Ram L Kumar, Michael Alan Smith, and Snehamay Bannerjee. 2004. User interface features influencing overall ease of use and personalization. Information & Management 41, 3 (2004), "
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lee et al . (2024) Seongyun Lee, Seungone Kim, Sue Park, Geewook Kim, and Minjoon Seo. 2024. Prometheus-vision: Vision-language model as a judge for fine-grained evaluation. In Findings of the associa"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al . (2023) Junlong Li, Shichao Sun, Weizhe Yuan, Run-Ze Fan, Hai Zhao, and Pengfei Liu. 2023. Generative judge for evaluating alignment. arXiv preprint arXiv:2310.05470 (2023)."
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al . (2024) Peiyao Li, Noah Castelo, Zsolt Katona, and Miklos Sarvary. 2024. Frontiers: Determining the validity of large language models for automated perceptual analysis. Marketing Science 43,"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al . (2024) Yinhong Liu, Han Zhou, Zhijiang Guo, Ehsan Shareghi, Ivan Vulić, Anna Korhonen, and Nigel Collier. 2024. Aligning with human judgement: The role of pairwise preference in large lang"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Luera et al . (2025) Reuben Luera, Ryan Rossi, Franck Dernoncourt, Alexa Siu, Sungchul Kim, Tong Yu, Ruiyi Zhang, Xiang Chen, Nedim Lipka, Zhehao Zhang, Seon Gyeom Kim, and Tak Yeon Lee. 2025. Persona"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Luera et al . (2024) Reuben Luera, Ryan A Rossi, Alexa Siu, Franck Dernoncourt, Tong Yu, Sungchul Kim, Ruiyi Zhang, Xiang Chen, Hanieh Salehy, Jian Zhao, et al . 2024. Survey of User Interface Design "
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Macaranas et al . (2015) Anna Macaranas, Alissa N Antle, and Bernhard E Riecke. 2015. What is intuitive interaction? Balancing users’ performance and satisfaction with natural user interfaces. Interac"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Medlock (2018) Michael C Medlock. 2018. The rapid iterative test and evaluation method (RITE). Games User Research (2018), 203–215."
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Muzaffar et al . (2011) Abdul Wahab Muzaffar, Farooque Azam, Hina Anwar, and Ali Saeed Khan. 2011. Usability aspects in pervasive computing: Needs and challenges. International Journal of Computer App"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Nielsen (2005) Jakob Nielsen. 2005. Ten usability heuristics. (2005)."
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ouyang et al . (2022) Long Ouyang, Jeffrey Wu, Xu Jiang, Diogo Almeida, Carroll Wainwright, Pamela Mishkin, Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, et al . 2022. Training language mod"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Oviatt (2006) Sharon Oviatt. 2006. Human-centered design meets cognitive load theory: designing interfaces that help people think. In Proceedings of the 14th ACM international conference on Multimedia"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Panickssery et al . (2024) Arjun Panickssery, Samuel R. Bowman, and Shi Feng. 2024. LLM Evaluators Recognize and Favor Their Own Generations. arXiv:2404.13076 [cs.CL] https://arxiv.org/abs/2404.13076"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qin et al . (2024) Zhen Qin, Rolf Jagerman, Kai Hui, Honglei Zhuang, Junru Wu, Le Yan, Jiaming Shen, Tianqi Liu, Jialu Liu, Donald Metzler, Xuanhui Wang, and Michael Bendersky. 2024. Large Language Mo"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ramamurthy et al . (2022) Rajkumar Ramamurthy, Prithviraj Ammanabrolu, Kianté Brantley, Jack Hessel, Rafet Sifa, Christian Bauckhage, Hannaneh Hajishirzi, and Yejin Choi. 2022. Is reinforcement learni"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Reinecke et al . (2013) Katharina Reinecke, Tom Yeh, Luke Miratrix, Rahmatri Mardiko, Yuechen Zhao, Jenny Liu, and Krzysztof Z Gajos. 2013. Predicting users’ first impressions of website aesthetics wi"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Rosala and Moran (2024) Tina Rosala and Kate Moran. 2024. Synthetic Users and AI Personas in UX Research: A Cautionary Note. Nielsen Norman Group Reports (2024). https://www.nngroup.com/articles/synth"
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Schoop et al . (2022) Eldon Schoop, Xin Zhou, Gang Li, Zhourong Chen, Bjoern Hartmann, and Yang Li. 2022. Predicting and Explaining Mobile UI Tappability with Vision Modeling and Saliency Analysis. In"
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Seeley (2012) William P Seeley. 2012. Hearing how smooth it looks: Selective attention and crossmodal perception in the arts. Essays in Philosophy 13, 2 (2012), 498–517."
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Shneiderman (2004) Ben Shneiderman. 2004. Designing for fun: how can we design user interfaces to be more fun? interactions 11, 5 (2004), 48–50."
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Steen et al . (2007) Marc Steen, Lottie Kuijt-Evers, and Jente Klok. 2007. Early user involvement in research and design projects–A review of methods and practices. In 23rd egos colloquium , Vol. 5. 1"
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Still (2018) Jeremiah D Still. 2018. Web page visual hierarchy: Examining Faraday’s guidelines for entry points. Computers in Human Behavior 84 (2018), 352–359."
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Stokes et al . (2025) Chase Stokes, Kylie Lin, and Cindy Xiong Bearfield. 2025. Write, Rank, or Rate: Comparing Methods for Studying Visualization Affordances. IEEE VIS (2025)."
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Team et al . (2023) Gemini Team, Rohan Anil, Sebastian Borgeaud, Jean-Baptiste Alayrac, Jiahui Yu, Radu Soricut, Johan Schalkwyk, Andrew M Dai, Anja Hauth, Katie Millican, et al . 2023. Gemini: a fami"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Thakur et al . (2025) Aman Singh Thakur, Kartik Choudhary, Venkat Srinik Ramayapally, Sankaran Vaidyanathan, and Dieuwke Hupkes. 2025. Judging the Judges: Evaluating Alignment and Vulnerabilities in L"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang (2024) Di Wang. 2024. Research on Visual Hierarchy and Interactive Experience in Digital Media UI Design. In 2024 5th International Conference on Intelligent Design (ICID) . IEEE, 133–136."
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang (2025) Dakuo et al. Wang. 2025. AgentA/B: Automated and Scalable Web A/B Testing with Interactive LLM Agents. arXiv preprint arXiv:2504.09723 (2025)."
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al . (2024) Huichen Will Wang, Jane Hoffswell, Victor S Bursztyn, Cindy Xiong Bearfield, et al . 2024. How aligned are human chart takeaways and llm predictions? a case study on bar charts wit"
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al . (2023) Peiyi Wang, Lei Li, Liang Chen, Zefan Cai, Dawei Zhu, Binghuai Lin, Yunbo Cao, Qi Liu, Tianyu Liu, and Zhifang Sui. 2023. Large language models are not fair evaluators. arXiv prepr"
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al . (2022) Yizhong Wang, Yeganeh Kordi, Swaroop Mishra, Alisa Liu, Noah A Smith, Daniel Khashabi, and Hannaneh Hajishirzi. 2022. Self-instruct: Aligning language models with self-generated in"
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al . (2019) Yun Wang, Adrien Segal, Roberta Klatzky, Daniel F. Keefe, Petra Isenberg, Jörn Hurtienne, Eva Hornecker, Tim Dwyer, and Stephen Barrass. 2019. An Emotional Response to the Value of"
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al . (2024) Jason Wu, Yi-Hao Peng, Xin Yue Amanda Li, Amanda Swearngin, Jeffrey P Bigham, and Jeffrey Nichols. 2024. UICLIP: a data-driven model for assessing user interface design. In Proceedin"
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xiang et al . (2024) Wei Xiang, Hanfei Zhu, Suqi Lou, Xinli Chen, Zhenghua Pan, Yuping Jin, Shi Chen, and Lingyun Sun. 2024. SimUser: Generating Usability Feedback by Simulating Various Users Interact"
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al . (2023) Xinghua Zhang, Bowen Yu, Haiyang Yu, Yangyu Lv, Tingwen Liu, Fei Huang, Hongbo Xu, and Yongbin Li. 2023. Wider and deeper llm networks are fairer llm evaluators. arXiv preprint ar"
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zheng et al . (2023) Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric Xing, et al . 2023. Judging llm-as-a-judge with mt-benc"
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ziegler et al . (2020) Daniel M. Ziegler, Nisan Stiennon, Jeffrey Wu, Tom B. Brown, Alec Radford, Dario Amodei, Paul Christiano, and Geoffrey Irving. 2020. Fine-Tuning Language Models from Human Prefe"
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zieglmeier and Lehene (2021) Valentin Zieglmeier and Antonia Maria Lehene. 2021. Designing trustworthy user interfaces. In Proceedings of the 33rd Australian Conference on Human-Computer Interaction ."
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Opportunities (Extended)"
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "p",
+   "en": "Building on our benchmark, we are extremely excited by the possible opportunities to expand on the capabilities of MLLM as a judge for interface testing. Most notably, this benchmark can be used to create a fine-tuned model or in alignment training. Reinforcement learning from human feedback (RLHF) is a specialized fine-tuning technique that would most align with this benchmark. Whether using this benchmark in isolation or in tandem with other similar datasets, there is an opportunity to create a fine-tuned model that will better supplement user research."
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4. Results when pairwise data is created for MLLMs and humans in the same way. For both human and MLLM evaluation sets, we take the absolute value gathered in task 1, compare the two absolute values, and take the higher of the two. Then we compare the human results to the MLLM results to get the agreement score presented here."
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "p",
+   "en": "Secondly, there is also the opportunity to expand on the benchmark by adding more screens and/or more tasks. Increasing the amount and diversity of screens can uncover more trends that were not uncovered in this study. For example, this study focused on mobile and desktop first UIs, but UIs exist for tablets, televisions, entertainment consoles, and many other devices. Expanding the benchmark to include a diverse set of UIs will create a more holistic benchmark. Furthermore, user research is not limited to just Likert-scale scores and A/B testing. The benchmark can be expanded by adding usability studies, surveys, need-finding, etc. Expanding the data in such a way will further test MLLM’s efficacy in UI tasks and create a more expansive benchmark for fine-tuned models."
+  },
+  {
+   "id": "b0172",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5. Mean Absolute Error (lower is better): This result shows that the mean absolute error for all models consistently is less than 1, with \"interesting\" being the exception. These results show that the models can reliably score within one point of the human scores when given a Likert scale UI question."
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "p",
+   "en": "There is also the opportunity to study the efficacy of more models and prompting methods. This study revolved mostly around GPT-4o, Claude 3.5 Sonnet, and Llama 3.2; running the same tasks on other models like Google’s Gemini, Qwen, or even GPT-4o mini could unveil even further outcomes and trends. Future studies can utilize the framework established in this study to test a wider range of models. Similarly, there is an opportunity to explore the role that prompting strategies can play in MLLM as a UI judge. For this reason, future studies can explore chain-of-thought and few shot learning methods to explore the impact that these methods have on outputs."
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "p",
+   "en": "Finally, considering that UI design is an iterative process, there is an opportunity for future studies to compare UI designs to their earlier iterations. In the pairwise portion of the study, different UI designs were compared with one another. Instead, there is an opportunity to explore the impact of changing a single color, text, or even the layout, and comparing it with an earlier iteration to measure the degree that small changes within the same design change human and MLLM judgments."
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "figcaption",
+   "en": "((a)) Browsing & Discovery"
+  },
+  {
+   "id": "b0178",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "figcaption",
+   "en": "((b)) Confirmation & Feedback"
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "figcaption",
+   "en": "((c)) Communication & Engagement"
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6. Three grouped bar charts comparing mean factor scores from humans vs. each model. Human score marked with black line, model scores represented by different bars. Trends show that MLLMs are able to effectively approximate human scores. Also shows how model scoring distributions align with human scores across Browsing & Discovery, Confirmation & Feedback, and Communication & Engagement."
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Additional Results & Prompts"
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "p",
+   "en": "The additional results shown reflect further visualizations of data presented in the main body of the paper. Figure 5 and Figure 6 represent how well MLLMs did on Task 1, with the former representing the mean absolute error (MAE) and the latter being a visual summary of Table 2. Furthermore works like Figure 4, represent potential ablation study data. Here we also present the prompts used to have the MLLMs evaluate the UIs in the same way that the humans did. Figure 7 asks the MLLMs to evaluate the UIs on a 7-point Likert scale on the UI factors presented in Table 1. Figure 8 prompts the MLLMs to compare two UIs to one another on the aforementioned factors and choos a \"winner.\""
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7. Instructions provided to the MLLMs to evaluate the UI in Section 4.1"
+  },
+  {
+   "id": "b0187",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8. Instructions provided to the MLLMs for pairwise comparison in Section 4.2."
+  }
+ ]
+}

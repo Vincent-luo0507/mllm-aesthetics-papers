@@ -1,0 +1,1228 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Personalized Preference Fine-tuning of Diffusion Models"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "RLHF techniques like DPO can significantly improve the generation quality of text-to-image diffusion models. However, these methods optimize for a single reward that aligns model generation with popul"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Diffusion models [12, 40, 42, 43] have achieved great success in text-to-images generation tasks, as demonstrated by models such as DALL-E 2 [33], Imagen [35], Stable Diffusion [34, 29], and Stable Cascade [27]. These large-scale models, often trained through supervised fine-tuning on text-image datasets containing high-quality aesthetic images such as LAION-5B [38], demonstrate impressive image quality and a remarkable visual understanding of text prompts. Recent advances focus on fine-tuning diffusion models to better align with human preferences. Methods such as DDPO [2] and DPOK [9] employ reinforcement learning from human feedback (RLHF) techniques to optimize human-alignment reward functions. Alternatively, Diffusion-DPO [45] utilize direct preference optimization (DPO) [32] to directly optimizes for human preferences using an offline ranking dataset. SD3 [7] shows that fine-tuning diffusion models with human feedback techniques can significantly enhance overall image quality."
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "Despite these promising results, Diffusion-DPO aligns a model with a single reward that represents population-level human preferences. These fine-tuning techniques are thus insufficient for achieving personalized preference alignment. As studied in domains such as language [36, 10, 44], individual users have unique preferences—for instance, some may favor images with brighter colors, while others might prefer images with centralized foregrounds. Fine-tuning a separate model for each person based on their preference data is impractical and does not scale well, limiting the feasibility of personalized alignment. Additionally, this may limit cross-user generalization."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "A complementary research direction introduces additional control mechanisms into diffusion models to enable customization and personalization. Approaches such as IP-Adapter [51] and CtrlNet [54] allow for controlled image generation by using an additional conditioning image that encodes personalization features. However, these methods are constrained by their reliance on single-image inputs and do not directly learn or adapt to human preferences."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "To address these limitations, we propose PPD, a general framework that incorporates personalization into a diffusion model preference alignment through multi-reward optimization. Our approach learns a diverse set of human preferences within a single model and generalizes effectively to new users. Personalization in our approach requires minimal additional data, as we label samples in the preference dataset with a unique identifier for each user. This annotation is inexpensive to obtain and commonly included in datasets such as Pick-a-Pic [16]. We leverage vision-language models (VLMs) such as LLaVA-OneVision [20] to extract user preference embeddings from few-shot pairwise preference examples for each user. We show that these few-shot text embeddings from preference pairs serve as effective features to represent reward functions under the Bradley-Terry model [3] and thus are suitable for conditioning the diffusion model. Next, adopting Stable Cascade [27] as our base model, we condition the diffusion model on these user embeddings through additional cross-attention layers and fine-tune it with a variant of the Diffusion-DPO [45] objective for preference alignment."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Our empirical evaluations demonstrate that PPD can effectively optimize multiple rewards including CLIP [13, 31], Aesthetic [37], and HPS [47], significantly outperforming baselines. It also interpolates smoothly between different rewards during inference. Additionally, in real-world user scenarios, PPD aligns more closely with individual user preferences on the dataset Pick-a-Pic [16]. Notably, with only a few-shot ranking examples for a new user, PPD generate images that align closely with that user’s specific preference and outperforms prior approaches such as Stable Cascade, achieving an average win rate of 76%, as evaluated by GPT4o [26]."
+  },
+  {
+   "id": "b0010",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: The overall architecture of PPD. In Stage 1, user embedding are generated with few-shot preference examples using a VLM. In Stage 2, we fine-tune diffusion models on the preference datasets with the user embedding as conditioning added to cross-attention."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "h4",
+   "en": "Aligning Diffusion Models"
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "Aligning text-to-image diffusion models has been extensively studied. Some methods optimize with online RL using a Bradley Terry reward function [2, 9, 55]. Others fine-tune diffusion models to increase the reward of generated images by gradient back-propagation on the reward function [5, 49, 30]. Recently proposed approaches [45, 50] leverage the duality of the reward learning and policy optimization from DPO [32] to eliminate the need of on-policy samples and only utilize offline human preference data. Alternatively, DiffusionKTO [22] replaces DPO with KTO [8], eliminating the need for paired data. Additionally, some methods modify the training data distribution on visually appealing and textually cohered data [48, 18, 6], while others improve text accuracy by re-captioning pre-collected web images [11, 39]."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "h4",
+   "en": "Controllable Generation for Diffusion Models"
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "To address the lack of fine-grained control in image synthesis, various methods add conditional controls to text-to-image diffusion models. CtrlNet [54] and T2I-Adapter [25] introduce additional UNet modules that encode spatial information, such as edges and human poses, derived from conditioning images. IP-Adapter [51] introduces additional cross-attention layers to incorporate high-level semantic information from reference images."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h4",
+   "en": "LLM Alignment"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "The alignment of large language models (LLMs) using RLHF objectives has been extensively explored [56, 1, 32], demonstrating effective instruction-following and alignment to population values. However, a key challenge remains in representing the diversity of human preferences [36], as these models often capture an averaged population preference rather than accounting for individual differences, leading to biases and reduced alignment with underrepresented communities. Pluralistic Alignment [10, 44] addresses this issue by modeling a distribution of individuals, each with distinct values and perspectives, with methods like distributional and overton alignment enhancing calibration across diverse user groups. Several works have investigated LLM personalization through the reparameterization of reward models [28, 52, 23], enabling a more tailored user experience. However, these works leverage synthetic users and study a limited number of users, particularly in text and robotic control domains."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Preliminary"
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "We introduce the preliminaries behind diffusion models, DPO and its adaption to diffusion models."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h4",
+   "en": "Diffusion Models"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Diffusion models are generative models consisting two processes: a forward (diffusion) process and a backward (denoising) process [12, 40, 42, 43]. In the forward process, Gaussian noise ⟦SLOT_0⟧ is progressively added to a data distribution ⟦SLOT_1⟧ over ⟦SLOT_2⟧ steps, guided by noise scheduling functions ⟦SLOT_3⟧ and ⟦SLOT_4⟧. At timestep ⟦SLOT_5⟧, noisy images ⟦SLOT_6⟧ are generated via ⟦SLOT_7⟧. In the backward process, samples are generated from Gaussian noise with a learnable model, which can also be conditioned on additional inputs, such as text in the case of text-to-image diffusion models. Typically, diffusion models – denoted as ⟦SLOT_8⟧ – are trained to predict the Gaussian noise ⟦SLOT_9⟧ from noisy images ⟦SLOT_10⟧ at timestep ⟦SLOT_11⟧ with conditioning ⟦SLOT_12⟧, using a denoising objective:"
+  },
+  {
+   "id": "b0023",
+   "t": "keep",
+   "w": "table",
+   "en": "L DM = 𝔼 𝐱 0 , ϵ , t ​ [ ω ⁡ ( λ t ) ​ ‖ ϵ − ϵ θ ​ ( 𝐱 t , 𝐜 , t ) ‖ 2 2 ] , L_{\\text{DM}}=\\mathbb{E}_{{\\mathbf{x}}_{0},{\\mathbf{\\epsilon}},t}\\left[\\omega(\\lambda_{t})\\|{\\mathbf{\\epsilon}}-{\\mathbf{\\e"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_13⟧ is a signal-to-noise ratio, ⟦SLOT_14⟧ is a pre-specified weighting function [14]. Once the model ⟦SLOT_15⟧ is trained, images can be generated from random noise using accelerated sampling methods such as DDIM [41]."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "h4",
+   "en": "Direct Preference Optimization (DPO)"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "DPO [32] is a fine-tuning paradigm that aligns autoregressive large language models (LLMs) with human preferences without relying on traditional reinforcement learning techniques. Unlike Reinforcement Learning from Human Feedback (RLHF), which involves training a reward model and then fine-tuning the LLM using reinforcement learning, DPO directly optimizes the model based on human preference data. Given a dataset containing ranking pairs ⟦SLOT_16⟧ where ⟦SLOT_17⟧ being the prompt and ⟦SLOT_18⟧ being the preferred and dispreferred responses labeled by human, the training objective optimizes a simple loss under which we can obtain an optimal policy:"
+  },
+  {
+   "id": "b0027",
+   "t": "keep",
+   "w": "table",
+   "en": "L DPO ​ ( θ ) = − 𝔼 𝐜 , 𝐱 0 + , 𝐱 0 − ​ [ log ⁡ σ ⁡ ( β ​ Δ ) ] , where Δ = ( log ⁡ p θ ​ ( 𝐱 0 + | 𝐜 ) p ref ​ ( 𝐱 0 + | 𝐜 ) − log ⁡ p θ ​ ( 𝐱 0 − | 𝐜 ) p ref ​ ( 𝐱 0 − | 𝐜 ) ) , \\displaystyle\\begin{"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_19⟧ is the sigmoid function and ⟦SLOT_20⟧ is a hyperparameter determining how much ⟦SLOT_21⟧ may deviate from a reference distribution ⟦SLOT_22⟧. Intuitively, the objective aims to increase the likelihoods of preferred responses while decreasing that of dispreferred ones."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "h4",
+   "en": "Diffusion DPO"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "The DPO objective in Eq. 2 requires optimization of log-likelihoods ⟦SLOT_23⟧, which is analytically intractable for diffusion models. Diffusion-DPO [45] leverages the fact that the (appropriately weighted) training objective of diffusion models as in Eq. 1 can be viewed as the evidence lower bound (ELBO) of their log-likelihoods. It derives an upper bound to DPO for diffusion models to align them with human preferences:"
+  },
+  {
+   "id": "b0031",
+   "t": "keep",
+   "w": "table",
+   "en": "L Diff-DPO ​ ( θ ) = − 𝔼 𝐜 , 𝐱 0 + , 𝐱 0 − ​ [ log ⁡ σ ⁡ ( − β ​ T ​ ω ​ ( λ t ) ​ Δ ) ] , where \\displaystyle L_{\\text{Diff-DPO}}({\\mathbf{\\theta}})=-\\mathbb{E}_{{\\mathbf{c}},{\\mathbf{x}}^{+}_{0},{\\m"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_24⟧ is the caption; ⟦SLOT_25⟧ and ⟦SLOT_26⟧ are the preferred and dispreferred images; ⟦SLOT_27⟧ and ⟦SLOT_28⟧ are noisy images obtained from forward process with Gaussian noise ⟦SLOT_29⟧ and ⟦SLOT_30⟧ at timestep ⟦SLOT_31⟧. This objective computes 4 terms as in Eq. 1: the denoising loss of training and preference distributions ⟦SLOT_32⟧ and ⟦SLOT_33⟧ on preferred and dispreferred noisy images ⟦SLOT_34⟧ and ⟦SLOT_35⟧ respectively. Intuitively, it aims to decrease the loss of preferred images while increasing that of dispreferred ones."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Method"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "Despite impressive image quality and alignment control achieved in prior works, a key limitation among works that use DPO for diffusion models is that it assumes a uniform preference among all users for generated images. In practice, this assumption often fails, as individuals may have diverse preferences related to style, color, lighting, and other visual attributes. While such preferences can be easily expressed by human through pairwise comparisons, it is challenging to summarize them accurately through text or single-image prompts, due to the inaccuracy of natural language and the limitations inherent in single-prompt formats."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Motivated by this problem, we propose PPD, a method that aligns diffusion models with individual-level human preferences. We first formulate the problem of personalization and define a new DPO variant for this task (Sec. 4.1), and then show that individual-level preference learning can be achieved using few-shot comparison examples using a VLM (Sec. 4.2), finally we introduce a parameterization of denoiser that can takes advantage of the VLM embeddings (Sec. 4.3). The overall architecture is in Fig. 1."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Problem Setup"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "We consider a dataset containing ⟦SLOT_36⟧ where ⟦SLOT_37⟧ is the text prompt, ⟦SLOT_38⟧ are preferred and dispreferred generated images and ⟦SLOT_39⟧ represents the user labeling the preference. User features ⟦SLOT_40⟧ can be high-dimensional including information like age or gender, but often ⟦SLOT_41⟧ consists only of scalar user IDs ⟦SLOT_42⟧. We define ⟦SLOT_43⟧ as the reward on image ⟦SLOT_44⟧ for user ⟦SLOT_45⟧ given prompt ⟦SLOT_46⟧. We would like to fine-tune a text-to-image models ⟦SLOT_47⟧ for individual user ⟦SLOT_48⟧ such that reward is maximized for this user while keeping close to a reference model ⟦SLOT_49⟧ in terms of KL-divergence as regularization :"
+  },
+  {
+   "id": "b0038",
+   "t": "keep",
+   "w": "table",
+   "en": "max p θ i 𝔼 𝐜 , 𝐱 0 ​ [ r ⁡ ( 𝐜 , 𝐱 0 , 𝐮 i ) ] − β 𝔻 KL [ p θ i ( 𝐱 0 | 𝐜 ) ∥ p ref ( 𝐱 0 | 𝐜 ) ] , \\displaystyle\\begin{split}\\max_{p_{\\theta_{i}}}&\\mathbb{E}_{{\\mathbf{c}},{\\mathbf{x}}_{0}}\\left[r({"
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_50⟧ is a parameter controlling how much ⟦SLOT_51⟧ deviates from ⟦SLOT_52⟧. Following [32], the optimal ⟦SLOT_53⟧ for user ⟦SLOT_54⟧ takes the form"
+  },
+  {
+   "id": "b0040",
+   "t": "keep",
+   "w": "table",
+   "en": "p θ i ​ ( 𝐱 0 | 𝐜 ) ∝ p ref ​ ( 𝐱 0 | 𝐜 ) ​ exp ⁡ ( r ⁡ ( 𝐜 , 𝐱 0 , 𝐮 i ) / β ) . p_{\\theta_{i}}({\\mathbf{x}}_{0}|{\\mathbf{c}})\\propto p_{\\text{ref}}({\\mathbf{x}}_{0}|{\\mathbf{c}})\\exp\\left(r({\\mathbf"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "Suppose model ⟦SLOT_55⟧ has sufficient capacity, we can represent ⟦SLOT_56⟧ as ⟦SLOT_57⟧, where ⟦SLOT_58⟧ serves as as a conditioning. This allows us to jointly optimize a single model ⟦SLOT_59⟧ for all users. Following [45], we have the following objective to learn a personalized diffusion models:"
+  },
+  {
+   "id": "b0042",
+   "t": "keep",
+   "w": "table",
+   "en": "L PPD ​ ( θ ) = − 𝔼 𝐜 , 𝐱 0 + , 𝐱 0 − , 𝐮 ​ [ log ⁡ σ ⁡ ( − β ​ T ​ ω ​ ( λ t ) ​ Δ ) ] , where \\displaystyle L_{\\text{PPD }}({\\mathbf{\\theta}})=-\\mathbb{E}_{{\\mathbf{c}},{\\mathbf{x}}^{+}_{0},{\\mathbf"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "This objective is similar to Eq. 3 but with the addition of ⟦SLOT_60⟧, representing extra features conditioned on for each user. But what user features should be conditioned on?"
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Generating User Features from a VLM with In-Context Examples"
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "h4",
+   "en": "Discussion on User Features in Preference Datasets"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "One fundamental challenge in personalized image generation lies in the effective parameterization of the user representation, denoted as ⟦SLOT_61⟧, for each individual. This parameterization is critical because it directly influences the model’s capacity to generate outputs tailored to specific user preferences. Existing image preference datasets, such as Pick-a-Pic [16], typically lack comprehensive user information beyond basic identifiers, often focusing on generic preference data rather than capturing the nuanced individual preferences necessary for effective personalization."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "Even in preference datasets that include user information (e.g PRISM [15]), this information is frequently obtained through self-reported surveys, which can lead to incomplete or biased user profiles. Discrepancies often arise between stated preferences and actual behavior; users may not accurately articulate their likes and dislikes, or they may respond in a manner that they perceive as socially desirable rather than truthful. Such inconsistencies present significant challenges when attempting to model and predict user preferences accurately."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "To address these issues, we adopt a simplified approach by assuming access solely to a unique user ID for each individual in the dataset. This user ID serves as a key to differentiate users within the labeled preference dataset, represented as ⟦SLOT_62⟧, where ⟦SLOT_63⟧ denotes a unique user identifier."
+  },
+  {
+   "id": "b0049",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Top-K accuracy of the User Classification. We fine-tune a user-classifier from the frozen embeddings from the VLM on few-shot preference examples for 300 users. This classifier significantly outperforms a random chance baseline."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "h4",
+   "en": "Conditioning on a Unique User Identifier"
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "The primary challenge, then, is to leverage this user ID ⟦SLOT_64⟧ to construct a meaningful user embedding that can effectively guide the model’s predictions. A naïve approach might involve representing the embedding ⟦SLOT_65⟧ using a one-hot encoding of the user IDs, which can be formally defined by a function ⟦SLOT_66⟧, establishing a bijective mapping from the set of user IDs ⟦SLOT_67⟧ to the space of one-hot encoded vectors ⟦SLOT_68⟧, where ⟦SLOT_69⟧ represents the total number of unique users in the dataset. While this method uniquely encodes each user, it suffers from a critical limitation: the inability to generalize to new, unseen users, as the embedding space is inherently tied to the users present in the training data."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "To enhance generalization and adaptability, we reconsider the parameterization of ⟦SLOT_70⟧ in the context of learning the distribution of reward functions, denoted as ⟦SLOT_71⟧. Here, a more flexible and robust parameterization leverages few-shot examples that reflect an individual user’s preferences. These examples can be extracted from the offline preference dataset for each user, providing concrete instances of preferred and dispreferred content. Conditioning on these examples allows for a more accurate estimation of the reward function ⟦SLOT_72⟧ for each user."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we utilize the features of a pre-trained vision-language Model (VLM), specifically LLaVA-OneVision [21], an open-source multimodal model with multi-image processing capabilities. For each user, a set of ⟦SLOT_73⟧ few-shot examples is selected, comprising a caption describing the context, a preferred image, and a dispreferred image. These examples are processed by the VLM, from which we extract an intermediate hidden state."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "To validate that the user embedding is effective, we condition on the frozen embedding to classify which user provided the preference annotations. As seen in Figure 2, the classifier significantly outperforms chance with a top-16 accuracy of 90%, indicating that the embedding can disentangle different users in the preference dataset effectively. By incorporating this user-specific embedding into the conditioning of a text-to-image diffusion model, we enable user-aware reward modeling and generation."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Personalization as Conditioning"
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "In order to add the user embedding as conditioning to the diffusion model in image generation, we utilize additional cross-attention layers akin to IP-Adapter [51]. Here we learn to condition on the user information using the VLM embeddings and then integrate the image features into pretrained UNet by adapted modules with decoupled cross-attention. There are many other ways to add conditioning information to diffusion models; we chose this instantiation due to its training and parameter efficiency."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "We utilize Stable Cascade [27] as our base model which comprises of three stages: Stages A-C. Stage A and B are image compressors, similar to the VAE in Stable Diffusion [34] but achieve a much higher compression rate; and Stage C is the generation module conditioned on text. In Stage C, the text features ⟦SLOT_74⟧ from pretrained CLIP text encoder are plugged into the model by feeding into the cross-attention layers. Given the query features ⟦SLOT_75⟧ and text features ⟦SLOT_76⟧, the output is ⟦SLOT_77⟧ where ⟦SLOT_78⟧, ⟦SLOT_79⟧, ⟦SLOT_80⟧ are query, key and values, and ⟦SLOT_81⟧ are trainable layers."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "Following IP-Adapter [51], we utilize a decoupled cross-attention mechanism to condition on the user embedding. First, we add a new cross-attention layer to each cross-attention layer in the Stage C model, using the original query ⟦SLOT_82⟧ and introducing new keys ⟦SLOT_83⟧ and values ⟦SLOT_84⟧ for user features. Then, we simply add the output of user cross-attention to the output of text cross-attention. Hence the final formulation of cross-attention is"
+  },
+  {
+   "id": "b0060",
+   "t": "keep",
+   "w": "table",
+   "en": "𝐙 ′ = Softmax ​ ( 𝐐𝐊 T d ) ​ 𝐕 + Softmax ​ ( 𝐐 ​ ( 𝐊 ′ ) T d ) ​ 𝐕 ′ , {\\mathbf{Z}}^{\\prime}=\\text{Softmax}(\\frac{{\\mathbf{Q}}{\\mathbf{K}}^{T}}{\\sqrt{d}}){\\mathbf{V}}+\\text{Softmax}(\\frac{{\\mathbf{Q}}"
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_85⟧, ⟦SLOT_86⟧, ⟦SLOT_87⟧, ⟦SLOT_88⟧, ⟦SLOT_89⟧ and ⟦SLOT_90⟧ are new introduced trainable parameters for ⟦SLOT_91⟧. During training, we optimize only the added cross-attention layers while keeping the parameters of pretrained diffusion model frozen, using the training objective as in Eq. 6. We also randomly drop user features (zero out the user embedding) in the training stage as regularization. This allows us to also prompt the model unconditionally of the user, by passing a zero embedding for the user."
+  },
+  {
+   "id": "b0062",
+   "t": "keep",
+   "w": "table",
+   "en": "CLIP Aesthetic HPS Stable Cascade 31.97 5.33 23.87 Diffusion-DPO 32.48 5.46 25.96 SFT 32.26 5.56 25.78 ours 32.66 5.92 27.51 Diffusion-DPO (CLIP) 32.96 - - Diffusion-DPO (Aesthetic) - 6.42 - Diffusion"
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Averaged scores on three reward function. We condition on each reward to generate images both in SFT and our methods. Diffusion-DPO (*) are upper-bounds."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Experiments"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "h4",
+   "en": "Models and Dataset"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we demonstrate the performance of PPD across a range of experiments designed to assess its capabilities in personalized preference alignment. We use the objective from Eq. 6 to fine-tune the open-source diffusion model, Stable Cascade [27] – specifically Stage C, which is responsible for text-conditioned generation. Following Wallace et al. [45], we fine-tune our model on the Pick-a-Pic v2 dataset [16], a preference dataset containing 58K text prompts and 0.8M image pairs labeled by 5K users."
+  },
+  {
+   "id": "b0067",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Automatic win rate evaluation with reward functions. We compare against Stable Cascade, Diffusion-DPO, and SFT."
+  },
+  {
+   "id": "b0069",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: PPD is able to interpolate among three distinct objectives during inference. (a) generated images conditioned on (b) various weights, with three axes representing CLIP, Aesthetic, and HPS; (c) reward scores for each image. The score for each objective increases as its respective weight increases, and decreasing otherwise. For each row from left to right, the CLIP score increases alongside its weight, leading to a decrease in the Aesthetic score as its weight decreases. From bottom to top, the HPS score increases with its weight."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "h4",
+   "en": "Training Details"
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "During training of PPD, we only optimize the added cross-attention layers while keeping the pretrained diffusion model fixed, as described in Sec. 4.3. We use AdamW [24] with an effective batch size of 768 pairs and a learning rate of ⟦SLOT_92⟧ for all experiments, training for one epoch. We find ⟦SLOT_93⟧ for hyperparameter tuning. Details are in Appendix B."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "h4",
+   "en": "User Information Conditioning"
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "We begin by demonstrating the model’s ability to condition on synthetic user information, optimizing three distinct reward functions, we further show that generalize by linearly interpolating the weights of different reward functions (Sec. 5.1). We then show that the model can also condition on real user preferences, generating personalized images based on few-shot examples from new users (Sec. 5.2)."
+  },
+  {
+   "id": "b0075",
+   "t": "keep",
+   "w": "table",
+   "en": "Stable Cascade Diffusion-DPO User Profile Append user profile to caption as augmentation Diffusion-DPO Ours The preferred images share common themes of wood grain, classic or futuristic design element"
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Qualitative Analysis of Images Generated by PPD and Baselines. Compared to Diffusion-DPO, PPD achieves closer alignment with the generated user profile, highlighted in green. The caption-augmented method captures user profile details; however, it often leads to unintended image alterations, causing the image to disregard the caption itself, as indicated in red."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 Synthetic User Alignment"
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "h4",
+   "en": "Synthetic User"
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "We utilize three reward functions, each representing a aspect of image-to-text generation quality, to simulate three distinct synthetic users: (i) CLIP (OpenCLIP ViT-H/14) [13, 31] for prompt image alignment, (ii) Aesthetic Predictor [37] for image visual appeal, and (iii) HPSv2 (Human Preference Score v2) [47] for human preference estimate. In the dataset, each user has an equal chance of appearing. We relabel ranking pairs ⟦SLOT_94⟧ based on the above reward functions, where ⟦SLOT_95⟧ is a one-hot vector indicating the reward function, taking one of 3 values: ⟦SLOT_96⟧."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "h4",
+   "en": "Baseline"
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "We compare our method with the following baseline: (1) Stable Cascade [27] pretrained model, which is also the reference model during training; (2) Diffusion-DPO, fine-tuned on Pick-a-Pic label without user conditioning [45]; (3) SFT, supervised fine-tuning on relabeled data with user conditioning. We also compare with (4) Diffusion-DPO (CLIP/Aesthetic/HPS), each annotation indicating a separately fine-tuned model with corresponding reward, this serves as the upper-bound of our method, where oracle information about the user is provided during inference to choose the appropriate model. For a fair comparison, all baselines are fine-tuned using Stable Cascade with the same architecture as our model, optimizing only the added cross-attention layers."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "h4",
+   "en": "Text-to-Image Generation"
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "For each method, we generate images with 30 inference steps using captions from PartiPrompts [53], a benchmark containing 1.6K examples across various categories and challenge aspects. For SFT and our method, we generate three images per prompt, each conditioned on one reward function. For Diffusion-DPO (CLIP/Aesthetic/HPS), images for each annotation are generated from its corresponding model. We report averaged reward scores in Tab. 1 and win rate comparisons in Fig. 3, we can see that our method significantly outperforms Stable Cascade in different reward functions, achieving win rates of 60%, 90%, and 93% in terms of CLIP, Aesthetic, and HPS respectively. Our method effectively optimizes each reward by conditioning on individual preference, outperforming supervised fine-tuning by a large margin. Unlike Diffusion-DPO, our method can jointly optimize multiple user rewards, achieving win rates comparable to Diffusion-DPO models fine-tuned separately on each user’s data."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "h4",
+   "en": "Generalization via Interpolation"
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "p",
+   "en": "During training we fine-tune the model using one-hot encoding of each objective. Specifically, the user embedding vector ⟦SLOT_97⟧ being ⟦SLOT_98⟧ corresponding to optimization for CLIP, Aesthetic, and HPS. The user embedding can also be seen as weighting mechanism for each objective. However, during inference, we are also interested in whether we can trade-off among different objectives by interpolating their respective weights. In Fig. 4, we generate images conditioned on various objective weightings, namely interpolating the given user embedding, we can see that as the weight of an objective increases, the corresponding score also rises, and vice versa. Therefore, our method can generalize to different reward combinations, even only trained on single objective data. This can not be achieved by optimizing separate models and each with an objective."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "This shows that by linearly interpolating the user embedding, we can adjust the rewards of the generated images accordingly. This finding aligns with the real user experiments presented next, as real user embeddings exhibit a linear correlation in embedding space."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2 Personalized Real User Alignment"
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "We now consider a realistic setting with preferences from the Pick-a-Pic dataset for each user. In this setting, we utilize the user features which are generated from a VLM on in-context preference examples as outlined in Section 4.2. We scale from the 3 synthetic ”users” in Section 5.1 to a filtered subset of the 4800 unique users in Pick-a-Pic."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "h4",
+   "en": "Experiment setting"
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "We repartition the Pick-a-Pic dataset into a set of 4 splits: (1) Train, (2) Validation, (3) Test with Seen Users + Held-out Captions and (4) Test with Unseen Users + Held-out Captions. This decomposition allows us to study independently the generalization of our methods to new prompts and unseen users. Additionally, for each user, we take sets of ⟦SLOT_99⟧ few-shot preference examples for each user and use these groupings for the conditioning of the VLM on few-shot preference pairs. We thus have to filter out 824 users in Pick-a-Pic which have less than 4 examples per user, as no user embedding for this user can be formed. We generate the user embedding through the procedure outlined in Sec. 4.2."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "h4",
+   "en": "Generation Results"
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "We perform qualitative analysis on the set of images generated for each user. We perform this evaluation by generating a user profile per user. We use a set of few-shot preference pairs per user which we condition a VLM on along with Chain-of-Thought prompting (COT) to construct a user-profile consistent with the preference pairs. The COT prompt asks the model to summarize each image in the preference pair and describe the differences between them, which is then aggregated to form a user profile. Sample user profiles and the full Chain-of-Thought prompt is found in Appendix B. As seen in Fig. 5, our method has closer alignment to the user profile with respect to Stable Cascade and Diffusion-DPO, being able to pick up details about the user such as the highlighted part. While Stable Cascade and Diffusion-DPO with augmented captions can capture certain aspects of the user description, they often overfit to the user profile, resulting in generated images that overlook the intended image caption."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "h4",
+   "en": "Personalized Preference Alignment Evaluation"
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate whether the generated model aligns with specific user preference using a VLM as a judge, leveraging strong VLMs such as GPT4o-vision [26], similar to recipes in prior work [19, 4]. In particular, we condition the VLM on few-shot examples from the user as well as a pair of images for a given test time caption and ask the model to judge which of the two images would be preferred by the user. To ensure consistency of the response the model selects, we judge each pair of images twice using the VLM, flipping the ordering of the images, filtering out pairs where the VLM is inconsistent. With this paradigm and ⟦SLOT_100⟧ shots per user, we find that the VLM is able to match the ground truth personalized human preference with ⟦SLOT_101⟧ accuracy."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "p",
+   "en": "We decompose our evaluation into two settings: (1) evaluating users that were seen during training but on captions that were held out and (2) evaluating held-out users and captions. We aggregate over these settings to also compute metrics for the general user in the dataset. For the 4341 users in Pick-a-Pic we select 192 held out and 277 in-distribution users. For each of these users, we choose ⟦SLOT_102⟧ examples, where 4 examples are used for the in-context conditioning for the user and 1 example is used as the caption for evaluation. We compute an automatic win-rate using pairs of models, generating one image for each caption and evaluating with the VLM-as-Judge pipeline outlined above."
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Automatic Win Rate Evaluation with GPT-4o We evaluate on seen users, held out users, and aggregate to see win-rates for generic users, comparing Stable Cascade and PPD."
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "We report win rate comparisons in Fig. 6. Here, PPD significantly outperforms Stable Cascade in all three evaluation settings, achieving a win rate of 83% on seen users, and 78% on unseen users, aggregated to 81% on all users."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Discussion, Conclusion, and Limitations"
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "p",
+   "en": "This work presents a framework for personalization in text-to-image diffusion models using user feature embeddings derived from a VLM. By conditioning on these embeddings through decoupled cross-attention layers and fine-tuning with the DPO objective, our method achieves both accurate reward modeling and high-quality personalized image generation. This approach allows us to generalize effectively to unseen users, requiring only few-shot preference examples from new users at test time."
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "p",
+   "en": "However, several open questions and limitations remain. Currently, our conditioning on few-shot examples is caption agnostic, as it selects a set of random preferences from a user. Future work could investigate methods for actively selecting the preferences that the VLM embeds, potentially enhancing personalization. Additionally, extending this technique to video generation could enable effective personalized video content, which is an exciting direction for further research. Finally, exploring the trade-offs between implicit and stated preferences may provide insights into optimizing user experience and model performance."
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgment"
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "p",
+   "en": "This research is done during MD’s internship at Luma AI and supported in part by ARO (W911NF-21-1-0125), ONR (N00014-23-1-2159), and the CZ Biohub. AS gratefully acknowledges the support of the NSF Graduate Research Fellowship Program."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] Yuntao Bai, Andy Jones, Kamal Ndousse, Amanda Askell, Anna Chen, Nova DasSarma, Dawn Drain, Stanislav Fort, Deep Ganguli, Tom Henighan, Nicholas Joseph, Saurav Kadavath, Jackson Kernion, Tom Coner"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] Kevin Black, Michael Janner, Yilun Du, Ilya Kostrikov, and Sergey Levine. Training diffusion models with reinforcement learning. In The Twelfth International Conference on Learning Representations"
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] Ralph Allan Bradley and Milton E Terry. Rank analysis of incomplete block designs: I. the method of paired comparisons. Biometrika , 39(3/4):324–345, 1952."
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] Zhaorun Chen, Yichao Du, Zichen Wen, Yiyang Zhou, Chenhang Cui, Zhenzhen Weng, Haoqin Tu, Chaoqi Wang, Zhengwei Tong, Qinglan Huang, Canyu Chen, Qinghao Ye, Zhihong Zhu, Yuqing Zhang, Jiawei Zhou,"
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] Kevin Clark, Paul Vicol, Kevin Swersky, and David J Fleet. Directly fine-tuning diffusion models on differentiable rewards. arXiv preprint arXiv:2309.17400 , 2023."
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] Xiaoliang Dai, Ji Hou, Chih-Yao Ma, Sam Tsai, Jialiang Wang, Rui Wang, Peizhao Zhang, Simon Vandenhende, Xiaofang Wang, Abhimanyu Dubey, et al. Emu: Enhancing image generation models using photoge"
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] Patrick Esser, Sumith Kulal, Andreas Blattmann, Rahim Entezari, Jonas Müller, Harry Saini, Yam Levi, Dominik Lorenz, Axel Sauer, Frederic Boesel, et al. Scaling rectified flow transformers for hig"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] Kawin Ethayarajh, Winnie Xu, Niklas Muennighoff, Dan Jurafsky, and Douwe Kiela. Kto: Model alignment as prospect theoretic optimization. arXiv preprint arXiv:2402.01306 , 2024."
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] Ying Fan, Olivia Watkins, Yuqing Du, Hao Liu, Moonkyung Ryu, Craig Boutilier, Pieter Abbeel, Mohammad Ghavamzadeh, Kangwook Lee, and Kimin Lee. Reinforcement learning for fine-tuning text-to-image"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] Shangbin Feng, Taylor Sorensen, Yuhan Liu, Jillian Fisher, Chan Young Park, Yejin Choi, and Yulia Tsvetkov. Modular Pluralism: Pluralistic Alignment via Multi-LLM Collaboration. arXiv e-prints , "
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] Gabriel Goh, James Betker, Li Jing, Aditya Ramesh, Tim Brooks, Jianfeng Wang, Lindsey Li, Long Ouyang, Juntang Zhuang, Joyce Lee, Prafulla Dhariwal, Casey Chu, Joy Jiao, Jong Wook Kim, Alex Nicho"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising diffusion probabilistic models. In Advances in neural information processing systems , pages 6840–6851, 2020."
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] Gabriel Ilharco, Mitchell Wortsman, Ross Wightman, Cade Gordon, Nicholas Carlini, Rohan Taori, Achal Dave, Vaishaal Shankar, Hongseok Namkoong, John Miller, Hannaneh Hajishirzi, Ali Farhadi, and "
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] Diederik P. Kingma, Tim Salimans, Ben Poole, and Jonathan Ho. Variational diffusion models. In Advances in Neural Information Processing Systems 34 , 2021."
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] Hannah Rose Kirk, Alexander Whitefield, Paul Röttger, Andrew Bean, Katerina Margatina, Juan Ciro, Rafael Mosquera, Max Bartolo, Adina Williams, He He, Bertie Vidgen, and Scott A. Hale. The PRISM "
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] Yuval Kirstain, Adam Polyak, Uriel Singer, Shahbuland Matiana, Joe Penna, and Omer Levy. Pick-a-pic: An open dataset of user preferences for text-to-image generation. arXiv preprint arXiv:2305.01"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] Takeshi Kojima, Shixiang Shane Gu, Machel Reid, Yutaka Matsuo, and Yusuke Iwasawa. Large language models are zero-shot reasoners, 2023."
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] Kimin Lee, Hao Liu, Moonkyung Ryu, Olivia Watkins, Yuqing Du, Craig Boutilier, Pieter Abbeel, Mohammad Ghavamzadeh, and Shixiang Shane Gu. Aligning text-to-image models using human feedback. arXi"
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] Seongyun Lee, Seungone Kim, Sue Hyun Park, Geewook Kim, and Minjoon Seo. Prometheus-Vision: Vision-Language Model as a Judge for Fine-Grained Evaluation. arXiv e-prints , art. arXiv:2401.06591, 2"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] Bo Li, Yuanhan Zhang, Dong Guo, Renrui Zhang, Feng Li, Hao Zhang, Kaichen Zhang, Yanwei Li, Ziwei Liu, and Chunyuan Li. Llava-onevision: Easy visual task transfer. arXiv preprint arXiv:2408.03326"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] Bo Li, Yuanhan Zhang, Dong Guo, Renrui Zhang, Feng Li, Hao Zhang, Kaichen Zhang, Peiyuan Zhang, Yanwei Li, Ziwei Liu, and Chunyuan Li. LLaVA-OneVision: Easy Visual Task Transfer. arXiv e-prints ,"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] Shufan Li, Konstantinos Kallidromitis, Akash Gokul, Yusuke Kato, and Kazuki Kozuka. Aligning diffusion models by optimizing human utility. arXiv preprint arXiv:2404.04465 , 2024a."
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] Xinyu Li, Zachary C Lipton, and Liu Leqi. Personalized language modeling from personalized human feedback. arXiv preprint arXiv:2402.05133 , 2024b."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] Ilya Loshchilov and Frank Hutter. Decoupled weight decay regularization. arXiv preprint arXiv:1711.05101 , 2017."
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] Chong Mou, Xintao Wang, Liangbin Xie, Yanze Wu, Jian Zhang, Zhongang Qi, and Ying Shan. T2i-adapter: Learning adapters to dig out more controllable ability for text-to-image diffusion models. In "
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] OpenAI. Gpt-4 technical report. ArXiv , abs/2303.08774, 2023."
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] Pablo Pernias, Dominic Rampas, Mats Leon Richter, Christopher Pal, and Marc Aubreville. Würstchen: An efficient architecture for large-scale text-to-image diffusion models. In The Twelfth Interna"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] Sriyash Poddar, Yanming Wan, Hamish Ivison, Abhishek Gupta, and Natasha Jaques. Personalizing reinforcement learning from human feedback with variational preference learning. arXiv preprint arXiv"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] Dustin Podell, Zion English, Kyle Lacey, Andreas Blattmann, Tim Dockhorn, Jonas Müller, Joe Penna, and Robin Rombach. SDXL: Improving latent diffusion models for high-resolution image synthesis. "
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] Mihir Prabhudesai, Anirudh Goyal, Deepak Pathak, and Katerina Fragkiadaki. Aligning text-to-image diffusion models with reward backpropagation. arXiv preprint arXiv:2310.03739 , 2023."
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al. Learning transferable visual models from"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] Rafael Rafailov, Archit Sharma, Eric Mitchell, Christopher D Manning, Stefano Ermon, and Chelsea Finn. Direct preference optimization: Your language model is secretly a reward model. In Advances "
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] Aditya Ramesh, Prafulla Dhariwal, Alex Nichol, Casey Chu, and Mark Chen. Hierarchical text-conditional image generation with clip latents. arXiv preprint arXiv:2204.06125 , 2022."
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn Ommer. High-resolution image synthesis with latent diffusion models. In Proceedings of the IEEE/CVF conference on comput"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] Chitwan Saharia, William Chan, Saurabh Saxena, Lala Li, Jay Whang, Emily L Denton, Kamyar Ghasemipour, Raphael Gontijo Lopes, Burcu Karagol Ayan, Tim Salimans, Jonathan Ho, David J Fleet, and Moh"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] Shibani Santurkar, Esin Durmus, Faisal Ladhak, Cinoo Lee, Percy Liang, and Tatsunori Hashimoto. Whose Opinions Do Language Models Reflect? arXiv e-prints , art. arXiv:2303.17548, 2023."
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] Christoph Schuhmann. CLIP MLP aesthetic score predictor. https://github.com/christophschuhmann/improved-aesthetic-predictor , 2022. Accessed: 2024-11-06."
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] Christoph Schuhmann, Romain Beaumont, Richard Vencu, Cade Gordon, Ross Wightman, Mehdi Cherti, Theo Coombes, Aarush Katta, Clayton Mullis, Mitchell Wortsman, et al. LAION-5b: An open large-scale "
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] Eyal Segalis, Dani Valevski, Danny Lumen, Yossi Matias, and Yaniv Leviathan. A picture is worth a thousand words: Principled recaptioning improves image generation. arXiv preprint arXiv:2310.1665"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] Jascha Sohl-Dickstein, Eric Weiss, Niru Maheswaranathan, and Surya Ganguli. Deep unsupervised learning using nonequilibrium thermodynamics. In International conference on machine learning , pages"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] Jiaming Song, Chenlin Meng, and Stefano Ermon. Denoising diffusion implicit models. In International Conference on Learning Representations , 2021a."
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[42] Yang Song and Stefano Ermon. Generative modeling by estimating gradients of the data distribution. Advances in neural information processing systems , 32, 2019."
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[43] Yang Song, Jascha Sohl-Dickstein, Diederik P Kingma, Abhishek Kumar, Stefano Ermon, and Ben Poole. Score-based generative modeling through stochastic differential equations. In International Conf"
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[44] Taylor Sorensen, Jared Moore, Jillian Fisher, Mitchell Gordon, Niloofar Mireshghallah, Christopher Michael Rytting, Andre Ye, Liwei Jiang, Ximing Lu, Nouha Dziri, Tim Althoff, and Yejin Choi. A R"
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[45] Bram Wallace, Meihua Dang, Rafael Rafailov, Linqi Zhou, Aaron Lou, Senthil Purushwalkam, Stefano Ermon, Caiming Xiong, Shafiq Joty, and Nikhil Naik. Diffusion model alignment using direct prefere"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[46] Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed Chi, Quoc Le, and Denny Zhou. Chain-of-thought prompting elicits reasoning in large language models, 2023."
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[47] Xiaoshi Wu, Yiming Hao, Keqiang Sun, Yixiong Chen, Feng Zhu, Rui Zhao, and Hongsheng Li. Human preference score v2: A solid benchmark for evaluating human preferences of text-to-image synthesis. "
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[48] Xiaoshi Wu, Keqiang Sun, Feng Zhu, Rui Zhao, and Hongsheng Li. Human preference score: Better aligning text-to-image models with human preference. In Proceedings of the IEEE/CVF International Con"
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[49] Jiazheng Xu, Xiao Liu, Yuchen Wu, Yuxuan Tong, Qinkai Li, Ming Ding, Jie Tang, and Yuxiao Dong. Imagereward: Learning and evaluating human preferences for text-to-image generation. In Advances in"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[50] Kai Yang, Jian Tao, Jiafei Lyu, Chunjiang Ge, Jiaxin Chen, Weihan Shen, Xiaolong Zhu, and Xiu Li. Using human feedback to fine-tune diffusion models without any reward model. In Proceedings of th"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[51] Hu Ye, Jun Zhang, Sibo Liu, Xiao Han, and Wei Yang. Ip-adapter: Text compatible image prompt adapter for text-to-image diffusion models. arXiv preprint arxiv:2308.06721 , 2023."
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[52] Chao Yu, Hong Lu, Jiaxuan Gao, Qixin Tan, Xinting Yang, Yu Wang, Yi Wu, and Eugene Vinitsky. Few-shot in-context preference learning using large language models. arXiv preprint arXiv:2410.17233 ,"
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[53] Jiahui Yu, Yuanzhong Xu, Jing Yu Koh, Thang Luong, Gunjan Baid, Zirui Wang, Vijay Vasudevan, Alexander Ku, Yinfei Yang, Burcu Karagol Ayan, Ben Hutchinson, Wei Han, Zarana Parekh, Xin Li, Han Zha"
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[54] Lvmin Zhang, Anyi Rao, and Maneesh Agrawala. Adding conditional control to text-to-image diffusion models. In Proceedings of the IEEE/CVF International Conference on Computer Vision , pages 3836–"
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[55] Yinan Zhang, Eric Tzeng, Yilun Du, and Dmitry Kislyuk. Large-scale reinforcement learning for diffusion models. arXiv preprint arXiv:2401.12244 , 4, 2024."
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[56] Rui Zheng, Shihan Dou, Songyang Gao, Yuan Hua, Wei Shen, Binghai Wang, Yan Liu, Senjie Jin, Qin Liu, Yuhao Zhou, Limao Xiong, Lu Chen, Zhiheng Xi, Nuo Xu, Wenbin Lai, Minghao Zhu, Cheng Chang, Zh"
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "p",
+   "en": "Supplementary Material"
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Direct Preference Optimization on Diffusion Models"
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "p",
+   "en": "Given dataset containing examples ⟦SLOT_103⟧, we define ⟦SLOT_104⟧ as the reward on image ⟦SLOT_105⟧ given prompt ⟦SLOT_106⟧. We would like to fine-tune a text-to-image models ⟦SLOT_107⟧ such that reward is maximized while keeping close to a reference model ⟦SLOT_108⟧ in terms of KL-divergence as regularization :"
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "table",
+   "en": "max p θ 𝔼 𝐜 , 𝐱 0 [ r ( 𝐜 , 𝐱 0 ) ] − β 𝔻 KL [ p θ ( 𝐱 0 | 𝐜 ) ∥ p ref ( 𝐱 0 | 𝐜 ) ] , \\max_{p_{\\theta}}\\mathbb{E}_{{\\mathbf{c}},{\\mathbf{x}}_{0}}\\left[r({\\mathbf{c}},{\\mathbf{x}}_{0})\\right]-\\beta\\ma"
+  },
+  {
+   "id": "b0165",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_109⟧ is a parameter controlling how much ⟦SLOT_110⟧ deviates from ⟦SLOT_111⟧."
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "p",
+   "en": "We introduce latent variables ⟦SLOT_112⟧ and define ⟦SLOT_113⟧ as the reward on the whole diffusion chain, such that we can define ⟦SLOT_114⟧. Given Eq. 8, we have"
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "table",
+   "en": "min p θ − 𝔼 p θ ​ ( 𝐱 0 | 𝐜 ) [ r ( 𝐜 , 𝐱 0 ) / β ] + 𝔻 KL [ p θ ( 𝐱 0 | 𝐜 ) | | p ref ( 𝐱 0 | 𝐜 ) ] ≤ min p θ − 𝔼 p θ ​ ( 𝐱 0 | 𝐜 ) [ r ( 𝐜 , 𝐱 0 ) / β ] + 𝔻 KL [ p θ ( 𝐱 0 : T | 𝐜 ) | | p ref ( 𝐱 0 "
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_115⟧ is the partition function. The optimal ⟦SLOT_116⟧ of Equation (9) has a unique closed-form solution:"
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "table",
+   "en": "p θ ∗ ( 𝐱 0 : T | 𝐜 ) = p ref ( 𝐱 0 : T | 𝐜 ) exp ( R ( 𝐜 , 𝐱 0 : T ) / β ) / Z ( 𝐜 ) , \\displaystyle p_{\\theta}^{*}({\\mathbf{x}}_{0:T}|{\\mathbf{c}})=p_{\\text{ref}}({\\mathbf{x}}_{0:T}|{\\mathbf{c}})\\ex"
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "p",
+   "en": "Therefore, we have the reparameterization of reward function"
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "table",
+   "en": "R ( 𝐜 , 𝐱 0 : T ) \\displaystyle R({\\mathbf{c}},{\\mathbf{x}}_{0:T}) = β log p θ ∗ ( 𝐱 0 : T | 𝐜 ) p ref ( 𝐱 0 : T | 𝐜 ) + β log Z ( 𝐜 ) . \\displaystyle=\\beta\\log\\frac{p_{\\theta}^{*}({\\mathbf{x}}_{0:T}|"
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "p",
+   "en": "Plug this into the definition of ⟦SLOT_117⟧, hence we have"
+  },
+  {
+   "id": "b0173",
+   "t": "keep",
+   "w": "table",
+   "en": "r ( 𝐜 , 𝐱 0 ) = β 𝔼 p θ ( 𝐱 1 : T | 𝐱 0 , 𝐜 ) [ log p ∗ θ ( 𝐱 0 : T | 𝐜 ) p ref ( 𝐱 0 : T | 𝐜 ) ] + β log Z ( 𝐜 ) . r({\\mathbf{c}},{\\mathbf{x}}_{0})=\\beta\\mathbb{E}_{p_{\\theta}({\\mathbf{x}}_{1:T}|{\\ma"
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "p",
+   "en": "Substituting this reward reparameterization into maximum likelihood objective of the Bradly-Terry model, the partition function cancels for image pairs, and we get a maximum likelihood objective defined on diffusion models, for a single pair ⟦SLOT_118⟧:"
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "table",
+   "en": "L Diffusion-DPO ( θ ) = − log σ ( β 𝔼 𝐱 + 1 : T , 𝐱 − 1 : T [ log p θ ( 𝐱 + 0 : T | 𝐜 ) p ref ( 𝐱 + 0 : T | 𝐜 ) − log p θ ( 𝐱 − 0 : T | 𝐜 ) p ref ( 𝐱 − 0 : T | 𝐜 ) ] ) L_{\\text{Diffusion-DPO }}(\\theta"
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_119⟧ and ⟦SLOT_120⟧. Since sampling from ⟦SLOT_121⟧ is intractable, we utilize the forward process ⟦SLOT_122⟧ for approximation."
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "table",
+   "en": "L approx ​ ( θ ) = − log σ ( β 𝔼 𝐱 + 1 : T , 𝐱 − 1 : T [ log p θ ( 𝐱 + 0 : T ) p ref ( 𝐱 + 0 : T ) − log p θ ( 𝐱 − 0 : T ) p ref ( 𝐱 − 0 : T ) ] ) \\displaystyle\\begin{split}L_{\\text{approx}}(\\theta)&="
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_123⟧. Therefore,"
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "table",
+   "en": "L approx ​ ( θ ) = − log σ ( β 𝔼 𝐱 + 1 : T , 𝐱 − 1 : T [ ∑ t = 1 T log p θ ​ ( 𝐱 t − 1 + | 𝐱 t + ) p ref ​ ( 𝐱 t − 1 + | 𝐱 t + ) − log p θ ​ ( 𝐱 t − 1 − | 𝐱 t − ) p ref ​ ( 𝐱 t − 1 − | 𝐱 t ) ] ) = − l"
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_124⟧ and ⟦SLOT_125⟧. Since function ⟦SLOT_126⟧ is a convex function, by Jensen’s inequality, we can push ⟦SLOT_127⟧ to the outside of ⟦SLOT_128⟧ and get an upper bound, therefore we have"
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "table",
+   "en": "L approx ​ ( θ ) ≤ \\displaystyle L_{\\text{approx}}(\\theta)\\leq − 𝔼 t , 𝐱 t + , 𝐱 t − ​ log ⁡ σ ⁡ ( β ​ T ​ 𝔼 𝐱 t − 1 + , 𝐱 t − 1 − ​ [ log ⁡ p θ ​ ( 𝐱 t − 1 + | 𝐱 t + ) p ref ​ ( 𝐱 t − 1 + | 𝐱 t + ) −"
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "p",
+   "en": "Using the Gaussian parameterization of the reverse process (Eq. 1), the above loss simplifies to:"
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "table",
+   "en": "L approx ​ ( θ ) = − 𝔼 𝐜 , 𝐱 0 + , 𝐱 0 − ​ log ⁡ σ ⁡ ( − β ​ T ​ ω ​ ( λ t ) CLOSE \\displaystyle L_{\\text{approx}}(\\theta)=-\\mathbb{E}_{{\\mathbf{c}},{\\mathbf{x}}^{+}_{0},{\\mathbf{x}}^{-}_{0}}\\log\\sigm"
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_129⟧, ⟦SLOT_130⟧, ⟦SLOT_131⟧, ⟦SLOT_132⟧ is a signal-to-noise ratio term."
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Experiments Details"
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "h3",
+   "en": "B.1 Diffusion Model Fine-tuning Details"
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "p",
+   "en": "For the experiments shown in Sec. 5.1, we optimize only the added cross-attention layers, with 150M trainable parameters in total. All models are trained using the AdamW optimizer with an effective batch size of 768 pairs, a learning rate of ⟦SLOT_133⟧, and a single training epoch. The hyperparameter ⟦SLOT_134⟧ is tuned within the range ⟦SLOT_135⟧. Training is conducted on the Pick-a-Pic training set, with the best ⟦SLOT_136⟧ selected based on the averaged rewards of generated samples evaluated on the Pick-a-Pic validation set, which contains 500 unique captions. Results are reported on the Partipromt dataset containing 1632 captions. For each method (each row in Tab. 1), ⟦SLOT_137⟧ is tuned independently. Experiments are conducted on H100 GPUs with 80GB of memory. Using 8 GPUs, each with a local batch size of 16, training for one epoch (approximately 1000 gradient update steps) takes about 2 hours."
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "p",
+   "en": "For the personalized real user experiments shown in Sec. 5.2, we use the same training settings as in Sec. 5.1 except for a reduced learning rate of ⟦SLOT_138⟧. We train on Pick-a-Pic training set, find the best hyper-parameter on Pick-a-Pic validation set and report results on Partiprompt dataset. As there are no automatic evaluation metrics to evaluate alignment with individualized user preferences, we find the best ⟦SLOT_139⟧ based on the highest PickScore on the Pick-a-Pic validation set. We then run Diffusion-DPO with the same ⟦SLOT_140⟧ as baseline."
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "h3",
+   "en": "B.2 Additional Details for Generating User Embeddings"
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "p",
+   "en": "As mentioned in Sec. 4.2, features from pre-trained VLM, LLaVA-OneVision [20], are constructed from ⟦SLOT_141⟧ few-shot examples. To elicit these features, we employ Zero-Shot Chain of Thought Prompting (COT) [17, 46] to allow the model to reason about the images in a preference pair as well as generate a user profile. The prompt used for this COT can be found in Tab. 2. We then extract an embedding from the VLM from the last hidden state of the Qwen 2 Language Model in the LLaVA OneVision architecture for the final token it generates for the User Profile (Step 5 in the COT Assistant Prompt in Tab. 2). For sampling, we use a temperature of 0.7 with nucleus sampling probability of 1.0 (no nucleus sampling). As seen in Fig. 2, the top-k accuracy of a learned classifier from this frozen embedding is high, significantly outperforming random chance, indicating that this embedding is expressive, able to distinguish users within the pick-a-pick dataset. We additionally store the generated user profile for the baselines where the user profile is appended to the caption as an augmentation for the fairest comparison."
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "h3",
+   "en": "B.3 Additional Details for Scoring"
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "p",
+   "en": "We similarly employ COT for scoring. We add an additional assistant prompt for User Preference Prediction as found in Tab. 2. Here, we employ a stronger VLM as a Judge, GPT 4o-mini. For consistency, we present each pair of images twice to the model. In particular, for two images A and B, we ask the VLM to judge the images in two different permutations: first A then B and first B then A. We omit comparisons where the model isn’t consistent in scoring (i.e A chosen for both comparisons or B chosen for both comparisons). For sampling, we utilize a temperature of 1.0 and nucleus sampling probability of 1.0 (no nucleus sampling). With COT and consistency, we find that we can match the preferences from real users in the Pick-a-Pic v2 dataset [16] with 83% accuracy."
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "h3",
+   "en": "B.4 Additional Details for Evaluation and Dataset Construction"
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "p",
+   "en": "Due to the restriction of fewshot prompting, we require at least ⟦SLOT_142⟧ examples per user. Therefore, we drop users in the Pick-a-Pic v2 dataset where the number of preference pairs that the user labels are below ⟦SLOT_143⟧. For classification, we subsample 300 users with the most preference pairs to allow for more examples in classification."
+  },
+  {
+   "id": "b0195",
+   "t": "keep",
+   "w": "table",
+   "en": "System Prompt You are an expert in image aesthetics and have been asked to predict which image a user would prefer based on the examples provided. COT Assistant Prompt You will be shown a few examples"
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Instructions for Embedding Generation and User Preference Prediction"
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C More Qualitative Examples"
+  },
+  {
+   "id": "b0198",
+   "t": "text",
+   "w": "p",
+   "en": "Similar to Fig. 4, the following figures show that PPD is able to interpolate among three distinct rewards during inference."
+  },
+  {
+   "id": "b0199",
+   "t": "keep",
+   "w": "table",
+   "en": "a cream-colored labradoodle wearing glasses and black beret teaching calculus at a blackboard"
+  },
+  {
+   "id": "b0200",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7:"
+  },
+  {
+   "id": "b0201",
+   "t": "keep",
+   "w": "table",
+   "en": "a black baseball hat with a flame decal on it"
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8:"
+  },
+  {
+   "id": "b0203",
+   "t": "keep",
+   "w": "table",
+   "en": "trees seen through a car window on a rainy day"
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9:"
+  }
+ ]
+}

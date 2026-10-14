@@ -1,0 +1,1636 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "UNIAA: A Unified Multi-modal Image Aesthetic Assessment Baseline and Benchmark"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract."
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "As an alternative to expensive expert evaluation, Image Aesthetic Assessment (IAA) stands out as a crucial task in computer vision. However, traditional IAA methods are typically constrained to a sing"
+  },
+  {
+   "id": "b0003",
+   "t": "text",
+   "w": "h6",
+   "en": "Keywords:"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1. Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Image Aesthetics Assessment (IAA) in computer vision involves the evaluation of the photography techniques and artistic approaches of images (Deng et al., 2017), to categorize them into various aesthetic levels (Hou et al., 2022; Niu et al., 2022). Serving as an alternative to costly expert aesthetic evaluation, IAA has a wide range of applications in image retrieval (Liu et al., 2021), album curation (Guo et al., 2017), smart photography (Rawat and Kankanhalli, 2016), and image editing(Chai et al., 2020), which is still a challenging task (Yang et al., 2019). Various datasets and models for IAA have been proposed, achieving significant progress. IAA datasets offer images with aesthetic scores (Murray et al., 2012; Kong et al., 2016; Yang et al., 2022) and other annotations of aesthetic attributes (Kong et al., 2016; He et al., 2022; Yang et al., 2022; Murray et al., 2012), as well as overall description (Jin et al., 2019). Many studies have achieved promising results by employing data-driven approaches to directly predict the aesthetic mean opinion scores (MOS) (He et al., 2022; Xiong et al., 2023; He et al., 2023), including convolutional neural networks (Talebi and Milanfar, 2018; Chen et al., 2020; He et al., 2022; Hosu et al., 2019), and transformers (Ke et al., 2021; Xia et al., 2022; He et al., 2023). There are also works that use aesthetic attributes and image content to assist in predicting scores (Kong et al., 2016; Yang et al., 2022; He et al., 2023). VILA (Ke et al., 2023) and RPCD (Vera Nieto et al., 2022) have demonstrated the potential of learning image aesthetics from photo comments."
+  },
+  {
+   "id": "b0006",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1. The Unified Multi-modal Image Aesthetic Assessment Framework, containing a baseline (a) and a benchmark (b). The aesthetic perception performance of UNIAA-LLaVA and other MLLMs is shown in (c)."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "Psychological studies reveal that the human experience of aesthetics involves a series of information processing stages, encompassing perception, integration of implicit memory, explicit classification of content and style, and evaluation (Leder et al., 2004; Chatterjee, 2004). However, current IAA methods are not well-aligned with the human aesthetic process. Regarding IAA datasets, most of them only cover a partial level of the human aesthetic evaluation process and lack standardization in their formats, which makes it difficult to train them under a uniform architecture. For example, AVA contains both the MOS of images as well as rich comments, photography style labels, and content tags. Aesthetic annotations are represented in different formats consisting of numeric, language, and category/attribute labels. Regarding IAA methods, they only utilize a part of aesthetic information and are predominantly focused on a single aesthetic task. Scoring models struggle to recognize the aesthetic attributes of images, while aesthetic description models can not score photos."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "We need a unified IAA framework that can align well with human aesthetic processes, integrate different sources and formats of aesthetic data, and achieve good results in multiple aesthetic subtasks. Specifically, we argue that in the process of IAA-model learning, it is necessary to align with the process of human aesthetics, rather than simply relying on implicit mapping through learning MOS or partial attributes (Vera Nieto et al., 2022; Ke et al., 2023). The model necessitates a visual understanding and harbors inherent reservoirs of aesthetic knowledge. It needs to learn explicit categorization of the aesthetic attributes and integrate the aesthetic information to provide detailed descriptions and overall scores. MLLM (OpenAI, 2023; Alayrac et al., 2022; Li et al., 2022; Driess et al., 2023; Zhu et al., 2023; Liu et al., 2023; Huang et al., 2023; Li et al., 2023) is primarily composed of a vision encoder and an LLM, which is capable of visual perception and has substantial knowledge capacity (Schaeffer et al., 2023), making it a natural fit for human-aligned and unified IAA."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "We propose UNIAA, as shown in Figure 1, which to the best of our knowledge, introduces MLLM to IAA for the first time, including an IAA-MLLM baseline and a comprehensive aesthetic benchmark. The baseline is capable of unifying aesthetic perception, description, and assessment tasks, while the benchmark comprehensively evaluates the aesthetic capabilities of MLLM from these three aspects, which strives to align the aesthetic evaluation process with that of human experts. For the baseline model, we adopt the well-established LLaVA (Liu et al., 2023a; Liu et al., 2023b) architecture and further finetune it with aesthetic visual instruction tuning data to obtain our UNIAA-LLaVA (Figure 1(a)). Based on the integration of visually aesthetic perception by the vision encoder and memory of aesthetic knowledge through LLM, UNIAA-LLaVA demonstrates a strong ability to learn and align with human aesthetics. However, due to the subjective and complex nature of aesthetics (Yang et al., 2022), annotating a large amount of aesthetic visual instruction tuning data is very expensive. Therefore, we establish a low-cost IAA Dataset Conversion Paradigm (IDCP), aiming to convert aesthetic annotations such as aesthetic attributes and comments from off-the-shelf IAA datasets into a MLLM visual-instruction-tuning format."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "To evaluate the aesthetic ability of the proposed UNIAA-LLaVA and other existing MLLMs, we construct a comprehensive and professional UNIAA-Bench (Figure 1(b)). To ensure diversity, we select test-set images from the IAA datasets as the in-domain split and collect images from the internet as the in-the-wild split. The in-the-wild split does not overlap with the IAA datasets that are used to train the UNIAA-LLaVA, which can further prove its generalization capability on various aesthetic tasks. In accordance with the image-quality Q-bench (Wu et al., 2023) and human aesthetic (Leder et al., 2004), we evaluate the aesthetic ability of MLLMs from three aspects, including Perception, Description, and Assessment. For Aesthetic Perception, we construct the UNIAA-QA dataset, which covers six general aesthetic attributes (Yang et al., 2022; Li et al., 2023) through its questions: content and theme, composition, color, light, focus and sentiments. For Aesthetic Description, we construct the UNIAA-Describe dataset to assess the ability of MLLM on detailed and professional aesthetic comments and suggestions. For Aesthetic Assessment, we test the zero-shot scoring ability of MLLMs through output token logits. Our contributions can be summed up into four points:"
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_0⟧ We establish an IAA framework that includes an IAA-Baseline and a comprehensive IAA-Bench, namely UNIAA. Both the learning process and evaluation process of UNIAA align with the visual aesthetic process of human experts."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_1⟧ We develop an IAA Datasets Conversion Paradigm (IDCP) to convert existing aesthetic datasets into a format suitable for MLLMs fine-tuning. Using converted data, we obtain the UNIAA-LLaVA, which unifies IAA subtasks with language."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_2⟧ We are constructing a comprehensive aesthetic evaluation benchmark called UNIAA-Bench, which systematically evaluates the aesthetic abilities of MLLMs from three overall dimensions: Aesthetic Perception, Aesthetic Description, and Aesthetic Assessment."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_3⟧ We demonstrate the effectiveness of UNIAA-LLaVA and IDCP, the authority of UNIAA-Bench, and the feasibility of MLLM in accomplishing aesthetic tasks through experiments."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "h2",
+   "en": "2. Related Work"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1. Image Aesthestic Assessment"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "Image Aesthetics Assessment has three main tasks: direct scoring of the aesthetic quality of images (Murray et al., 2012; Karayev et al., 2014; Tang et al., 2013; Ren et al., 2017; Lee et al., 2018; Yang et al., 2022; He et al., 2022), recognition of aesthetic attributes (Celona et al., 2022; Jin et al., 2019), and aesthetic description (Zhou et al., 2016; Wang et al., 2019). A multitude of approaches, encompassing network architecture design (Tang et al., 2013; He et al., 2023), loss function design (Kong et al., 2016; Talebi and Milanfar, 2018), utilization of the CLIP (Radford et al., 2021) pre-training model (Ke et al., 2023; Xiong et al., 2023), and more, have been proposed, demonstrating strong performance on their respective tasks and datasets. However, the majority of IAA models focus on accomplishing one or two subtasks. There is a lack of a comprehensive and versatile IAA model for holistic image aesthetic evaluation."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "Numerous datasets emerge to support the advancement of IAA. Murray et al. (Murray et al., 2012) pioneered the AVA dataset, which has gained significant popularity. Kong et al. (Kong et al., 2016) introduced the Aesthetics and Attributes Database (AADB), encompassing subjective aesthetic scores and attributes Addressing the need for generating captions based on photo aesthetics, Yu et al. (Chang et al., 2017) developed the Photo Critique Captioning Dataset (PCCD). TAD66K (He et al., 2022) is an extensive dataset encompassing 47 subjects. The Personalized Image Aesthetics Database with Rich Attributes (PARA) (Yang et al., 2022) includes nine image-oriented objective attributes and four human-oriented subjective attributes. ICAA17K (He et al., 2023) comprises 17K images capturing 30 popular color combinations, providing a valuable resource for color-oriented analysis. While these datasets were previously handled separately, the shared and correlated nature of aesthetic knowledge provides the potential for integrating learning."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "However, the current IAA methods still have a significant gap from a general-purpose image aesthetic evaluation, mainly due to the following two issues. Firstly, relying on human-labeled aesthetic ratings, i.e. MOS, for directly supervised learning may be sub-optimal, as it lacks of interpretability (Kang et al., 2020) and may lead to overfitting to label noise. Moreover, current methods are still constrained by the need to train different models for individual datasets. Tasks such as aesthetic perception, aesthetic description, and aesthetic assessment also require training in separate models (Yang et al., 2019). Current IAA methods lack comprehensive aesthetic information learning and universal applicability across different datasets and tasks. These limitations hinder the practical applicability and universality of IAA. Therefore, IAA urgently requires a unified and versatile approach to enhance its practical value."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2. Multi-modality Large Language Models"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Large language models (LLMs) such as GPT-4 (OpenAI, 2023), T5 (Chung et al., 2022), and LLaMA (Touvron et al., 2023), have demonstrated a remarkable language proficiency in general knowledge. By incorporating vision encoders (Radford et al., 2021) and additional adaptive modules into LLMs, Multi-modal Large Language Models (MLLMs) (Li et al., 2023; Gao et al., 2023; Liu et al., 2023; Dai et al., 2023; Zhang et al., 2023) have driven significant progress in tackling various multi-modal tasks concerning high-level vision, such as image captioning (Chen et al., 2015; Agrawal et al., 2019; Young et al., 2014), visual question answering (VQA) (Antol et al., 2015; Marino et al., 2019; Schwenk et al., 2022), and other language-related abilities (Liu et al., 2023; Fu et al., 2023; Li et al., 2023)."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "Although MLLMs (OpenAI, 2023; Alayrac et al., 2022; Li et al., 2022; Driess et al., 2023; Zhu et al., 2023; Liu et al., 2023; Huang et al., 2023; Li et al., 2023; Lin et al., 2023; Lin et al., 2024; Zhu et al., 2023; Jin et al., 2023) play a crucial role in advancing vision-language learning, they exhibit subpar performance in specific tasks and vertical applications (Li et al., 2023; Fu et al., 2023; Wu et al., 2023; Li et al., 2023). The emergence of fine-tuning with task-specific instructional knowledge has led to a surge of MLLMs tailored for specific tasks, such as Q-instruct (Wu et al., 2023), LLaVA-Med (Li et al., 2023), and Drive-GPT4 (Xu et al., 2023)."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "Why choose MLLM for IAA? There are two reasons for adapting MLLMs to IAA tasks. (1) MLLMs are capable of aesthetic visual perception and knowledge integration. (2) The fine-tuning data and output are both mediated by language, which facilitates the natural integration of aesthetic visual instruction tuning and enables seamless completion of IAA subtasks. These training data and subtasks are highly associated with the human aesthetic process (Leder et al., 2004). Our goal is to create a unified aesthetic foundational model that can integrate various aesthetic information and establish general capabilities across various tasks while robustly responding to open-ended human queries."
+  },
+  {
+   "id": "b0025",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2. The IAA Datasets Conversion Paradigm for UNIAA-LLaVA."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "h2",
+   "en": "3. UNIAA-LLaVA"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "In the following two sections, we present the details of our proposed aesthetic evaluation framework, UNIAA, which aims to unify the aesthetic information perception, description, and assessment tasks. As a starting point, we integrate LLaVA, a versatile multimodal conversational model (Liu et al., 2023a), as the initial model. Subsequently, we consistently refine and fine-tune the model to specifically cater to the demands of the aesthetic domain. There is a shortage of multi-modal image aesthetic datasets for training an instruction-following assistant. To bridge this gap, we construct the initial dataset of its kind, derived from extensively available IAA datasets. As a fundamental part of constructing the instruction fine-tuning dataset, we first introduce a low-cost paradigm for converting the instruction fine-tuning data. Unlike the need for manual annotation collection, we utilize the existing IAA dataset and transform it into corresponding suitable IAA instruction fine-tuning data based on the aesthetic dimensions emphasized during its labeling and annotation settings. Then, further using the transformed data, we obtain the first MLLM of IAA via instruction fine-tuning on the LLaVA."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1. IAA Datasets Conversion Paradigm"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "Inspired by the construction of classic datasets of instruction tuning (Fu et al., 2023; Liu et al., 2023; Wu et al., 2023; Chen et al., 2023), our IAA Data Conversion Paradigm (IDCP) consists of three steps: data selection, data filtering, and question-answer generation, as illustrated in Figure 2. The converted data will be used for training UNIAA-LLaVA. We hope that our IAA data transformation pipeline can provide inspiration and guidance for building new IAA instruction tuning datasets as well as other domain-specific task datasets."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "h4",
+   "en": "3.1.1. Data Selection."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "To maximize the diversity and comprehensiveness of UNIAA, we first select five open-source mainstream IAA datasets, AVA, AADB, ICAA17K, PARA, and PCCD, detailed in Appendix A.1. These datasets have aesthetic annotations across different dimensions. We select specific aesthetic information. The annotation content of existing IAA datasets can be primarily categorized into the following three types, aesthetic attributes, aesthetic comments, and aesthetic scores. We choose the first two categories."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "Aesthetic Attributes are annotated information about photographs on specific objective aesthetic dimensions. Its exceptional suitability for conversion into visual question answering empowers the model with the ability to recognize and evaluate the aesthetic attributes of images using concise words. The data sources for aesthetic attributes include the photography styles annotated in AVA, the influence of aesthetic attributes on overall image aesthetics in AADB, the color schemes in the ICAA17K dataset, and the quality classification of aesthetic attributes in PARA."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "Aesthetic Comments are evaluations and descriptions of aesthetic features, aiming to explore and convey the aesthetic ambiance and emotional experiences that images invoke. Descriptions of aesthetic comments can be made from various perspectives, such as color, composition, form of expression, meaning, emotions, etc. These comments can help models better understand and appreciate images. The data sources for aesthetic comments include the overall comment on a photo in AVA and the dimensional comment in PCCD including the use of camera, photo subject, depth of field, focus, color brightness, composition, and overall impression."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Why not use Aesthetic Scores? Aesthetic Scores are highly subjective (Yang et al., 2022). Due to the differences in scoring rules and aesthetic differences among annotation experts, it is difficult to convert scores from different IAA datasets into unified evaluation scores. For example, a photo with a high score in one dataset may not have better aesthetic quality than a photo with a medium score in another dataset. Instead, we use attributes and descriptions to enable the UNIAA-LLaVA to have good zero-shot scoring capability, detailed in Section 5.3. As a supplementary experiment, based on the vision encoder of UNIAA-LLaVA, we further conduct supervised training on specific datasets and achieve the SOTA performance, demonstrating the generalization of our learning framework."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h4",
+   "en": "3.1.2. Data Filtration."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "Data Quality. We ensure the quality of the training data from the source by conducting manual checks on the selected data for both completeness and accuracy. We filter out empty or incomplete annotations and remove incorrectly labeled aesthetic dimensions. We check the difficulty of aesthetic information by removing data that is too simple or too difficult. We discard the \"Tags\" of AVA, which contain simple categories like \"Water\" and \"Street\" due to their low relevance to aesthetics. For some attributes in AADB, such as whether colors are harmonious, we filter out samples that are difficult for experts to judge."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "Data Balance. To introduce diverse visual aesthetic appearances, we uniformly sampled images from each aesthetic quality range. We balance the number of aesthetic attributes as well as the number of options within each attribute. For yes or no questions, we ensure the balance between \"yes\" and \"no\" responses."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "h4",
+   "en": "3.1.3. QA Generation."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "Attributes-based Pipeline. According to aesthetic attribute annotation, aesthetic experts first manually write down several elemental questions, and then let ChatGPT expand them into various forms while ensuring the same meaning, detailed in Appendix A.2. To imitate diverse query formats from human beings (Wu et al., 2023), we organize three question types, Yes-or-No, What, and How, which correspond to different types of annotations. For binary attribute questions, such as whether elements in a photo are balanced, \"yes/no\" is used. Specifically, for questions about the types of attributes, such as the primary color usage of a picture, \"what\" is used. For quality classification questions, such as the quality of focus, \"how\" is used."
+  },
+  {
+   "id": "b0041",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3. The UNIAA-Bench overview. (a) UNIAA-QA contains 5354 Image-Question-Answer samples and (b) UNIAA-Describe contains 501 Image-Description samples. (c) For open-source MLLMs, Logits can be extracted to calculate the score."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "Comments-based Pipeline. The quality and style of aesthetic comments in different datasets can vary. For instance, the comments in the AVA (Murray et al., 2012) are more colloquial, whereas the PCCD (Chang et al., 2017) contains professional comments from experienced photographers. It is necessary to use ChatGPT (OpenAI, 2023a; OpenAI, 2023b) to clean the raw data, detailed in Appendix A.3. The transformation process of aesthetic comments mainly consists of two steps: comments rewriting and question matching. We utilize GPT and LLaVA to assist in rewriting the comments. LLaVA offers the image content and details. GPT is prompted to filter out the drawbacks of aesthetic comments from different datasets, such as the colloquial content in AVA that is not relevant to aesthetics and the excessively long comments in PCCD."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "Regarding question matching, we use the length and dimension of cleaned content as key points. We ask the MLLM questions to evaluate the image’s overall aesthetic and specific dimensions, such as composition, lighting, and impression. If the comments include explanations for aesthetic patterns and suggestions for aesthetic improvements, the matching questions will also include phrases such as \"analyze the causes of this characteristic\" and \"please provide some aesthetic improvement suggestions.\" If the comments exceed a certain length, such as 100 words, the corresponding question would be to provide a “detailed” evaluation of the image."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "h4",
+   "en": "3.1.4. IDCP Advantages Discussion."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "As a general MLLM aesthetic data conversion paradigm, IDCP has the following three advantages. Firstly, it is low cost. IDCP integrates publicly available datasets, without the need for additional manpower to collect and annotate data. Secondly, it has uniformity. Through conversion, aesthetic comments and aesthetic attributes can be trained in a unified format, enhancing the overall aesthetic capabilities of the model. Thirdly, it has scalability. In addition to the five datasets we select, it can also be used to incorporate newly emerged aesthetic datasets, and more data will further enhance the aesthetic capabilities of the model."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2. Image Aesthetic Visual Instruction Tuning"
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we discuss the training approaches used to fine-tune MLLMs with Image Aesthetic visual instructions. The training process for open-source MLLMs (Dai et al., 2023; Li et al., 2023; Zhang et al., 2023) consists of two stages. The first stage involves aligning the representation space of the visual backbone and LLM with million-scale data (Schuhmann et al., 2021; Sharma et al., 2018). The second stage includes fine-tuning the MLLM with a combination of human-labeled datasets (Yu et al., 2016; Antol et al., 2015; Chen et al., 2015; Marino et al., 2019) for visual instruction tuning. Considering the scale and computational cost of the IDCP dataset, we utilize the MLLM fine-tuned after the second stage for visual instruction tuning to perform IAA learning. IAA tasks require a finer level of visual perception. We open the parameter training of the vision encoder during training."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "h2",
+   "en": "4. UNIAA-Bench"
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "It is uncertain how well the UNIAA-LLaVA performs in image aesthetics. The lack of a dedicated benchmark for assessing the effectiveness of MLLMs in aesthetic evaluation presents an apparent obstacle, which may hinder the progress of advanced MLLMs capable of aesthetics. To solve this problem, we propose UNIAA-Bench, an expert benchmark designed to comprehensively evaluate the aesthetic capabilities of MLLMs. To ensure the diversity of the benchmark (Liu et al., 2023a), we select images from the internet and other datasets that have never been seen by UNIAA-LLaVA, serving as In-the-Wild resources. IAA-Bench also contains test-set images from the IAA datasets as In Domain resources, whose training sets were previously used during the training of our baseline. Inspired by human aesthetic process (Leder et al., 2004) and image-quality bench (Wu et al., 2023), we suggest a collection of integrative standards to measure the aesthetic skills of MLLMs from three perspectives: Aesthetic Perception, Aesthetic Description, and Aesthetic Assessment."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1. Aesthetic Perception"
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "We construct the UNIAA-QA to investigate whether MLLMs can accurately respond to simple natural language queries related to aesthetic attributes, which is also an ability of human experts to recognize explicit aesthetic information (Leder et al., 2004). UNIAA-QA contains 5,354 images, as listed in Figure 3(a), including 2,229 images in the domain and 3,125 images from the wild. The aesthetic issues examined in the WILD do not exist in the training of UNIAA-LLaVA, as indicated by the item highlighted in red in Figure 3(a). For each image, there is one question related to perception, with one correct option and 1-3 false options. Drawing on recent studies on aesthetic perception (Yang et al., 2022) and the human perception process related to image aesthetics (Li et al., 2023), the UNIIAA-QA subset addresses six dimensions through its questions: Content and Theme, Composition, Color, Light, Focus and Sentiment."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "Content and Theme are the first aspects that need to be understood when analyzing the aesthetics (Leder et al., 2004; Li et al., 2023). Question design includes asking about photo theme, subject type, content, and influence on aesthetics. Composition is a critical indicator in characterizing the aesthetic qualities of an image (Celona et al., 2022), which structures the visual story and enhances the aesthetic appeal. Within visual arts, the visual elements of an image are interdependent through composition (Liu et al., 2019), relying on each other to collectively showcase the aesthetic qualities of the entire image. Composition contains multiple categories, such as the rule of thirds, diagonal, symmetry, and centering. Color is considered more perceptually distinct and relevant than other aesthetic features (He et al., 2023) since the human eye can directly perceive different wavelengths of light and convert them into distinct color signals. UNIAA-Bench examines color scheme, color combination, and color harmony. Light affects aspects of the image such as brightness, contrast, and saturation, which can create a sense of visual hierarchy and depth. The perception of light includes the lighting quality, the type of luminance source, and the lighting tone. Focus highlights the important part of the image. A good focus can help the viewer better understand the story of the image and the emotions conveyed, thus improving the aesthetic quality of the image. Sentiment plays a crucial role in visual aesthetic (Feng et al., 2023; Leder et al., 2004). It encompasses emotional reactions, attractiveness, and understanding of atmosphere in aesthetic experiences."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "The UNIAA-QA utilizes three question types commonly used in human queries when interacting with MLLMs (Chen et al., 2023; Wu et al., 2023): \"Yes-or-No\" questions requires a positive or negative response (e.g., Does this photo employ the rule of thirds in its composition?). \"What\" questions examine more comprehensive aesthetic perception, such as \"What type of composition is used in this photo?\". \"How\" questions are used to evaluate more details about the grade and production of aesthetic feeling in the image, such as \"How does the use of symmetry composition affect photo aesthetic quality?\"."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1. Evaluation results on the Aesthetic Perception ability. We highlight the best result of each subclass with bold and underline the second, third, and fourth best sub-optimal results. CS means the model is the close source. *GPT-4V may refuse to answer some questions, and the accuracy is calculated based on the questions it answers."
+  },
+  {
+   "id": "b0056",
+   "t": "keep",
+   "w": "table",
+   "en": "MLLM Aesthetic Attributes Question Types Image Sources Overall Rank Con. The. Comp. Color Light Focus Sent. Yes-No What How In-Domain Wild Random guess 36.15% 33.67% 39.43% 39.62% 38.07% 41.72% 50.00%"
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2. Aesthetic Description"
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "We construct the UNIAA-Describe subset to examine the aesthetic language description ability of MLLMs. UNIAA-Describe is a golden aesthetic description dataset, consisting of a single long (averaging 100 words) expert-provided description for each image. The dataset consists of 501 images, categorized into low, medium, and high aesthetic quality with 151, 150, and 200 images respectively. The description includes a concise and detailed analysis of the aesthetic attributes and photographic techniques used in the image, such as composition, color, focus, lighting, and sentiment. Improvement suggestions and overall aesthetic conclusions are summarized at the end of the description. All descriptions have been written by aesthetic experts and manually reviewed. Referring to these golden text descriptions, we can measure the quality of MLLMs output using a single-modal GPT (Wu et al., 2023), evaluated along three dimensions: Completeness, Preciseness, and Relevance. The prompt words used to generate descriptions for MLLM are as follows:"
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "User: Describe and evaluate the aesthetic attribute in detail."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "For images with medium and low aesthetic quality, we prompt MLLM to generate additional aesthetic improvement suggestions: Give suggestions for improvement. The specific GPT evaluation prompts can be found in Appendix B.6."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3. Aesthetic Assessment"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "The third task tests the zero-shot capability of MLLMs to provide quantitative scores of the overall aesthetic of images. Recent explorations (Wu et al., 2023) have observed that LMMs exhibit similar behavior patterns to humans when instructed to score, preferring to respond defined levels, such as good and poor. Using the prompt,"
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "User: Rate this image from an aesthetic perspective."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "MLLM: The aesthetic quality is [Score Token]."
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "MLLMs can provide log probabilities (logits) of the score token. The standard rating level texts (Series, 2012), are bad, poor, fair, good, excellent. Inspired by Q-bench(Wu et al., 2023) and Q-align(Wu et al., 2023), we employ softmax pooling on the logits of rating level words of the score token, to obtain their probabilities. Figure 3(c) gives an assessment example."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "The quantified scores ⟦SLOT_4⟧ for the five rating-level words:"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "Excellent: 5, Good: 4, Fair: 3, Poor: 2, Bad: 1"
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "The probability calculation for each rating-level word is as follows:"
+  },
+  {
+   "id": "b0069",
+   "t": "keep",
+   "w": "table",
+   "en": "(1) p r i = e ℒ r i ∑ j = 1 5 e ℒ r j , p_{r_{i}}=\\frac{e^{\\mathcal{L}_{r_{i}}}}{\\sum_{j=1}^{5}{e^{\\mathcal{L}_{r_{j}}}}},"
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_5⟧ is the rating-level word, and ⟦SLOT_6⟧ represents the logits of the rating word output by MLLMs. We obtain an aesthetic quantification score of the image using MLLMs by multiplying the corresponding quantified score of the five rating-level adjectives by their respective probabilities:"
+  },
+  {
+   "id": "b0071",
+   "t": "keep",
+   "w": "table",
+   "en": "(2) S MLMM = ∑ i = 1 5 p r i ​ S i \\mathrm{S_{MLMM}}=\\sum_{i=1}^{5}p_{r_{i}}S_{i}"
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_7⟧ and the ground-truth scores will be used to calculate Spearman’s rank correlation coefficient (SRCC) and Pearson linear correlation coefficient (PLCC). The higher these two metrics are, the better the scoring ability of MLLMs. We select four mainstream IAA dataset sources: AVA, PARA, TAD66K, and Flick-Aes (Ren et al., 2017), of which the training set of the first two are used in the training process, while the latter two are not. They are depicted in Appendix B.3. It is worth noting that although we use the aesthetic information annotations of AVA and PARA during the training process, we do not use their MOS for training. So it is a zero-shot assessment task."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "h2",
+   "en": "5. Experiments"
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "We select LLaVA-1.5-7B (Liu et al., 2023b) as the base model, which contains a ViT-L image encoder, a LLaMA-2-7B, and an MLP connector. Detailed training information is in the Appendix A.5. In UNIAA-Bench, we assess 13 variants on the 10 most current and competitive open-source MLLMs, as well as GPT-4V and Gemini-Pro-Vision. We also report the perception results of human aesthetic judgment."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1. Results on Aesthetic Perception"
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "p",
+   "en": "We assess the aesthetic perception of MLLMs by testing their capability to provide accurate responses to uncomplicated natural language queries related to aesthetic attributes. Table 1 summarizes the outcomes. It is pleasing to note that the majority of MLLMs can significantly surpass random guessing on all aesthetic attributes. Except for Qwen-VL, it will answer \"uncertain\" for some of the questions about aesthetic choices. We provide its response examples in the Appendix B.5. Given that these general-purpose models did not receive much explicit training on visual aesthetic attributes, these findings demonstrate their strong potential for aesthetics. By comparing UNIAA-LLaVA with the original LLaVA-1.5, it can be found that using aesthetic fine-tuning data obtained by the IAA conversion pipeline can significantly improve the aesthetic perception ability of MLLM. There is an increase of over 10% in almost all aesthetic dimensions. It is worth noting that the accuracy of composition has been improved from less than 50% to 66.82%. In terms of question types, the largest improvement is in the \"How\" type of questions, which increases by 30%. The simultaneous improvement of UNIAA-LLaVA in both in-the-wild and in-domain data proves its generalization of aesthetic perception ability. This finding demonstrates that aesthetic abilities are transferable and can be well generalized to unseen images. Compared with GPT-4V, we achieve a leading performance in four out of six dimensions except for the composition and content and have an overall accuracy higher than GPT-4V (78.48% vs. 74.74%). In addition to our model, two closed-source models have a high visual aesthetic perception ability in mainstream MLLMs. There is no doubt that GPT-4V is the strongest, with Gemini Pro ranking fourth among all models and only slightly behind mPLUG-Owl2. The best in open-source MLLM is mPLUG-Owl2, with its perceptual accuracy surpassing ShareGPT-4V by 3.59%. The most challenging perceptual dimension for MLLM is Composition, with most models not exceeding 60%. This may be due to the difficulty of the composition appreciation task and the diversity of composition techniques. Compared to \"what\" and \"yes/no\" questions, MLLMs generally have low accuracy in answering \"how\" questions, indicating that their ability to rate aesthetics needs to be improved."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "MLLMs VS. Human. Although leading other models, UNIAA-LLaVA still lags behind Junior-level Humans slightly (78.48% VS. 79.01%). Despite its prowess, there is still a way to go for UNIAA-LLaVA before it can match the overall proficiency of the Senior-level Human (with experiences on visual aesthetic tasks, 10% better than UNIAA-LLaVA). The aspect in which the largest gap between MLLMs and humans exists is composition. The comparative results with human evaluation indicate that MLLMs still have a long way to go in terms of visual aesthetics, and it is necessary to continue enhancing the visual aesthetic ability of MLLMs."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2. Result on Aesthetic Description"
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "In terms of descriptive ability, as shown in Table 2, GPT-4V achieves the highest performance and UNIAA-LLaVA takes the lead in completeness and preciseness. As accurate description is the most difficult, all MLLMs have not achieved a score of 1 or higher in preciseness. Instead, They achieve good scores in completeness, with scores higher than 0.8. Overall, only the GPT-4V, UNIAA-LLaVA, and ShareGPT-4V score over 3 out of 6. All the MLLMs fail the UNIAA-Describe test (3.6/6.0). MLLMs have relatively limited and basic abilities in providing aesthetic descriptions. Detailed examples and qualitative analysis can be found in Appendix C.3."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2. Evaluation on the Aesthetic Description. Due to the high cost and difficulty, human results are not be provided."
+  },
+  {
+   "id": "b0081",
+   "t": "keep",
+   "w": "table",
+   "en": "MLLM Comp. Prec. Rele. Overall UNIAA-LLaVA 1.581 0.821 1.046 3.448 GPT-4V (CS) 1.448 0.754 1.372 3.574 ShareGPT-4V 1.427 0.722 0.978 3.127 LLaVA-1.5 1.271 0.709 0.948 2.928 LLaVA 1.287 0.673 0.956 2.9"
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3. Evaluation results on the Aesthetic Assessment ability. Metrics are PLCC/SRCC. Seen means using the data in training UNIAA-LLaVA, while unseen means not using. Due to the enormous quantity, we do not use human-assessment."
+  },
+  {
+   "id": "b0083",
+   "t": "keep",
+   "w": "table",
+   "en": "Model AVA PARA TAD66K Flickr-Aes Seen Seen Unseen Unseen UNIAA-LLaVA 0.704/0.713 0.895/0.864 0.425/0.411 0.751/0.724 Aes-CLIP 0.637/0.647 - - - VILA 0.664/0.658 0.635/0.657 0.372/0.350 0.602/0.577 Q-I"
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "h3",
+   "en": "5.3. Result on Aesthetic Assessment"
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "p",
+   "en": "As depicted in 4.3, we use the score token to predict aesthetic scores, and compute the PLCC/SRCC concerning ground truth. The results are listed in Table 3. UNIAA-LLaVA leads zero-shot score performance on all four mainstream IAA datasets, even though it has not been trained on TAD66K and Flick-AES. It’s worth noting that we do not use MOS values during the training. The result indicates that we can fine-tune MLLMs effectively on Aesthetic Assessment by utilizing aesthetic knowledge transformed from IDCP. Additionally, we obtain the state-of-the-art (SOTA) performance on AVA and TAD66K by conducting supervised training using the vision encoder of UNIAA-LLaVA, as shown in Appendix C.1. We achieve a PLCC of 0.838 on AVA and 0.553 on TAD66K with our vision encoder and some additional linear layers."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4. Ablation study. AA represents using aesthetic attribute data obtained from IDCP to optimize MLLM, while AC represents using aesthetic comment/description data. RAW represents using raw comment data without going through IDCP."
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "table",
+   "en": "AA AC Perception Desc. TAD66K Flickr-Aes In-domain Wild Overall ✓ \\checkmark ✓ \\checkmark 78.78% 78.27% 78.48% 3.448 0.43/0.41 0.75/0.72 ✓ \\checkmark × \\times 75.68% 72.58% 73.87% 2.511 0.32/0.30 0.68"
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "h3",
+   "en": "5.4. Ablation Study"
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "h4",
+   "en": "5.4.1. IDCP ablation experiments"
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "To validate the effectiveness of IDCP, we conduct ablation experiments on aesthetic data types, cleaning steps, and additional MLLM, as shown in Table 4. When using only aesthetic attributes or aesthetic descriptions, a decrease in perception occurs in both cases, with a greater decrease observed in the latter. This reflects the importance of attributes and comments in improving aesthetic capabilities. The use of raw comments training led to a 3.8% decrease in WILD, demonstrating that lacking IDCP cleaning can affect generalization. Meanwhile, the description ability decreases significantly, indicating the necessity of rewriting the raw data using IDCP. When any of the IDCP stages is missing, the performance of the model will decrease to a different extent."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5. Results on Q-bench LLVisionQA dev set. QI represents Q-Instruct data for image quality assessment finetuning."
+  },
+  {
+   "id": "b0092",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Acc. InstructBLIP 56.72% LLaVa-v1.5-7B 58.66% LLaMA-Adapter-V2 59.46% LLaVA-v1.5-13B 62.14% mPLUG-Owl2 62.90% InternLM-XComposer-VL 65.35% Qwen-VL-Plus (CS) 66.04% Gemini-pro-vison (CS) 68.16% "
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "h4",
+   "en": "5.4.2. UNIAA on mPLUG-OWL2"
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "We obtain the UNIAA-mPLUG-OWL2 using the same data of UNIAA-LLaVA, and find that its accuracy on the Aesthetic Perception is 77.89%, which is slightly lower than UNIAA-LLaVA and better than GPT-4V. This further proves the generality of IDCP. UNIAA-mPLUG-OWL2 also achieves significant improvements in both description and assessment compared to the vanilla model."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "h4",
+   "en": "5.4.3. Ablation of Fine-tuning the vision encoder."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "We freeze the weights of vision encoder during training while keeping other training settings consistent. The perception is 76.82%, lower than the original UNIAA-LLaVA (78.48%), and a similar trend is observed in assessment. It shows that IAA tasks require a finer level of visual perception. Freezing VE slightly improves aesthetic description."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "h4",
+   "en": "5.4.4. Generalization on image quality benchmark."
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "Q-bench (Wu et al., 2023) is a low-level visual benchmark on image quality assessment. As shown in Table 5, UNIAA-LLaVA performs surprisingly well. Without being trained on image quality datasets, it not only outperforms many open-source MLLMs, but also surpasses models trained using Q-instruct, which is specifically designed for image quality. The consistency result between Q-bench and UNIAA-Bench demonstrates the effectiveness of IDCP and the reliability of UNIAA-Bench."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "h2",
+   "en": "6. Conclusion"
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we introduce Unified Multi-modal Image Aesthetic Assessment (UNIAA), a complete framework to enhance and examine the visual aesthetic ability of MLLMs, including UNIAA-LLaVA and UNIAA-Bench. We propose the first-of-a-kind multi-modal IAA Datasets Conversion Paradigm (IDCP). It permits MLLMs to substantially enhance accuracy in answering queries about visual aesthetic perception and also demonstrates the potential to produce more dependable aesthetic descriptions of images. Ultimately, this could serve to alleviate the workload of human experts in performing IAA. UNIAA-Bench examines MLLMs based on three crucial capabilities: the ability to perceive aesthetic attributes, the ability to provide an accurate and thorough aesthetic description, and the capacity to offer a score of aesthetic quality. The evaluation carried out by UNIAA-Bench has yielded two significant findings. The first finding is that UNIAA-LLaVA exhibits superior aesthetic abilities compared to other MLLM models, which serves as evidence of the effectiveness of IDCP. The second finding is that, in comparison to human experts, MLLMs still have a significant distance to traverse in order to become a truly dependable general visual aesthetic assistant. We sincerely hope that UNIAA can inspire future MLLMs to enhance their aesthetic abilities."
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Deng et al . (2017) Yubin Deng, Chen Change Loy, and Xiaoou Tang. 2017. Image aesthetic assessment: An experimental survey. IEEE Signal Processing Magazine 34, 4 (2017), 80–106."
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hou et al . (2022) Jingwen Hou, Henghui Ding, Weisi Lin, Weide Liu, and Yuming Fang. 2022. Distilling knowledge from object classification to aesthetics assessment. IEEE Transactions on Circuits and S"
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Niu et al . (2022) Yuzhen Niu, Shanshan Chen, Bingrui Song, Zhixian Chen, and Wenxi Liu. 2022. Comment-guided semantics-aware image aesthetics assessment. IEEE Transactions on Circuits and Systems for"
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al . (2021) Fangcen Liu, Chenqiang Gao, Yongqing Sun, Yue Zhao, Feng Yang, Anyong Qin, and Deyu Meng. 2021. Infrared and visible cross-modal image retrieval through shared features. IEEE Transa"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Guo et al . (2017) Cong Guo, Xinmei Tian, and Tao Mei. 2017. Multigranular event recognition of personal photo albums. IEEE Transactions on Multimedia 20, 7 (2017), 1837–1847."
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Rawat and Kankanhalli (2016) Yogesh Singh Rawat and Mohan S Kankanhalli. 2016. ClickSmart: A context-aware viewpoint recommendation system for mobile photography. IEEE Transactions on Circuits and Sys"
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chai et al . (2020) Xiongli Chai, Feng Shao, Qiuping Jiang, and Yo-Sung Ho. 2020. Roundness-preserving warping for aesthetic enhancement-based stereoscopic image editing. IEEE Transactions on Circuits"
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al . (2019) Hongtao Yang, Ping Shi, Saike He, Da Pan, Zefeng Ying, and Ling Lei. 2019. A comprehensive survey on image aesthetic quality assessment. In 2019 IEEE/ACIS 18th International Confer"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Murray et al . (2012) Naila Murray, Luca Marchesotti, and Florent Perronnin. 2012. AVA: A large-scale database for aesthetic visual analysis. In 2012 IEEE conference on computer vision and pattern rec"
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kong et al . (2016) Shu Kong, Xiaohui Shen, Zhe Lin, Radomir Mech, and Charless Fowlkes. 2016. Photo aesthetics ranking network with attributes and content adaptation. In European conference on comput"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al . (2022) Yuzhe Yang, Liwu Xu, Leida Li, Nan Qie, Yaqian Li, Peng Zhang, and Yandong Guo. 2022. Personalized Image Aesthetics Assessment With Rich Attributes. In Proceedings of the IEEE/CVF "
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "He et al . (2022) Shuai He, Yongchang Zhang, Rui Xie, Dongxiang Jiang, and Anlong Ming. 2022. Rethinking Image Aesthetics Assessment: Models, Datasets and Benchmarks. In Proceedings of the Thirty-Firs"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jin et al . (2019) Xin Jin, Le Wu, Geng Zhao, Xiaodong Li, Xiaokun Zhang, Shiming Ge, Dongqing Zou, Bin Zhou, and Xinghui Zhou. 2019. Aesthetic attributes assessment of images. In Proceedings of the 2"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xiong et al . (2023) Zhiwei Xiong, Yunfan Zhang, Zhiqi Shen, Peiran Ren, and Han Yu. 2023. Image Aesthetics Assessment via Learnable Queries. arXiv preprint arXiv:2309.02861 (2023)."
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "He et al . (2023) Shuai He, Anlong Ming, Shuntian Zheng, Haobin Zhong, and Huadong Ma. 2023. EAT: An Enhancer for Aesthetics-Oriented Transformers. In Proceedings of the 31st ACM International Confere"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Talebi and Milanfar (2018) Hossein Talebi and Peyman Milanfar. 2018. NIMA: Neural image assessment. IEEE transactions on image processing 27, 8 (2018), 3998–4011."
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al . (2020) Qiuyu Chen, Wei Zhang, Ning Zhou, Peng Lei, Yi Xu, Yu Zheng, and Jianping Fan. 2020. Adaptive Fractional Dilated Convolution Network for Image Aesthetics Assessment. In IEEE/CVF Co"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hosu et al . (2019) Vlad Hosu, Bastian Goldlucke, and Dietmar Saupe. 2019. Effective Aesthetics Prediction With Multi-Level Spatially Pooled Features. In Proceedings of the IEEE/CVF Conference on Comp"
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ke et al . (2021) Junjie Ke, Qifei Wang, Yilin Wang, Peyman Milanfar, and Feng Yang. 2021. MUSIQ: Multi-Scale Image Quality Transformer. In Proceedings of the IEEE/CVF International Conference on Comp"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xia et al . (2022) Zhuofan Xia, Xuran Pan, Shiji Song, Li Erran Li, and Gao Huang. 2022. Vision transformer with deformable attention. In Proceedings of the IEEE/CVF conference on computer vision and "
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "He et al . (2023) Shuai He, Anlong Ming, Yaqi Li, Jinyuan Sun, ShunTian Zheng, and Huadong Ma. 2023. Thinking image color aesthetics assessment: Models, datasets and benchmarks. In Proceedings of the "
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ke et al . (2023) Junjie Ke, Keren Ye, Jiahui Yu, Yonghui Wu, Peyman Milanfar, and Feng Yang. 2023. VILA: Learning Image Aesthetics from User Comments with Vision-Language Pretraining. In Proceedings "
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Vera Nieto et al . (2022) Daniel Vera Nieto, Luigi Celona, and Clara Fernandez Labrador. 2022. Understanding Aesthetics with Language: A Photo Critique Dataset for Aesthetic Assessment. Advances in Ne"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Leder et al . (2004) Helmut Leder, Benno Belke, Andries Oeberst, and Dorothee Augustin. 2004. A model of aesthetic appreciation and aesthetic judgments. British journal of psychology 95, 4 (2004), 489"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chatterjee (2004) Anjan Chatterjee. 2004. Prospects for a cognitive neuroscience of visual aesthetics. Bulletin of Psychology and the Arts 4, 2 (2004), 56–60."
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2023) OpenAI. 2023. GPT-4V(ision) System Card. https://api.semanticscholar.org/CorpusID:263218031 ."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Alayrac et al . (2022) Jean-Baptiste Alayrac, Jeff Donahue, Pauline Luc, Antoine Miech, Iain Barr, Yana Hasson, Karel Lenc, Arthur Mensch, Katie Millican, Malcolm Reynolds, Roman Ring, Eliza Rutherfor"
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al . (2022) Junnan Li, Dongxu Li, Silvio Savarese, and Steven C. H. Hoi. 2022. BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. In ICML ."
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Driess et al . (2023) Danny Driess, F. Xia, Mehdi S. M. Sajjadi, Corey Lynch, Aakanksha Chowdhery, Brian Ichter, Ayzaan Wahid, Jonathan Tompson, Quan Ho Vuong, Tianhe Yu, Wenlong Huang, Yevgen Chebota"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al . (2023) Deyao Zhu, Jun Chen, Xiaoqian Shen, Xiang Li, and Mohamed Elhoseiny. 2023. MiniGPT-4: Enhancing Vision-Language Understanding with Advanced Large Language Models. arXiv preprint arX"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al . (2023) Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. 2023. Visual Instruction Tuning."
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al . (2023) Shaohan Huang, Li Dong, Wenhui Wang, Yaru Hao, Saksham Singhal, Shuming Ma, Tengchao Lv, Lei Cui, Owais Khan Mohammed, Qiang Liu, Kriti Aggarwal, Zewen Chi, Johan Bjorck, Vishrav "
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al . (2023) Kunchang Li, Yinan He, Yi Wang, Yizhuo Li, Wen Wang, Ping Luo, Yali Wang, Limin Wang, and Yu Qiao. 2023. VideoChat: Chat-Centric Video Understanding. ArXiv abs/2305.06355 (2023)."
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Schaeffer et al . (2023) Rylan Schaeffer, Brando Miranda, and Sanmi Koyejo. 2023. Are emergent abilities of Large Language Models a mirage? arXiv preprint arXiv:2304.15004 (2023)."
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al . (2023a) Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. 2023a. Visual instruction tuning. arXiv preprint arXiv:2304.08485 (2023)."
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al . (2023b) Haotian Liu, Chunyuan Li, Yuheng Li, and Yong Jae Lee. 2023b. Improved baselines with visual instruction tuning. arXiv preprint arXiv:2310.03744 (2023)."
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al . (2023) Haoning Wu, Zicheng Zhang, Erli Zhang, Chaofeng Chen, Liang Liao, Annan Wang, Chunyi Li, Wenxiu Sun, Qiong Yan, Guangtao Zhai, and Weisi Lin. 2023. Q-Bench: A Benchmark for General-P"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al . (2023) Leida Li, Yipo Huang, Jinjian Wu, Yuzhe Yang, Yaqian Li, Yandong Guo, and Guangming Shi. 2023. Theme-aware Visual Attribute Reasoning for Image Aesthetics Assessment. IEEE Transactio"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Karayev et al . (2014) Sergey Karayev, Matthew Trentacoste, Helen Han, Aseem Agarwala, Trevor Darrell, Aaron Hertzmann, and Holger Winnemoeller. 2014. Recognizing Image Style. In Proceedings of the Br"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tang et al . (2013) Xiaoou Tang, Wei Luo, and Xiaogang Wang. 2013. Content-based photo quality assessment. IEEE Transactions on Multimedia 15, 8 (2013), 1930–1943."
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ren et al . (2017) Jian Ren, Xiaohui Shen, Zhe Lin, Radomir Mech, and David J. Foran. 2017. Personalized Image Aesthetics. In The IEEE International Conference on Computer Vision (ICCV) ."
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lee et al . (2018) Jun-Tae Lee, Han-Ul Kim, Chul Lee, and Chang-Su Kim. 2018. Photographic composition classification and dominant geometric element detection for outdoor scenes. Journal of Visual Com"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Celona et al . (2022) Luigi Celona, Marco Leonardi, Paolo Napoletano, and Alessandro Rozza. 2022. Composition and style attributes guided image aesthetic assessment. IEEE Transactions on Image Process"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhou et al . (2016) Ye Zhou, Xin Lu, Junping Zhang, and James Z Wang. 2016. Joint image and text representation for aesthetics analysis. In Proceedings of the 24th ACM international conference on Mult"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al . (2019) Wenshan Wang, Su Yang, Weishan Zhang, and Jiulong Zhang. 2019. Neural aesthetic image reviewer. IET Computer Vision 13, 8 (2019), 749–758."
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Radford et al . (2021) Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, Gretchen Krueger, and Ilya Su"
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chang et al . (2017) Kuang-Yu Chang, Kung-Hung Lu, and Chu-Song Chen. 2017. Aesthetic critiques generation for photos. In Proceedings of the IEEE international conference on computer vision . 3514–352"
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kang et al . (2020) Chen Kang, Giuseppe Valenzise, and Frédéric Dufaux. 2020. EVA: An Explainable Visual Aesthetics Dataset. In Joint Workshop on Aesthetic and Technical Quality Assessment of Multimed"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2023) OpenAI. 2023. GPT-4 Technical Report. arXiv:2303.08774 [cs.CL]"
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chung et al . (2022) Hyung Won Chung, Le Hou, Shayne Longpre, Barret Zoph, Yi Tay, William Fedus, Eric Li, Xuezhi Wang, Mostafa Dehghani, Siddhartha Brahma, Albert Webson, Shixiang Shane Gu, Zhuyun Da"
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Touvron et al . (2023) Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, Aurelien Rodrigue"
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al . (2023) Bo Li, Yuanhan Zhang, Liangyu Chen, Jinghao Wang, Jingkang Yang, and Ziwei Liu. 2023. Otter: A Multi-Modal Model with In-Context Instruction Tuning. ArXiv abs/2305.03726 (2023)."
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gao et al . (2023) Peng Gao, Jiaming Han, Renrui Zhang, Ziyi Lin, Shijie Geng, Aojun Zhou, Wei Zhang, Pan Lu, Conghui He, Xiangyu Yue, Hongsheng Li, and Yu Qiao. 2023. LLaMA-Adapter V2: Parameter-Effi"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dai et al . (2023) Wenliang Dai, Junnan Li, Dongxu Li, Anthony Meng Huat Tiong, Junqi Zhao, Weisheng Wang, Boyang Li, Pascale Fung, and Steven Hoi. 2023. InstructBLIP: Towards General-purpose Vision-L"
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al . (2023) Pan Zhang, Xiaoyi Dong, Bin Wang, Yuhang Cao, Chao Xu, Linke Ouyang, Zhiyuan Zhao, Shuangrui Ding, Songyang Zhang, Haodong Duan, Wenwei Zhang, Hang Yan, Xinyue Zhang, Wei Li, Jing"
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al . (2015) Xinlei Chen, Hao Fang, Tsung-Yi Lin, Ramakrishna Vedantam, Saurabh Gupta, Piotr Dollar, and C. Lawrence Zitnick. 2015. Microsoft COCO Captions: Data Collection and Evaluation Serve"
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Agrawal et al . (2019) Harsh Agrawal, Karan Desai, Yufei Wang, Xinlei Chen, Rishabh Jain, Mark Johnson, Dhruv Batra, Devi Parikh, Stefan Lee, and Peter Anderson. 2019. nocaps: novel object captioning "
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Young et al . (2014) Peter Young, Alice Lai, Micah Hodosh, and Julia Hockenmaier. 2014. From image descriptions to visual denotations: New similarity metrics for semantic inference over event descript"
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Antol et al . (2015) Stanislaw Antol, Aishwarya Agrawal, Jiasen Lu, Margaret Mitchell, Dhruv Batra, C. Lawrence Zitnick, and Devi Parikh. 2015. VQA: Visual Question Answering. In ICCV ."
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Marino et al . (2019) Kenneth Marino, Mohammad Rastegari, Ali Farhadi, and Roozbeh Mottaghi. 2019. OK-VQA: A Visual Question Answering Benchmark Requiring External Knowledge. In Conference on Computer"
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Schwenk et al . (2022) Dustin Schwenk, Apoorv Khandelwal, Christopher Clark, Kenneth Marino, and Roozbeh Mottaghi. 2022. A-OKVQA: A Benchmark for Visual Question Answering using World Knowledge. arXiv"
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al . (2023) Yuanzhan Liu, Haodong Duan, Yuanhan Zhang, Bo Li, Songyang Zhang, Wangbo Zhao, Yike Yuan, Jiaqi Wang, Conghui He, Ziwei Liu, Kai Chen, and Dahua Lin. 2023. MMBench: Is Your Multi-mo"
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fu et al . (2023) Chaoyou Fu, Peixian Chen, Yunhang Shen, Yulei Qin, Mengdan Zhang, Xu Lin, Zhenyu Qiu, Wei Lin, Jinrui Yang, Xiawu Zheng, Ke Li, Xing Sun, and Rongrong Ji. 2023. MME: A Comprehensive "
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al . (2023) Bohao Li, Rui Wang, Guangzhi Wang, Yuying Ge, Yixiao Ge, and Ying Shan. 2023. SEED-Bench: Benchmarking Multimodal LLMs with Generative Comprehension. arXiv:2307.16125 [cs.CL]"
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lin et al . (2023) Bin Lin, Bin Zhu, Yang Ye, Munan Ning, Peng Jin, and Li Yuan. 2023. Video-llava: Learning united visual representation by alignment before projection. arXiv preprint arXiv:2311.1012"
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lin et al . (2024) Bin Lin, Zhenyu Tang, Yang Ye, Jiaxi Cui, Bin Zhu, Peng Jin, Junwu Zhang, Munan Ning, and Li Yuan. 2024. Moe-llava: Mixture of experts for large vision-language models. arXiv prepri"
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al . (2023) Bin Zhu, Bin Lin, Munan Ning, Yang Yan, Jiaxi Cui, HongFa Wang, Yatian Pang, Wenhao Jiang, Junwu Zhang, Zongwei Li, et al . 2023. Languagebind: Extending video-language pretraining "
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jin et al . (2023) Peng Jin, Ryuichi Takanobu, Caiwan Zhang, Xiaochun Cao, and Li Yuan. 2023. Chat-UniVi: Unified Visual Representation Empowers Large Language Models with Image and Video Understandin"
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al . (2023) Haoning Wu, Zicheng Zhang, Weixia Zhang, Chaofeng Chen, Liang Liao, Chunyi Li, Yixuan Gao, Annan Wang, Erli Zhang, Wenxiu Sun, et al . 2023. Q-align: Teaching lmms for visual scoring"
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al . (2023) Chunyuan Li, Cliff Wong, Sheng Zhang, Naoto Usuyama, Haotian Liu, Jianwei Yang, Tristan Naumann, Hoifung Poon, and Jianfeng Gao. 2023. Llava-med: Training a large language-and-vision"
+  },
+  {
+   "id": "b0172",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al . (2023) Haoning Wu, Zicheng Zhang, Erli Zhang, Chaofeng Chen, Liang Liao, Annan Wang, Kaixin Xu, Chunyi Li, Jingwen Hou, Guangtao Zhai, et al . 2023. Q-instruct: Improving low-level visual a"
+  },
+  {
+   "id": "b0173",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xu et al . (2023) Zhenhua Xu, Yujia Zhang, Enze Xie, Zhen Zhao, Yong Guo, Kenneth KY Wong, Zhenguo Li, and Hengshuang Zhao. 2023. Drivegpt4: Interpretable end-to-end autonomous driving via large langu"
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al . (2023) Lin Chen, Jisong Li, Xiaoyi Dong, Pan Zhang, Conghui He, Jiaqi Wang, Feng Zhao, and Dahua Lin. 2023. Sharegpt4v: Improving large multi-modal models with better captions. arXiv prep"
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2023a) OpenAI. 2023a. ChatGPT (June 13 version). https://chat.openai.com/chat Large language model."
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2023b) OpenAI. 2023b. GPT-4 Technical Report. ArXiv abs/2303.08774 (2023)."
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Schuhmann et al . (2021) Christoph Schuhmann, Richard Vencu, Romain Beaumont, Robert Kaczmarczyk, Clayton Mullis, Aarush Katta, Theo Coombes, Jenia Jitsev, and Aran Komatsuzaki. 2021. LAION-400M: Open"
+  },
+  {
+   "id": "b0178",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sharma et al . (2018) Piyush Sharma, Nan Ding, Sebastian Goodman, and Radu Soricut. 2018. Conceptual Captions: A Cleaned, Hypernymed, Image Alt-text Dataset For Automatic Image Captioning. In ACL ."
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yu et al . (2016) Licheng Yu, Patrick Poirson, Shan Yang, Alexander C. Berg, and Tamara L. Berg. 2016. Modeling Context in Referring Expressions. arXiv:1608.00272 [cs.CV]"
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al . (2019) Dong Liu, Rohit Puri, Nagendra Kamath, and Subhabrata Bhattacharya. 2019. Modeling image composition for visual aesthetic assessment. In Proceedings of the IEEE/CVF Conference on Co"
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Feng et al . (2023) Tinglei Feng, Jiaxuan Liu, and Jufeng Yang. 2023. Probing Sentiment-Oriented Pre-Training Inspired by Human Sentiment Perception Mechanism. In Proceedings of the IEEE/CVF Conferenc"
+  },
+  {
+   "id": "b0182",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al . (2023) Yi Chen, Yuying Ge, Yixiao Ge, Mingyu Ding, Bohao Li, Rui Wang, Ruifeng Xu, Ying Shan, and Xihui Liu. 2023. EgoPlan-Bench: Benchmarking Egocentric Embodied Planning with Multimodal"
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al . (2023) Haoning Wu, Erli Zhang, Liang Liao, Chaofeng Chen, Jingwen Hou, Annan Wang, Wenxiu Sun, Qiong Yan, and Weisi Lin. 2023. Towards explainable in-the-wild video quality assessment: a da"
+  },
+  {
+   "id": "b0184",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Series (2012) B Series. 2012. Methodology for the subjective assessment of the quality of television pictures. Recommendation ITU-R BT 500, 13 (2012)."
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ren et al . (2017) Jian Ren, Xiaohui Shen, Zhe Lin, Radomir Mech, and David J Foran. 2017. Personalized image aesthetics. In Proceedings of the IEEE international conference on computer vision . 638–6"
+  },
+  {
+   "id": "b0186",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ma et al . (2017) Shuang Ma, Jing Liu, and Chang Wen Chen. 2017. A-lamp: Adaptive layout-aware multi-patch deep convolutional neural network for photo aesthetic assessment. In Proceedings of the IEEE "
+  },
+  {
+   "id": "b0187",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "She et al . (2021) Dongyu She, Yu-Kun Lai, Gaoxiong Yi, and Kun Xu. 2021. Hierarchical layout-aware graph convolutional network for unified aesthetics assessment. In Proceedings of the IEEE/CVF Confer"
+  },
+  {
+   "id": "b0188",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tu et al . (2022) Zhengzhong Tu, Hossein Talebi, Han Zhang, Feng Yang, Peyman Milanfar, Alan Bovik, and Yinxiao Li. 2022. MaxViT: Multi-Axis Vision Transformer. European conference on computer vision "
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A More Information of IDCP"
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "h3",
+   "en": "A.1. Data Source Details"
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "p",
+   "en": "The sample size of IDCP using five IAA datasets sources is shown in Table 6. Overall Comments provide a general evaluation of the photo. Photo Style is an annotation of the photographic and aesthetic style, such as macro photography, motion blur, long exposure, etc. Binary Attributes are binary annotations of aesthetic attributes, Such as whether there is balance in the elements, and whether the rule of thirds is applied. Attributes Level is an evaluation of the quality level of the aesthetic attributes. Single Attribute Comments are comments about a specific dimension of the photo, and Color Scheme is an annotation of the color combinations in the photo."
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6. Datasets resource detail. The total number of data sources is 278,181."
+  },
+  {
+   "id": "b0193",
+   "t": "keep",
+   "w": "table",
+   "en": "Dataset Annotation Size AVA Overall Commments 26562 Photo style 30957 AADB Binary Attributes 30976 PARA Attributes Level 141100 PCCD Overall Comments 4202 Single Attribute Comments 27033 ICAA17K Color"
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "h3",
+   "en": "A.2. Prompt of Question Generation on Aesthetic Attributes"
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "p",
+   "en": "We first assign the role of an aesthetic expert to ChatGPT and ask it to design a question based on a specific aesthetic dimension. Then, while maintaining the same meaning, we ask it to expand the question into multiple different sentence structures. The following is a prompt for designing a question about composition."
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "p",
+   "en": "User: Assuming you are an aesthetic expert, please design a question to ask What kind of composition is used for this photo. Rewrite the question into five different sentences with the same meaning."
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "h3",
+   "en": "A.3. Prompt of Description Generation"
+  },
+  {
+   "id": "b0198",
+   "t": "text",
+   "w": "p",
+   "en": "Given an image, we use LLaVA to generate its content. LLaVA is required to output the image content and spatial information. It is not allowed to provide any aesthetic-related information to prevent any interference with the real aesthetic annotation."
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "p",
+   "en": "User: Provide a detailed description of this image, including the spatial and relative position of the elements in the picture. Do not output any information related to aesthetics, such as atmosphere, emotion, and the beauty of the scenery, etc."
+  },
+  {
+   "id": "b0200",
+   "t": "text",
+   "w": "p",
+   "en": "We input the annotated comments and the captions generated by LLaVA into GPT and request GPT to rewrite the comments."
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "p",
+   "en": "User: Assistant is a professional aesthetic critic."
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "p",
+   "en": "The assistant is a highly professional individual who possesses a remarkable eye for aesthetics and aligns well with the views of the general public. Instructions: - You’re given a caption of an image and some comments on the image from a photography website."
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "p",
+   "en": "- Step1: Rewrite the comments into professional aesthetic comments and ignore those comments that are not highly related to aesthetics or only expressions of personal affection. Please be objective and do not use colloquial words."
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "p",
+   "en": "- Step2: Summarize the rewritten aesthetic comments and your answers in Step2 into one complete aesthetic comment written by a professional aesthetic critic. You may refer to the image caption as though you are truly seeing this image, but please focus solely on the aesthetic-related content."
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "p",
+   "en": "When the image caption conflicts with the given comments, follow the comments. Do not imagine and give irrelevant or groundless responses regarding the given comments."
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "h3",
+   "en": "A.4. Examples of IDCP Data"
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "p",
+   "en": "Following are some examples of training data obtained through IDCP transformation."
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "p",
+   "en": "Aesthetic Attributes AVA: Question: What kind of photography style is this image in? Answer: Soft Focus."
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "AADB: Question: Are the elements in this image balancing? Answer: No."
+  },
+  {
+   "id": "b0210",
+   "t": "text",
+   "w": "p",
+   "en": "PARA: Question: How would you rate the composition of this image? Answer: The image has a fair score of composition."
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "p",
+   "en": "ICAA17K: Question: What is the color scheme employed in this picture? Answer: Complementary."
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "p",
+   "en": "Question: What complementary colors are used in this photo? Answer: Orange and Violet."
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "p",
+   "en": "Aesthetic Comments AVA: Question: What is your overall impression of this image from an aesthetic viewpoint? Answer: The image seems to be the result of well-coordinated, meticulous work that features impressive captures of the lunar eclipse across different stages. The successful inclusion of background stars further enriches the image’s overall visual appeal and depth. Expert editing appears to have been utilized proficiently, contributing substantially to the enchanting allure of the artwork. However, a minor flaw can be noted on the eighth moon, indicating room for further refinements. The work invokes a blend of admiration and curiosity, leaving the observer to ponder whether this breathtaking display was captured entirely in nature or whether digital enhancements played a role. Nonetheless, the image stands out as a favorite due to its unique and striking aesthetic elements."
+  },
+  {
+   "id": "b0214",
+   "t": "text",
+   "w": "p",
+   "en": "PCCD: Question: Summarize your aesthetic evaluations of this image as if you are a professional aesthetic critic. Answer: The composition of the image is well-executed, with the baby girl placed in the center and occupying a significant portion of the frame. The use of a white blanket as the background creates a serene and soothing atmosphere. The pink bow in the baby’s hair adds a touch of color and serves as the main focal point of the image. The lighting, with its rosy effect, enhances the overall aesthetic appeal, giving the image a gentle and warm tone. However, the image lacks a strong emotional impact and fails to capture the viewer’s attention."
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "p",
+   "en": "PCCD: Question: How would you evaluate the aesthetic expression of the use of camera of this image? Answer: The photographer made skillful choices in the use of the camera for this image. The angle chosen provides an interesting perspective, allowing us to fully appreciate the details of the subject. The f-stop and shutter speed selection contribute to the clean and well-captured image, ensuring that the details are sharp and clear."
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "h3",
+   "en": "A.5. Hyper-parameters of Training"
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "p",
+   "en": "Table 7 contains the hyper-parameters utilized for tuning the IAA instructions in LLaVA-v1.5-7B and mPLUG-OWL2 using 8 NVIDIA V100 GPU. The fine-tuning took a total of 16 hours for UNIAA-LLaVA and 22 hours for UNIAA-mPLUG-OWL2. We conduct a third stage of fine-tuning solely with converted aesthetic instruct tuning data to obtain the UNIAA-LLaVA for 2 epochs with a learning rate of 2e-5 and a batch size of 128."
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7. Hyper-parameters of IAA visual instruction tuning on UNIAA-LLaVA and UNIAA-mPLUG-OWL2, the same as original baselines."
+  },
+  {
+   "id": "b0219",
+   "t": "keep",
+   "w": "table",
+   "en": "Hyper-parameter UNIAA-LLaVA UNIAA-mPLUG-OWL2 ViT init. CLIP-L/14-336 CLIP-L/14-448 LLM init. LLaMA2-7B image resolution 336 × 336 336\\times 336 448 × 448 448\\times 448 batch size 128 lr max 2e-5 lr sc"
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Details on UNIAA-Bench Evaluation"
+  },
+  {
+   "id": "b0221",
+   "t": "text",
+   "w": "h3",
+   "en": "B.1. Examples of UNIAA-QA"
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "p",
+   "en": "Here we present examples of UNIAA-QA questions with different aesthetic attributes."
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "p",
+   "en": "Content and Theme Question: What is the object of interest in this photo? Candidates: A. Landscape B. Portrait C. Still life D. Animal"
+  },
+  {
+   "id": "b0224",
+   "t": "text",
+   "w": "p",
+   "en": "Composition Question: What is the specific composition method used in this image? Candidates: A. Diagonal composition B. Center composition C. Triangle D. Symmetrical composition"
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "p",
+   "en": "Color Question: What is the color saturation of the picture? Candidates: A. Oversaturated B. Appropriate C. Undersaturated"
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "p",
+   "en": "Light Question: What is the source of light in this image? Candidates: A. Natural light B. Artificial light"
+  },
+  {
+   "id": "b0227",
+   "t": "text",
+   "w": "p",
+   "en": "Focus Question: What type of shot is this photo? Candidates: A. Long shot B. Medium shot C. Close-up"
+  },
+  {
+   "id": "b0228",
+   "t": "text",
+   "w": "p",
+   "en": "Sentiment Question: Based on the color and content of this picture, what emotion does this photo evoke from you? Candidates: A. The character’s demeanor and the surrounding atmosphere in this image evoke a sense of longing and nostalgia. B. This picture resonates with a sense of introspection and contemplation due to the character’s actions and the environment, devoid of any traces of regret or sadness. C. The character’s actions and environment bring about a feeling of melancholy and regret. D. Despite the gloomy mood implied by the character’s actions and environment in the picture, a feeling of peacefulness and serenity suffuses throughout."
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "h3",
+   "en": "B.2. Example of UNIAA-Describe"
+  },
+  {
+   "id": "b0230",
+   "t": "text",
+   "w": "p",
+   "en": "Question: Describe and evaluate the aesthetic attributes in detail. Give suggestions for improvement. Answer: The upward angle captures the grand structure and spatiality of the urban architecture. The composition is relatively neat and harmonious, with the top of the two buildings forming a diagonal composition, giving the image a certain sense of depth. However, there is a large empty space in the middle, making the image slightly unbalanced. The overall color is dark and low in saturation, lacking color coordination and contrast, making the image dull and uninteresting. The overall brightness is insufficient, lacking layers and details. To improve, the shooting position needs to be changed to reduce the empty sky in the middle of the frame, while emphasizing the diagonal composition to make the image more vivid and layered. The saturation of colors needs to be increased to make the image more vibrant and lively. Lastly, overall exposure needs to be increased to enhance the layers and image details. This is a below-average architectural photography photo."
+  },
+  {
+   "id": "b0231",
+   "t": "text",
+   "w": "h3",
+   "en": "B.3. Example of UNIAA Assessment Dataset"
+  },
+  {
+   "id": "b0232",
+   "t": "text",
+   "w": "p",
+   "en": "There are 19,928 samples in the AVA test set. The number of samples in the test set of PARA, TAD66K, and Flickr-aes is 14,079, 3,000, and 4,737, respectively. The aesthetic assessment datasets image samples are shown in Figure 4. The maximum aesthetic score is 10 for AVA, TAD66K, and Flicker-aes, while it is 5 for PARA."
+  },
+  {
+   "id": "b0233",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0234",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4. Image examples of four datasets in Aesthetic Assessment. Below the images are the corresponding aesthetic scores."
+  },
+  {
+   "id": "b0235",
+   "t": "text",
+   "w": "h3",
+   "en": "B.4. Evaluation Details for Aesthetic Perception"
+  },
+  {
+   "id": "b0236",
+   "t": "text",
+   "w": "p",
+   "en": "For the majority of the models, we use multiple-choice prompts as follows,"
+  },
+  {
+   "id": "b0237",
+   "t": "text",
+   "w": "p",
+   "en": "How would you describe the color saturation of this picture? (Question) [IMAGE_TOKEN] (Image) Choose between one of the options as follows: A. Oversaturated (Correct) B. Undersaturated(Wrong) C. Appropriate(Wrong) #Answer:"
+  },
+  {
+   "id": "b0238",
+   "t": "text",
+   "w": "h3",
+   "en": "B.5. Exceptions Perception Responses."
+  },
+  {
+   "id": "b0239",
+   "t": "text",
+   "w": "p",
+   "en": "For the InstructBLIP, although it has aesthetic perception capabilities, it usually provides a paragraph in response instead of options. To deal with this, we use chatGPT to determine its choice based on its response,"
+  },
+  {
+   "id": "b0240",
+   "t": "text",
+   "w": "p",
+   "en": "As a language expert, please complete the following task. You are now an answer selection expert, and I will provide you with a question with several options, as well as a target sentence. Please return the alphabet of the option with the highest probability of matching this target sentence. Given questions with options and the target sequence [MLLM ANSWER]. Please output your responses in the form of a dictionary \"maximum probability\": \"xxx\", where xxx is A or B or C or …"
+  },
+  {
+   "id": "b0241",
+   "t": "text",
+   "w": "p",
+   "en": "For Qwen-VL, it may present options that do not exist or the response ’information is insufficient’, and we consider this to be a wrong answer,"
+  },
+  {
+   "id": "b0242",
+   "t": "text",
+   "w": "p",
+   "en": "How would you describe the color saturation of this picture? (Question) [IMAGE_TOKEN] (Image) Choose between one of the options as follows: A. Oversaturated (Correct) B. Undersaturated(Wrong) C. Appropriate(Wrong) #Answer: D. Not enough information"
+  },
+  {
+   "id": "b0243",
+   "t": "text",
+   "w": "p",
+   "en": "Regarding GPT-4V, it occasionally encounters unknown errors or refuses to respond. We have made repeated attempts and still encountered 500+ such incidents. Therefore, we calculated its accuracy in answering questions."
+  },
+  {
+   "id": "b0244",
+   "t": "text",
+   "w": "h3",
+   "en": "B.6. Evaluation Details for Aesthetic Description"
+  },
+  {
+   "id": "b0245",
+   "t": "text",
+   "w": "p",
+   "en": "Settings for GPT Evaluation:"
+  },
+  {
+   "id": "b0246",
+   "t": "text",
+   "w": "p",
+   "en": "Due to the inherent variability of GPT, responses to identical prompts may not always be definitive. In order to alleviate the impact of these situations on our evaluation, we have adopted an average pooling strategy over 5 rounds. This involves presenting the same prompt as defined in the following templates five times, and averaging the results of GPT’s answers to obtain the final outcome. By using this method, we can effectively alleviate the unpredictability of GPT, resulting in a more accurate score."
+  },
+  {
+   "id": "b0247",
+   "t": "text",
+   "w": "p",
+   "en": "Prompt Templates for GPT Evaluation:"
+  },
+  {
+   "id": "b0248",
+   "t": "text",
+   "w": "p",
+   "en": "#System: As a language expert, please complete the following task."
+  },
+  {
+   "id": "b0249",
+   "t": "text",
+   "w": "p",
+   "en": "Completeness. #User: Evaluate whether the description [MLLM_DESC] contains the dimensions of aesthetic, including composition, color, lighting, focus and suggestions, etc., in the reference description [GOLDEN_DESC]. Please rate score 2 for completely or almost completely including aesthetic dimensions, 0 for not including at all, and 1 for including part of the dimensions or similar description.. Please only provide the result in the following format: Score: Preciseness. # The precision metric punishes highly controversial aesthetic perspectives that output contrasts with the reference, e.g., positive for negative evaluations, good composition for messy composition, harmonious colors for abrupt colors, appropriate lighting for inappropriate lighting, high quality for low quality, colorful for monotonous. Evaluate whether [MLLM_DESC] precisely reflects reference [GOLDEN_DESC]. Please rate score 2 for a totally no controversial aesthetic description, 1 for less controversial aesthetic description than the matched description, and 0 for more controversial aesthetic description than the matched. Please only provide the result in the following format: Score: Relevance. #User: Evaluate whether the [MLLM_DESC] is relevant to the aesthetic evaluation, aesthetic attributes and aesthetic terminology. Aesthetic attributes include composition, color, lighting, focus, sentiments, and suggestions for improvement. Please rate score 2 for completely relevant, with no content unrelated to aesthetics; 1 for partly relevant, with a small amount of content unrelated to aesthetics; 0 for a large amount of content unrelated to aesthetics, even irrelevant. Please only provide the result in the following format: Score:"
+  },
+  {
+   "id": "b0250",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0251",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5. Supervised training model of MOS prediction. F1 represents the features of the last layer of the Vision Encoder, while F2 represents the features of the second-to-last layer."
+  },
+  {
+   "id": "b0252",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8. Results on AVA and Tad66K datasets. Blue and black numbers in bold represent the best and second best respectively. Metrics are PLCC/SRCC."
+  },
+  {
+   "id": "b0253",
+   "t": "keep",
+   "w": "table",
+   "en": "Method AVA TAD66K NIMA ( Talebi and Milanfar, 2018 ) 0.636/0.612 0.405/0.390 ALamp ( Ma et al., 2017 ) 0.671/0.666 0.422/0.411 HGCN ( She et al., 2021 ) 0.687/0.665 0.493/0.486 MaxViT ( Tu et al., 202"
+  },
+  {
+   "id": "b0254",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Supplemental experiment"
+  },
+  {
+   "id": "b0255",
+   "t": "text",
+   "w": "h3",
+   "en": "C.1. Result on Supervised Scoring"
+  },
+  {
+   "id": "b0256",
+   "t": "text",
+   "w": "p",
+   "en": "To further enhance the scoring capability on specific datasets, we extract the vision encoder of UNIAA-LLaVA. We use the features from its last two layers, each of which is separately projected through a linear layer, then added together and passed through a score prediction head. The entire training model is shown in Figure 5. We test its performance on AVA and Tad66K, as shown in Table 8. We use a learning rate of 4e-6, a batch size of 32, a middle dimension of 4096 for the linear layers, and 40 training epochs. It is evident that even compared with the state-of-the-art EAT(He et al., 2023), our model still achieves superiority, further proving the capability of UNIAA-LLaVA on IAA."
+  },
+  {
+   "id": "b0257",
+   "t": "text",
+   "w": "h3",
+   "en": "C.2. Qualitative Analyse on Perception"
+  },
+  {
+   "id": "b0258",
+   "t": "text",
+   "w": "p",
+   "en": "In Figure 6 , we show qualitative examples of MLLM responses on questions in the UNIAA-QA. Some of the MLLM still have inadequate spatial perception of the camera shot."
+  },
+  {
+   "id": "b0259",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0260",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6. Answer examples of MLLMs on ’Focus’ perception."
+  },
+  {
+   "id": "b0261",
+   "t": "text",
+   "w": "h3",
+   "en": "C.3. Qualitative Analyse on Description"
+  },
+  {
+   "id": "b0262",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Figure 7 and 8, we have presented examples of MLLM descriptions of high and low aesthetic quality. As shown in Figure 7, when MLLMs evaluate high aesthetic quality images, their descriptions are complete, accurate, and relevant, and their scores are high. UNIAA-LLaVA uses more aesthetic terms such as well-balanced composition, shallow depth of field, and color contrast, providing a professional description. GPT-4V has a clear structure and provides the longest answers among all models. When evaluating low aesthetic quality images, the model scores are lower, which also indicates an insight that accurately identifying the shortcomings of an image is more challenging than praising one. UNIAA-LLaVA can still pinpoint the shortcomings of the images accurately, such as cluttered composition and overexposure, while other models tend to praise the images instead. Using IDCP data could lead to better aesthetic discernment and expression ability."
+  },
+  {
+   "id": "b0263",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0264",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7. Description examples on the high-aesthetic image of MLLMs."
+  },
+  {
+   "id": "b0265",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0266",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8. Description example on the low-aesthetic image of MLLMs."
+  },
+  {
+   "id": "b0267",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D Limitations"
+  },
+  {
+   "id": "b0268",
+   "t": "text",
+   "w": "h3",
+   "en": "D.1. UNIAA-LLaVA Limitations"
+  },
+  {
+   "id": "b0269",
+   "t": "text",
+   "w": "p",
+   "en": "Despite the enhanced aesthetic abilities, the performance on general-purpose tasks, especially those that require heavy reasoning abilities and language tasks, has decreased. Hence, if UNIAA-LLaVA is used for tasks other than aesthetic perception and understanding, it may generate undesired outcomes. Secondly, despite the improved accuracy, UNIAA-LLaVA still performs worse than the human. Therefore, they may not be able to replace humans directly. Thirdly, the Converted dataset from IDCP mostly comprises natural in-the-wild images. The performance can be further refined by adding more dataset sources, including natural image datasets, artistic image datasets, AI Generated Content datasets. Future work will focus on universal visual aesthetics, including aesthetic evaluation of videos."
+  },
+  {
+   "id": "b0270",
+   "t": "text",
+   "w": "h3",
+   "en": "D.2. UNIAA-Bench Limitations"
+  },
+  {
+   "id": "b0271",
+   "t": "text",
+   "w": "p",
+   "en": "Although we have already aimed to maintain a balance in the number of dimensions for each aesthetic attribute and the balance between options, there inevitably exists some numerical deviation in the collection process. We will continue to refine the benchmark. Regarding the description task, we recognize that determining whether an MLLM answer aligns with the gold description is a subjective process that lacks an absolute standard. Human scores on the MLLM descriptions are also subject to individual differences. Despite employing the 5-round GPT-assisted evaluation protocol, which is currently the most trustworthy and reproducible approach, there may still be hallucinations (from GPT) that cannot be avoided. Moving forward, we will keep exploring better evaluation protocols for the low-level visual description task. We will continue to expand the scope of the aesthetic evaluation system in UNIAA-Bench, including but not limited to art paintings, AIGC, videos, movie clips, and other samples along with their corresponding aesthetic dimensions."
+  }
+ ]
+}

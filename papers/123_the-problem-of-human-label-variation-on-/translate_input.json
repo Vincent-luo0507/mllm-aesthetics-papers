@@ -1,0 +1,886 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "The “Problem” of Human Label Variation: On Ground Truth in Data, Modeling and Evaluation"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Human variation in labeling is often considered noise. Annotation projects for machine learning (ML) aim at minimizing human label variation, with the assumption to maximize data quality and in turn o"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "In Natural Language Processing (NLP) much progress today is driven by fine-tuning large pre-trained language models using an annotated dataset, assumed to be representative for a target language task of interest Schlangen (2021). This is analogously so in Machine Learning (ML) and Computer Vision (CV), where the target tasks differ, yet the conceptual pipeline remains the same: data, modeling, evaluation. Despite the importance of annotated data—as it fuels all steps in this pipeline—a crucial assumption of today’s learning systems is to rely on a single gold label per instance. The gold label is obtained by aggregation (e.g. majority vote) of labels crucially provided by humans."
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "@goptd@color\\pc@hyenc@colorpdfcommentcolor\\HyColor@XZeroOneThreeFour\\pc@goptd@fontcolor\\pc@hyenc@fontcolorpdfcommentcolor\\HyColor@XZeroOneThreeFour\\pc@goptd@icolor\\pc@hyenc@icolorpdfcommentcolor\\pdfmark[⟦SLOT_0⟧ ]pdfmark=/ANN,Subtype=/Widget,Raw=/TU (Screenreader caption: Schematic of human label variation vs annotation errors. Disagreement in annotation can be due to genuine annotator disagreement, subjectivity or simply because two (or more) views are plausible. \\textCR(\\pc@goptd@deadline)) /T (tooltip zref@0) /C [ ] /FT/Btn /F 768 /Ff 65536 /H/N /BS << /W 0 >>"
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: We propose the term human label variation to capture the fact that inherent disagreement in annotation can be due to genuine disagreement, subjectivity or simply because two (or more) views are plausible."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "The assumption of a ground truth (and taking the majority vote or the ‘mode’ of the human judgement distribution) makes sense when humans involved in labeling highly agree on the answer to the questions, such as “Does this image contain a bird?”, “Is ‘learn’ a verb?”, “What is the capital of Italy?\". However, this assumption often does not make sense—especially when language is involved. For example, on questions determining a word sense, questions such as “Is this comment toxic?” or questions involving understanding indirect answers to polar questions like “Q: Hey. Everything ok?” “A: I’m just mad at my agent” (see more examples in Figure 2). While some disagreement is due to human labeling errors (cf. Figure 1 arrow to the left and § 3), an increasing body of work has shown that irreconcilable variation between annotations is plausible and abundant Plank et al. (2014b); Aroyo and Welty (2015); Pavlick and Kwiatkowski (2019); Uma et al. (2021b) (illustrated in Figure 1). The observed variation can indeed be disagreement due to difficult cases, subjectivity or cases where multiple answers are plausible (cf. § 2). We argue that human label variation (Hlv) provides rich information that should not be discarded. Critically, to rely on a ground truth means we tacitly agree to continue: i) to create datasets that encode a single ground truth, ii) to develop models that are optimized towards a single preferred output, and iii) to evaluate models against a single ground truth. By continuing to do so, we might ask ourselves if we are climbing the right hill–or whether continuing to model a single ground truth hampers progress."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "In this position paper, we argue that neglecting variation in labeling is problematic, as it impacts all steps of the pipeline. Traditionally, this variation has been considered a problem. We underline emerging works that instead believe this issue to be an opportunity. In fact, we believe it is essential to take human label variation into account for progress. Human labels are bound to be scarce yet at the same time critical as they provide human interpretations and values. Therefore, embracing it is necessary for human-facing NLP, i.e., technology which is by and for humans; inclusive and reliable. However, the research landscape is fragmented, and approaches often focus on either steps of the pipeline. Therefore, in this paper we focus on the three core aspects of the pipeline: data, modeling and evaluation. In particular, i) we distill some of the on-going discussions in disparate (sub-)fields and propose a unified term; ii) we present and work out suggestions for each for the future; and iii) we provide a comprehensive repository of publicly-available data sets that allow studying human label variation, and invite the community to contribute."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Data and Human Label Variation"
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "High-quality data is essential for any empirical scientific inquiry and has to satisfy the requirements of validity and reliability Krippendorff (2018); Pustejovsky and Stubbs (2012); Schlangen (2021). However, for almost all tasks in NLP and CV irreconcilable disagreement between annotators has been observed Uma et al. (2021b). In light of this, the original definition of data reliability is questionable—it assumes labels follow a given standard. We might ask which standard?"
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "Human annotations are needed to ground and make sense of language, images, speech etc. However, labelling data is difficult, particularly when dealing with an object of study as complex as language. Take the illustration in Figure 2 as example. While categories exist, their boundaries are fluid, or simply multiple options are plausible."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "h3",
+   "en": "Disagreement or variation?"
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "We define human label variation (Hlv) as plausible variation in annotation, see Figure 1, to reconcile different notions found in the literature (discussed next). We prefer ‘variation’, because ‘disagreement’ implies that two (or more) views involved cannot all hold. In contrast, errors are annotation differences, due to amongst others attention slips. Crucially, Hlv assumes humans usually provide their best judgements, and variation emerges due to, e.g., ambiguity of the instance, uncertainty of the annotator, genuine disagreement, or simply the fact that multiple options are correct. Aggregation obfuscates this real-world complexity."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "@goptd@color\\pc@hyenc@colorpdfcommentcolor\\HyColor@XZeroOneThreeFour\\pc@goptd@fontcolor\\pc@hyenc@fontcolorpdfcommentcolor\\HyColor@XZeroOneThreeFour\\pc@goptd@icolor\\pc@hyenc@icolorpdfcommentcolor\\pdfmark[⟦SLOT_1⟧]pdfmark=/ANN,Subtype=/Widget,Raw=/TU (Screenreader caption: The figure illustrates three hard cases. Case 1: What is the sentiment (positive, neutral, negative) of ‘This was an excellent offer and i didn’t not enjoy it’. Case 2: Does A entail B? ‘A: Paola drinks oat milk’ ‘B: Paolo drinks milk.’. Case 3: It shows a low-resolution image, the question is whether it is a cat or a dog or another animal.\\textCR(\\pc@goptd@deadline)) /T (tooltip zref@1) /C [ ] /FT/Btn /F 768 /Ff 65536 /H/N /BS << /W 0 >>"
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Hard cases. Image from Uma et al. (2021b)."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "Hlv has been studied in CV, where it is dubbed human uncertainty Peterson et al. (2019), as well as in human-computer interaction (HCI) as disagreement or contested labels Gordon et al. (2021). In NLP, variation has been acknowledged as annotator disagreement already in early works on resolving disagreement Poesio and Artstein (2005), particularly in pragmatics and discourse de Marneffe et al. (2012); Webber and Joshi (2012); Das et al. (2017). Hlv in NLP is discussed both from the linguistic side as hard cases Zeman (2010); Plank et al. (2014b), difficult linguistic cases Manning (2011), as judgements which are not always categorical de Marneffe et al. (2012), inherent disagreement Pavlick and Kwiatkowski (2019); Davani et al. (2022) and justified and informative disagreement Sommerauer et al. (2020). Variation in NLP is also discussed in connection to subjectivity, e.g., as a range of reasonable interpretations (CrowdTruth) Aroyo and Welty (2015), as one or many beliefs Rottger et al. (2022), the social dimensions of annotators like their demographic Sap et al. (2019); Larimore et al. (2021); Sap et al. (2022) and cultural backgrounds Hershcovich et al. (2022), often discussed more generally as different perceptions in data perspectivisim Basile et al. (2021a); Wich et al. (2021). Moreover, there is work that acknowledges that multiple plausible answers are correct, such as works on the collective human opinion Nie et al. (2020) influenced by seminal work that looks at the human judgement distribution Pavlick and Kwiatkowski (2019) who found plausible variation in at least 20% of their data. Earlier work on veridicality also made this point de Marneffe et al. (2012). The fact that multiple plausible annotations exist has also been put forward as a range of acceptable annotations Palomaki et al. (2018). The known variation in annotation for subjective tasks is at least a decade old Alm (2011). They suggest that in the absence of a real ‘ground truth’, acceptability may be a more useful concept than ‘right’ and ‘wrong’. Capturing the Hlv, instead of the global majority, aligns with this viewpoint."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h3",
+   "en": "Open issues and our suggestions"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "To make progress, we need to i) collect and release annotator-level (un-aggregated) labels, ii) document dataset creation, and iii) include as much meta-data as possible. In particular, we urge the community to release annotator-level (un-aggregated) labels–even if only for a small subset of the data–and thus we echo Basile et al. (2021b) and Prabhakaran et al. (2021) (also in Denton et al. (2021)) who independently raised this point as well."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "As a concrete starting point, we provide a comprehensive overview of existing datasets with multiple annotations in the appendix, which we release as a github repository to encourage uptake. Moreover, if possible to release responsibly, besides making data statements of datasets available Bender and Friedman (2018), we encourage the community to include annotator-level background information Prabhakaran et al. (2021) and document the annotation process Geiger et al. (2020). In general, we believe there is high value in releasing any meta-data available (ideally on the instance level, e.g. source, time of document, annotator ids, annotation completion time etc). For example, in a recent study we created a new relation extraction corpus with instance-level flags of annotator uncertainty proving valuable for evaluation Bassignana and Plank (2022). Similarly, we asked the annotator to provide free-text rationales of relations, which recently was also put forward in Borin (2022), referring to earlier work on collecting annotator rationals during annotation McDonnell et al. (2016)."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "We believe that the more, richer datasets become available, the more insights can be generated into the capabilities of models and their limitations. New algorithms may emerge capable of learning from fewer but richer sources. On a related line, collecting multiple annotations calls for research in estimating data quality and revisiting agreement measures; e.g., new measures for multiple-labels were recently proposed Marchal et al. (2022)."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Modeling and Human Label Variation"
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "There is a growing literature on methods on how to deal with Hlv in learning. We categorize them into two camps: those that resolve variation, and those that embrace it. We will draw connections to surveys and the emerging literature, and discuss adoption of methods as well as gaps."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "The first big camp of research aims at resolving human label variation and includes: 1) Aggregation and 2) Filtering. It considers Hlv as “problematic” or “noisy”. Consequently, a single (aggregated) label is obtained with presumably high agreement as the ground truth. Aggregation is performed via majority voting or probabilistic aggregation methods, see Paun et al. (2022) for a survey and seminal works Dawid and Skene (1979); Qing et al. (2014); Artstein and Poesio (2008). Aggregation is still the most widely-adopted solution for the problem today. However, aggregation by definition allows only one belief/label/category. This is very limiting, as often it is not just about disagreement or matter of subjectivity, but multiple options being plausible. Filtering methods are advocated by some with the idea to remove data instances with low agreement Reidsma and Carletta (2008); Reidsma and op den Akker (2008); Beigman Klebanov et al. (2008); Beigman and Beigman-Klebanov (2009). However, only using high-agreement instances can yield worse performance Jamison and Gurevych (2015) and it wastes data."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "The second camp of research instead aims at embracing human label variation. Two broad directions include: 3) Learning from un-aggregated labels (directly), or 4) Enriching gold with human label variation. With regard to learning from un-aggregated labels, methods of varying complexity exist, from model-agnostic methods such as repeated labeling Sheng et al. (2008) used by e.g. de Marneffe et al. (2012), to architecture-specific choices, e.g., adding a crowd layer Rodrigues and Pereira (2018), learning from soft labels Peterson et al. (2019) and more; see the survey of Uma et al. (2021b). So far learning from un-aggregated labels directly has shown greater promise in classification tasks in CV than in NLP Uma et al. (2021b) (evidence is scarce, see open issues). Within NLP, a more studied direction is currently to enrich the gold label with human label variation, i.e., to learn from both the gold and the un-aggregated labels. Methods in this category can be seen as part of the broader set of well-known regularization methods in ML, and for NLP include e.g., cost-sensitive loss weighting Plank et al. (2014a), variants of multi-task learning Cohn and Specia (2013); Fornaciari et al. (2021); Davani et al. (2022), or sequential fine-tuning Lalor et al. (2017). These methods further differ in how they use un-aggregated labels, i.e., as confusion matrices estimated from a small sample Plank et al. (2014a), as annotator-level auxiliary tasks requiring the full data with multiple labels Cohn and Specia (2013); Davani et al. (2022), or as single “soft-label” auxiliary task that captures the per-instance human label distribution Fornaciari et al. (2021)."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "@goptd@color\\pc@hyenc@colorpdfcommentcolor\\HyColor@XZeroOneThreeFour\\pc@goptd@fontcolor\\pc@hyenc@fontcolorpdfcommentcolor\\HyColor@XZeroOneThreeFour\\pc@goptd@icolor\\pc@hyenc@icolorpdfcommentcolor\\pdfmark[⟦SLOT_2⟧]pdfmark=/ANN,Subtype=/Widget,Raw=/TU (Screenreader caption: The graph shows a bar chat with counts of NLP paper per year that release unaggregated labels. The plot suggests an upward trend.\\textCR(\\pc@goptd@deadline)) /T (tooltip zref@2) /C [ ] /FT/Btn /F 768 /Ff 65536 /H/N /BS << /W 0 >>"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: NLP Resource papers per publication year, counting publicly-available datasets released with human label variation (multiple annotator-labels per instance), cf. details in Table 1 in the Appendix."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "h3",
+   "en": "Open issues and our suggestions"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "Undoubtedly, there is increasing interest in studying methods to learn with human label variation (see Figure 3 for our analysis of research papers). However, existing research is fragmented across (sub)-disciplines. We identify at least three diverse areas within NLP, with little to no overlap (as shown in Table 1 in the Appendix), focusing respectively on: subjectivity Basile et al. (2021a) (pdai.info, SemEval 23), natural language inference (NLI) Pavlick and Kwiatkowski (2019); Nie et al. (2020), and both NLP and CV (JAIR & SemEval 21). To the best of our knowledge, only the latter work and shared task so far bridges across disciplines Uma et al. (2021b); Uma et al. (2021a). Still, they focus on complementary NLP tasks to the two previous initiatives. It is thus an open issue to see whether tasks might need to have specific properties to be suitable for one kind of method over another. A comprehensive evaluation is lacking. Studying transferability of methods across problems is another interesting open issue."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "Learning from Hlv heavily depends on data labeled with multiple annotators. In some settings, it might be difficult to obtain sizeable amounts of such data (however, as seen in Section 2, more datasets are emerging). Regarding learning, Lalor et al. (2017) find that even small amounts of data can be helpful in a sequential fine-tuning setup, as also early work indicates Plank et al. (2014a). An open challenge is to find the right balance between the amount of data collected and the number of annotators. Overall, we hypothesize that the richness of information captured by human label variation has the potential to reduce data size requirements (possibly fewer instances but with more information captured in the human label distribution). It remains an open issue to connect with emerging works on learning with different amounts of annotation Zhang et al. (2021), which can also lead to novel architectures."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "A related important challenge is to tease apart errors from signal (Reidsma and Carletta, 2008; Gordon et al., 2021, e.g.). Work on annotation error detection exists, cf. the very recent survey by Klie et al. (2022) or Zhang and de Marneffe (2021). It is though largely overlooked. This calls further for theoretical work on the notion of an what constitutes an error versus a hard case Manning (2011); Webber and Joshi (2012); Plank et al. (2014b). This bears connections to emerging work in HCI, in particular social computing Gordon et al. (2021); Gordon et al. (2022), who look at the perception of system errors by humans, see also Section 4, and earlier work in HCI on crowdsourcing that allows for some errors Krishna et al. (2016)."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "While embracing human label variation helps to regularize learning, the connection to a broader range of ML methods such as noise labeling or calibration remains highly relevant and a source of further inspiration Goldberger and Ben-Reuven (2016); Han et al. (2018b); Han et al. (2018a); Meister et al. (2020). There are some initial studies that compare human disagreement with model confidence Davani et al. (2022). Overall, interest in calibration methods Naeini et al. (2015); Guo et al. (2017) is increasing Desai and Durrett (2020); Kong et al. (2020); Jiang et al. (2021) to counter overconfidence of neural classifiers Meister et al. (2020). In contemporary work to this, we show that measuring calibration to human majority given inherent disagreements is theoretically and empirically problematic Baan et al. (2022). As a first step, we propose instance-level measures of calibration that better capture the human label distribution. In future, it remains to be seen how to best use human label variation to make systems more trustworthy."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "Finally, there is relevant interesting work that more deeply looks at data during learning. In NLP, recent seminal work by Swayamdipta et al. (2020) proposes data maps to investigate the behavior of a model on individual instances during training (training dynamics). They show that training a system on ambiguous instances identified via data maps helps to generalizes better in out-of-distribution evaluation Swayamdipta et al. (2020). Building on top of this work, Zhang and Plank (2021) show that the instances at the boundary of hard and ambiguous cases derived from small data maps aids active learning. This is further evidence that human uncertainty in labeling is beneficial for learning. It remains to be seen whether training dynamics can yield novel architectures for learning from Hlv."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Evaluation and Human Label Variation"
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluation is of critical importance in empirical research fields such as ML, NLP and CV. It helps to choose one system over another, and to measure progress. However, current evaluation practices typically use accuracy against a gold standard. In many tasks this common practice is severely flawed. It obfuscates the truth about the state of ML models. It leaves a large gap between in-vitro and in-vivo evaluation. HCI research has shown that metrics are not aligned with reality; audits of algorithms’ performance have uncovered very poor results in practice, and that this disconnect is indicative of a larger disconnect on how ML and HCI researchers evaluate their work Gordon et al. (2021). We believe this is an important take-away for NLP. We too often focus on single metrics, single components of the pipeline, in other words, on myopic in-vitro experimentation."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h3",
+   "en": "Open issues and our suggestions"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "Despite the increasing body of literature on methods for learning with Hlv, a majority of the papers introducing new methods strikingly evaluate against hard labels (gold labels) (Rodrigues and Pereira, 2018; Fornaciari et al., 2021, e.g.). If we want to take human label variation seriously, we need to shift our attention to evaluation that goes beyond hard labels (accuracy). As accuracy of all models can be high (at times), looking at only one metric (and, in fact a single—argmax—prediction) gives no indication on how reasonable a model is, yet alone how confident and trustworthy it is."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "Research in ML, CV and NLP has started to incentivize hard and soft label evaluation. Soft labels compare the human label distribution to model outputs. Proposed soft metrics include: cross entropy, to capture how well the model captures humans’ assessment not just of the top label, which is used in both CV Peterson et al. (2019) and NLP Pavlick and Kwiatkowski (2019); entropy correlation proposed by Uma et al. (2020), to compute Pearson’s correlation between instance-level entropy scores of human soft labels and model predictions; Kullback-Leibler divergence-based evaluation Nie et al. (2020) (either KL or Jensen-Shannon). Others instead started to evaluate against individual annotators Resnick et al. (2021); Davani et al. (2022), measure F1 scores against data splits by different annotator agreement levels Leonardelli et al. (2021); Damgaard et al. (2021), data splits based on annotator clustering Basile et al. (2021a), data splits based on item difficulty based on entropy of the label distribution and semantic distance Jolly et al. (2021), and data splits based on annotator uncertainty flags Bassignana and Plank (2022). Analogously as in Section 3, it is an open issue to see whether tasks might need to have specific properties to be more suitable for one kind of evaluation over another. In general, we need better evaluation practices (besides soft and hard evaluation), particularly in light of the complexity of human label variation—and the reasons it arises, which might be due to uncertainty, background, task complexity, intra-coder reliability etc; see Basile et al. (2021b) and in particular Jiang and de Marneffe (2022) for a discussion on disagreement sources; the latter recently developed a taxonomy for disagreement in natural language inference data."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Conclusions"
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we outline that human label variation impacts all steps of the traditional ML pipeline, and is an opportunity, not a problem. To move forward, we argue for a more comprehensive treatment of Hlv, which considers all steps, to enable innovation: data, modeling and evaluation. To do so, and truly move beyond the current in-vitro setups, we need an open, inter-disciplinary discussion. We hope to contribute to this discussion, and stipulate research with the released repository: https://github.com/mainlp/awesome-human-label-variation.11 1 The repository contains the datasets in Appendix 1 as a starting point. This is, to the best of our knowledge, the most comprehensive list of datasets with un-aggregated labels available today. We encourage readers to contribute. They are further invited to join the SemEval 2023 shared task LeWiDi: https://le-wi-di.github.io/"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "h2",
+   "en": "Limitations"
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "This position paper tries to be succinct while aiming at synthesizing a very broad notion—human label variation—that affects all steps dealing with learning from annotated data. Therefore, this position paper is necessarily incomplete, as is the dataset repository that is provided. However, we hope that the repository and paper will lead to an open discussion and community uptake, as this is a big open issue and necessitates a broader, inter-disciplinary treatment."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "h2",
+   "en": "Ethics Statement"
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "Modeling human label variation is connected to social bias, as annotator backgrounds influence annotations and consequently both machine learning and evaluation. Therefore it is important to be aware of possible social implications of some of the technologies discussed here. Inevitably there is potential for dual use, as amplifying the voice of some might harm others. However, there are social opportunities, as modeling human label variation allows to include the voices of more groups, and even the very underrepresented. In a world where the majority view dominates, these would otherwise be left behind."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgements"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "We thank the reviewers for their feedback. Special thanks to Bonnie Webber, Massimo Poesio and Raffaella Bernardi for invaluable feedback on drafts of this paper and discussions on this topic, in parts at the Insights workshop@ACL 2022. Thanks to members of the NLPnorth & MaiNLP lab for feedback on this paper. BP is supported by ERC Consolidator Grant DIALECT 101043235."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0048",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Akhtar et al. (2021) Sohail Akhtar, Valerio Basile, and Viviana Patti. 2021. Whose opinions matter? Perspective-aware models to identify opinions of hate speech victims in abusive language detection. "
+  },
+  {
+   "id": "b0049",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Alm (2011) Cecilia Ovesdotter Alm. 2011. Subjective natural language problems: Motivations, applications, characterizations, and implications. In Proceedings of the 49th Annual Meeting of the Associat"
+  },
+  {
+   "id": "b0050",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Almanea and Poesio (2022) Dina Almanea and Massimo Poesio. 2022. The ARMIS dataset of misogyny in arabic tweets. In Proc. of LREC ."
+  },
+  {
+   "id": "b0051",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Aroyo and Welty (2015) Lora Aroyo and Chris Welty. 2015. Truth is a lie: Crowd truth and the seven myths of human annotation. AI Magazine , 36(1):15–24."
+  },
+  {
+   "id": "b0052",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Artstein and Poesio (2008) Ron Artstein and Massimo Poesio. 2008. Inter-coder agreement for computational linguistics. Computational linguistics , 34(4):555–596."
+  },
+  {
+   "id": "b0053",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Baan et al. (2022) Joris Baan, Wilker Aziz, Barbara Plank, and Raquel Fernandez. 2022. Stop measuring calibration when humans disagree. In Empirical Methods of Natural Language Processing: EMNLP 2022 "
+  },
+  {
+   "id": "b0054",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Basile et al. (2021a) Valerio Basile, Federico Cabitza, Andrea Campagner, and Michael Fell. 2021a. Toward a perspectivist turn in ground truthing for predictive computing. arXiv preprint arXiv:2109.04"
+  },
+  {
+   "id": "b0055",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Basile et al. (2021b) Valerio Basile, Michael Fell, Tommaso Fornaciari, Dirk Hovy, Silviu Paun, Barbara Plank, Massimo Poesio, Alexandra Uma, et al. 2021b. We need to consider disagreement in evaluati"
+  },
+  {
+   "id": "b0056",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bassignana and Plank (2022) Elisa Bassignana and Barbara Plank. 2022. CrossRE: A Cross-Domain Dataset for Relation Extraction. In Findings of the Association for Computational Linguistics: EMNLP 2022 "
+  },
+  {
+   "id": "b0057",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Beigman and Beigman-Klebanov (2009) Eyal Beigman and Beata Beigman-Klebanov. 2009. Learning with annotation noise . In Proceedings of the Joint Conference of the 47th Annual Meeting of the ACL and the"
+  },
+  {
+   "id": "b0058",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Beigman Klebanov et al. (2008) Beata Beigman Klebanov, Eyal Beigman, and Danie Diermaier. 2008. Analyzing disagreements. In Proceedings of the Coling 2008 workshop on Human Judgements in Computational"
+  },
+  {
+   "id": "b0059",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bender and Friedman (2018) Emily M Bender and Batya Friedman. 2018. Data statements for natural language processing: Toward mitigating system bias and enabling better science. Transactions of the Asso"
+  },
+  {
+   "id": "b0060",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Berzak et al. (2016) Yevgeni Berzak, Yan Huang, Andrei Barbu, Anna Korhonen, and Boris Katz. 2016. Anchoring and agreement in syntactic annotations . In Proceedings of the 2016 Conference on Empirical"
+  },
+  {
+   "id": "b0061",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Borin (2022) Lars Borin. 2022. All that glitters… interannotator agreement in natural language processing. Morfologi, målstrev og maskinar – Trond Trosterud 60 , 46(1)."
+  },
+  {
+   "id": "b0062",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bryant and Ng (2015) Christopher Bryant and Hwee Tou Ng. 2015. How far are we from fully automatic high quality grammatical error correction? In Proceedings of the 53rd Annual Meeting of the Associati"
+  },
+  {
+   "id": "b0063",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cercas Curry et al. (2021) Amanda Cercas Curry, Gavin Abercrombie, and Verena Rieser. 2021. ConvAbuse: Data, analysis, and benchmarks for nuanced abuse detection in conversational AI . In Proceedings "
+  },
+  {
+   "id": "b0064",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cheplygina and Pluim (2018) Veronika Cheplygina and Josien PW Pluim. 2018. Crowd disagreement about medical images is informative. In Intravascular imaging and computer assisted stenting and large-sca"
+  },
+  {
+   "id": "b0065",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cohn and Specia (2013) Trevor Cohn and Lucia Specia. 2013. Modelling annotator bias with multi-task Gaussian processes: An application to machine translation quality estimation . In Proceedings of the"
+  },
+  {
+   "id": "b0066",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dagan et al. (2005) Ido Dagan, Oren Glickman, and Bernardo Magnini. 2005. The pascal recognising textual entailment challenge. In Machine learning challenges workshop , pages 177–190. Springer."
+  },
+  {
+   "id": "b0067",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Damgaard et al. (2021) Cathrine Damgaard, Paulina Toborek, Trine Eriksen, and Barbara Plank. 2021. “I’ll be there for you”: The one with understanding indirect answers . In Proceedings of the 2nd Work"
+  },
+  {
+   "id": "b0068",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Das et al. (2017) Debopam Das, Manfred Stede, and Maite Taboada. 2017. The good, the bad, and the disagreement: Complex ground truth in rhetorical structure analysis . In Proceedings of the 6th Worksh"
+  },
+  {
+   "id": "b0069",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Davani et al. (2022) Aida Mostafazadeh Davani, Mark Díaz, and Vinodkumar Prabhakaran. 2022. Dealing with disagreements: Looking beyond the majority vote in subjective annotations. Transactions of the "
+  },
+  {
+   "id": "b0070",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dawid and Skene (1979) Alexander Philip Dawid and Allan M Skene. 1979. Maximum likelihood estimation of observer error-rates using the em algorithm. Journal of the Royal Statistical Society: Series C "
+  },
+  {
+   "id": "b0071",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "de Marneffe et al. (2012) Marie-Catherine de Marneffe, Christopher D. Manning, and Christopher Potts. 2012. Did it happen? the pragmatic complexity of veridicality assessment . Computational Linguisti"
+  },
+  {
+   "id": "b0072",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "de Marneffe et al. (2019) Marie-Catherine de Marneffe, Mandy Simons, and Judith Tonhauser. 2019. The commitmentbank: Investigating projection in naturally occurring discourse. In proceedings of Sinn u"
+  },
+  {
+   "id": "b0073",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Demszky et al. (2020) Dorottya Demszky, Dana Movshovitz-Attias, Jeongwoo Ko, Alan Cowen, Gaurav Nemade, and Sujith Ravi. 2020. GoEmotions: A dataset of fine-grained emotions . In Proceedings of the 58"
+  },
+  {
+   "id": "b0074",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Denton et al. (2021) Emily Denton, Mark Díaz, Ian Kivlichan, Vinodkumar Prabhakaran, and Rachel Rosen. 2021. Whose ground truth? accounting for individual and collective identities underlying dataset "
+  },
+  {
+   "id": "b0075",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Derczynski et al. (2016) Leon Derczynski, Kalina Bontcheva, and Ian Roberts. 2016. Broad Twitter corpus: A diverse named entity recognition resource . In Proceedings of COLING 2016, the 26th Internati"
+  },
+  {
+   "id": "b0076",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Desai and Durrett (2020) Shrey Desai and Greg Durrett. 2020. Calibration of pre-trained transformers . In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)"
+  },
+  {
+   "id": "b0077",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dinu et al. (2021) Liviu P. Dinu, Ioan-Bogdan Iordache, Ana Sabina Uban, and Marcos Zampieri. 2021. A computational exploration of pejorative language in social media . In Findings of the Association "
+  },
+  {
+   "id": "b0078",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dumitrache et al. (2018) Anca Dumitrache, Lora Aroyo, and Chris Welty. 2018. Crowdsourcing semantic label propagation in relation classification . In Proceedings of the First Workshop on Fact Extracti"
+  },
+  {
+   "id": "b0079",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dumitrache et al. (2019) Anca Dumitrache, Lora Aroyo, and Chris Welty. 2019. A crowdsourced frame disambiguation corpus with ambiguity. In Annual Conference of the North American Chapter of the Associ"
+  },
+  {
+   "id": "b0080",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ferracane et al. (2021) Elisa Ferracane, Greg Durrett, Junyi Jessy Li, and Katrin Erk. 2021. Did they answer? subjective acts and intents in conversational discourse . In Proceedings of the 2021 Confe"
+  },
+  {
+   "id": "b0081",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fornaciari et al. (2021) Tommaso Fornaciari, Alexandra Uma, Silviu Paun, Barbara Plank, Dirk Hovy, and Massimo Poesio. 2021. Beyond black & white: Leveraging annotator disagreement via soft-label mult"
+  },
+  {
+   "id": "b0082",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Geiger et al. (2020) R Stuart Geiger, Kevin Yu, Yanlai Yang, Mindy Dai, Jie Qiu, Rebekah Tang, and Jenny Huang. 2020. Garbage in, garbage out? do machine learning application papers in social computin"
+  },
+  {
+   "id": "b0083",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Goldberger and Ben-Reuven (2016) Jacob Goldberger and Ehud Ben-Reuven. 2016. Training deep neural-networks using a noise adaptation layer. ICLR 2017 ."
+  },
+  {
+   "id": "b0084",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gordon et al. (2022) Mitchell L Gordon, Michelle S Lam, Joon Sung Park, Kayur Patel, Jeff Hancock, Tatsunori Hashimoto, and Michael S Bernstein. 2022. Jury learning: Integrating dissenting voices into"
+  },
+  {
+   "id": "b0085",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gordon et al. (2021) Mitchell L Gordon, Kaitlyn Zhou, Kayur Patel, Tatsunori Hashimoto, and Michael S Bernstein. 2021. The disagreement deconvolution: Bringing machine learning performance metrics in "
+  },
+  {
+   "id": "b0086",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Guo et al. (2017) Chuan Guo, Geoff Pleiss, Yu Sun, and Kilian Q. Weinberger. 2017. On calibration of modern neural networks. In Proceedings of the 34th International Conference on Machine Learning - V"
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Han et al. (2018a) Bo Han, Jiangchao Yao, Gang Niu, Mingyuan Zhou, Ivor Tsang, Ya Zhang, and Masashi Sugiyama. 2018a. Masking: A new perspective of noisy supervision. In Advances in Neural Information"
+  },
+  {
+   "id": "b0088",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Han et al. (2018b) Bo Han, Quanming Yao, Xingrui Yu, Gang Niu, Miao Xu, Weihua Hu, Ivor Tsang, and Masashi Sugiyama. 2018b. Co-teaching: Robust training of deep neural networks with extremely noisy la"
+  },
+  {
+   "id": "b0089",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hershcovich et al. (2022) Daniel Hershcovich, Stella Frank, Heather Lent, Miryam de Lhoneux, Mostafa Abdou, Stephanie Brandl, Emanuele Bugliarello, Laura Cabello Piqueras, Ilias Chalkidis, Ruixiang Cu"
+  },
+  {
+   "id": "b0090",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jamison and Gurevych (2015) Emily Jamison and Iryna Gurevych. 2015. Noise or additional information? leveraging crowdsource annotation item agreement for natural language tasks. In Proceedings of the "
+  },
+  {
+   "id": "b0091",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jiang and de Marneffe (2022) Nan-Jiang Jiang and Marie-Catherine de Marneffe. 2022. Investigating reasons for disagreement in natural language inference. Transactions of the Association for Computatio"
+  },
+  {
+   "id": "b0092",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jiang et al. (2021) Zhengbao Jiang, Jun Araki, Haibo Ding, and Graham Neubig. 2021. How Can We Know When Language Models Know? On the Calibration of Language Models for Question Answering . Transactio"
+  },
+  {
+   "id": "b0093",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jolly et al. (2021) Shailza Jolly, Sandro Pezzelle, and Moin Nabi. 2021. EaSe: A diagnostic tool for VQA based on answer diversity . In Proceedings of the 2021 Conference of the North American Chapter"
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kennedy et al. (2020) Chris J Kennedy, Geoff Bacon, Alexander Sahn, and Claudia von Vacano. 2020. Constructing interval variables via faceted rasch measurement and multitask deep learning: a hate spee"
+  },
+  {
+   "id": "b0095",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Klie et al. (2022) Jan-Christoph Klie, Bonnie Webber, and Iryna Gurevych. 2022. Annotation error detection: Analyzing the past and present for a more coherent future. Computational Linguistics ."
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kong et al. (2020) Lingkai Kong, Haoming Jiang, Yuchen Zhuang, Jie Lyu, Tuo Zhao, and Chao Zhang. 2020. Calibrated language model fine-tuning for in- and out-of-distribution data . In Proceedings of t"
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Krippendorff (2018) Klaus Krippendorff. 2018. Content analysis: An introduction to its methodology . Sage publications."
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Krishna et al. (2016) Ranjay A Krishna, Kenji Hata, Stephanie Chen, Joshua Kravitz, David A Shamma, Li Fei-Fei, and Michael S Bernstein. 2016. Embracing error to enable rapid crowdsourcing. In Proceed"
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lalor et al. (2017) John P Lalor, Hao Wu, and Hong Yu. 2017. Soft label memorization-generalization for natural language inference. arXiv preprint arXiv:1702.08563 ."
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Larimore et al. (2021) Savannah Larimore, Ian Kennedy, Breon Haskett, and Alina Arseniev-Koehler. 2021. Reconsidering annotator disagreement about racist language: Noise or signal? In Proceedings of t"
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Leonardelli et al. (2021) Elisa Leonardelli, Stefano Menini, Alessio Palmero Aprosio, Marco Guerini, and Sara Tonelli. 2021. Agreeing to disagree: Annotating offensive language datasets with annotator"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2016) Tong Liu, Christopher Homan, Cecilia Ovesdotter Alm, Megan Lytle, Ann Marie White, and Henry Kautz. 2016. Understanding discourse on work and job-related well-being in public social "
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Manning (2011) Christopher D Manning. 2011. Part-of-speech tagging from 97% to 100%: is it time for some linguistics? In International conference on intelligent text processing and computational lingu"
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Marchal et al. (2022) Marian Marchal, Merel Scholman, Frances Yung, and Vera Demberg. 2022. Establishing annotation quality in multi-label annotations . In Proceedings of the 29th International Confer"
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Martínez Alonso et al. (2016) Héctor Martínez Alonso, Anders Johannsen, and Barbara Plank. 2016. Supersense tagging with inter-annotator disagreement . In Proceedings of the 10th Linguistic Annotation"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "McDonnell et al. (2016) Tyler McDonnell, Matthew Lease, Mucahid Kutlu, and Tamer Elsayed. 2016. Why is that relevant? collecting annotator rationales for relevance judgments. In Proceedings of the AAA"
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Meister et al. (2020) Clara Meister, Elizabeth Salesky, and Ryan Cotterell. 2020. Generalized entropy regularization or: There’s nothing special about label smoothing. arXiv preprint arXiv:2005.00820 "
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Naeini et al. (2015) Mahdi Pakdaman Naeini, Gregory F. Cooper, and Milos Hauskrecht. 2015. Obtaining Well Calibrated Probabilities Using Bayesian Binning. In Proceedings of the Twenty-Ninth AAAI Confe"
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Nie et al. (2020) Yixin Nie, Xiang Zhou, and Mohit Bansal. 2020. What can we learn from collective human opinions on natural language inference data? In Proceedings of the 2020 Conference on Empirical"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Palomaki et al. (2018) Jennimaria Palomaki, Olivia Rhinehart, and Michael Tseng. 2018. A case for a range of acceptable annotations. In SAD/CrowdBias@ HCOMP , pages 19–31."
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Passonneau et al. (2010) Rebecca J Passonneau, Ansaf Salleb-Aouissi, Vikas Bhardwaj, and Nancy Ide. 2010. Word sense annotation of polysemous words by multiple annotators. In Proceedings of the Sevent"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Paun et al. (2022) Silviu Paun, Ron Artstein, and Massimo Poesio. 2022. Statistical methods for annotation analysis. Synthesis Lectures on Human Language Technologies , 15(1):1–217."
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Pavlick and Kwiatkowski (2019) Ellie Pavlick and Tom Kwiatkowski. 2019. Inherent disagreements in human textual inferences . Transactions of the Association for Computational Linguistics , 7:677–694."
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Peng et al. (2022) Siyao Peng, Yang Janet Liu, and Amir Zeldes. 2022. Gcdt: A chinese rst treebank for multigenre and multilingual discourse parsing. In Proceedings of the 2nd Conference of the Asia-P"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Peterson et al. (2019) Joshua C. Peterson, Ruairidh M. Battleday, Thomas L. Griffiths, and Olga Russakovsky. 2019. Human uncertainty makes classification more robust. 2019 IEEE/CVF International Confe"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Plank et al. (2014a) Barbara Plank, Dirk Hovy, and Anders Søgaard. 2014a. Learning part-of-speech taggers with inter-annotator agreement loss . In Proceedings of the 14th Conference of the European Ch"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Plank et al. (2014b) Barbara Plank, Dirk Hovy, and Anders Søgaard. 2014b. Linguistically debatable or just plain wrong? In Proceedings of the 52nd Annual Meeting of the Association for Computational L"
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Poesio and Artstein (2005) Massimo Poesio and Ron Artstein. 2005. The reliability of anaphoric annotation, reconsidered: Taking ambiguity into account . In Proc. of ACL Workshop on Frontiers in Corpus"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Poesio et al. (2019) Massimo Poesio, Jon Chamberlain, Silviu Paun, Juntao Yu, Alexandra Uma, and Udo Kruschwitz. 2019. A crowdsourced corpus of multiple judgments and disagreement on anaphoric interpr"
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Prabhakaran et al. (2021) Vinodkumar Prabhakaran, Aida Mostafazadeh Davani, and Mark Diaz. 2021. On releasing annotator-level labels and information in datasets . In Proceedings of The Joint 15th Ling"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Pustejovsky and Stubbs (2012) James Pustejovsky and Amber Stubbs. 2012. Natural Language Annotation for Machine Learning: A guide to corpus-building for applications . O’Reilly Media."
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qing et al. (2014) Ciyang Qing, Ulle Endriss, Raquel Fernández, and Justin Kruger. 2014. Empirical analysis of aggregation methods for collective annotation. In COLING ."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Reidsma and Carletta (2008) Dennis Reidsma and Jean Carletta. 2008. Reliability measurement without limits. Computational Linguistics , 34(3):319–326."
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Reidsma and op den Akker (2008) Dennis Reidsma and Rieks op den Akker. 2008. Exploiting ‘subjective’ annotations . In Proc. of the Workshop on Human Judgments in Computational Linguistics , pages 8–16"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Resnick et al. (2021) Paul Resnick, Yuqing Kong, Grant Schoenebeck, and Tim Weninger. 2021. Survey equivalence: A procedure for measuring classifier accuracy against human labels. arXiv preprint arXiv"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Rodrigues and Pereira (2018) Filipe Rodrigues and Francisco Pereira. 2018. Deep learning from crowds. In Proceedings of the AAAI conference on artificial intelligence , volume 32."
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Rottger et al. (2022) Paul Rottger, Bertie Vidgen, Dirk Hovy, and Janet Pierrehumbert. 2022. Two contrasting data annotation paradigms for subjective NLP tasks . In Proceedings of the 2022 Conference "
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sap et al. (2019) Maarten Sap, Dallas Card, Saadia Gabriel, Yejin Choi, and Noah A. Smith. 2019. The risk of racial bias in hate speech detection . In Proceedings of the 57th Annual Meeting of the Ass"
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sap et al. (2022) Maarten Sap, Swabha Swayamdipta, Laura Vianna, Xuhui Zhou, Yejin Choi, and Noah A. Smith. 2022. Annotators with attitudes: How annotator beliefs and identities bias toxic language de"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Schlangen (2021) David Schlangen. 2021. Targeting the benchmark: On methodology in current natural language processing research . In Proceedings of the 59th Annual Meeting of the Association for Compu"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sheng et al. (2008) Victor S. Sheng, Foster Provost, and Panagiotis G. Ipeirotis. 2008. Get another label? improving data quality and data mining using multiple, noisy labelers . In Proceedings of the"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Simpson et al. (2019) Edwin Simpson, Erik-Lân Do Dinh, Tristan Miller, and Iryna Gurevych. 2019. Predicting humorousness and metaphor novelty with Gaussian process preference learning . In Proceedings"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Snow et al. (2008) Rion Snow, Brendan O’connor, Dan Jurafsky, and Andrew Y Ng. 2008. Cheap and fast–but is it good? evaluating non-expert annotations for natural language tasks. In Proceedings of the "
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sommerauer et al. (2020) Pia Sommerauer, Antske Fokkens, and Piek Vossen. 2020. Would you describe a leopard as yellow? evaluating crowd-annotations with justified and informative disagreement . In Pr"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Swayamdipta et al. (2020) Swabha Swayamdipta, Roy Schwartz, Nicholas Lourie, Yizhong Wang, Hannaneh Hajishirzi, Noah A. Smith, and Yejin Choi. 2020. Dataset cartography: Mapping and diagnosing dataset"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Uma et al. (2021a) Alexandra Uma, Tommaso Fornaciari, Anca Dumitrache, Tristan Miller, Jon Chamberlain, Barbara Plank, Edwin Simpson, and Massimo Poesio. 2021a. SemEval-2021 task 12: Learning with dis"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Uma et al. (2020) Alexandra Uma, Tommaso Fornaciari, Dirk Hovy, Silviu Paun, Barbara Plank, and Massimo Poesio. 2020. A case for soft-loss functions. In Proc. of HCOMP ."
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Uma et al. (2021b) Alexandra Uma, Tommaso Fornaciari, Dirk Hovy, Silviu Paun, Barbara Plank, and Massimo Poesio. 2021b. Learning from disagreement: A survey. Journal of Artificial Intelligence Researc"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Webber and Joshi (2012) Bonnie Webber and Aravind Joshi. 2012. Discourse structure and computation: Past, present and future . In Proceedings of the ACL-2012 Special Workshop on Rediscovering 50 Years"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wich et al. (2021) Maximilian Wich, Christian Widmer, Gerhard Hagerer, and Georg Groh. 2021. Investigating annotator bias in abusive language datasets . In Proceedings of the International Conference "
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zeman (2010) Daniel Zeman. 2010. Hard problems of tagset conversion. In Proceedings of the Second International Conference on Global Interoperability for Language Resources , pages 181–185."
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang and Plank (2021) Mike Zhang and Barbara Plank. 2021. Cartography active learning . In Findings of the Association for Computational Linguistics: EMNLP 2021 , pages 395–406, Punta Cana, Dominican"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2021) Shujian Zhang, Chengyue Gong, and Eunsol Choi. 2021. Learning with different amounts of annotation: From zero to many labels. arXiv preprint arXiv:2109.04408 ."
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang and de Marneffe (2021) Xinliang Frederick Zhang and Marie-Catherine de Marneffe. 2021. Identifying inherent disagreement in natural language inference . In Proceedings of the 2021 Conference of "
+  },
+  {
+   "id": "b0145",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Datasets with Multiple Annotations"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "table",
+   "en": "Field Reference Name/Description URL Jair PDAI SemEval21 TACL22 SemEval23 NLP Passonneau et al. (2010) Word sense disambiguation (WSD) https://anc.org/ Plank et al. (2014a) POS tagging (500 tweets fro"
+  },
+  {
+   "id": "b0147",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Overview of publicly-available datasets with Hlv data (see repository for updates and to contribute: https://github.com/mainlp/awesome-human-label-variation). ⟦SLOT_3⟧: whether the source was used in broader empirical evaluations, e.g., the JAIR survey on learning from disagreement Uma et al. (2021b), is listed on pdai.info Basile et al. (2021a) (as of June, 2022), is part of the SemEval 2021 task on learning from disagreement Uma et al. (2021a), is used in a TACL paper on learning beyond majority vote Davani et al. (2022), is used in the SemEval 2023 shared task on Learning With Disagreement LeWiDi https://le-wi-di.github.io/."
+  }
+ ]
+}

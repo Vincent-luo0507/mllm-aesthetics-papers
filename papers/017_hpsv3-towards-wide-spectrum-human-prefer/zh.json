@@ -1,0 +1,664 @@
+{
+ "blocks": {
+  "b0005": {
+   "zh": "图 1：宽谱人类偏好分数（HPSv3）。图中展示了 HPDv3 数据集中的示例及其对应的 HPSv3 分数。HPDv3 是首个全面的宽谱人类偏好数据集，旨在跨越广泛的提示词与场景来评估生成模型。"
+  },
+  "b0008": {
+   "zh": "1 引言"
+  },
+  "b0009": {
+   "zh": "随着文本到图像生成模型的迅速进步，以人为中心的评测方法相继出现，例如 HPS [43, 41]、ImageReward [46]、PickScore [11] 与 MPS [49]，它们将主观的人类反馈纳入评测。这类方法构建人工标注数据集，并训练模型去捕捉人类偏好的分布，从而实现更贴合感知的评测。"
+  },
+  "b0010": {
+   "zh": "然而，这些以人为中心的评测模型仍受制于数据分布狭窄、模型设计欠佳与训练方案过于简化。"
+  },
+  "b0011": {
+   "zh": "一方面，已有的人类中心评测指标 [43, 11, 46] 受训练数据质量谱系过窄的限制，其数据主要来自基于扩散的模型 [28]，因此不足以评测更先进的方法，如扩散 Transformer [3, 1] 与自回归模型 [39, 10]。此外，缺乏标准化、可靠的标注流程，也在数据标注环节引入了潜在偏差。"
+  },
+  "b0012": {
+   "zh": "另一方面，从模型架构看，[43, 41, 11, 47] 等工作常用的 CLIP [25] 与 BLIP [14] 特征提取器在多模态特征提取上表现较弱 [15, 40]，导致用于最终排序的表示不够全面。此外，直接用 KL 散度 [41, 49] 优化模型，忽视了标注真值中潜在的不一致性，而这在人类偏好标注中十分常见。这些挑战说明，需要更稳健的模型架构与训练范式来更好地捕捉人类偏好。"
+  },
+  "b0013": {
+   "zh": "本文针对上述挑战提出两项关键改进：（a）一个覆盖宽质量谱系、经过精细标注的数据集，包含丰富多样的文本-图像对，并通过精心设计的流程构建，以契合人类偏好；（b）一个具备强健骨干网络以完成充分特征编码的偏好模型，配合不确定性感知排序损失，缓解标注者导致的训练样本不确定性或错误。"
+  },
+  "b0014": {
+   "zh": "如图 1 所示，受光谱概念 [20] 启发，我们提出人类偏好数据集 v3（HPDv3）——一个更全面、更系统的数据集，包含 108 万文本-图像对与 117 万条人工标注的成对比较。HPDv3 在既有工作之上加以扩展，整合了当前最优的自回归与扩散模型输出，以及从互联网采集的高质量真实图像，后者代表了人工采集图像质量的上界。"
+  },
+  "b0015": {
+   "zh": "具体而言，HPDv3 由三个主要来源构建：（1）用 ⟦SLOT_0⟧ 个当前最优模型生成图像，以扩展 HPDv2；（2）整理高质量互联网照片，由视觉语言模型（VLM）为其生成描述文本，据此再生成图像；（3）纳入 Midjourney 的输出，包括每个提示词生成的四张图像以及一个用户选择的偏好结果。为提升可靠性，每个样本由 ⟦SLOT_1⟧ 名标注者进行成对比较，以保证主观评价的多样性。HPDv3 缓解了既有数据集中的偏差，既可作为训练偏好对齐模型的基础，也可作为评测生成模型的基准。"
+  },
+  "b0016": {
+   "zh": "在 HPDv3 的基础上，我们提出人类偏好分数 v3（HPSv3）——一个在该数据集上训练的综合性模型，用于使图像生成模型更好地契合人类期望。HPSv3 有两项关键改进：（1）借助视觉语言模型（VLM）强大的视觉编码器捕捉丰富的高维特征；（2）采用不确定性感知排序损失，更准确地区分图像质量上的细微差异。由于在生成图像与高质量真实图像构成的多样化数据上训练，HPSv3 提供了稳健可靠的评测框架，能够高度贴合人类偏好。"
+  },
+  "b0017": {
+   "zh": "最后，我们提出人类偏好链（CoHP）——一种由推理驱动的图像生成新流程。CoHP 的第一项创新是引入受思维链（CoT）启发的推理机制，无需任何训练数据即可系统性地提升图像质量。第二项创新是把 HPSv3 用作奖励模型，从语义对齐、真实感与美学吸引力三个方面评估图像。HPSv3 通过引导推理过程，保证每一步都选出质量最高的图像，使最终输出得到逐步精化与提升。"
+  },
+  "b0018": {
+   "zh": "HPSv3 的贡献有三："
+  },
+  "b0019": {
+   "zh": "• 我们提出宽谱人类偏好数据集 HPDv3，整合高质量真实世界图像与当前最优生成模型的输出，包含 108 万文本-图像对与 117 万条人工标注的成对比较，可作为评测生成模型的细粒度基准。"
+  },
+  "b0020": {
+   "zh": "• 我们提出 HPSv3，一个基于 HPDv3 训练的人类偏好模型。它利用视觉语言模型的特征，并采用不确定性感知排序损失进行训练，以辨识标注者造成的训练样本不确定性或错误。"
+  },
+  "b0021": {
+   "zh": "• 我们提出 CoHP，一种借助 HPSv3 迭代精化输出来提升图像生成质量的新推理方法。"
+  },
+  "b0022": {
+   "zh": "2 相关工作"
+  },
+  "b0023": {
+   "zh": "2.1 文本到图像生成"
+  },
+  "b0024": {
+   "zh": "生成模型从 GAN [33, 30, 35, 22] 的兴起到扩散模型 [28, 26, 29, 16, 18, 36, 12, 44] 的出现，取得了显著进展。近来，FLUX [1, 17, 8] 等文本到图像模型进一步将大规模 Transformer 架构融入扩散模型，提升了生成图像的质量与连贯性。除基于扩散的模型外，视觉自回归模型 [10, 9, 45] 也展现出遵循语言指令生成高分辨率、照片级真实图像的强大能力。"
+  },
+  "b0026": {
+   "zh": "表 1：与相关数据集的对比。HPDv3 是唯一全面覆盖各类图像生成模型的数据集，同时包含跨多样提示词的高质量（HQI）与低质量（LQI）图像，也是目前规模最大的图像集合。其标注具有很强的标注者间一致性，可靠性优异。"
+  },
+  "b0027": {
+   "zh": "2.2 人类偏好模型"
+  },
+  "b0028": {
+   "zh": "近来，HPS [43]、HPSv2 [41]、MPS [49] 与 PickScore [11] 等研究提出基于人类偏好对 CLIP 进行微调，用于评估由同一文本提示词生成的图像。ImageReward [46] 则以 BLIP 编码器为特征提取器训练奖励模型，以评测并改进生成模型。然而，这些模型主要使用 Stable Diffusion 及其变体的图像进行调整，其跨数据集的泛化能力尚未得到验证。此外，用 CLIP/BLIP 编码器作特征提取器存在局限：语义信息过于宽泛或特征维度有限，难以有效刻画用户行为与期望。"
+  },
+  "b0029": {
+   "zh": "2.3 图像质量数据集"
+  },
+  "b0030": {
+   "zh": "文本到图像生成模型通常依赖从互联网获取的高质量真实图像，以保证生成结果的保真度。HPDv1 [42]、ImageReward [46] 与 Pick-a-Pic [11] 是对成对图像进行比较的人工标注数据集，侧重评测生成图像，并通过使文本到图像模型对齐人类偏好来提升图像质量。与此类似，HPDv2 [41] 纳入了更多生成模型、范围更广的图像，从而对这些偏好预测模型进行更全面的评测。然而，这些数据集主要比较已有模型生成的图像，忽略了与高质量真实图像的比较。"
+  },
+  "b0031": {
+   "zh": "3 人类偏好数据集 v3"
+  },
+  "b0032": {
+   "zh": "已有的人类偏好基准存在两处关键局限，因而无法为生成模型提供稳健的评测框架：缺少用于定义质量上界的高质量真实照片，以及所采用的生成模型已经过时。"
+  },
+  "b0033": {
+   "zh": "为此，我们提出人类偏好数据集 v3（HPDv3）。该综合性数据集按提示词将图像两两分组，包含 ⟦SLOT_2⟧ 百万条二值偏好选择，覆盖 ⟦SLOT_3⟧ 百万张图像。标注具有很高的可靠性：每项判断都由 ⟦SLOT_4⟧ 至 ⟦SLOT_5⟧ 名专业标注者核验，并需达到 ⟦SLOT_6⟧ 的一致率阈值。来源模型的细节见补充材料。"
+  },
+  "b0034": {
+   "zh": "3.1 文本-图像对采集"
+  },
+  "b0035": {
+   "zh": "HPDv2 是目前规模最大的人工标注人类偏好数据集，包含 ⟦SLOT_7⟧ 条二值偏好选择，覆盖 ⟦SLOT_8⟧ 张图像。然而，其可用性受两处主要缺陷制约。其一，图像语料由生成模型输出与低质量真实图像构成，缺少建立稳健质量上界所必需的高质量真实照片。其二，数据集的模型覆盖已经过时，仅延伸到 Stable Diffusion 2.0，因而缺少与近期最优模型的比较。"
+  },
+  "b0036": {
+   "zh": "HPDv3 通过补齐这些缺失的组成部分——高保真真实照片与当前领先生成模型的图像——来克服上述局限。具体而言，HPDv3 的采集工作由三个主要部分构成："
+  },
+  "b0037": {
+   "zh": "扩展 HPDv2。我们保留 HPDv2 的提示词，其中包含由 ChatGPT 依据 COCO Captions 与 DiffusionDB 等来源润色得到的 ⟦SLOT_9⟧ 条文本，并用这些文本生成图像，纳入 FLUX.1-dev [1]、Infinity [10]、Hunyuan [17]、Kolors [38] 与 SD3 [8] 等近期发布的最优图像生成模型的输出。"
+  },
+  "b0038": {
+   "zh": "基于真实照片描述文本的生成。我们在 AI 生成内容之外纳入高质量真实世界摄影图像，以构建宽谱人类偏好数据集。"
+  },
+  "b0039": {
+   "zh": "• 提示词分类。为真实贴合用户提示词的分布，我们将提示词划分为 ⟦SLOT_10⟧ 个不同类别。"
+  },
+  "b0040": {
+   "zh": "• 分布对齐。我们按这些类别从互联网采集高质量摄影图像，并使每个类别的占比遵循 JourneyDB [34] 的提示词分布。"
+  },
+  "b0041": {
+   "zh": "• 美学筛选。为保证质量，我们使用美学预测器（Aesthetic Predictor）对采集数据打分。由于部分类别（如商品）本身美学分数偏低，我们在每个类别中选取美学分数排名前 ⟦SLOT_11⟧ 的图像，最终得到 ⟦SLOT_12⟧ 张高质量图像。"
+  },
+  "b0042": {
+   "zh": "• 描述与生成。用视觉语言模型为这些图像生成描述，构成提示词列表，再由各类生成模型据此产出对应图像。"
+  },
+  "b0043": {
+   "zh": "从 Midjourney 采集。此外，受艺术家青睐的文本到图像生成模型 Midjourney 11 1 https://www.midjourney.com/ 在 Discord 平台上提供了大量用户自写提示词、生成图像与用户偏好结果。我们采集了 331,955 张用户生成的图像，并将其组织为成对数据。这些选择结果可直接作为真实的用户标签。"
+  },
+  "b0044": {
+   "zh": "3.2 标注流程"
+  },
+  "b0045": {
+   "zh": "我们通过邀请用户从具有相同文本提示词的图像对中选出更偏好的一张来完成标注。标注工作强调标注者的专业能力与标注质量。"
+  },
+  "b0046": {
+   "zh": "为确保标注者具备相应能力，我们构建了一个验证集，包含由 ⟦SLOT_14⟧ 位专业艺术家标注的 ⟦SLOT_13⟧ 个图像对，收敛度达到 ⟦SLOT_15⟧，用以考查标注者水平。标注者正式参与前，必须从该验证集随机抽取的 ⟦SLOT_17⟧ 个图像对中至少正确评判 ⟦SLOT_16⟧ 个。在标注质量控制方面，主数据集中的每个图像对由 ⟦SLOT_18⟧ 至 ⟦SLOT_19⟧ 名标注者评判，以保证可靠性与一致性。标注者依据美学、与提示词的语义相似度以及整体连贯性进行选择。考虑到偏好固有的主观性，我们不设固定的接受标准。该标注方法应用于 HPDv3 的前两个组成部分；标注者间置信度超过 ⟦SLOT_20⟧ 的图像对用于 HPSv3 训练。Midjourney 数据则直接使用从 Discord 采集的偏好标签。我们共收集到 ⟦SLOT_21⟧ 百万条高置信度成对比较用于训练。"
+  },
+  "b0047": {
+   "zh": "3.3 与其他数据集的对比"
+  },
+  "b0048": {
+   "zh": "如表 1 所示，HPDv3 与现有其他数据集的对比凸显了该数据集的多项关键优势。"
+  },
+  "b0049": {
+   "zh": "其一，HPDv3 涵盖全面的模型生成结果，使用了 ⟦SLOT_22⟧ 个不同的模型，包括基于 GAN、基于扩散与自回归的模型。其模型多样性超过其他数据集，保证了图像生成风格与能力的更大差异，并提供了规模最大的文本-图像对与成对样本集合。"
+  },
+  "b0050": {
+   "zh": "其二，HPDv3 提供多样的提示词来源与图像类别。不同于其他数据集依赖 COCO [5] 或 DiffusionDB 提示词等有限来源，HPDv3 纳入了来自 JourneyDB、Midjourney 的用户自写提示词，以及高质量摄影图像的描述文本。这种多样性提升了数据集在各类场景下的适用性，也为相关研究提供了更稳健的支撑。"
+  },
+  "b0051": {
+   "zh": "其三，HPDv3 通过同时纳入高质量与低质量的真实图像，独树一帜地支持真实图像与生成图像之间的比较。这种设计支持更细致的比较，有助于研究者更清楚地认识图像生成模型相对于真实照片的优势与不足。"
+  },
+  "b0052": {
+   "zh": "我们还分析了 HPDv2 与 HPDv3 的标注收敛度：HPDv2 的平均收敛度为 ⟦SLOT_23⟧，而 HPDv3 的收敛度分布更为集中，平均收敛度达到 ⟦SLOT_24⟧。这清楚表明 HPDv3 在数据集构建上优于 HPDv2，能更有效地达成较高的标注一致性。"
+  },
+  "b0053": {
+   "zh": "综上，HPDv3 是规模最大、覆盖最全面的图像生成偏好数据集，唯一囊括了全部主流模型类型、多样提示词来源与丰富的选择类型。其标注具有高置信度与高可靠性，并由较强的标注者收敛度加以验证。"
+  },
+  "b0054": {
+   "zh": "4 人类偏好分数 v3"
+  },
+  "b0055": {
+   "zh": "人工评测仍是评估合成图像偏好的金标准，但成本高昂且难以规模化。为此，我们提出人类偏好分数 v3（HPSv3）——一个从标注中学习人类偏好的模型，可作为可扩展的自动化评测器。"
+  },
+  "b0056": {
+   "zh": "4.1 模型设计"
+  },
+  "b0057": {
+   "zh": "架构。"
+  },
+  "b0058": {
+   "zh": "视觉语言模型（VLM）凭借强大的表示能力，被广泛用于图像分类与打标等下游任务。受此启发，我们采用 QWen2-VL [40] 作为骨干网络提取图像与文本特征，再经过一个多层感知机（MLP）映射得到最终输出。在我们的方法中，给定一对训练图像 ⟦SLOT_25⟧，以及相应的文本提示词 ⟦SLOT_26⟧ 与人类偏好标注 ⟦SLOT_27⟧，该成对数据的最终输出由下式给出："
+  },
+  "b0060": {
+   "zh": "其中 ⟦SLOT_28⟧ 表示视觉语言模型，⟦SLOT_29⟧ 表示多层感知机（MLP）。"
+  },
+  "b0062": {
+   "zh": "图 2：HPDv3 与 HPSv3 概览。HPDv3 同时整合了真实世界采集图像与生成图像。HPSv3 采用视觉语言模型骨干网络，从图像与描述文本中提取丰富的语义表示，再利用不确定性感知排序从成对比较数据中有效学习人类偏好。"
+  },
+  "b0063": {
+   "zh": "不确定性感知排序。"
+  },
+  "b0064": {
+   "zh": "已有模型并未考虑标注结果中潜在的不一致性。直接选定某个确定的偏好分数，可能使模型在困难样本上产生判断偏差。"
+  },
+  "b0065": {
+   "zh": "给定输入 ⟦SLOT_30⟧ 与标签 ⟦SLOT_31⟧，已有模型计算分数 ⟦SLOT_32⟧，偏好概率定义为："
+  },
+  "b0067": {
+   "zh": "其中 sigmoid 函数可表示为 ⟦SLOT_33⟧，用于将预测输出约束为 [0,1] 区间内的概率值。"
+  },
+  "b0068": {
+   "zh": "然而，这种确定性建模方式对所有输出预测赋予同等置信度，模型在训练过程中盲目地为样本打分，没有考虑预测本身的不确定性。"
+  },
+  "b0069": {
+   "zh": "受 [37] 启发，我们引入不确定性感知排序模型。传统 RankNet 模型利用 ⟦SLOT_34⟧ 的最后一层线性层输出分数 ⟦SLOT_35⟧，我们则使用最后两层线性层分别预测 ⟦SLOT_36⟧ 与 ⟦SLOT_37⟧，将输出分数 ⟦SLOT_38⟧ 建模为一维高斯分布 ⟦SLOT_39⟧。这为输出分数引入了不确定性维度，缓解了标注者标注不确定性所导致的成对数据不确定或错误。最终概率定义为："
+  },
+  "b0072": {
+   "zh": "图 3：基于 HPSv3 的思维链式图像生成（CoHP）概览。CoHP 同时纳入模型级偏好与样本级偏好，由 HPSv3 完成筛选，构建出「思考—选择」式的图像生成流程。"
+  },
+  "b0073": {
+   "zh": "我们把偏好排名较高的样本记为 ⟦SLOT_40⟧，其对应奖励为 ⟦SLOT_41⟧；偏好排名较低的样本记为 ⟦SLOT_42⟧，奖励为 ⟦SLOT_43⟧。通过最小化负对数似然，损失函数定义如下："
+  },
+  "b0075": {
+   "zh": "不确定性感知排序促使模型利用成对数据的潜在分布，而非仅依赖单一的标量分数。这一做法增强了模型捕捉人类标注中细微不确定性的能力，最终提升了整体排序准确率。"
+  },
+  "b0076": {
+   "zh": "4.2 用 CoHP 提升图像生成质量"
+  },
+  "b0077": {
+   "zh": "我们提出 CoHP，一种借助 HPSv3 迭代精化输出以提升图像生成质量的方法。如图 3 所示，CoHP 由模型级偏好阶段与样本级偏好阶段组成。每个阶段都以 HPSv3 作为奖励模型评估生成图像，并指导候选结果的多轮迭代筛选，使生成质量随轮次逐步提升。"
+  },
+  "b0079": {
+   "zh": "表 2：主流图像生成模型在 HPDv3 基准上的表现。我们使用各参评模型推荐的推理设置或官方 API 生成图像。最优与次优结果分别以粗体与下划线标出。"
+  },
+  "b0080": {
+   "zh": "模型级偏好。给定某一提示词，不同模型的生成质量可能存在差异，因此首先需要确定与该提示词最匹配的模型。我们把候选模型池记为 ⟦SLOT_44⟧，其中 ⟦SLOT_45⟧ 表示池中的第 ⟦SLOT_46⟧ 个模型，⟦SLOT_47⟧ 表示候选模型总数。我们用每个模型 ⟦SLOT_48⟧ 按给定提示词在 ⟦SLOT_49⟧ 轮中生成一组候选图像：⟦SLOT_50⟧，其中 ⟦SLOT_51⟧ 表示模型 ⟦SLOT_52⟧ 在第 ⟦SLOT_53⟧ 轮生成的图像。每个 ⟦SLOT_54⟧ 随后由 HPSv3 评分，得到偏好分数 ⟦SLOT_55⟧。模型 ⟦SLOT_56⟧ 的平均分数计算为 ⟦SLOT_57⟧。作为模型级筛选的最后一步，取 ⟦SLOT_58⟧ 最高的模型作为黄金模型 ⟦SLOT_59⟧："
+  },
+  "b0082": {
+   "zh": "样本级偏好。给定提示词，选出的黄金模型 ⟦SLOT_60⟧ 在每一轮采样中生成一批 ⟦SLOT_61⟧ 张图像。我们把第 ⟦SLOT_62⟧ 轮生成的图像批次记为 ⟦SLOT_63⟧，其中 ⟦SLOT_64⟧ 表示样本级阶段的当前生成轮次，⟦SLOT_65⟧ 为批次内图像的索引，⟦SLOT_66⟧ 表示样本级阶段的额外轮数。每张图像 ⟦SLOT_67⟧ 由 HPSv3 评估，得到一组分数 ⟦SLOT_68⟧。"
+  },
+  "b0083": {
+   "zh": "在第 ⟦SLOT_69⟧ 轮中 HPSv3 分数最高的图像被选为下一轮生成的参考图像：⟦SLOT_70⟧ 被选中的图像 ⟦SLOT_71⟧ 将与噪声混合，并与原始文本提示词组合，共同构成下一轮生成的输入条件。该过程再迭代 ⟦SLOT_72⟧ 轮。最后，取所有轮次中总分最高的图像作为最终黄金图像："
+  },
+  "b0085": {
+   "zh": "借助 HPSv3 的迭代精化，CoHP 既保证了最合适模型的选择，也保证了最高质量图像的生成。这种结构化流程提升了图像质量与语义对齐，为传统的一步式生成方法提供了强有力的替代方案。"
+  },
+  "b0086": {
+   "zh": "5 实验"
+  },
+  "b0088": {
+   "zh": "图 4：不同指标下的生成模型排序。HPSv3 与人类标注的相关性最高，表明其在反映人类偏好上表现优异。"
+  },
+  "b0089": {
+   "zh": "5.1 HPSv3"
+  },
+  "b0090": {
+   "zh": "5.1.1 实现细节"
+  },
+  "b0091": {
+   "zh": "HPDv3。我们使用多种模型生成图像，各模型均采用其推荐的推理设置，运行在 80GB NVIDIA A800 GPU 上。对于常规生成任务，图像按各模型推荐的分辨率生成，通常使用方形宽高比。当由真实图像的提示词生成图像时，我们保留原始宽高比，以避免标注偏差并增加训练集分辨率的多样性。该策略使训练样本更加多样、更具代表性，更贴近真实世界的图像分布。"
+  },
+  "b0092": {
+   "zh": "HPSv3。我们使用 ⟦SLOT_73⟧ 百万条标注良好的成对样本训练 HPSv3。HPSv3 以 Qwen2VL-7B 为骨干网络，全部参数均可训练。训练共进行 ⟦SLOT_74⟧ 个轮次，使用 ⟦SLOT_75⟧ 张 NVIDIA A800 GPU（每卡显存 ⟦SLOT_76⟧GB）。模型采用学习率 ⟦SLOT_77⟧、预热比例 ⟦SLOT_78⟧、总批大小 ⟦SLOT_79⟧（对应单卡批大小 ⟦SLOT_80⟧）进行优化。所有训练图像在保持原始宽高比的前提下缩放到 ⟦SLOT_81⟧ 像素。更多训练细节见补充材料。"
+  },
+  "b0094": {
+   "zh": "表 3：自动化指标与人类偏好排序的相关性。HPSv3 与人类判断的一致性最高，HPSv2 与 PickScore 次之，CLIP 的相关性最弱。"
+  },
+  "b0095": {
+   "zh": "5.1.2 HPDv3 基准与评测"
+  },
+  "b0096": {
+   "zh": "为建立全面的人类偏好基准，我们从 HPDv3 的每个类别中采样 ⟦SLOT_82⟧ 条提示词，共得到 ⟦SLOT_83⟧ 条提示词条目。随后用 ⟦SLOT_84⟧ 个被广泛采用的生成模型基于这些提示词生成图像，产生 ⟦SLOT_85⟧ 个文本-图像对，构成 HPDv3 基准。表 2 报告了各模型在该基准上的 HPSv3 分数。由于 HPSv3 同时在生成图像与高质量真实图像上训练，所得模型排序与预期相符，证明了 HPSv3 的稳健性，以及其作为评测当前与未来图像生成模型的综合性指标的有效性。"
+  },
+  "b0097": {
+   "zh": "5.1.3 偏好比较"
+  },
+  "b0098": {
+   "zh": "我们在 HPDv3 基准上比较 HPSv3 与其他评测方法，如图 4 与表 3 所示，在多个生成模型上评估各类偏好模型。HPSv3 始终与人类偏好高度一致，取得最高的相关系数（Spearman ⟦SLOT_86⟧、Kendall ⟦SLOT_87⟧），并能有效区分位于性能谱系不同位置的模型。HPSv2 也有一定一致性，但区分能力有限（例如 Playgroundv2.5、Infinity 与 Flux-dev 得到相同分数）。PickScore 在低质量模型上表现良好，却难以处理中等水平的样本；ImageReward 虽能捕捉差异，却与人类排序偏离。CLIP 的相关性最弱，反映出其在体现人类偏好上的局限。综合来看，HPSv3 是评测生成模型最可靠的指标。"
+  },
+  "b0100": {
+   "zh": "表 4：在 ImageReward、HPDv2 与 HPDv3 测试集上的偏好预测准确率（%）。最优与次优结果分别以粗体与下划线标出。HPSv3 表现出优异的置信度。"
+  },
+  "b0101": {
+   "zh": "与其他模型在多个数据集上的性能比较。如表 4 所示，HPSv3 表现突出，在 PickScore、HPDv2 与 HPDv3 测试集上分别取得 ⟦SLOT_88⟧、⟦SLOT_89⟧ 与 ⟦SLOT_90⟧ 的最优准确率。其中，在难度较高的 HPDv3 数据集上，HPSv3 的准确率相比 HPSv2 提升 ⟦SLOT_91⟧，相比 PickScore 提升 ⟦SLOT_92⟧。此外，从 HPDv2 切换到 HPDv3 时，PickScore 骤降 ⟦SLOT_93⟧ 个百分点（pp），MPS 下降 ⟦SLOT_94⟧pp，而 HPSv3 保持稳定，仅小幅下降 ⟦SLOT_95⟧pp。这些结果说明 HPSv3 在建模人类偏好上能力更强、跨数据集更稳健，也表明 HPDv3 对现有方法构成了实质性挑战。"
+  },
+  "b0102": {
+   "zh": "5.1.4 消融实验"
+  },
+  "b0103": {
+   "zh": "我们在与第 5.1.1 节相同的训练条件下，比较了不同的骨干架构（Qwen2VL-7B、Qwen2VL-2B 与 CLIP）。如表 5 所示，采用 Qwen2VL-7B 作为骨干带来了显著的性能提升，在 HPDv3 上分别比 Qwen2VL-2B 与 CLIP 高出 ⟦SLOT_96⟧ 个百分点（pp）与 ⟦SLOT_97⟧ pp。同时，引入不确定性感知排序损失后，各数据集上的准确率均有提升；其中 PickScore 测试集上的准确率提升达 ⟦SLOT_98⟧，凸显了该损失的有效性与稳健性。"
+  },
+  "b0105": {
+   "zh": "图 5：使用人类偏好链（CoHP）的图像生成。该图展示了生成图像的质量随 CoHP 逐步提升的过程。第一行展示了各参评模型（Flux-dev、Kolors、Playground v2.5 与 SD3）生成的全部候选图像。"
+  },
+  "b0107": {
+   "zh": "表 5：骨干网络与损失函数的消融实验。结果报告为在 ImageReward（IR）、Pickapic、HPDv2 与 HPDv3 测试集上的偏好准确率（%）。最优结果以粗体标出。"
+  },
+  "b0108": {
+   "zh": "5.2 基于 HPSv3 的 CoT"
+  },
+  "b0109": {
+   "zh": "5.2.1 推理设置"
+  },
+  "b0110": {
+   "zh": "本文采用四个生成模型——Flux-dev [1]、Playground v2.5 [13]、SD3 [8] 与 Kolors [38]——作为人类偏好链（CoHP）框架中的候选模型。CoT 流程在模型级与样本级两个阶段各配置四个连续步骤。高分辨率图像按各模型推荐的设置以 ⟦SLOT_99⟧ 像素生成。在模型级阶段，每个模型生成四张图像，以支持四轮评估；在样本级阶段，前两轮的去噪强度设为 ⟦SLOT_100⟧，其余轮次设为 ⟦SLOT_101⟧。"
+  },
+  "b0111": {
+   "zh": "5.2.2 使用 CoHP 生成图像"
+  },
+  "b0112": {
+   "zh": "图 5 展示了图像在 CoHP-HPSv3 中的逐步演化过程。在模型级阶段，第一行展示了各模型生成的最佳图像以供比较，可见所选模型在图像质量与图文对齐上均更优。在样本级阶段，HPSv3 作为可靠指标进一步精化图像，增强其细节与结构连贯性。"
+  },
+  "b0114": {
+   "zh": "图 6：不同偏好模型下 CoHP 结果的比较。CoHP-HPSv3 的连贯性与保真度最佳，而其他方法则存在过饱和或不稳定问题。"
+  },
+  "b0115": {
+   "zh": "5.2.3 定性评测"
+  },
+  "b0116": {
+   "zh": "我们在 CoHP 中尝试不同的偏好模型以考察其表现。CoHP-HPSv3 能够在模型级阶段选出表现最佳的模型，并在样本级阶段生成细节丰富的图像。如图 6 所示，CoHP-PickScore 生成的图像色彩饱和度过高且存在语义不一致；CoHP-ImageReward 与 CoHP-HPSv2 能产生一些不错的結果，但生成过程不够稳定。相比之下，CoHP-HPSv3 生成的图像更为忠实，连贯性更好，图文对齐也更优。"
+  },
+  "b0117": {
+   "zh": "5.2.4 用户研究"
+  },
+  "b0118": {
+   "zh": "我们在 ⟦SLOT_102⟧ 个生成的文本-图像对上进行人工评测，将 HPSv3 与 HPSv2、ImageReward、PickScore 进行比较。我们把 CoHP-HPSv3 与各个基线方法（CoHP-HPSv2、CoHP-ImageReward、CoHP-PickScore）逐一进行成对比较，以衡量相对性能增益。如图 7 所示，HPSv3 以 ⟦SLOT_103⟧ 的胜率优于 ImageReward，并相对 PickScore 与 HPSv2 有明显优势。这些结果证明 HPSv3 比现有模型更有效地捕捉人类偏好。"
+  },
+  "b0120": {
+   "zh": "图 7：不同人类偏好模型在 CoHP 上的人工评测。HPSv3 以大幅优势优于其他所有人类偏好模型。"
+  },
+  "b0121": {
+   "zh": "5.2.5 消融实验"
+  },
+  "b0123": {
+   "zh": "表 6：轮数的消融实验。我们计算了各偏好阶段在不同轮数下的 HPSv3 分数，最终选择每个阶段运行 ⟦SLOT_104⟧ 轮。"
+  },
+  "b0124": {
+   "zh": "我们从 HPDv3 基准中随机采样 ⟦SLOT_105⟧ 条提示词，并针对每个阶段在不同迭代轮数下生成图像。如表 6 所示，在模型级阶段，HPSv3 分数由第 ⟦SLOT_107⟧ 轮的 ⟦SLOT_106⟧ 提升到第 ⟦SLOT_109⟧ 轮的 ⟦SLOT_108⟧，说明增加轮数起初有助于更好地选择模型；但在第 ⟦SLOT_110⟧ 轮之后分数趋于稳定，到第 ⟦SLOT_112⟧ 轮仅略微下降至 ⟦SLOT_111⟧，表明继续增加轮数的收益递减。"
+  },
+  "b0125": {
+   "zh": "在样本级阶段，HPSv3 分数从第 ⟦SLOT_113⟧ 轮到第 ⟦SLOT_114⟧ 轮持续提升，仅在第 ⟦SLOT_115⟧ 轮出现极小回落。这一趋势说明，该阶段增加轮数能够在一定范围内提升样本质量。基于上述分析，我们认为 ⟦SLOT_116⟧ 轮在计算开销与性能之间取得了平衡，因此将其作为本文的设置。"
+  },
+  "b0126": {
+   "zh": "6 结论"
+  },
+  "b0127": {
+   "zh": "我们提出人类偏好分数 v3（HPSv3），包括：（1）HPDv3，首个宽谱人类偏好数据集，包含来自当前最优生成模型与高质量真实图像的 ⟦SLOT_117⟧ 百万文本-图像对与 ⟦SLOT_118⟧ 百万条标注比较；（2）一个基于视觉语言模型进行特征提取、并采用不确定性感知排序损失实现准确打分的偏好模型。此外，我们提出人类偏好链（CoHP）——一种基于推理的迭代图像精化新方法，无需额外的训练数据。大量实验验证了 HPSv3 作为稳健基准的有效性，以及 CoHP 作为高效且贴合人类偏好的图像生成质量提升方法的作用。"
+  },
+  "b0128": {
+   "zh": "致谢"
+  },
+  "b0129": {
+   "zh": "感谢 Xuan Ouyang 与 Wenting Xu 富有裨益的讨论，感谢 Changyao Tian 在本项目数据迁移工作中的协助。我们诚挚感谢 Fuxi Youling 众包平台组织大批标注人员与审核人员，完成了本工作所需的繁重标注任务。本项目由国家重点研发计划项目 2022ZD0161100、由香港创新科技署（ITC）InnoHK 计划支持下设立的感知与交互智能中心（CPII）有限公司，以及广东省基础与应用基础研究基金（No. 2023B1515130008, XW）共同资助。"
+  },
+  "b0130": {
+   "zh": "参考文献"
+  },
+  "b0181": {
+   "zh": "补充材料"
+  },
+  "b0182": {
+   "zh": "1 HPDv3 的图像来源"
+  },
+  "b0184": {
+   "zh": "表 S1：HPDv3 的图像来源。该数据集包含来自高质量真实照片与各类图像生成模型（自回归模型、基于 DiT 的模型与扩散模型）的图像。"
+  },
+  "b0185": {
+   "zh": "表 S1 总结了 HPDv3 的来源模型与图像。我们的数据集包含近期最优图像生成模型的输出、高质量真实世界图像以及 Midjourney 生成的图像，合计 ⟦SLOT_119⟧M 个文本-图像对。此外，我们比较了 HPDv3、HPDv2、PickScore 与 ImageReward 数据集中的文本-图像对。图 S1 显示，HPDv2 [41]、PickScore [11] 与 ImageReward [47] 数据集常把同一提示词关联到 ⟦SLOT_120⟧ 张以上的图像，造成分布不均并出现显著离群值，这类不均衡会对模型训练产生负面影响。相比之下，HPDv3 的分布更为均衡，没有任何提示词关联超过 ⟦SLOT_121⟧ 张图像，从而保证学习用户偏好时训练的一致性与无偏性。"
+  },
+  "b0187": {
+   "zh": "图 S1：各数据集中每个提示词对应的图像数量。"
+  },
+  "b0188": {
+   "zh": "2 HPDv3 的类别分布"
+  },
+  "b0189": {
+   "zh": "为更好地反映用户对提示词类别的偏好，我们把 JourneyDB [34] 中的用户提示词划分为 ⟦SLOT_122⟧ 个类别，并使 HPDv3 中各类别的占比与 JourneyDB 尽量接近。"
+  },
+  "b0190": {
+   "zh": "如图 S2 所示，我们比较了 HPDv3、HPDv2、ImageReward 与 Pick-a-Pic 数据集的类别分布。结果显示，HPDv3 与 JourneyDB 的类别占比最为接近，说明 HPDv3 有效捕捉了用户对提示词类别的偏好，更具代表性、更为均衡。"
+  },
+  "b0192": {
+   "zh": "图 S2：从互联网采集的 ⟦SLOT_123⟧ 个类别的真实图像分布。"
+  },
+  "b0193": {
+   "zh": "3 HPDv3 数据集构建"
+  },
+  "b0194": {
+   "zh": "3.1 真实图像采集"
+  },
+  "b0195": {
+   "zh": "我们从互联网采集了约 ⟦SLOT_124⟧M 张高质量真实图像，涵盖建筑、人物、物体、动物、植物、风景、商品与海报等广泛类别。这种多样化采样保证了数据集的广度与代表性。"
+  },
+  "b0196": {
+   "zh": "采集到的图像以真实照片为主，为高质量数据集打下了坚实基础。不过，尽管采集流程已力求严谨，数据集中仍存在部分噪声与无关样本，需要进一步清洗。"
+  },
+  "b0197": {
+   "zh": "3.2 美学模型训练"
+  },
+  "b0198": {
+   "zh": "为基于美学质量高效筛选海量图像，我们专门开发了一个视觉评估模型。分析发现，开源社区 [31] 训练的模型对油画风格有强烈偏好，未必能准确反映人类的美学偏好；这种偏差可能使图像质量评估偏向某一特定视觉风格，而非捕捉更具普遍性的质量维度。为克服这一局限、更好地契合多样的美学判断，我们决定使用新构建的数据集重新训练模型。"
+  },
+  "b0199": {
+   "zh": "模型训练。我们保持与开源美学模型 [31] 相近的模型架构，并针对美学偏差加以改进。模型在单张 NVIDIA A100 80GB GPU 上训练，使用我们精心整理的 ⟦SLOT_125⟧ 张图像标注数据集，训练配置采用学习率 ⟦SLOT_126⟧ 与批大小 ⟦SLOT_127⟧。"
+  },
+  "b0200": {
+   "zh": "3.3 高质量真实图像筛选"
+  },
+  "b0201": {
+   "zh": "借助训练好的美学模型，我们对全部采集图像进行质量评估。首先剔除质量分数低于 ⟦SLOT_128⟧ 的图像，这些图像的质量一贯偏低。随后为保证类别多样性，我们按类别分别评估并按比例选取，聚焦各类别内分数最高的图像，同时维持 HPDv3 中各类别的比例。"
+  },
+  "b0202": {
+   "zh": "该流程最终得到包含 ⟦SLOT_129⟧k 张高质量真实图像的精选数据集。如图 S3 所示，这些入选图像的类别分布与图 S2 中的比例高度一致，确保了数据集的均衡性与高质量。"
+  },
+  "b0204": {
+   "zh": "图 S3：HPDv3 数据集中高质量真实图像的类别分布。"
+  },
+  "b0205": {
+   "zh": "3.4 成对图像生成"
+  },
+  "b0206": {
+   "zh": "我们使用各种生成模型并按其推荐配置，基于 HPDv2 的提示词、真实图像描述或 JourneyDB 的提示词生成图像。对于由 HPDv2 与 JourneyDB 提示词生成的图像，我们采用方形尺寸以保持一致；对于基于真实图像描述的图像，我们匹配原图的宽高比，以保留其结构与视觉完整性，使内容与美学质量的评估不受图像比例影响。"
+  },
+  "b0207": {
+   "zh": "生成之后，我们把同一提示词下的图像按不同模型的输出两两配对。这些成对比较使我们能够在相同提示词下评估各生成模型的相对表现，更细致地揭示其优势与不足。这种成对组织方式构成了后续标注与模型训练的基础。"
+  },
+  "b0209": {
+   "zh": "表 S2：标注指南的详细内容。"
+  },
+  "b0211": {
+   "zh": "图 S4：标注者人口统计特征：性别分布与年龄分层。"
+  },
+  "b0213": {
+   "zh": "图 S5：成对图像比较的标注界面。"
+  },
+  "b0214": {
+   "zh": "4 标注细节"
+  },
+  "b0215": {
+   "zh": "4.1 图像标注。"
+  },
+  "b0216": {
+   "zh": "为构建可靠的训练集，我们依照标准化的评估流程对成对图像数据进行细致的人工标注。"
+  },
+  "b0217": {
+   "zh": "如表 S2 所示，我们为评测人员提供了详细的指南，明确评判标准。这种结构化方式既保证了标注的一致性，也保留了人类偏好的多维度特征。"
+  },
+  "b0218": {
+   "zh": "每张图像由 ⟦SLOT_130⟧ 名专家评分，并设定 ⟦SLOT_131⟧ 的标注者间一致率阈值以确保高可靠性。标注过程沿用正文成对数据标注部分所述的严格方法。通过在数据集构建的各个阶段保持一致的评估标准，我们确保了标注数据的整体质量与可靠性。"
+  },
+  "b0220": {
+   "zh": "表 S3：成对图像分析任务的用户回答分析"
+  },
+  "b0221": {
+   "zh": "4.2 标注者人口统计。"
+  },
+  "b0222": {
+   "zh": "如图 S4 所示，我们的标注团队性别分布较为均衡，包含 ⟦SLOT_132⟧ 名女性与 ⟦SLOT_133⟧ 名男性参与者。年龄分布显示，多数标注者处于青年至中年区间，其中 ⟦SLOT_134⟧ 人年龄在 ⟦SLOT_135⟧ 至 ⟦SLOT_136⟧ 岁之间，⟦SLOT_137⟧ 岁年龄段人数最多（⟦SLOT_138⟧）。这一人口构成带来若干优势，例如对当代语言习惯与流行趋势较为熟悉。此外，标注者的职业背景多样，涵盖大学生、自由职业者、艺术家、教师与工程师，为标注过程带来了多元视角。这样一个均衡且多样的群体，使标注结果能够有效捕捉注重时尚的消费者的偏好，提升了标注数据集的质量与相关性。"
+  },
+  "b0223": {
+   "zh": "4.3 标注界面与指南。"
+  },
+  "b0224": {
+   "zh": "图 S5 展示了我们用于成对图像比较的易用标注界面。界面并排显示由同一文本提示词生成的两张图像，并附上该提示词以提供语境。标注者需依据明确的评估指南选出自己更偏好的图像。"
+  },
+  "b0225": {
+   "zh": "标注规程引导评测人员从三个关键维度评估图像："
+  },
+  "b0226": {
+   "zh": "• 提示词对齐度：图像与给定文本描述的匹配程度。"
+  },
+  "b0227": {
+   "zh": "• 美学质量：图像的视觉吸引力与技术实现水平。"
+  },
+  "b0228": {
+   "zh": "• 整体连贯性：画面场景的逻辑一致性与自然程度。"
+  },
+  "b0229": {
+   "zh": "这些结构化准则确保标注能够捕捉有意义的质量差异，同时将主观偏差降至最低。表 S3 给出了标注结果示例，包括最终偏好、置信度分数以及标注者质量的评估。这种系统化方法有助于维持数据集标注的可靠性与一致性。"
+  },
+  "b0230": {
+   "zh": "4.4 标注收敛度。"
+  },
+  "b0231": {
+   "zh": "我们对每个数据类别评估标注收敛度，以衡量标注者判断的一致性。图 S6 可视化了各类别的标注收敛水平。收敛度通过计算标注者在评价同一文本提示词下的图像对时的一致程度得到。"
+  },
+  "b0233": {
+   "zh": "图 S6：各类别的平均收敛度分数。"
+  },
+  "b0234": {
+   "zh": "5 HPSv3 训练细节"
+  },
+  "b0236": {
+   "zh": "表 S4：HPSv3 模型训练所用训练集的构成。"
+  },
+  "b0237": {
+   "zh": "5.1 训练数据集"
+  },
+  "b0238": {
+   "zh": "训练最终模型时，我们使用了四个来源的数据：HPDv3、Pick-A-Pic 与 ImageReward 的子集，以及从 Midjourney 收集的真实用户偏好数据。训练集共包含 ⟦SLOT_139⟧ 百万条成对样本。"
+  },
+  "b0239": {
+   "zh": "具体而言，HPDv3 数据集由两部分组成。第一部分包含真实图像之间、以及基于 JourneyDB 与 HPDv2 提示词生成图像之间的成对比较。这些比较通过前述标注流程完成，仅置信度达到 ⟦SLOT_140⟧ 及以上的样本被选入训练。"
+  },
+  "b0240": {
+   "zh": "第二部分是人工整理的黄金训练集，包含高质量样本数据。我们用该黄金训练集训练一个过滤模型，其架构与训练方法与 HPSv3 相同；再用该过滤模型从 HPDv2 中挑选样本，并从中随机选取 ⟦SLOT_141⟧ 对。这一过程通过增加模型多样性与成对数据多样性，丰富了 HPDv3 数据集。为进一步提升黄金集的贡献，我们在训练过程中对其中部分样本进行了复制。"
+  },
+  "b0241": {
+   "zh": "此外，我们纳入了来自 Pick-A-Pic 的 ⟦SLOT_142⟧ 条成对样本与来自 ImageReward 的 ⟦SLOT_143⟧ 条样本，为提升模型性能提供了更多样的补充。"
+  },
+  "b0242": {
+   "zh": "我们还通过互联网从 Midjourney 收集了 ⟦SLOT_144⟧ 对真实用户选择数据。这些真实世界的偏好数据对提升 HPSv3 在 CoHP 中处理用户选择的能力至关重要。"
+  },
+  "b0243": {
+   "zh": "综上，如表 S4 所示，训练集混合了高质量、经人工整理与真实用户偏好数据，构成多样而全面的组合，从而保证模型表现的稳健性与适应性。"
+  },
+  "b0244": {
+   "zh": "5.2 在其他数据集上训练"
+  },
+  "b0246": {
+   "zh": "表 S5：数据集消融。我们分别使用 HPDv2、ImageReward 与 PickScore 的训练集训练 HPSv3。结果显示，使用 HPDv3 训练集在所有测试集上取得最高准确率，表现最优。"
+  },
+  "b0247": {
+   "zh": "表 S5 给出了数据集消融实验的结果：分别在 HPDv2、ImageReward、PickScore 与 HPDv3 上训练 HPSv3，并在 ImageReward、PickScore、HPDv2 与 HPDv3 四项指标上评测。其中以 HPDv3 训练的 HPSv3 表现最佳，在所有测试集上均取得最好成绩——ImageReward 上 ⟦SLOT_145⟧、PickScore 上 ⟦SLOT_146⟧、HPDv2 上 ⟦SLOT_147⟧、HPDv3 上 ⟦SLOT_148⟧。这些结果清楚表明，HPDv3 数据集为训练提供了最全面、最有效的监督，显著增强了 HPSv3 的稳健性与泛化能力，优于其他数据集。"
+  },
+  "b0248": {
+   "zh": "5.3 关于损失函数的说明"
+  },
+  "b0249": {
+   "zh": "本节说明文献 [46, 11, 41, 49]（含本文）中提到的各种损失函数与 Bradley-Terry 损失 [2] 具有相同的底层优化目标。"
+  },
+  "b0250": {
+   "zh": "形式 1：优化 KL 散度。"
+  },
+  "b0251": {
+   "zh": "在 [41, 49, 11] 中，预测偏好 ⟦SLOT_149⟧ 计算为："
+  },
+  "b0253": {
+   "zh": "其中 ⟦SLOT_150⟧ 表示样本 ⟦SLOT_151⟧ 的偏好分数。模型通过最小化真值 ⟦SLOT_152⟧ 与预测分布之间的 KL 散度进行优化。具体地，若样本 ⟦SLOT_154⟧ 优于 ⟦SLOT_155⟧，则 ⟦SLOT_153⟧，否则取 ⟦SLOT_156⟧。最小化 KL 散度的损失函数形式化如下："
+  },
+  "b0255": {
+   "zh": "为简化问题，我们假设样本 ⟦SLOT_157⟧ 为偏好样本，而 ⟦SLOT_158⟧ 为非偏好样本。按此顺序，⟦SLOT_159⟧ 恒为 ⟦SLOT_160⟧。将其代入损失函数，可得："
+  },
+  "b0257": {
+   "zh": "这表明 KL 散度形式最终归结为比较两个样本偏好分数的 logistic 损失。"
+  },
+  "b0258": {
+   "zh": "形式 2：Bradley-Terry 损失。"
+  },
+  "b0259": {
+   "zh": "[46, 2] 采用 Bradley-Terry 损失，以最大化获胜（排名较高）样本相对落败（排名较低）样本的概率。Bradley-Terry 模型中获胜样本的概率可定义为："
+  },
+  "b0261": {
+   "zh": "目标是最大化该概率，因此模型通过最小化负对数似然进行优化："
+  },
+  "b0263": {
+   "zh": "不过，我们还可以继续对其化简。"
+  },
+  "b0265": {
+   "zh": "等价性结论。"
+  },
+  "b0266": {
+   "zh": "可以看到，形式 1（KL 散度）与形式 2（Bradley-Terry）最终都收敛到同一个成对 logistic 排序损失："
+  },
+  "b0268": {
+   "zh": "这说明二者尽管理论来源不同，在优化目标上具有根本的等价性。"
+  },
+  "b0269": {
+   "zh": "6 HPDv3 数据集可视化"
+  },
+  "b0270": {
+   "zh": "6.1 数据集可视化"
+  },
+  "b0271": {
+   "zh": "图 S10 展示了 HPDv3 数据集中的示例。每个图像对由同一提示词生成的不同图像构成，图像来源于各类图像生成模型以及真实世界照片。对于每个提示词，我们系统地把所有可能的图像组合两两配对，构建成对比较；随后由标注者对这些图像对进行评判，给出偏好判断，最终形成细致的成对偏好数据集合。"
+  },
+  "b0272": {
+   "zh": "这种严格的成对标注方式，能够捕捉同一概念在不同视觉呈现之间的细微偏好差异。由于同时包含来自多种模型的 AI 生成图像与真实照片，该数据集得以在合成与真实视觉内容的完整谱系上全面分析人类偏好。由此得到的偏好信号为训练 HPSv3 模型、使其更好地契合人类判断提供了丰富基础。"
+  },
+  "b0273": {
+   "zh": "6.2 基准可视化"
+  },
+  "b0274": {
+   "zh": "图 S7、S8 与 S9 展示了 HPDv3 基准中的提示词样例。该基准旨在为评估图像生成模型的性能提供多样且标准化的评测框架。具体地，HPDv3 基准从 HPDv3、HPDv2 与 JourneyDB 三个数据集中抽取，为 ⟦SLOT_162⟧ 个类别各精心挑选 ⟦SLOT_161⟧ 条提示词。这些提示词在风格与长度上各有差异，以保证评测的全面性。"
+  },
+  "b0275": {
+   "zh": "对于来自 HPDv3 数据集的提示词，我们提供相应的真实世界参考图像，便于与生成图像比较；而来自 HPDv2 与 JourneyDB 的提示词仅提供文本，用于考察模型纯从文本输入生成图像的能力。"
+  },
+  "b0276": {
+   "zh": "这一设置支持多角度评测：真实参考图像的引入，可衡量生成图像与实际视觉内容的接近程度；纯文本提示词则考察模型仅依据文本描述进行理解与生成的能力。两者结合，使 HPDv3 基准为跨内容类别与提示词风格评估图像合成质量提供了完整框架，有助于文本到图像生成研究中的一致性评测与持续进步。"
+  },
+  "b0277": {
+   "zh": "7 CoHP 的更多结果"
+  },
+  "b0278": {
+   "zh": "本节展示 CoHP 的大量生成结果，涵盖多次迭代产生的多样化输出。图 S11 与 S12 的第一行展示了模型级偏好阶段中各模型（Flux、Kolors 与 Playground v2.5）生成的最佳结果。如图 S11 与图 S12 所示，模型级偏好阶段在 CoHP 中起着关键作用，它筛选出语义理解强、构图合理的模型；样本级偏好阶段则负责精化图像、增强细节。"
+  },
+  "b0279": {
+   "zh": "图 S13 与 S14 展示了在本文框架中实现不同人类偏好模型所得的对比结果。这些扩展的可视化结果揭示了不同偏好建模方式如何影响生成图像的质量、多样性与人类对齐程度。"
+  },
+  "b0280": {
+   "zh": "8 HPSv3 作为奖励模型"
+  },
+  "b0281": {
+   "zh": "在使用强化学习（RL）提升生成图像质量时，奖励模型的设计至关重要。设计良好的奖励模型可以通过提升真实感、美学质量与图文对齐度，或使输出更贴合人类偏好，显著改善生成结果。依托精心构建的宽谱图像质量数据集与基于视觉语言模型的骨干网络，HPSv3 能更准确地捕捉人类偏好，从而减少 RL 中的奖励破解行为，引导模型生成更符合人类期望的内容。"
+  },
+  "b0282": {
+   "zh": "DanceGRPO。我们采用 DanceGRPO [48] 作为图像生成的强化学习算法，并分别比较以 ImageReward、PickScore、HPSv2 与 HPSv3 作为奖励模型时的结果。DanceGRPO 对扩散轨迹进行多次采样，用奖励模型为每条轨迹的最终生成图像打分，并通过计算各轨迹相对平均奖励的优势值执行策略梯度优化，从而提升模型性能。所有奖励模型均沿用 DanceGRPO 的默认实验设置，基础模型为 Stable-Diffusion v1.4 [27]，共训练 300 次迭代。"
+  },
+  "b0283": {
+   "zh": "实验结果。图 S15 与 S16 给出了相同训练迭代次数下的定性结果。为表述方便，我们把使用这些奖励模型训练得到的图像生成模型分别记为 ⟦SLOT_163⟧、⟦SLOT_164⟧、⟦SLOT_165⟧ 与 ⟦SLOT_166⟧。结果显示，这些奖励模型都能提升生成图像的质量与美感。⟦SLOT_167⟧ 生成的图像真实感更强——色彩饱和度更自然、光影更平滑、伪影与畸变更少。此外，⟦SLOT_168⟧ 的奖励破解现象更少。如第三行第一列、第五行第二列、第六行第一与第二列所示，⟦SLOT_169⟧ 倾向于生成大量无意义的配饰、提示词未提及的物体，或装饰性光效与斑点，表明模型正通过这些元素进行奖励破解；而 ⟦SLOT_170⟧ 中该现象明显更少。更多以 HPSv3 为奖励模型的 DanceGRPO 结果见图 S17。"
+  },
+  "b0284": {
+   "zh": "9 HPDv3 使用条款"
+  },
+  "b0285": {
+   "zh": "所有权与责任。HPDv3 数据集包含部分从互联网获取的图像，这些图像不属于 MizzenAI 所有。MizzenAI 不对这些图像的内容或含义负责。"
+  },
+  "b0286": {
+   "zh": "非商业用途。我们的资助资源、数据集与模型严格限于非商业用途，符合美国最高法院就教育与研究用途提出的「合理使用」原则。严禁将 HPDv3 数据集用于任何商业目的。"
+  },
+  "b0287": {
+   "zh": "使用限制。您同意不为任何商业目的而复制、翻印、拷贝、出售、交易、转售或利用 HPDv3 数据集的任何部分图像或任何衍生数据，也不得进一步复制、发布或分发该数据集的任何部分。不过，允许在同一组织内的单一场所复制数据集供内部使用。"
+  },
+  "b0288": {
+   "zh": "内容移除。若您希望将自己的内容或产品从 HPDv3 数据集中移除，请与我们联系，我们将及时处理您的请求。"
+  },
+  "b0289": {
+   "zh": "条款接受。使用 HPDv3 数据集即表示您同意遵守上述使用条款。任何违反条款的行为都可能导致您对数据集的访问权限被终止，并可能引发法律诉讼。"
+  },
+  "b0290": {
+   "zh": "许可政策。为防止我们的数据集与模型被未经授权地用于商业用途，我们采用「CC BY-NC-SA」许可协议（Creative Commons 署名-非商业性使用-相同方式共享）。该协议允许他人出于非商业目的自由分享与改编我们的成果，但须注明出处，且衍生作品须沿用相同的许可条款。这一措施在保持非商业使用初衷的同时，确保了成果的合规传播。"
+  },
+  "b0291": {
+   "zh": "图像采集与许可合规。我们数据集中的大部分真实图像来自 Unsplash，该平台以 CC0 许可提供高质量图像。CC0 许可允许不受限制地采集、分发与使用图像，包括免费用于研究与教育目的。沿用这些许可条款，我们既确保了知识产权合规，也促进了研究社群内的自由开放协作。"
+  },
+  "b0292": {
+   "zh": "伦理与公平使用的承诺。我们致力于在数据集构建与模型开发中恪守伦理标准。所有材料均经过审核，以确保遵守许可协议并在适用时正确署名。我们鼓励更广泛的研究社群在使用本成果时同样秉持这些伦理原则，推动负责任的研究实践，避免任何知识产权滥用。"
+  },
+  "b0293": {
+   "zh": "10 局限性"
+  },
+  "b0294": {
+   "zh": "HPDv3 包含 1.08M 个文本-图像对与 1.17M 条成对数据，旨在反映真实世界的用户偏好，但也存在固有的局限，可能影响其在某些情境下的泛化能力与适用性。"
+  },
+  "b0295": {
+   "zh": "提示词分布偏差。数据集构建主要依据 JourneyDB 数据库中高频出现的提示词类别，反映了一般用户的输入模式。这种做法虽覆盖了广泛的典型生成用例，却可能无意中遗漏医学、生物、物理等需要专用数据的专门领域。例如，面向医学影像或科学图表生成的生成模型，用本数据集评测时可能表现不准。这种潜在偏差会限制数据集在评估面向这些专门应用设计的模型时的作用。"
+  },
+  "b0296": {
+   "zh": "统一评分指标。我们的标注流程采用统一评分指标，从整体上评估文本-图像对。这种做法简化了评测过程，却无法给出色彩保真度、艺术风格、锐度或图像清晰度等更细粒度维度的信息。粒度不足会妨碍对生成模型进行更细致的分析与基准测试，尤其是在特定属性至关重要的应用中。"
+  },
+  "b0297": {
+   "zh": "标注者人口统计。数据集标注过程未实施严格的人口统计控制或分类，标注中也未采集或使用标注者的族裔、年龄、专业背景与文化背景等信息。因此，标注结果可能反映出基于标注者主观视角的无意偏差。人口统计多样性的缺乏，会降低数据集在评测面向全球或文化敏感场景的生成模型时的稳健性。"
+  },
+  "b0298": {
+   "zh": "困难样本的挑战。为保证标注稳健，我们采用多标注者方式为文本-图像对打标，借助多人反馈提升分数的可靠性。然而，这一方式在处理困难或含糊的样本时遇到了挑战：对于主观性强或存在理解冲突的提示词或图像，标注者往往难以收敛到一致的分数。这些未消解的分歧会影响数据集的准确性，限制其在上述情形下作为确定性基准的能力。尽管存在这些挑战，多标注者机制整体上仍是提升数据集可靠性的有效方法。"
+  },
+  "b0300": {
+   "zh": "图 S7：HPDv3 基准中的代表性提示词示例。每个类别都包含从简单描述到高度详细设定的一系列提示词。这些提示词用于从不同的 AI 模型生成图像对，以计算各模型的 HPSv3 分数。"
+  },
+  "b0302": {
+   "zh": "图 S8：HPDv3 基准中的代表性提示词示例。每个类别都包含从简单描述到高度详细设定的一系列提示词。这些提示词用于从不同的 AI 模型生成图像对，以计算各模型的 HPSv3 分数。"
+  },
+  "b0304": {
+   "zh": "图 S9：HPDv3 基准中的代表性提示词示例。每个类别都包含从简单描述到高度详细设定的一系列提示词。这些提示词用于从不同的 AI 模型生成图像对，以计算各模型的 HPSv3 分数。"
+  },
+  "b0308": {
+   "zh": "图 S10：HPDv3 数据集可视化。我们的数据集涵盖动物、建筑、人物等多个类别的多样化图像。每一行展示不同的样本，体现数据集的丰富性与质量。"
+  },
+  "b0310": {
+   "zh": "图 S11：CoHP 的更多结果"
+  },
+  "b0312": {
+   "zh": "图 S12：CoHP 的更多结果"
+  },
+  "b0314": {
+   "zh": "图 S13：使用不同人类偏好模型的 CoHP 更多结果"
+  },
+  "b0316": {
+   "zh": "图 S14：使用不同人类偏好模型的 CoHP 更多结果"
+  },
+  "b0318": {
+   "zh": "图 S15：使用不同人类偏好模型的 DanceGRPO 结果"
+  },
+  "b0320": {
+   "zh": "图 S16：使用不同人类偏好模型的 DanceGRPO 结果"
+  },
+  "b0299": {
+   "zh": "动物（Animals）： • water color Bird similar to alex grey style , opal. • an armadillo on a bicycle in the rain. • American opossum in faerieland, cute, in the style of Maurice Sendak. • The image showcases a magnificent peacock with its tail fully fanned out, displaying its vibrant plumage. The bird’s body is a rich, deep blue, contrasting beautifully with the array of colors in its feathers. The head is adorned with a small crest of feathers, and a white marking extends from the beak along the side of the face.The tail feathers are the focal point, featuring iridescent eye patterns in shades of blue, green, and gold. Each eye is surrounded by a halo of darker hues, creating a mesmerizing effect. … 建筑（Architecture）：• beautiful atmospheric picture of ghosts attacking New York, Y0̆14dkai, visually stunning, highly detailed, 8K, • fantasy Christmas house, in a field of snow, fairy lights, by Gediminas Pranckevicius • the palace of the Red Branch Knights • The image captures a row of Tudor-style buildings under a cloudy sky. The buildings are characterized by their distinctive black and white timber framing, a hallmark of Tudor architecture. The black beams create vertical and diagonal patterns against the white-painted walls, giving the facades a striking contrast and a sense of depth. The roofs are steeply pitched and covered with dark tiles. 艺术（Arts）：• elf martial artist, meditating, misty background, pink flowers on the ground, fantasy art, oil painting • dreamy watercolor painting of an angry witch and her ravens in a magical forest • sketch, Abstract Purple background, illustration, watercolor::2.5, • The image captures a tourist immersed in art appreciation within a museum setting. The focus is on the back of a young man with light-colored hair, wearing a white t-shirt, dark jeans, and a black backpack. He stands facing a display of classical sculptures.The sculptures include a prominent male nude figure with its arm raised, positioned to the left of a smaller statue. … 人物（Characters）：• The image features a half cyborg girl character design with a nature meets technology theme, rendered with cinematic lighting and high detail. • Anime girl in transparent holographic light suit black and yellow, Full body, three quarter length + poster + Guweiz + Cyberpunk, branding, texts, labels, three quarter body • the most beautiful Andorran woman in the world, • The image features a medium shot of a man with dark skin, his gaze directed straight at the viewer. He has a serious expression, with a neatly trimmed goatee and dark eyes that carry a piercing intensity. His hair is styled in thin braids, some falling around his face and shoulders, adding to his thoughtful appearance. … 设计（Design）：• illustration of bluebeard tale, with typographic placement , linocut, by Saul Bass • A pen and copic marker sketch of the design of an simple robotic fish, white background, no paper background, no words, no pen or marker in photo, high quality • vector symbol Sci fi Space 70s empty world • This image shows a stylish and monochromatic interior design. The walls are painted in a deep, matte black, which serves as a dramatic backdrop for the decor. A black upholstered armchair with button detailing and four wooden legs sits prominently in the foreground, adding a touch of luxury. …"
+  },
+  "b0301": {
+   "zh": "食物（Food）： • a handful of guava fruits drawn by david hockney, detailed, intricate • sketch round cracker with chocolate Half enrobbed with color • cartoon wine illustration, vector, simple clean, minimalist, wallpaper, bright, collection, in a set • The image displays two tall glasses filled with a deep red beverage, likely a type of cocktail or juice, set against a dark background. The glasses are garnished with slices of grapefruit and sprigs of fresh mint, adding a vibrant splash of color and freshness. Ice cubes float within the drink, suggesting a refreshing and chilled experience.The wooden surface beneath the glasses has a weathered, rustic look, enhancing the natural and organic feel of the composition. One glass is positioned closer to the viewer, bringing the details of the drink and garnish into sharp focus, while the other is slightly blurred in the background, creating depth. … 自然风景（Natural Scenery）：• an epic outdoor sticker of the animas river with the san juan mountains in the background • water ocean texture shot from bird perspective • the view from inside a cosmic black hole 8k photorealistic • The image presents a long, straight stretch of asphalt road leading towards a distant mountain range. The road takes up most of the foreground, its surface a dark gray, with two solid yellow lines running down the center, creating a strong sense of perspective. On either side of the road, there are dark, undefined areas of land.In the distance, snow-capped mountains dominate the horizon. Their jagged peaks and white surfaces contrast sharply with the dark land and road below, adding depth and a sense of grandeur to the scene.The sky above is partially cloudy, with patches of blue peeking through the white clouds. The clouds are scattered across the sky, adding texture and visual interest to the upper part of the image. … 植物（Plants）：• fotorealistic jungle leaves, repetitive pattern, endless, mid-century modern style, geometric • dark geisha pink flower with sword blue background ultra hd 8k • garden full of golden flowers, • The image presents a vast, golden field of ripe wheat under a clear blue sky. The wheat stalks dominate the foreground, their heads heavy with grain, creating a dense and textured visual tapestry. The color palette is dominated by warm tones, with the golden wheat contrasting nicely with the cool blue above.The wheat field stretches far into the distance, appearing to meet a slightly darker horizon line. A few scattered white clouds add a touch of lightness to the sky. The composition is simple yet striking, emphasizing the expansive nature of the landscape and the abundance of the harvest. The lighting is bright and sunny, casting gentle shadows within the field and highlighting the individual grains of wheat. Overall, the image evokes a sense of warmth, tranquility, and the bounty of nature. … 商品（Products）：• simple knolling, snow removal Snowblower and graders and loaders, white background • Hand holding megaphone on bright yellow background with plenty of copy space. Magazine collage cut out style • raw wrapping papers inspired Yeezy 350, hyper-detailed • The image presents a striking contrast between black and red, with a small, wrapped gift placed on the black portion of the background. The background is divided diagonally, with a textured black area on the left and a smooth, vibrant red area on the right. This division creates a visually compelling composition.The gift itself is small and square, wrapped in shiny red foil. A bright red ribbon is tied around the package in a simple bow, with the ends of the ribbon elegantly trailing onto the black background. …"
+  },
+  "b0303": {
+   "zh": "交通工具（Transportation）： • Sports Bike, race track, realism, 4K, No logo, Ducati, HDR, ar 3:2 • Porsche made from candy, beautiful, editorial photography, color graded, masterpiece • sunken pirate ship, cinematic lighting, 4k, 8k, unreal engine, octane render • The image showcases a collection of vintage automobiles, arranged neatly on a paved surface that seems to be a brick-patterned area. The backdrop includes lush greenery of trees and a unique architectural structure, possibly a modern park feature with a curved design, suggesting a blend of historical vehicles in a contemporary setting.Dominating the view are three cars of different makes. The first one, partially visible on the left, is a sleek, dark green, with a closed top. Adjacent to it is a classic black car with an open driver’s area, a notable upright grille, and what looks like a soft top. Positioned in the foreground is a lighter-colored vehicle, likely a light grey or off-white, also with a soft top. It features spoked wheels and shiny headlamps. All three vehicles exhibit signs of age and careful preservation. The black and grey cars each have a sign or placard visible in the front window. Overall, the image captures a timeless elegance. … 科学（Science）：• a solar system view of a large space battle set in the Star Wars Universe, hyper realistic, 4k resolution • 3D illustration of employees working in factory, 21st century • futuristic neuronal network with robotic integration. Black background, 8K, hyperrealistic. • reactor round underground scifi, hardsurface, HD, cinematography, low viewpoint, photorealistic, epic composition, Cinematic, Color Grading, portrait Photography, Ultra-Wide Angle, hyper-detailed, beautifully color-coded, insane details, intricate details, beautifully color graded, Unreal Engine, Cinematic, Color Grading, Editorial Photography, Photography, Photoshoot, Depth of Field, DOF, Tilt Blur, White Balance, 32k, Super-Resolution, Megapixel, ProPhoto RGB, VR, Halfrear Lighting, Backlight, Natural Lighting, Incandescent, Optical Fiber, Moody Lighting, Cinematic Lighting, Studio Lighting, Soft Lighting, Volumetric, Contre-Jour, Beautiful Lighting, Accent Lighting, Global Illumination, Screen Space Global Illumination, Ray Tracing Global Illumination, Optics, Scattering, Glowing, Shadows, Rough, Shimmering, Ray Tracing Reflections, Lumen Reflections, Screen Space Reflections, Diffraction Grading, Chromatic Aberration, GB Displacement, Scan Lines,… 其他（Others）：• realistic eyeball, pupil replaced with heart, up close, red, 1970s documentary photographs 35mm • A memorial candle is lit on a table in a dark room close up vivid colours • The image captures the vibrant energy of a live music festival. The foreground is filled with a large crowd, their heads a sea of diverse hairstyles and colors. Many are looking towards a massive stage structure, which dominates the left side of the frame.The stage is a complex scaffolding of metal and screens. The screens are illuminated with bright blue light, suggesting some sort of visual display accompanying the performance. A silhouette of a performer can be seen on stage, adding to the sense of a live event.Above the stage, the sky is a patchwork of white clouds against a bright blue background, creating a sense of expansive space. In the distance, the sun appears to be setting, casting a warm glow over the scene. To the right, trees in the background mark the natural setting of the festival. The overall composition captures the excitement and scale of a large-scale music event. … • The image showcases a single, small, earthen oil lamp, known as a diya, resting on a reflective surface. The diya is dark brown and has a rounded shape, typical of traditional Indian oil lamps. Atop the diya, a small flame flickers, providing the main source of light in the image.The backdrop is a soft, blurred yellow-orange gradient, creating a warm and cozy atmosphere. The surface on which the diya sits is dark, shiny, and reflective, mirroring the light from the flame. This reflection adds depth and dimension to the image, amplifying the glow and creating a sense of tranquility. …"
+  },
+  "b0322": {
+   "zh": "图 S17：以 HPSv3 为奖励模型、基于 SD1.4 的 DanceGRPO 更多结果"
+  }
+ }
+}

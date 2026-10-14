@@ -1,0 +1,2302 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "C o l o r Bench : Can VLMs See and Understand the Colorful World? A Comprehensive Benchmark for Color Perception, Reasoning, and Robustness"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Color plays an important role in human perception and usually provides critical clues in visual reasoning. However, it is unclear whether and how vision-language models (VLMs) can perceive, understand"
+  },
+  {
+   "id": "b0003",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "p",
+   "en": "Color is widely recognized as a fundamental component of human visual perception [11, 34], playing a critical role and providing critical clues in object detection, scene interpretation, contextual understanding, planning, etc., across critical application scenarios such as scientific discovery, medical care, remote sensing, shopping, visualization, artwork interpretation, etc. For instance, [19] leverages spectral color signatures to distinguish vegetation, health, and water bodies in satellite imagery, and [1] utilizes sediment color patterns to detect marine ecosystems. These applications underscore how color-driven features play an important role in real-world scenarios. Moreover, colors can convey affective or semantic information beyond simply recognizing and naming colors since colors are highly correlated to other attributes or concepts and thus can provide key information to various downstream tasks that do not even directly ask about colors [18, 37, 45]. As modern vision-language models (VLMs) [12, 41, 48] continue to be deployed to increasingly diverse scenarios, color—an essential visual feature—plays a growing role in the processes of understanding and reasoning. It is essential to examine whether and how these models can understand and leverage color information as in human perception and reasoning, how color influences their overall perceptual and reasoning capabilities, and whether they can interpret visual illusions, resolve ambiguous cues, and maintain reliable performance under color variations."
+  },
+  {
+   "id": "b0005",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Test samples from ColorBench. ColorBench evaluates VLMs across three core capabilities: Perception, Reasoning and Robustness. The benchmark comprises 11 tasks designed to assess fine-grained color understanding abilities and the effect of color on other reasoning skills, including counting, proportion calculation, and robustness estimation. With over 1,400 instance, ColorBench covers a wide range of real-world application scenarios, including painting analysis, test kit readings, shopping, satellite/wildlife image analysis, etc."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "However, existing benchmarks for VLMs mainly focus on tasks that may not heavily depend on color understanding or require color-centric reasoning, thereby overlooking nuanced color-related factors [25, 29]. Hence, there is a lack of benchmarks that systematically assess how well VLMs understand color when it serves as the main or distinguishing feature of a scene and key information to a task. Moreover, robustness to variations in color, such as recoloring and shifting hues, has also been largely neglected in the LLM era [6, 8, 20]. Consequently, it remains unclear whether VLMs can perceive and reason about color with human-like proficiency and to what extent their performance deteriorates under significant color perturbations. This shortfall underscores the need for a dedicated benchmark that comprehensively probes various facets of color comprehension in VLMs. A detailed discussion of related works is provided in Appendix A."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "To bridge this gap, we propose a novel benchmark, ColorBench, that aims at comprehensively evaluating VLMs on three core capabilities of color understanding: Color Perception, Color Reasoning, and Color Robustness. Color Perception examines VLMs’ fundamental capability to correctly detect and interpret colors from inputs. Color Reasoning refers to the reasoning skills to draw further conclusions based on the understanding of colors from input and prior knowledge, in which colors act as a crucial clue to formulate accurate judgments. Color Robustness assesses how consistently VLMs perform when an image’s colors are altered, ensuring they maintain accurate predictions across different color variants of an image. Under these three core dimensions, ⟦SLOT_0⟧ fine-grained tasks assessing different aspects of color understanding capabilities are formulated as shown in Figure 1, which not only shows test examples in ColorBench but also presents potential real-world applications."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "By focusing on these facets, ColorBench offers a granular view of VLMs’ capabilities in color understanding, aiming to illuminate both their strengths and shortcomings. We evaluate ⟦SLOT_1⟧ widely used VLMs in our benchmark, ranging from open-source to proprietary models, from relatively small models (⟦SLOT_2⟧B) to larger models (⟦SLOT_3⟧B), and obtain some unrevealed observations."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "Main Contribution. We introduce “ColorBench”, the first dedicated benchmark for assessing the color perception, reasoning, and robustness of VLMs. We develop an evaluation suite for 11 color-centric tasks, covering diverse application scenarios and practical challenges. Moreover, we report a fine-grained empirical evaluation of ⟦SLOT_4⟧ state-of-the-art VLMs, which exposes their limitations in color understanding and offers novel insights for future research. Our key findings are highlighted in the following:"
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "li",
+   "en": "1. The scaling law still holds for color understanding but is much weaker and mainly depends on the language model parts. The correlation between the performance and the vision encoder’s size is not significant due to the limited choices in current VLMs."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "li",
+   "en": "2. The absolute performances of different VLMs are relatively low, and the gaps between different models (open-source vs. proprietary, small vs. large) are not large, indicating the challenges of ColorBench and the negligence of color understanding in existing VLMs."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "li",
+   "en": "3. Despite the weaknesses of VLMs on color understanding, adding reasoning steps can still improve their performance on ColorBench tasks, even for color robustness, which has not been investigated by the community."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "li",
+   "en": "4. Color clues are indeed leveraged more or less by VLMs in most of the tasks in ColorBench. However, in color illusion and mimicry tasks, colors might mislead VLMs to give wrong answers, and converting colorful images into grayscale can improve the accuracy."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "h2",
+   "en": "2 ColorBench Construction"
+  },
+  {
+   "id": "b0016",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Statistics of 3 categories and 11 tasks in ColorBench."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "We present ColorBench, the first benchmark explicitly designed to comprehensively evaluate the color understanding capabilities of VLMs across three key dimensions: Color Perception, Color Reasoning, and Color Robustness. This benchmark consists of ⟦SLOT_5⟧ instances and ⟦SLOT_6⟧ image-text questions spanning ⟦SLOT_7⟧ diverse tasks. For the Color Perception and Color Reasoning categories, each instance contains an image, a question, and multiple-choice (⟦SLOT_8⟧ to ⟦SLOT_9⟧) options, with only one correct answer. For Color Robustness, each instance consists of 10 multiple-choice image-text questions, including a seed image and 9 edited images with color changes. Given that color is a fundamental visual feature influencing most vision-related tasks, disentangling color understanding from other general capabilities (e.g., object recognition, counting) is challenging. To address this, we design questions with explicit color constraints for Color Perception and Reasoning dimensions, enabling a focused evaluation of VLMs’ perception and reasoning abilities in relation to color."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Taxonomy"
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "Motivated by the existing evaluation criteria from prior benchmarks and real-world application scenarios, we categorize the color understanding capability into ⟦SLOT_10⟧ core dimensions and ⟦SLOT_11⟧ detailed axes, as shown in Figure 1. The detailed question templates and sample cases are shown in Appendix 16."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h4",
+   "en": "2.1.1 Color Perception"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "This core dimension refers to the fundamental capability to correctly detect and interpret colors from inputs. We assess this capability through ⟦SLOT_12⟧ key aspects: i) Color Recognition, ii) Color Extraction, and iii) Object Recognition."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "Color Recognition includes questions that either ask for the color of a given object or determine whether a specific color is present in the image. Color Extraction requires the model to extract the value of color code (e.g., RGB, HSV, or HEX) for a given single color image. This task measures the ability to perform fine-grained color retrieval from visual input. Object Recognition evaluates the model’s capability to identify objects that match a specified color described in the text input. These two tasks require VLMs to be able to detect and interpret the color in either the image or text input."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h4",
+   "en": "2.1.2 Color Reasoning"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "This dimension refers to the reasoning skills to draw further conclusions based on the understanding of colors from input and prior knowledge, in which colors act as a crucial clue to formulate accurate judgments. This category encapsulates ⟦SLOT_13⟧ key aspects: i) Color Proportion, ii) Color Comparison, iii) Color Counting, iv) Object Counting, v) Color Illusion, vi) Color Mimicry and vii) Color Blindness."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "Color Proportion tests the model’s capability to estimate the relative area occupied by a specific color. Questions in this task require both color perception and proportion calculation capabilities. Color Comparison requires the model to be able to distinguish among multiple colors in the image, assessing its sensitivity to hue, saturation, and brightness differences in visual input. Color Counting focuses on identifying the number of unique colors in the image, evaluating the model’s perception and differentiation of distinct color variations, and counting ability. Object Counting extends this challenge by requiring the model to count objects that match a specific color pattern. This task requires an integration of object recognition and color perception. Color Illusion questions query VLMs to compare colors in potential illusionary environments. This task evaluates the model’s ability to account for color-induced optical illusions. Color Mimicry challenges the model to detect objects camouflaged within their surroundings, where color serves as a misleading factor, requiring advanced pattern recognition and contextual reasoning. These two tasks both assess the model’s ability to make correct predictions under the misleading of color-related information in visual input. Color Blindness, inspired by Ishihara tests, assesses the model’s ability to recognize numbers or text embedded in color patterns, testing its understanding of shape-color relationships. These ⟦SLOT_14⟧ tasks comprehensively assess the model’s capacity for logical reasoning, spatial awareness, and adaptive interpretation of color-based visual cues."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "h4",
+   "en": "2.1.3 Color Robustness"
+  },
+  {
+   "id": "b0028",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Generation Pipeline for Color Robustness. For each seed image, we apply ⟦SLOT_15⟧ recoloring strategies (Entire Image, Target Segment, Largest Segment) to generate edited images. For each strategy, we change the color of the recoloring region via shifting the Hue values by ⟦SLOT_16⟧°, ⟦SLOT_17⟧°, or ⟦SLOT_18⟧°in HSV color space."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "Color Robustness assesses how consistently VLMs perform and whether they can consistently deliver accurate predictions under color variants of a given image. It involves measuring the stability of a VLM’s responses when confronted with the same text input and a series of recolored images. To ensure that color does not influence the predictions, we select questions and corresponding answers that are independent of color attributes. Under these conditions, a robust model should produce unchanged predictions regardless of recoloring manipulation. Any variation in the model’s responses is then used to quantify its susceptibility to color changes, providing a direct measure of robustness."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Data Curation"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "For most of the tasks in the category of Color Perception and Color Reasoning, we rely on human experts to manually collect images from multiple online benchmarks and websites. For the Color Proportion task, to ensure the correctness of the ground truth, an extra color extraction tool is firstly utilized to obtain the color histogram of the image. Questions and options are then manually designed based on these color statistics. For tasks including Color Extraction, Color Blindness, and Color Illusion, testing images are generated by corresponding code programs to ensure the controllability of the questions and answers. The detailed data sources are shown in Appendix B."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "After the initial data is collected, additional filtering processes are conducted in a human-machine interactive process. We first conduct inference on a variety of VLMs and discard low-quality samples based on the GPT-4o prediction result and human evaluation. For synthesized data, similar processes are conducted, but with additional code (for generation) and image assessment. The above process is conducted in three rounds before the final benchmark instances are settled. This refinement process ensures ColorBench a rigorous and informative benchmark for assessing color-related understanding."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "For Color Robustness, we create evaluation instances by modifying images or specific regions through color changes. We define ⟦SLOT_19⟧ recoloring strategies to determine the recoloring region: i) Entire Image, where the whole image is recolored; ii) Target Segment, where only the segment relevant to the question is altered; and iii) Largest Segment, where the largest region unrelated to the question is modified. Further details can be found in Appendix C. While generating color variants, we derive seed images from CV-Bench [42], a publicly available benchmark. For each seed image, as shown in Figure 3, we first employ a Grounded Segmentation Model (GAM) [38] to extract segments and their corresponding labels. We then apply the predefined recoloring strategies to determine the editing region and perform recoloring by shifting the Hue value in the HSV color space at three levels to cover entire color wheel: (⟦SLOT_20⟧°, ⟦SLOT_21⟧°, and ⟦SLOT_22⟧°). This process produces ⟦SLOT_23⟧ variations per seed image, covering different strategies and degrees of color change to enable a comprehensive robustness assessment. To ensure interpretability, human experts filter out unnatural or negligible modifications, resulting in a final selection of ⟦SLOT_24⟧ seed images for robustness evaluation."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "h3",
+   "en": "2.3 Evaluation Metrics"
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "For Perception and Reasoning, we use accuracy as the evaluation metric, as all tasks follow a multiple-choice format. Accuracy is computed per task and per category, representing the proportion of correctly answered questions."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "For Robustness, we evaluate a model’s ability to maintain consistent accurate predictions under color variations. As detailed in Section 2.2, each seed image ⟦SLOT_25⟧ is transformed into ⟦SLOT_26⟧ recolored variants using recoloring strategies, while keeping the original question ⟦SLOT_27⟧ unchanged. A model ⟦SLOT_28⟧ is considered robust on a seed image ⟦SLOT_29⟧ and corresponding question ⟦SLOT_30⟧ if and only if it provides a correct prediction for ⟦SLOT_31⟧ and maintains correct on all ⟦SLOT_32⟧ recolored versions. To quantify robustness, we define the instance-level robustness metric ⟦SLOT_33⟧ and a model-level robustness metric ⟦SLOT_34⟧."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "Instance-level Robustness. Let the recolored images be ⟦SLOT_35⟧ and the generation output of model for image ⟦SLOT_36⟧ and question ⟦SLOT_37⟧ is ⟦SLOT_38⟧. Define ⟦SLOT_39⟧ as the model correctness: ⟦SLOT_40⟧ if model result ⟦SLOT_41⟧ is correct, otherwise ⟦SLOT_42⟧. The instance-level robustness metric ⟦SLOT_43⟧ for a seed image ⟦SLOT_44⟧ and question ⟦SLOT_45⟧ is defined as:"
+  },
+  {
+   "id": "b0039",
+   "t": "keep",
+   "w": "table",
+   "en": "R ⁡ ( I s , q ) = { 1 if ​ c ​ ( ℳ ⁡ ( I i , q ) ) = c ⁡ ( ℳ ⁡ ( I s , q ) ) = 1 , ∀ i ∈ [ n ] 0 otherwise R(I_{s},q)=\\begin{cases}1&\\text{if }c(\\mathcal{M}(I_{i},q))=c(\\mathcal{M}(I_{s},q))=1,\\forall"
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "Overall Robustness. Let ⟦SLOT_46⟧ be the set of seed images. We define model robustness to be:"
+  },
+  {
+   "id": "b0041",
+   "t": "keep",
+   "w": "table",
+   "en": "R ​ o ​ b ​ u ​ s ​ t ℳ = ∑ I s ∈ 𝒮 R ⁡ ( I s ) | 𝒮 | , R ​ o ​ b ​ u ​ s ​ t ℳ ∈ [ 0 , 1 ] {Robust}_{\\mathcal{M}}=\\frac{\\sum_{I_{s}\\in\\mathcal{S}}R(I_{s})}{\\lvert\\mathcal{S}\\rvert},{Robust}_{\\mathcal"
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_47⟧ represents the proportion of seed images on which the model maintains correctness across all color variations. A model is more robust when ⟦SLOT_48⟧ is higher."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Performance of ⟦SLOT_49⟧ VLMs (grouped by size) and human performance on ColorBench. Models are ranked within each group according to their overall performance on Color Perception and Reasoning (P & R Overall) tasks. For human evaluation, Color Extraction task is excluded, as humans are not attuned to precise color code differences. The best performance in each VLM group is highlighted in bold. For human evaluation, any instance surpassing all VLMs is marked in bold."
+  },
+  {
+   "id": "b0044",
+   "t": "keep",
+   "w": "table",
+   "en": "Color Perception Color Reasoning P & R Robustness C’Recog C’Extract O’Recog C’Prop C’Comp C’Count O’Count C’Illu C’Mimic C’Blind Overall C’Robust VLMs: < < 7B LLaVA-OV-0.5B 26.3 44.8 46.8 30.0 23.8 22"
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Experimental Results"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Main Results"
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "Table 1 presents the performances of a wide range of VLMs, along with human evaluation results on our ColorBench. Human participants achieve the highest performance on all evaluated tasks across all models. Among the models, overall accuracy generally increases with model size, with larger models tend to outperform smaller models, and the two proprietary models, GPT-4o and Gemini-2-flash, perform the best11 1 To examine the upper limits of VLM capabilities and benchmark against human-level performance, we also assess performance GPT-o3 on perception and reasoning tasks. The result is shown in Appendix H.."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "Color Perception. In Color Recognition (C’Recog), most models perform well (above ⟦SLOT_50⟧), indicating that this task is relatively basic for color perception. Gemini-2 with CoT obtains the highest performance. In Color Extraction (C’Extra), to our surprise, the two powerful proprietary models without CoT prompting only reach the middle-tier performances, indicating the potential limitation on the color perception of their vision encoders. Similar to the Color Existence task, almost all the models perform well in Object Recognition (O’Recog), and the 2 proprietary models do not reach the top. This is probably due to the strong alignment between this task and the common training recipe, which includes abundant general object detection images."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "Color Reasoning. In Color Proportion (C’Prop), even the best model, Gemini-2 with CoT, can only reach ⟦SLOT_51⟧ of the accuracy, which is almost only slightly better than random guessing, showcasing the supreme difficulty of this task. In Color Comparison (C’Comp), larger models perform better in this task, and the proprietary models with CoT reach the top performance unsurprisingly. Surprisingly, in Color Counting (C’Count), all models show extremely poor performances. The highest performance comes from Gemini-2 with CoT, exceeding the second place by ⟦SLOT_52⟧ percent, although its performance is also unsatisfactory at only ⟦SLOT_53⟧. In Object Counting (O’Count), surpassing the 2 proprietary models, LLaVA-OV-72B reaches the top and becomes the only model that exceeds ⟦SLOT_54⟧ of the accuracy. Similar to the findings from the Object Recognition task, this might be caused by the extremely adequate object detection tasks in open-sourced training recipes. In Color Illusion (C’Illu), the accuracies of most models lie in the range of ⟦SLOT_55⟧ to ⟦SLOT_56⟧, and GPT-4o without CoT is the only one that exceeds ⟦SLOT_57⟧ of the accuracy. In Color Mimicry (C’Mimic), the 2 proprietary models reach the top, while more reasoning steps do not benefit a lot. In Color Blindness (C’Blind), most of the open-sourced models present accuracies under ⟦SLOT_58⟧. Considering the extremely practical usage of this scenario, we think the current community should pay more attention to this. Moreover, we also observe that, surprisingly, more reasoning steps benefit VLMs in the color blindness test, although it seems like a pure color perception task."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "Color Robustness. In Color Robustness (C’Robust), a higher value represents better robustness towards color alteration. The only ⟦SLOT_59⟧ models that exceed ⟦SLOT_60⟧ are LLaVA-OV-72B, InternVL2.5-26B, InternVL2.5-38B, and InternVL2.5-78B, which utilize relatively larger vision encoders, InternViT-6B, compared with others (mostly only 300-400M). In the meantime, GPT-4o has a really low robustness (⟦SLOT_61⟧) to colors, indicating its vulnerable sensitivity to color changes, while Gemini-2 shows promising robustness (⟦SLOT_62⟧) towards colors. Moreover, another surprising observation is that even though only the colors are changed and all the original queries are kept, utilizing more reasoning steps can consistently improve robustness for GPT-4o (⟦SLOT_63⟧) and Gemini-2 (⟦SLOT_64⟧)."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Further Findings"
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Spearman’s rank correlation between VLM performance and different model parts’ sizes on each task. L denotes the language model part’s size and V represents the vision encoder part’s size. We use “(*)” to mark correlations with p-values ⟦SLOT_65⟧. It shows that the scaling law still holds for color understanding but it is much weaker."
+  },
+  {
+   "id": "b0053",
+   "t": "keep",
+   "w": "table",
+   "en": "Color Perception Color Reasoning P & R Color Robustness C’Recog C’Extract O’Recog C’Prop C’Comp C’Count O’Count C’Illu C’Mimic C’Blind Overall C’Robust L + + V 0.5657 (*) 0.5255 (*) 0.7107 (*) 0.5125 "
+  },
+  {
+   "id": "b0054",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0055",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: The heatmaps related to performances and VLM sizes. Deeper color represents higher performance of P&R Overall Accuracy or Robustness. Each line represents a model family with the sizes growing from small to large. This visualization clearly shows the correlation between performances and model sizes, larger model leads to higher performance."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "Since color-related tasks often involve abstract reasoning, language comprehension, and contextual interpretation, it is essential to assess not just the vision encoder but also part of the language model, which plays a critical role in processing and understanding such tasks. To quantitatively analyze the correlation between VLM performances on color understanding tasks and their sizes, Spearman’s rank correlation is calculated between VLM performances and (i) overall model sizes (L ⟦SLOT_66⟧ V), (ii) language model sizes (L), and (iii) vision encoder sizes (V). The correlation values and p-signs are presented in Table 2; a star is notated when the p-value of the correlation is lower than ⟦SLOT_67⟧. It is observed that between the performances and language model sizes, most of the tasks have a correlation greater than ⟦SLOT_68⟧ and a p-value smaller than ⟦SLOT_69⟧, except for Color Illusion and Color Blindness due to their special characteristics. Since the correlation between overall model sizes (L ⟦SLOT_70⟧ V) and P&R Overall (⟦SLOT_71⟧), and Robustness (⟦SLOT_72⟧), we conclude that the color understanding, including Color Perception, Color Reasoning, and Color Robustness, still follows the scaling law of model sizes. Figure 4 presents the correlations between performances and model sizes in each model family. This visualization clearly shows the correlation between performances and model sizes; a larger model leads to higher performance within each model family."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "However, between the performances and vision encoder sizes, most of the tasks either have a correlation lower than ⟦SLOT_73⟧ or a p-value greater than ⟦SLOT_74⟧, which is not sufficient to conclude with the evident positive correlation. Despite these findings, we try to avoid conveying the message that there is no positive correlation between performances and vision encoder sizes. We think it is because of the negligence of the current community to focus on the scaling laws of vision encoders. The vision encoders used in the current mainstream VLMs are constrained in a very small set: (i) most of the VLMs only use one type of vision encoders for the whole family, except for the InternVL2 and InternVL2.5 series; (ii) most of the VLMs use the vision encoder with the size of ⟦SLOT_75⟧ - ⟦SLOT_76⟧M. These challenges make it hard to evaluate the scaling laws of vision encoders. Further visualizations are presented in Appendix L.2."
+  },
+  {
+   "id": "b0059",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: The best model within each group and its performances (on P&R accuracy and Robustness). The absolute performances of different VLMs on ColorBench are relatively low, and the performance gaps between models are not large."
+  },
+  {
+   "id": "b0061",
+   "t": "keep",
+   "w": "table",
+   "en": "Color P & R Overall Color Robustness Model Size Model Best Model Best < < 7B Cambrian-3B 41.5 Qwen2.5-VL-3B 63.7 7B–8B Qwen2.5-VL-7B 46.2 Qwen2.5-VL-7B 74.4 10B–30B InternVL2.5-26B 46.8 InternVL2.5-26"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Table 3, we separate all the VLMs into several groups based on their sizes and present the best accuracy and the model name within each group. We can see that even the powerful proprietary models, GPT-4o and Gemini-2, can only reach an overall color perception and reasoning (P & R Overall) accuracy of ⟦SLOT_77⟧, only ⟦SLOT_78⟧ better than the best open-sourced model. Task-level results in Table 1 further reveal that these advanced proprietary models still exhibit substantial performance gaps compared to humans across most tasks. Moreover, the best model from group 1 has the accuracy of ⟦SLOT_79⟧ (Cambrian-3B), which is only ⟦SLOT_80⟧ lower than the best open-sourced model. As for the robustness, the powerful proprietary models even show weaker robustness than the 7B model. Considering the lack of existing benchmarks specifically evaluating VLMs’ color understanding capabilities, we conclude that this area is long-neglected by the community, and the open-sourced community is still on the same page with the proprietary model providers."
+  },
+  {
+   "id": "b0063",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Adding reasoning steps can improve VLMs’ performance on ColorBench. The change of accuracy brought by Chain of Thought (CoT) prompting on all tasks for GPT-4o and Gemini-2-flash. The last row presents the average improvement across both models."
+  },
+  {
+   "id": "b0065",
+   "t": "keep",
+   "w": "table",
+   "en": "Color Perception Color Reasoning P & R Color Robustness C’Recog C’Extract O’Recog C’Prop C’Comp C’Count O’Count C’Illu C’Mimic C’Blind Overall C’Robust GPT-4o Δ \\Delta +1.3 +14.6 +2.6 +6.1 +5.0 –3.9 +"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "The impact of using CoT prompting is shown in Table 4, in which we can see CoT improves the average P&R Overall accuracy across both models by ⟦SLOT_81⟧, indicating that reasoning benefits these color-related tasks. Within the category of Color Perception, the improvements from CoT on Color Recognition and Object Recognition are quite limited as these tasks heavily rely on the vision encoder. Figure 59 and 60 in Appendix M illustrate that adding reasoning steps does not take effect since the initial visual perception and color identification are incorrect in the slow thinking process. However, to our surprise, we find that the Color Extraction task benefits extremely from more reasoning steps, although it seems only related to the vision encoder. After a thorough investigation, we observe that most of the current VLMs are not capable of directly extracting color values, so they need to use more reasoning steps to reach reasonable answers."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "Within the category of Color Reasoning, CoT benefits most of the tasks. However, in the Color Illusion task, CoT harms the model performance. After a manual investigation, we observe that more reasoning steps might cause VLMs to focus more on the misleading environments rather than directly compare the assigned colors, as shown in Figure 61. Another observation occurs in the Color Blindness task. Unlike other reasoning-related tasks, humans can read a color blindness test image with a simple glimpse without any slow thinking. This fascinating misalignment between humans and VLMs intrigues us to further investigation. We find that VLMs recognize these digits in a button-up pattern: they need to first infer that the dots in the image can form a digit before they really recognize these dots as digits."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "In addition, the consistent improvement of CoT on Color Robustness is also an unrevealed phenomenon. In our setting, only the colors of the image are altered, and the questions are strictly the same as the original. Thus, under this circumstance, color is the only variant, which is supposed to be more related to the capability of the vision encoder. However, counterintuitively, as shown in our experiments, more reasoning steps make the VLMs more robust to the color changes, which is probably caused by the higher confidence of correct answers after reasoning."
+  },
+  {
+   "id": "b0069",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0070",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: The percentage of change in accuracy (y-axis) by converting colorful images to grayscale in each ColorBench task (x-axis). Each violin plot visualizes the distribution over all VLMs. Higher (lower) percentage indicates that VLMs rely more (less) on color clues for the task. Positive (negative) percentage indicates degradation (improvement) on grayscale images. Color clues are indeed more or less leveraged by VLMs in most tasks but they might mislead VLMs (illusion & mimicry)."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "In order to examine whether VLMs really leverage color clues to handle tasks in ColorBench, experiments are conducted by converting all the original colorful images in the Color Perception and Reasoning categories into gray-scale ones, without changing the questions. Under this circumstance, the accuracies are expected to decrease dramatically as all our questions are related to colors. For quantitative analysis, we calculate the accuracy changing ratio as ⟦SLOT_82⟧ for each VLM on each task. This value directly represents how the original accuracy changes with a gray-scale transformation. The positive value represents that the VLM has a higher accuracy on the original colored images, indicating that it needs color clues to solve the task. Higher positive values represent higher significance of the color clues. On the contrary, if the value is negative, it means that the VLM can reach a better accuracy after the gray-scale transformation, indicating that it does not need color clues for the task, and colors might even mislead VLM’s judgment. Lower negative values represent the severe harm the color can have on the task."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "The accuracy changing ratio distributions across all VLMs and tasks are presented in Figure 5 as the violin plot. As shown in the figure, for most of the tasks, the ratios of VLMs are above ⟦SLOT_83⟧, indicating that VLMs indeed leverage color clues to correctly solve the tasks; removing the color directly harms the original accuracies dramatically. However, when it comes to Color Illusion and Color Mimicry, the majority of the changing ratios are below ⟦SLOT_84⟧, which means that VLMs can get better accuracies when all the color information is removed. This phenomenon is reasonable as the colors on both of these two tasks are more likely serving as the misleading factors. In the meantime, for the Color Counting and Color Blindness tasks, almost half the accuracies increase and half decrease, indicating that the color clues might not be so significant in this task, thus, some of the models can find other ways to get the answer. We also investigate the correlation between accuracy changing ratios and model sizes, while no significant correlation can be concluded."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Conclusion, Limitation, and Future Works"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we introduce ColorBench, the first benchmark designed to comprehensively evaluate the color understanding capabilities of VLMs, including Perception, Reasoning, and Robustness. After evaluating ⟦SLOT_85⟧ widely used VLMs on our benchmark, several undiscovered observations are revealed by us. These observations emphasize the need for more sophisticated model architectures that integrate deeper color reasoning capabilities. To ensure high-quality and reliable annotations, ColorBench relies on manual data collection, annotation, and assessment across most domains. While this guarantees consistency, it inevitably limits dataset scale, style diversity, and category coverage. As future work, we aim to develop a trustworthy automated data collection pipeline and expand ColorBench to larger-scale, more diverse tasks involving complex interplays of color with texture, shape, and spatial relationships. Furthermore, investigating the impact of different visual encoders and language models could further elucidate the pathways through which VLMs process color information."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0077",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] Basit Alawode, Iyyakutti Iyappan Ganapathi, Sajid Javed, Naoufel Werghi, Mohammed Bennamoun, and Arif Mahmood. Aquaticclip: A vision-language foundation model for underwater scene analysis. arXiv "
+  },
+  {
+   "id": "b0078",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, Sibo Song, Kai Dang, Peng Wang, Shijie Wang, Jun Tang, Humen Zhong, Yuanzhi Zhu, Mingkun Yang, Zhaohai Li, Jianqiang Wan, Pengfei Wang, "
+  },
+  {
+   "id": "b0079",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] Jirayu Burapacheep, Ishan Gaur, Agam Bhatia, and Tristan Thrush. Colorswap: A color and word order dataset for multimodal evaluation. arXiv preprint arXiv:2402.04492 , 2024."
+  },
+  {
+   "id": "b0080",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] Lin Chen, Jinsong Li, Xiaoyi Dong, Pan Zhang, Yuhang Zang, Zehui Chen, Haodong Duan, Jiaqi Wang, Yu Qiao, Dahua Lin, et al. Are we on the right way for evaluating large vision-language models? arX"
+  },
+  {
+   "id": "b0081",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] Zhe Chen, Jiannan Wu, Wenhai Wang, Weijie Su, Guo Chen, Sen Xing, Muyan Zhong, Qinglong Zhang, Xizhou Zhu, Lewei Lu, et al. Internvl: Scaling up vision foundation models and aligning for generic v"
+  },
+  {
+   "id": "b0082",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] Kanjar De and Marius Pedersen. Impact of colour on robustness of deep neural networks. In Proceedings of the IEEE/CVF international conference on computer vision , pages 21–30, 2021."
+  },
+  {
+   "id": "b0083",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] Google DeepMind. Gemini 2.0 flash, 2025."
+  },
+  {
+   "id": "b0084",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] Alexey Dosovitskiy and Thomas Brox. Inverting visual representations with convolutional networks. In Proceedings of the IEEE conference on computer vision and pattern recognition , pages 4829–4837"
+  },
+  {
+   "id": "b0085",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] Hao Fei, Yuan Yao, Zhuosheng Zhang, Fuxiao Liu, Ao Zhang, and Tat-Seng Chua. From multimodal llm to human-level ai: Modality, instruction, reasoning, efficiency and beyond. In Proceedings of the 2"
+  },
+  {
+   "id": "b0086",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] Chaoyou Fu, Peixian Chen, Yunhang Shen, Yulei Qin, Mengdan Zhang, Xu Lin, Jinrui Yang, Xiawu Zheng, Ke Li, Xing Sun, Yunsheng Wu, and Rongrong Ji. Mme: A comprehensive evaluation benchmark for mu"
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] Karl R. Gegenfurtner and Jochem Rieger. Sensory and cognitive contributions of color to the recognition of natural scenes. Current Biology , 10(13):805–808, 2000."
+  },
+  {
+   "id": "b0088",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] Akash Ghosh, Arkadeep Acharya, Sriparna Saha, Vinija Jain, and Aman Chadha. Exploring the frontier of vision-language models: A survey of current methodologies and future directions. arXiv prepri"
+  },
+  {
+   "id": "b0089",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] Tianrui Guan, Fuxiao Liu, Xiyang Wu, Ruiqi Xian, Zongxia Li, Xiaoyu Liu, Xijun Wang, Lichang Chen, Furong Huang, Yaser Yacoob, et al. Hallusionbench: an advanced diagnostic suite for entangled la"
+  },
+  {
+   "id": "b0090",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] Tanmay Gupta, Ryan Marten, Aniruddha Kembhavi, and Derek Hoiem. Grit: General robust image task benchmark. arXiv preprint arXiv:2204.13653 , 2022."
+  },
+  {
+   "id": "b0091",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] Shuai He, Anlong Ming, Li Yaqi, Sun Jinyuan, Zheng ShunTian, and Ma Huadong. Thinking image color aesthetics assessment: Models, datasets and benchmarks. ICCV , 2023."
+  },
+  {
+   "id": "b0092",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] Nam Hyeon-Woo, Moon Ye-Bin, Wonseok Choi, Lee Hyun, and Tae-Hyun Oh. Vlm’s eye examination: Instruct and inspect visual competency of vision language models. arXiv preprint arXiv:2409.14759 , 202"
+  },
+  {
+   "id": "b0093",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] Md Farhan Ishmam, Ishmam Tashdeed, Talukder Asir Saadat, Md Hamjajul Ashmafee, Abu Raihan Mostofa Kamal, and Md Azam Hossain. Visual robustness benchmark for visual question answering (vqa). arXi"
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] Ali Jahanian, Shaiyan Keshvari, SVN Vishwanathan, and Jan P Allebach. Colors–messengers of concepts: Visual design mining for learning color semantics. ACM Transactions on Computer-Human Interact"
+  },
+  {
+   "id": "b0095",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] Johannes Jakubik, Benedikt Blumenstiel, and Clive Tinashe Marimo. Ms-clip: Multi-spectral vision language learning for earth observation. In American Geophysical Union Fall Meeting , 2024."
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] Jayendra Kantipudi, Shiv Ram Dubey, and Soumendu Chakraborty. Color channel perturbation attacks for fooling convolutional neural networks and a defense against such attacks. IEEE Transactions on"
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] Tony Lee, Haoqin Tu, Chi Heem Wong, Wenhao Zheng, Yiyang Zhou, Yifan Mai, Josselin Somerville Roberts, Michihiro Yasunaga, Huaxiu Yao, Cihang Xie, et al. Vhelm: A holistic evaluation of vision la"
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] Bohao Li, Rui Wang, Guangzhi Wang, Yuying Ge, Yixiao Ge, and Ying Shan. Seed-bench: Benchmarking multimodal llms with generative comprehension. arXiv preprint arXiv:2307.16125 , 2023a."
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] Baiqi Li, Zhiqiu Lin, Wenxuan Peng, Jean de Dieu Nyandwi, Daniel Jiang, Zixian Ma, Simran Khanuja, Ranjay Krishna, Graham Neubig, and Deva Ramanan. Naturalbench: Evaluating vision-language models"
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] Bo Li, Yuanhan Zhang, Dong Guo, Renrui Zhang, Feng Li, Hao Zhang, Kaichen Zhang, Peiyuan Zhang, Yanwei Li, Ziwei Liu, and Chunyuan Li. Llava-onevision: Easy visual task transfer, 2024b."
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] Jian Li, Weiheng Lu, Hao Fei, Meng Luo, Ming Dai, Min Xia, Yizhang Jin, Zhenye Gan, Ding Qi, Chaoyou Fu, Ying Tai, Wankou Yang, Yabiao Wang, and Chengjie Wang. A survey on benchmarks of multimoda"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] Ming Li, Chenguang Wang, Yijun Liang, Xiyao Wang, Yuhang Zhou, Xiyang Wu, Yuqing Zhang, Ruiyi Zhang, and Tianyi Zhou. Caughtcheating: Is your mllm a good cheating detective? exploring the boundar"
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] Ming Li, Ruiyi Zhang, Jian Chen, Jiuxiang Gu, Yufan Zhou, Franck Dernoncourt, Wanrong Zhu, Tianyi Zhou, and Tong Sun. Towards visual text grounding of multimodal large language model, 2025b."
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] Yifan Li, Yifan Du, Kun Zhou, Jinpeng Wang, Wayne Xin Zhao, and Ji-Rong Wen. Evaluating object hallucination in large vision-language models. arXiv preprint arXiv:2305.10355 , 2023b."
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] Zongxia Li, Xiyang Wu, Hongyang Du, Huy Nghiem, and Guangyao Shi. Benchmark evaluations, applications, and challenges of large vision language models: A survey. arXiv preprint arXiv:2501.02189 , "
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr Doll’ar, and C Lawrence Zitnick. Microsoft coco: Common objects in context. In Computer Vision–ECCV 201"
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] Haotian Liu, Chunyuan Li, Yuheng Li, Bo Li, Yuanhan Zhang, Sheng Shen, and Yong Jae Lee. Llava-next: Improved reasoning, ocr, and world knowledge, 2024a."
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] Yuan Liu, Haodong Duan, Yuanhan Zhang, Bo Li, Songyang Zhang, Wangbo Zhao, Yike Yuan, Jiaqi Wang, Conghui He, Ziwei Liu, et al. Mmbench: Is your multi-modal model an all-around player? In Europea"
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] Lingjun Mao, Zineng Tang, and Alane Suhr. Evaluating model perception of color illusions in photorealistic scenes. arXiv preprint arXiv:2412.06184 , 2024."
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] Daniela Mapelli and Marlene Behrmann. The role of color in object recognition: Evidence from visual agnosia. Neurocase , 3(4):237–247, 1997."
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] OpenAI, Aaron Hurst, Adam Lerer, Adam P. Goucher, Adam Perelman, Aditya Ramesh, Aidan Clark, AJ Ostrow, Akila Welihinda, Alan Hayes, Alec Radford, and etc. Gpt-4o system card, 2024."
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] Bryan A Plummer, Liwei Wang, Chris M Cervantes, Juan C Caicedo, Julia Hockenmaier, and Svetlana Lazebnik. Flickr30k entities: Collecting region-to-phrase correspondences for richer image-to-sente"
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] Ragini Rathore, Zachary Leggon, Laurent Lessard, and Karen B Schloss. Estimating color-concept associations from image statistics. IEEE Transactions on Visualization and Computer Graphics , 26(1)"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] Tianhe Ren, Shilong Liu, Ailing Zeng, Jing Lin, Kunchang Li, He Cao, Jiayu Chen, Xinyu Huang, Yukang Chen, Feng Yan, et al. Grounded sam: Assembling open-world models for diverse visual tasks. ar"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] Ahnaf Mozib Samin, M Firoz Ahmed, and Md Mushtaq Shahriyar Rafee. Colorfoil: Investigating color blindness in large vision and language models. arXiv preprint arXiv:2405.11685 , 2024."
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] Haz Sameen Shahgir, Khondker Salman Sayeed, Abhik Bhattacharjee, Wasi Uddin Ahmad, Yue Dong, and Rifat Shahriyar. Illusionvqa: A challenging optical illusion dataset for vision language models. a"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] Min Shi, Fuxiao Liu, Shihao Wang, Shijia Liao, Subhashree Radhakrishnan, De-An Huang, Hongxu Yin, Karan Sapra, Yaser Yacoob, Humphrey Shi, et al. Eagle: Exploring the design space for multimodal "
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[42] Shengbang Tong, Ellis Brown, Penghao Wu, Sanghyun Woo, Manoj Middepogu, Sai Charitha Akula, Jihan Yang, Shusheng Yang, Adithya Iyer, Xichen Pan, et al. Cambrian-1: A fully open, vision-centric ex"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[43] Fei Wang, Xingyu Fu, James Y Huang, Zekun Li, Qin Liu, Xiaogeng Liu, Mingyu Derek Ma, Nan Xu, Wenxuan Zhou, Kai Zhang, et al. Muirbench: A comprehensive benchmark for robust multi-image understan"
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[44] Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Fei Xia, Ed Chi, Quoc V Le, Denny Zhou, et al. Chain-of-thought prompting elicits reasoning in large language models. Advances in neural in"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[45] Hanna-Sophia Widhoelzl and Ece Takmaz. Decoding emotions in abstract art: Cognitive plausibility of clip in recognizing color-emotion associations. arXiv preprint arXiv:2405.06319 , 2024."
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[46] Weihao Yu, Zhengyuan Yang, Linjie Li, Jianfeng Wang, Kevin Lin, Zicheng Liu, Xinchao Wang, and Lijuan Wang. Mm-vet: Evaluating large multimodal models for integrated capabilities. arXiv preprint "
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[47] Xiang Yue, Yuansheng Ni, Kai Zhang, Tianyu Zheng, Ruoqi Liu, Ge Zhang, Samuel Stevens, Dongfu Jiang, Weiming Ren, Yuxuan Sun, et al. Mmmu: A massive multi-discipline multimodal understanding and "
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[48] Jingyi Zhang, Jiaxing Huang, Sheng Jin, and Shijian Lu. Vision-language models for vision tasks: A survey. IEEE Transactions on Pattern Analysis and Machine Intelligence , 2024."
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[49] Jiarui Zhang, Mahyar Khayatkhoei, Prateek Chhikara, and Filip Ilievski. Mllms know where to look: Training-free perception of small visual details with multimodal llms. arXiv preprint arXiv:2502."
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[50] Le Zhang, Rabiul Awal, and Aishwarya Agrawal. Contrasting intra-modal and ranking cross-modal hard negatives to enhance visio-linguistic fine-grained understanding. arXiv preprint arXiv:2306.0883"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[51] Tiancheng Zhao, Tianqi Zhang, Mingwei Zhu, Haozhan Shen, Kyusong Lee, Xiaopeng Lu, and Jianwei Yin. Vl-checklist: Evaluating pre-trained vision-language models with objects, attributes and relati"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[52] Bolei Zhou, Hang Zhao, Xavier Puig, Sanja Fidler, Adela Barriuso, and Antonio Torralba. Scene parsing through ade20k dataset. In Proceedings of the IEEE conference on computer vision and pattern "
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[53] Bolei Zhou, Hang Zhao, Xavier Puig, Tete Xiao, Sanja Fidler, Adela Barriuso, and Antonio Torralba. Semantic understanding of scenes through the ade20k dataset. International Journal of Computer V"
+  },
+  {
+   "id": "b0130",
+   "t": "text",
+   "w": "h2",
+   "en": "Table of Contents for Appendix"
+  },
+  {
+   "id": "b0131",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Related Works"
+  },
+  {
+   "id": "b0132",
+   "t": "text",
+   "w": "h3",
+   "en": "A.1 VLM Benchmarks"
+  },
+  {
+   "id": "b0133",
+   "t": "text",
+   "w": "p",
+   "en": "With the rapid advancements in Vision-Language Models (VLMs) [9], numerous benchmarks have emerged to systematically evaluate VLM capabilities across diverse dimensions [29]. These benchmarks generally fall into two categories: text-centric and vision-centric evaluations, each designed to assess distinct multimodal competencies. Text-centric benchmarks primarily measure commonsense knowledge, reasoning, and complex problem-solving capabilities, exemplified by tasks in MMMU [47] and NaturalBench [23]. Conversely, vision-centric benchmarks focus on visual perception and reasoning (MMBench [32] and MME [10]), and robustness to visual perturbations (Grit [14] and Visual Robustness [17]). Furthermore, several benchmarks have extended their scope to evaluate specialized visual tasks, such as spatial relationship comprehension (SEED-Bench [22] and MM-Vet [46]), chart and map understanding (MMSTAR [4] and MuirBench [43]), visual grounding (Flickr30k [36] and TRIG [27]) and the detection and understanding of visual hallucinations (POPE [28] and HallusionBench [13]). However, despite the extensive scope covered by existing VLM benchmarks, none currently provide an integrated evaluation that simultaneously assesses visual perception, reasoning, and robustness within a unified framework. Moreover, although certain benchmarks [32, 10] have incorporated color-related questions, these have typically addressed basic color perception and recognition, neglecting deeper assessments of reasoning and robustness associated with color understanding."
+  },
+  {
+   "id": "b0134",
+   "t": "text",
+   "w": "h3",
+   "en": "A.2 Color Evaluation"
+  },
+  {
+   "id": "b0135",
+   "t": "text",
+   "w": "p",
+   "en": "Color understanding is increasingly recognized as a crucial aspect of Vision-Language Models’ ability to perceive and interpret visual content. Limited studies have explored how color information influences model performance on specific tasks. Some studies [51, 50] explore the understanding of color by replacing color-related words in textual inputs to evaluate the models’ ability to handle color-specific information. More recent research [16, 21] focuses on assessing fine-grained color discrimination by asking models to distinguish subtle color differences in visual inputs. Samin et al. [39] introduced color-related foils to test VLMs’ capacity to cognize basic colors like red, white, and green, particularly in contexts requiring attention to subtle cues. Additionally, Burapacheep et al. [3] developed a benchmark dataset to evaluate and enhance compositional color comprehension in VLMs, emphasizing tasks where understanding minimal color relationships is essential. IllusionVQA [40] evaluates model perception of color illusions in photorealistic scenes. While these works have addressed isolated aspects of color understanding, none have provided a holistic assessment framework. In contrast to these previous works, our study establishes the first comprehensive and specialized benchmark for evaluating the color-related abilities of VLMs, offering a quantitative, automated approach to further this area of research."
+  },
+  {
+   "id": "b0136",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Data Sources"
+  },
+  {
+   "id": "b0137",
+   "t": "text",
+   "w": "p",
+   "en": "We conduct ColorBench from multiple sources, including website sources, publicly available benchmarks, and generated images. The detailed sources are included in Table 5."
+  },
+  {
+   "id": "b0138",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Data sources for each task."
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "table",
+   "en": "Category Data Source C’Recognition Website, ICAA17K [ 15 ] C’Recognition Website, ICAA17K [ 15 ] C’Extraction Synthetic Data C’Proportion Website, Synthetic Data C’Comparison Website C’Counting Websit"
+  },
+  {
+   "id": "b0140",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Detailed Generation Process for Robustness"
+  },
+  {
+   "id": "b0141",
+   "t": "text",
+   "w": "p",
+   "en": "For the Color Robustness, we evaluate the consistency of VLMs when faced with instances that differ only in the color of the visual input. To systematically assess this effect, we define ⟦SLOT_86⟧ recoloring strategies that determine which part of the image is altered: i) Target Segment, ii) Largest Segment, and iii) Entire Image. As mentioned in Table 6, Target Segment strategy recolors only the segment containing the object referenced in the question. This strategy ensures that the modification directly affects the model’s perception of task-relevant content. Largest Segment strategy alters the color of the largest segment that is irrelevant to the question, testing whether models are distracted by dominant but unrelated visual changes. In contrast, Entire Image strategy applies a global color shift to evaluate the model’s sensitivity to overall color variations. As summarized in Table 6, the first two strategies introduce localized modifications, while the third assesses robustness to broader image-wide color changes. Importantly, only color attributes are altered without modifying object shapes or contextual elements, which preserves the overall realism of the image. By incorporating both task-relevant and irrelevant edits, our benchmark provides a comprehensive evaluation of VLMs’ ability to handle color perturbations across different contexts."
+  },
+  {
+   "id": "b0142",
+   "t": "text",
+   "w": "p",
+   "en": "While generating color variations, we derive seed images from CV-Bench [42], a publicly available benchmark. For each seed image, as shown in Figure 3, we first employ a Grounded Segmentation Model (GAM) [38] to extract segments and their corresponding labels. We then apply the predefined recoloring strategies to determine the editing region. Once the editing region is determined, we modify the color of the corresponding region. In HSV color space, since Saturation and Value control the purity or brightness of the color, and only Hue controls the color of the part, we only adjust the Hue value in the HSV color space. Specifically, we shift the Hue by ⟦SLOT_87⟧°, ⟦SLOT_88⟧°, and ⟦SLOT_89⟧°. These three values ensure that the color manipulations cover significant perceptual differences across the color spectrum. This process produces nine variations per seed image, covering different strategies and degrees of color change to enable a comprehensive robustness assessment. To ensure interpretability, human experts filter out unnatural or negligible modifications, resulting in a final selection of 493 seed images for robustness evaluation. Additionally, we select questions that are color-invariant, which means answers remain valid regardless of whether the recoloring appears fully natural. This design choice isolates color variation as the sole variable of interest and prevents confounding effects from semantic or contextual changes. Through these steps, we evaluate whether VLMs rely excessively on color information and whether they maintain consistency in their predictions despite substantial color shifts."
+  },
+  {
+   "id": "b0143",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Recoloring strategies."
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "table",
+   "en": "Strategy Editing Region Purpose Entire Image Whole image Assesses the model’s robustness to global color shifts Target Segment Segment containing the object referenced in the question Evaluates the mo"
+  },
+  {
+   "id": "b0145",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D ColorBench Categories and Questions"
+  },
+  {
+   "id": "b0146",
+   "t": "text",
+   "w": "p",
+   "en": "Table 7 provides a detailed description of each task, alongside representative figures and sample questions that effectively demonstrate the specific capabilities being tested. Cases are provided for each task in Figure 6 to 16."
+  },
+  {
+   "id": "b0147",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Task and question definition in ColorBench."
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "table",
+   "en": "Task # Sample Case Description Sample Questions Perception Color Recognition 76 Figure 6 Ask for the color of a specific object or determine if a particular color is present in the image. What is the "
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0150",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Cases for Color Recognition Task."
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0152",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Cases for Color Extraction Task."
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0154",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8: Cases for Object Recognition Task."
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0156",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9: Cases for Color Proportion Task."
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 10: Cases for Color Comparison Task."
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 11: Cases for Color Counting Task."
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 12: Cases for Object Counting Task."
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0164",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 13: Cases for Color Illusion Task."
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 14: Cases for Color Mimicry Task."
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 15: Cases for Color Blindness Task."
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 16: Cases for Color Robustness Task."
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix E Implementation Details"
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "p",
+   "en": "To further advance our understanding of VLMs’ capabilities in color perception, reasoning, and robustness dimensions, we conduct an extensive evaluation of ⟦SLOT_90⟧ vision-language models (VLMs) spanning a range of large language model (LLM) sizes and architectures. Our evaluation includes state-of-the-art models such as GPT-4o[35], Gemini-2-flash[7], LLaVA-OV[24], LLaVA-NEXT [31], Cambrian[42], InternVL2[5], InternVL2.5[5], Qwen2.5-VL[2], and Eagle[41]. GPT-4o and Gemini-2-flash are used with API calls. We further examine reasoning enhancement via chain-of-thought (CoT) prompting [44], applying it to GPT-4o and Gemini-2-Flash to evaluate how intermediate reasoning steps influence color understanding. Additionally, we include the most recent GPT-o3 on perception and reasoning tasks, which is the most powerful model with a long internal chain-of-thought process. This selection covers a diverse set of architectures, including both proprietary and open-source models, enabling a comprehensive assessment of their reasoning capabilities under different computational constraints."
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "p",
+   "en": "To ensure a fair comparison, we standardize our experimental setup across models. Open-source models with fewer than 70B parameters are evaluated using a single NVIDIA A100 80GB GPU, while larger models require four NVIDIA A100 80GB GPUs to accommodate their increased memory and computational demands."
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix F Evaluation Prompts"
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix G Human Evaluation"
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "p",
+   "en": "To assess the degree of alignment between VLMs and human color understanding, we selected a representative subset of ColorBench, focusing specifically on color perception and reasoning tasks. The Color Extraction task was excluded from human annotation, as humans are generally not sensitive to fine-grained differences in color codes. Three human participants were recruited, each tasked with completing 50 samples per category. All evaluators responded to the full set of multiple-choice and judgment-oriented questions. We then gathered all responses and conducted statistical analysis on the collected human evaluations."
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix H Reasoning Models with Thinking Process"
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "p",
+   "en": "To comprehensively assess the performance of VLMs with the thinking process on ColorBench, except for proprietary models with chain-of-thought(CoT) prompt, we additionally conduct experiments with GPT-o3 on perception and reasoning tasks. GPT-o3 is the most recent powerful proprietary VLMs that is trained to think before answering with reinforcement learning. We use the API version of GPT-o3 (2025-04-16) for evaluation. The result is shown in Table 8, together with results of CoT prompting and human evaluation."
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "p",
+   "en": "The results presented in Table 8 indicate that human evaluators achieve the highest performance across the majority of tasks, except for three specific categories: Object Recognition (O’Recog), Color Proportion (C’Prop), and Color Comparison (C’Comp), where GPT-o3 holds the highest scores. The performance differences between GPT-o3 and human evaluators on O’Recog and C’Comp tasks are relatively minor (less than ⟦SLOT_91⟧). However, GPT-o3 substantially outperforms both humans and other VLMs on the C’Prop task, with an advantage exceeding ⟦SLOT_92⟧. This significant gap on C’Prop aligns with expectations, as humans generally exhibit lower sensitivity to precise quantitative measures. Meanwhile, GPT-o3 benefits from including the capability to utilize analytical tools for precise image assessments and continuous exhaustive visual search [26] to obtain better proportion estimations."
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "p",
+   "en": "On the remaining tasks, GPT-o3 consistently outperforms GPT-4o (CoT) and Gemini-2-flash (CoT), except for the Color Blindness (C’Blind) task, where GPT-o3 trails GPT-4o (CoT) by ⟦SLOT_93⟧. The C’Blind task requires VLMs to accurately identify numbers or strings in an image that is composed of colored dots. This task demands capabilities of precise color recognition combined with a holistic spatial perception. One plausible reason for GPT-o3’s inferior performance is its longer and more complex reasoning path, which may lead to overthinking. This might cause the model to focus too much on local details or choices of tool, at the expense of the global and intuitive perception needed for this task."
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "p",
+   "en": "Overall, these findings highlight the relative strengths and weaknesses of current advanced VLMs compared to human evaluators. Importantly, there remains substantial room for improvement in VLM capabilities, as significant performance gaps persist between VLMs and humans, particularly in reasoning-intensive tasks."
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8: Performance of proprietary reasoning models with thinking processes on Color Perception and Reasoning Tasks. Models are ranked based on their overall performance on color perception and reasoning (P & R Overall) tasks. The best-performing model within the VLM group is highlighted in bold. For human evaluation, any instance that exceeds the performance of all VLMs is also highlighted in bold."
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "table",
+   "en": "Color Perception Color Reasoning P & R C’Recog C’Extract O’Recog C’Prop C’Comp C’Count O’Count C’Illu C’Mimic C’Blind Overall VLMs: Proprietary GPT-4o (CoT) 77.6 55.2 83.1 44.4 71.3 26.5 33.0 44.1 77."
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix I Qualitative Analysis of Failure Cases"
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "p",
+   "en": "To gain deeper insights into VLM failures on color-related tasks, we conduct a detailed case analysis using Qwen2.5-VL-3B and 7B models on different tasks. Following the attention visualization methodology of Zhang et al. [49], we focus on instances where the 3B model fails but the 7B model succeeds, allowing a clearer examination of the underlying capability differences. The visualizations of attention maps are shown in Figure 17 to 25."
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "p",
+   "en": "For Color Perception tasks, we analyze the Color Recognition and Object Recognition tasks (excluding Color Extraction, which contains single-color color images). Our preliminary findings show that only a small number of failures arise from incorrect object localization. In most cases, both models correctly attend to the relevant regions but still produce incorrect predictions. This indicates that VLMs cannot accurately interpret color information, rather than deficiencies in visual grounding for these basic perception tasks."
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "p",
+   "en": "For Color Reasoning tasks, tasks such as Color Proportion, Color Comparison, Color Counting, and Color Illusion require integrating visual information across the entire image without a clear focus point. Attention maps show that both 3B and 7B models exhibit similar focus patterns but generate different answers, implying that the divergence mainly originates from the language reasoning component rather than the visual encoder. For tasks with explicit perception targets, including Object Counting, Color Mimicry, and Color Blindness, both models attend to the correct regions, yet the 3B model often fails to produce accurate predictions. These results reveal that current VLMs remain weak in color interpretability even when their attention is properly aligned."
+  },
+  {
+   "id": "b0190",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 17: Visualized Attention Maps for Color Recognition Tasks."
+  },
+  {
+   "id": "b0192",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 18: Visualized Attention Maps for Object Recognition Tasks."
+  },
+  {
+   "id": "b0194",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 19: Visualized Attention Maps for Color Proportion Tasks."
+  },
+  {
+   "id": "b0196",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 20: Visualized Attention Maps for Color Comparison Tasks."
+  },
+  {
+   "id": "b0198",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 21: Visualized Attention Maps for Color Counting Tasks."
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 22: Visualized Attention Maps for Object Counting Tasks."
+  },
+  {
+   "id": "b0202",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 23: Visualized Attention Maps for Color Illusion Tasks."
+  },
+  {
+   "id": "b0204",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 24: Visualized Attention Maps for Color Mimicry Tasks."
+  },
+  {
+   "id": "b0206",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 25: Visualized Attention Maps for Color Blindness Tasks."
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix J Effect of Different Modalities"
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "To investigate the impact of color information, we compare model performance on RGB versus grayscale images, thereby isolating the role of color within the image modality. To further explore the contribution of the image modality, we also conduct experiments using textual input only (questions and answer choices), where the original input images are substituted with pure black images of identical dimensions."
+  },
+  {
+   "id": "b0210",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 9: Average Accuracy (%) across three input settings (Text-only, Grayscale+Text, RGB+Text) on Color Perception and Reasoning tasks."
+  },
+  {
+   "id": "b0211",
+   "t": "keep",
+   "w": "table",
+   "en": "Color Perception Color Reasoning P & R C’Recog C’Extract O’Recog C’Prop C’Comp C’Count O’Count C’Illu C’Mimic C’Blind Overall VLMs: < < 7B Text-only 29.2 30.6 31.6 29.6 35.3 24.5 20.6 35.5 41.7 23.4 2"
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "p",
+   "en": "Table 9 presents the average accuracy across models grouped by LLM size. The result demonstrates that removing the visual modality (text-only setting) leads to the lowest performance across the majority of tasks. The performance differences among the three input settings allow us to disentangle the impact of textual input, image context (excluding color), and color information itself."
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "p",
+   "en": "Notably, in tasks such as Color Recognition and Object Recognition, the performance gap between text-only and grayscale experiments is relatively small, whereas both are significantly outperformed by the RGB input setting. This suggests that color cues play a substantially more important role than either contextual visual or textual information in these tasks."
+  },
+  {
+   "id": "b0214",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix K Fine-tuning Experiments on ColorBench"
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "p",
+   "en": "We conduct a series of fine-tuning experiments to investigate model adaptation on specialized color-centric tasks. These experiments leverage three synthetic datasets designed for Color Extraction, Color Illusion, and Color Blindness. Using our synthetic data generation pipeline, we curate dedicated training sets for this purpose, with sample counts summarized in Table 10."
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 10: Number of synthetic samples generated for fine-tuning experiments."
+  },
+  {
+   "id": "b0217",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Number of Samples Color Extraction 2400 Color Illusion 2400 Color Blindness 2280"
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "p",
+   "en": "To systematically assess the influence of different model components, we perform a comprehensive ablation study on Qwen2.5-VL-3B and Qwen2.5-VL-7B with the following settings:"
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "li",
+   "en": "• MLP only"
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "li",
+   "en": "• Vision encoder only"
+  },
+  {
+   "id": "b0221",
+   "t": "text",
+   "w": "li",
+   "en": "• MLP + Vision encoder (jointly)"
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "li",
+   "en": "• LLM (LoRA) only"
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "li",
+   "en": "• LLM (LoRA) + MLP"
+  },
+  {
+   "id": "b0224",
+   "t": "text",
+   "w": "li",
+   "en": "• LLM (LoRA) + Vision encoder"
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "li",
+   "en": "• LLM (LoRA) + MLP + Vision encoder (jointly)"
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "p",
+   "en": "For configurations involving the LLM, we adopt the LoRA approach to update a subset of its parameters, while the remaining modules are fully fine-tuned."
+  },
+  {
+   "id": "b0227",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 11: Accuracy (%) of Qwen2.5-VL (3B and 7B) under different training strategies across ColorBench tasks. Bold numbers indicate the best results within each model group."
+  },
+  {
+   "id": "b0228",
+   "t": "keep",
+   "w": "table",
+   "en": "Trainable Modules Color Perception Color Reasoning P&R Model LLM (LoRA) MLP Vision C’Recog C’Extract O’Recog C’Prop C’Comp C’Count O’Count C’Illu C’Mimic C’Blind Overall Qwen2.5-3B 72.4 38.5 74.0 43.8"
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "p",
+   "en": "The evaluation results with finetuned VLMs are shown in Table 11. Overall, models that include LoRA fine-tuning on the LLM component consistently outperform those without it, exhibiting a substantial improvement in overall accuracy. Importantly, the improvements are not confined to the directly targeted tasks (Color Extraction, Color Illusion, Color Blindness). These experiments show that fine-tuning the model on part of tasks also produces notable gains on some ancillary reasoning tasks, including Color Proportion, and Color Comparison."
+  },
+  {
+   "id": "b0230",
+   "t": "text",
+   "w": "p",
+   "en": "However, the transfer of knowledge is not universally positive. Certain tasks demonstrated limited or even negative performance transfer, indicating that fine-tuning exclusively on specialized color objectives does not guarantee generalization across the full spectrum of color perception and reasoning. This finding underscores that while targeted training enhances specialized abilities, a balanced and robust performance profile necessitates the inclusion of more diverse data and training objectives."
+  },
+  {
+   "id": "b0231",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix L More Visualizations"
+  },
+  {
+   "id": "b0232",
+   "t": "text",
+   "w": "h3",
+   "en": "L.1 VLM Size & Model Performance for Each Task"
+  },
+  {
+   "id": "b0233",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 27 to 35 present detailed correlations between the log-scaled sizes of VLM parameters and the performance metrics for each task of Perception and Reasoning Categories. Deeper color represents higher accuracy. Each line represents a model family with the sizes growing from small to large. This visualization clearly shows the correlation between performances and model sizes, larger model leads to higher performance."
+  },
+  {
+   "id": "b0234",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0235",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 26: Heatmap for Color Recognition."
+  },
+  {
+   "id": "b0236",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0237",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 27: Heatmap for Color Extraction."
+  },
+  {
+   "id": "b0238",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0239",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 28: Heatmap for Object Recognition."
+  },
+  {
+   "id": "b0240",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0241",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 29: Heatmap for Color Proportion."
+  },
+  {
+   "id": "b0242",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0243",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 30: Heatmap for Color Comparison."
+  },
+  {
+   "id": "b0244",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0245",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 31: Heatmap for Color Counting."
+  },
+  {
+   "id": "b0246",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0247",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 32: Heatmap for Object Counting."
+  },
+  {
+   "id": "b0248",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0249",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 33: Heatmap for Color Illusion."
+  },
+  {
+   "id": "b0250",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0251",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 34: Heatmap for Color Mimicry."
+  },
+  {
+   "id": "b0252",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0253",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 35: Heatmap for Color Blindness."
+  },
+  {
+   "id": "b0254",
+   "t": "text",
+   "w": "h3",
+   "en": "L.2 Vision Size & Model Performance for Each Task"
+  },
+  {
+   "id": "b0255",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 39 to 40 show detailed correlations between the log-scaled sizes of vision encoders and the performance metrics for each task of Perception and Reasoning Categories. Colors represent different model families. Models that have the same vision encoder sizes but with different LLM sizes are plotted as different points. Given that the majority of Vision-Language Models (VLMs) utilize a singular type of vision encoder, and that the sizes of these encoders generally range between 300-400M, it becomes challenging to assess the scaling effects within vision encoders."
+  },
+  {
+   "id": "b0256",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0257",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 36: The scatter plot for Color Recognition and Color Extraction."
+  },
+  {
+   "id": "b0258",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0259",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 37: The scatter plot for Object Recognition and Color Proportion."
+  },
+  {
+   "id": "b0260",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0261",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 38: The scatter plot for Color Comparison and Color Counting."
+  },
+  {
+   "id": "b0262",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0263",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 39: The scatter plot for Object Counting and Color Illusion."
+  },
+  {
+   "id": "b0264",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0265",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 40: The scatter plot for Color Mimicry and Color Blindness."
+  },
+  {
+   "id": "b0266",
+   "t": "text",
+   "w": "h3",
+   "en": "L.3 Performance for Each Model Family on Each Task"
+  },
+  {
+   "id": "b0267",
+   "t": "text",
+   "w": "p",
+   "en": "Figures 41 to 47 illustrate task performance across different models within the same model families. In general, models with more parameters tend to perform better on the majority of tasks."
+  },
+  {
+   "id": "b0268",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0269",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 41: Performance of LLaVA-OV models."
+  },
+  {
+   "id": "b0270",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0271",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 42: Performance of LLaVA-NEXT models."
+  },
+  {
+   "id": "b0272",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0273",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 43: Performance of Cambrian models."
+  },
+  {
+   "id": "b0274",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0275",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 44: Performance of Eagle models."
+  },
+  {
+   "id": "b0276",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0277",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 45: Performance of InternVL2 models."
+  },
+  {
+   "id": "b0278",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0279",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 46: Performance of InternVL2.5 models."
+  },
+  {
+   "id": "b0280",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0281",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 47: Performance of Qwen2.5 models."
+  },
+  {
+   "id": "b0282",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix M Samples Cases"
+  },
+  {
+   "id": "b0283",
+   "t": "text",
+   "w": "h3",
+   "en": "M.1 Effect of CoT"
+  },
+  {
+   "id": "b0284",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we present cases that the answers are influenced by adding reasoning steps for each task. For most of the tasks in ColorBench, adding reasoning steps can significantly improve the model performances. The samples cases of Perception and Reasoning categories are shown in Figure 48 to Figure 57. Case for Robustness category is shown in Figure 58."
+  },
+  {
+   "id": "b0285",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0286",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 48: Case with CoT for Color Recognition task."
+  },
+  {
+   "id": "b0287",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0288",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 49: Case with CoT for Color Extraction task. Option backgrounds correspond to their color codes."
+  },
+  {
+   "id": "b0289",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0290",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 50: Case with CoT for Object Recognition task."
+  },
+  {
+   "id": "b0291",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0292",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 51: Case with CoT for Color Proportion task."
+  },
+  {
+   "id": "b0293",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0294",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 52: Case with CoT for Color Comparison task."
+  },
+  {
+   "id": "b0295",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0296",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 53: Case with CoT for Color Counting task."
+  },
+  {
+   "id": "b0297",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0298",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 54: Case with CoT for Object Counting task."
+  },
+  {
+   "id": "b0299",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0300",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 55: Case with CoT for Color Illusion task."
+  },
+  {
+   "id": "b0301",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0302",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 56: Case with CoT for Color Mimicry task."
+  },
+  {
+   "id": "b0303",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0304",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 57: Case with CoT for Color Blindness task."
+  },
+  {
+   "id": "b0305",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0306",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 58: Case with CoT for Color Robustness task."
+  },
+  {
+   "id": "b0307",
+   "t": "text",
+   "w": "p",
+   "en": "However, for Color Recognition and Object Recognition tasks, the improvement of involving slow thinking is limited, as these two tasks heavily rely on the accurate cognition of the vision encoder. The sample cases are shown in Figure 59 and 60. For Color Illusion task, adding reasoning steps causes the model to focus more on the misleading environment and the relationship between the environment and the foreground objects. This thinking negatively influences the model performance. A sample case is shown by Figure 61."
+  },
+  {
+   "id": "b0308",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0309",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 59: Case that CoT results in an incorrect answer for Color Recognition task."
+  },
+  {
+   "id": "b0310",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0311",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 60: Case that CoT results in an incorrect answer for Object Recognition task."
+  },
+  {
+   "id": "b0312",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0313",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 61: Case that CoT results in an incorrect answer for Color Illusion task."
+  },
+  {
+   "id": "b0314",
+   "t": "text",
+   "w": "h3",
+   "en": "M.2 Effect of Grayscale"
+  },
+  {
+   "id": "b0315",
+   "t": "text",
+   "w": "p",
+   "en": "For most of the tasks in ColorBench, colors are critical clues for VLMs to generate the answers. We highlight these cases in Figure 62 to 69."
+  },
+  {
+   "id": "b0316",
+   "t": "text",
+   "w": "p",
+   "en": "However, for Color Illusion and Color Mimicry tasks, color clues might mislead VLMs to wrong answers, as shown in Figure 70 and 71."
+  },
+  {
+   "id": "b0317",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0318",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 62: Color clues play as a critical role for Color Recognition task."
+  },
+  {
+   "id": "b0319",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0320",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 63: Color clues play as a critical role for Color Extraction task. Option backgrounds correspond to their color codes."
+  },
+  {
+   "id": "b0321",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0322",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 64: Color clues play as a critical role for Object Recognition task."
+  },
+  {
+   "id": "b0323",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0324",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 65: Color clues play as a critical role for Color Proportion task."
+  },
+  {
+   "id": "b0325",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0326",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 66: Color clues play as a critical role for Color Comparison task."
+  },
+  {
+   "id": "b0327",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0328",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 67: Color clues play as a critical role for Color Counting task."
+  },
+  {
+   "id": "b0329",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0330",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 68: Color clues play as a critical role for Object Counting task."
+  },
+  {
+   "id": "b0331",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0332",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 69: Color clues play as a critical role for Color Blindness task."
+  },
+  {
+   "id": "b0333",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0334",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 70: Color clues negatively affect VLMs prediction for Color Illusion task."
+  },
+  {
+   "id": "b0335",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0336",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 71: Color clues negatively affect VLMs prediction for Color Mimicry task."
+  },
+  {
+   "id": "b0337",
+   "t": "text",
+   "w": "h3",
+   "en": "M.3 Failure with LLM and Vision"
+  },
+  {
+   "id": "b0338",
+   "t": "text",
+   "w": "p",
+   "en": "We present a representative failure case that highlights limitations in both the vision and language components of the model. As shown in Figure 72, the model fails to correctly interpret the visual content—it misidentifies the target colors by focusing on pink and purple flowers instead of red and yellow ones, indicating a vision encoder error. Furthermore, the language model compounds this mistake by generating an incorrect chain-of-thought reasoning and arriving at an erroneous answer based on the wrong color categories. This example underscores the necessity of evaluating both visual perception and language reasoning when diagnosing failure modes in vision-language models."
+  },
+  {
+   "id": "b0339",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0340",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 72: Case that model fails because of both vision encoder and language model."
+  },
+  {
+   "id": "b0341",
+   "t": "text",
+   "w": "h3",
+   "en": "M.4 Easy Cases"
+  },
+  {
+   "id": "b0342",
+   "t": "text",
+   "w": "p",
+   "en": "We present samples cases that majority of VLMs reach the correct answers."
+  },
+  {
+   "id": "b0343",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0344",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 73: Color Recognition case that majority of VLMs provide correct results."
+  },
+  {
+   "id": "b0345",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0346",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 74: Color Extraction case that majority of VLMs provide correct results. Option backgrounds correspond to their color codes."
+  },
+  {
+   "id": "b0347",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0348",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 75: Object Recognition case that majority of VLMs provide correct results."
+  },
+  {
+   "id": "b0349",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0350",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 76: Color Proportion case that majority of VLMs provide correct results."
+  },
+  {
+   "id": "b0351",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0352",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 77: Color Comparison case that majority of VLMs provide correct results."
+  },
+  {
+   "id": "b0353",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0354",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 78: Object Counting case that majority of VLMs provide correct results."
+  },
+  {
+   "id": "b0355",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0356",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 79: Color Mimicry case that majority of VLMs provide correct results."
+  },
+  {
+   "id": "b0357",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0358",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 80: Color Robustness case that majority of VLMs provide unchanged results over color variations in images."
+  },
+  {
+   "id": "b0359",
+   "t": "text",
+   "w": "h3",
+   "en": "M.5 Difficult Cases"
+  },
+  {
+   "id": "b0360",
+   "t": "text",
+   "w": "p",
+   "en": "We present samples cases that majority of VLMs reach the incorrect answers."
+  },
+  {
+   "id": "b0361",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0362",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 81: Color Recognition case that majority of VLMs provide incorrect results."
+  },
+  {
+   "id": "b0363",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0364",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 82: Color Extraction case that majority of VLMs provide incorrect results. Option backgrounds correspond to their color codes."
+  },
+  {
+   "id": "b0365",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0366",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 83: Object Recognition case that majority of VLMs provide incorrect results."
+  },
+  {
+   "id": "b0367",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0368",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 84: Color Proportion case that majority of VLMs provide incorrect results."
+  },
+  {
+   "id": "b0369",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0370",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 85: Color Comparison case that majority of VLMs provide incorrect results."
+  },
+  {
+   "id": "b0371",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0372",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 86: Color Counting case that majority of VLMs provide incorrect results."
+  },
+  {
+   "id": "b0373",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0374",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 87: Object Counting case that majority of VLMs provide incorrect results."
+  },
+  {
+   "id": "b0375",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0376",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 88: Color Illusion case that majority of VLMs provide incorrect results."
+  },
+  {
+   "id": "b0377",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0378",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 89: Color Mimicry case that majority of VLMs provide incorrect results."
+  },
+  {
+   "id": "b0379",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0380",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 90: Color Blindness case that majority of VLMs provide incorrect results."
+  },
+  {
+   "id": "b0381",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0382",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 91: Color Robustness case that majority of VLMs change the answers over color variations in images."
+  }
+ ]
+}

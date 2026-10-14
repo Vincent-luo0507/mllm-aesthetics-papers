@@ -1,0 +1,652 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "2AFC Prompting of Large Multimodal Models for Image Quality Assessment"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "While abundant research has been conducted on improving high-level visual understanding and reasoning capabilities of large multimodal models (LMMs), their visual quality assessment (IQA) ability has "
+  },
+  {
+   "id": "b0003",
+   "t": "text",
+   "w": "h6",
+   "en": "Index Terms:"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "I Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "The recent breakthroughs in large language models (LLMs) [1] have inspired the development of large multimodal models (LMMs) [2, 3, 4, 5], aiming to simulate human-like processing of multimodal information. Three representative abilities—instruction tuning [6], in-context learning [7], and chain-of-thought prompting [8]—highlight the impressive strides made in this field. With the growing interest in LMMs, especially with the emergence phenomenon of models like GPT-4V [5], it becomes crucial to understand their comprehensive capabilities and limitations."
+  },
+  {
+   "id": "b0006",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 1: Probing the IQA capability of LMMs via two-alternative forced choice. (a) A pair of images with the corresponding normalized mean opinion scores (MOSs), which is in the range of ⟦SLOT_0⟧. A larger value indicates better visual quality. (b) An order reversed version of (a). Humans can effortlessly select the “Train” image with better visual quality regardless of presentation order, but it is unclear whether the LMMs can make the same right choice. In this example, IDEFICS-Instruct [2] gives the incorrect prediction. mPULG-Owl [3] XComposer-VL [4], and Q-Instruct [9] are indifferent to presentation order, and biased towards selecting the second and the first image, respectively. The proprietary GPT-4V [5] is well aligned with human perception of visual quality."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "The high-level visual understanding and reasoning abilities of LMMs have been extensively evaluated across numerous benchmarks utilizing popular vision-language tasks [10], such as image captioning, visual question answering, and cross-modality grounding. However, the low-level visual processing and analysis aspects of LMMs remain relatively under-explored. Image quality assessment (IQA), with the goal of evaluating the perceived quality of visual content, serves as a representative low-level visual task, and holds paramount importance in various image processing [11, 12], computer graphics [13], and computer vision applications [14]. As such, it is highly desirable to evaluate the applicability of LMMs for the IQA task."
+  },
+  {
+   "id": "b0009",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a) AWGN_Level-⟦SLOT_1⟧"
+  },
+  {
+   "id": "b0011",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(b) AWGN_Level-⟦SLOT_2⟧"
+  },
+  {
+   "id": "b0013",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(c) JP2K_Level-⟦SLOT_3⟧"
+  },
+  {
+   "id": "b0015",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(d) Pink_Level-⟦SLOT_4⟧"
+  },
+  {
+   "id": "b0017",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(e) MOS = ⟦SLOT_5⟧"
+  },
+  {
+   "id": "b0019",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(f) MOS = ⟦SLOT_6⟧"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 2: Illustration of three pairing rules for fine-grained quality comparison. (a)&(b) Two synthetically distorted images with identical visual content and distortion type but different distortion levels. (c)&(d) Two synthetically distorted images with identical visual content and distortion level but different distortion types. (e)&(f) Two realistically distorted images in the MOS interval of ⟦SLOT_7⟧."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Q-Bench [15] presents an early attempt to assess the visual quality understanding abilities of LMMs through binary quality-relevant question answering, standard quality rating, and quality description. Most recently, You et al. [16] emphasized on the importance of more human-like quality description over “contrived” quality rating, and decomposed IQA into three subtasks: quality description, quality comparison, and comparison reasoning. Although these studies may seem appealing at first glance, they require human-verified quality descriptions, which is a more costly and time-consuming process than collecting scalar quality ratings. Moreover, the subjective nature of visual quality adds complexity to aggregating descriptions from various users. Last, the semantic comparison of two quality descriptions [6] represents an unresolved challenge in natural language processing."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "The research in visual quality assessment has a long history, and there are many well-established human-rated image quality databases [17, 18, 19, 20, 21, 22, 23, 24, 23], readily available to test this perceptual aspect of LMMs. In this paper, we propose to adopt the two-alternative forced choice (2AFC) method, also known as the paired comparison to comprehensively evaluate the IQA capability of LMMs on existing image quality datasets. We devise coarse-to-fine pairing rules, and use the maximum a posterior (MAP) estimation [25] to convert pairwise preferences of different LLMs to the global ranking scores. Additionally, we introduce three evaluation criteria, namely consistency, accuracy, and correlation, to quantify different and complementary aspects of the IQA capability of LMMs. These criteria offer deeper insights into the strengths and weaknesses of LMMs in discriminating image quality variations. Extensive experiments on subsets of eight existing image quality datasets reveal many “interesting” behaviors of LMMs (see Fig. 1). Most notably, we find that LMMs generally struggle with the IQA task, some of which exhibit strong biases. On the contrary, the proprietary model GPT-4V has exhibited outstanding performance, surpassing the majority of other models by a significant margin. Further testing on more challenging fine-grained pairs reveals that there remains room for improvement."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h2",
+   "en": "II Ingredients of Probingg Pipeline"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we first introduce the coarse-to-fine pairing rules, and then detail the maximum a posterior estimation (MAP) [25] for multiple options. We last introduce three evaluation criteria to benchmark LMMs."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h3",
+   "en": "II-A Coarse-to-fine Pairing"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "To evaluate the IQA capability of LMMs, we devise a set of coarse-to-fine pairing rules. For coarse-grained quality comparison, different images from the same dataset are randomly paired. For fine-grained quality comparison, we propose three pairing rules, as illustrated in Fig. 2. The first rule involves pairing synthetically distorted images with identical visual content and distortion type but different distortion levels. The second rule suggests pairing synthetically distorted images with identical visual content and distortion level but different distortion types. The third rule entails pairing realistically distorted images within the same mean opinion score (MOS) interval (i.e., of similar visual quality)."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "h3",
+   "en": "II-B Maximum a Posterior Estimation"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "For a complete 2AFC design, ⟦SLOT_8⟧ test stimuli require ⟦SLOT_9⟧ paired comparison to derive the global ranking results, which is infeasible when ⟦SLOT_10⟧ gets large. As such, we opt for the maximum a posterior estimation (MAP), which is able to handle ⟦SLOT_11⟧ options with fewer needed pairs by solving an optimization problem based on Thurstone’s case V model [25]. We denote a set of images as ⟦SLOT_12⟧ and their MOSs as ⟦SLOT_13⟧. The LMM is represented by a parametric function ⟦SLOT_14⟧, which takes a textual prompt ⟦SLOT_15⟧ and two images ⟦SLOT_16⟧ as inputs, and produces a binary output to indicate whether ⟦SLOT_17⟧ is perceived better than ⟦SLOT_18⟧. MAP estimation aggregates the quality preference entries ⟦SLOT_19⟧, which is computed by counting the number of times image ⟦SLOT_20⟧ preferred over ⟦SLOT_21⟧, into global ranking scores ⟦SLOT_22⟧. The log-likelihood of the quality preference matrix ⟦SLOT_23⟧ can be defined as"
+  },
+  {
+   "id": "b0030",
+   "t": "keep",
+   "w": "table",
+   "en": "ℒ ⁡ ( q θ | C ) = ∑ i , j C i , j ​ log ⁡ ( Φ ⁡ ( q θ ( i ) − q θ ( j ) ) ) , \\displaystyle\\mathcal{L}(q_{\\theta}|C)=\\sum_{i,j}C_{i,j}\\log(\\Phi(q_{\\theta}^{(i)}-q_{\\theta}^{(j)})), (1)"
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_24⟧ is the the standard Normal cumulative distribution function (CDF). The MAP estimation can be formed by solving the above maximum likelihood function with a ridge regularization on the scale values ⟦SLOT_25⟧:"
+  },
+  {
+   "id": "b0032",
+   "t": "keep",
+   "w": "table",
+   "en": "arg max q θ \\displaystyle\\underset{q_{\\theta}}{\\text{arg max}} ∑ i , j C i , j ​ log ⁡ ( Φ ⁡ ( q θ ( i ) − q θ ( j ) ) ) − ∑ i ( q θ ( i ) ) 2 2 \\displaystyle\\sum_{i,j}C_{i,j}\\log(\\Phi(q_{\\theta}^{(i)"
+  },
+  {
+   "id": "b0033",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a)"
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 3: Validation of MAP estimation in aggregating pairwise rankings from the human observer, NIQE, and DBCNN, respectively. MAP estimation quickly converges as the number of pairing rounds increases, where each round consists of ⟦SLOT_26⟧ paired comparisons for ⟦SLOT_27⟧ test images. Performance on sampled images from SPAQ (⟦SLOT_28⟧)."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "Herein, to verify the reliability and effectiveness of MAP estimation, we adopt MOS (to represent the golden human observer), and two no-reference IQA models NIQE [26] and DBCNN [27] as the judges to rank image pairs in the SPAQ dataset [22]. In particular, each image in sampled SPAQ (⟦SLOT_29⟧) is randomly paired with another image in each round, and such pairing process is repeated ⟦SLOT_30⟧ rounds until convergence. The winning image shall receive a higher quality score from the judge. We compute the Pearson linear correlation coefficient (PLCC) between the average ranking scores by MAP estimation and MOSs, as shown in Fig. 3. We find that for different judges, MAP estimation quickly converges to the respective upper bounds (represented by the dashed lines), which are calculated using the raw quality scores. Therefore, we conclude that if the outcome of the pairwise comparison is accurate, MAP estimation will produce reliable global quality ranking scores with a manageable number of paired comparison. By employing LMMs as the judges in the MAP estimation, we are able to quantify the capability of LMMs in perceiving visual quality like humans do."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "h3",
+   "en": "II-C Evaluation Criteria"
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "We propose to quantify the IQA capability of LLMs using the three evaluation criteria."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "Consistency (⟦SLOT_31⟧) measures whether the LLM’s prediction is robust to the presentation order of two images:"
+  },
+  {
+   "id": "b0040",
+   "t": "keep",
+   "w": "table",
+   "en": "κ = 1 | 𝒫 | ∑ ( x , y ) ∈ 𝒫 𝕀 [ f θ ( ( x , y ) , t ) + f θ ( ( y , x ) , t ) = 1 ] , \\displaystyle\\kappa=\\frac{1}{|\\mathcal{P}|}\\sum_{(x,y)\\in\\mathcal{P}}\\mathbb{I}\\left[f_{\\theta}\\left(({x},{y}),{t}"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_32⟧ denotes the total number of pairs, and ⟦SLOT_33⟧ is the indicator function. ⟦SLOT_34⟧ ranges from ⟦SLOT_35⟧ with a larger value indicating higher consistency."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE I: Overview of the image subset sampled from eight existing image quality datasets. The two numbers separated by “/” in the last two columns represent the number of reference and distorted images, respectively. We emphasize in the third section two datasets—KADIS-700k and SQAD—that are less likely to be included for training LMMs due to the absence of MOSs. We equip them with MOSs from a formal subjective experiment to test LMMs while minimizing the potential data contamination risk"
+  },
+  {
+   "id": "b0043",
+   "t": "keep",
+   "w": "table",
+   "en": "Dataset Distortion # images # samples Coarse- grained CSIQ [ 17 ] Synthetic 30 / 866 30/866 30 30 KADID-10k [ 18 ] Synthetic 81 / 10,125 81/10,125 81 81 MM21 [ 19 ] Synthetic 129 / 5,031 129/5,031 129"
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "Accuracy (⟦SLOT_36⟧) measures the accuracy rate of the LLM, provided that the consistency constraint (i.e., ⟦SLOT_37⟧) is met:"
+  },
+  {
+   "id": "b0045",
+   "t": "keep",
+   "w": "table",
+   "en": "α = 1 | 𝒫 s | ∑ ( x , y ) ∈ 𝒫 s 𝕀 [ f ( ( x , y ) , t ) = 𝕀 [ q ( x ) ≥ q ( y ) ] ] , \\displaystyle\\alpha=\\frac{1}{|\\mathcal{P}_{s}|}\\sum_{(x,y)\\in\\mathcal{P}_{s}}\\mathbb{I}\\left[f\\left(({x},{y}),{t}\\"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_38⟧ contains the subset of image pairs that the LLM makes consistent prediction."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "Correlation (⟦SLOT_39⟧) measures the linear correlation between the global ranking scores aggregated by MAP and the MOSs:"
+  },
+  {
+   "id": "b0048",
+   "t": "keep",
+   "w": "table",
+   "en": "ρ = ∑ i = 1 N ( q ( i ) − q ¯ ) ​ ( q θ ( i ) − q ¯ θ ) ∑ i = 1 N ( q ( i ) − q ¯ ) 2 ​ ∑ i = 1 N ( q θ ( i ) − q ¯ θ ) 2 , \\displaystyle\\rho=\\frac{\\sum_{i=1}^{N}(q^{(i)}-\\overline{q})(q_{\\theta}^{(i)"
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_40⟧ and ⟦SLOT_41⟧ represent the mean MOS and ranking score, respectively. Before computing ⟦SLOT_42⟧, a simple monotonic function is commonly applied to map the model prediction to the MOS range as a way of compensating prediction nonlinearity [28]."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE II: VQA capability comparisons of the LMMs in terms of consistency (⟦SLOT_43⟧), accuracy (⟦SLOT_44⟧), and correlation (⟦SLOT_45⟧) with the coarse-grained setting. The weighted average is computed by the average values weighted by the number of samples of the corresponding subsets. The best two results are highlighted in boldface and underline, respectively"
+  },
+  {
+   "id": "b0051",
+   "t": "keep",
+   "w": "table",
+   "en": "IDEFICS-Instruct [ 2 ] mPLUG-Owl [ 3 ] XComposer-VL [ 4 ] Q-Instruct [ 9 ] GPT-4V [ 5 ] Dataset Distortion κ ↑ \\kappa\\uparrow α ↑ \\alpha\\uparrow ρ ↑ \\rho\\uparrow κ ↑ \\kappa\\uparrow α ↑ \\alpha\\uparrow "
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "h2",
+   "en": "III Experiments"
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we first provide the experimental setups, and then present the coarse-grained and fine-grained IQA results of four LMMs with in-depth analysis. Last, other global ranking aggregation methods are applied to conduct the ablation experiments."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "h3",
+   "en": "III-A Experimental Setups"
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "We assess five LMMs that accept multiple images as input. These include four open-source models: IDEFICS-Instruct (based on LLaMA-9B) [2], mPLUG-Owl (based on LLaMA-7B) [3], XComposer-VL (based on InternLM-7B) [4], and Q-Instruct (based on LLaVA_v1.5-7B) [9] and one closed-source model: GPT-4V [5]. We initialize the open-source models with their default pretrained weights and use the official API to call GPT-4V. We sample a total of ⟦SLOT_46⟧ images from eight image quality datasets to conduct experiments. Synthetically distorted images are selected from CSIQ [17], KADID-10k [18], KADIS-700k [24], and MM21 [19] datasets. Realistically distorted images are chosen from CLIVE [20], KonIQ-10k [21], SPAQ [22], and SQAD [23] datasets. As listed in Table I, the sampled images form two subsets for coarse-grained and fine-grained quality assessment, respectively. It is worth noting that we manually curate ⟦SLOT_47⟧ images from KADIS-700k and SQAD datasets, which do not contain MOSs. This selection is to avoid data contamination, considering that closed-source LMM, such as GPT-4V, may have been trained on these image quality datasets. To assign MOSs to images from KADIS-700k and SQAD datasets, we conduct subjective testing using the single stimulus continuous methodology [29]. We invite ⟦SLOT_48⟧ subjects to participate in subjective testing in a controlled laboratory environment, ensuring the ambient illumination does not directly reflect off the displays. We apply the outlier rejection strategy recommended by ITU-T BT.500 [29] to filter noisy data. Finally, the mean value of the valid scores for each image is taken as the ground truth quality score."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "For image pairs with inconsistent predictions (see Eq. (3)), we exclude them from updating the quality preference matrix ⟦SLOT_49⟧. It is worth noting that global ranking scores are re-scale to the range of ⟦SLOT_50⟧. A larger score indicates better visual quality. We set the round number ⟦SLOT_51⟧ to ⟦SLOT_52⟧ in our experiments, which is sufficient for the MAP estimation to converge, as shown in Fig. 3. The pre-defined prompts ⟦SLOT_53⟧ are given as follows: prompt = [ ‘This is the first image:’, <Image x>, ‘This is the second image:’, <Image y>, ‘Which image has better visual quality?’ ]"
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "h3",
+   "en": "III-B Coarse-grained IQA Performance"
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "We collect a total of ⟦SLOT_54⟧ images for the coarse-grained quality comparison from eight IQA datasets. There are three sampling strategies. 1) We ensure the distorted images selected from the synthetic datasets are content-independent; 2) The mean opinion score (MOS) distribution of these images of each dataset is maintained as a roughly uniform distribution across five quality levels (excellent, good, fair, poor bad); 3) We compute the spatial information and colorfulness attributes of the chosen images to ensure the content balance [30]."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE III: VQA capability comparisons in terms of consistency (⟦SLOT_55⟧) and accuracy (⟦SLOT_56⟧) with the fine-grained setting"
+  },
+  {
+   "id": "b0060",
+   "t": "keep",
+   "w": "table",
+   "en": "IDEFICS-Instruct [ 2 ] mPLUG-Owl [ 3 ] XCompose-VL [ 4 ] Q-Instruct [ 9 ] GPT-4V [ 5 ] Single subject Dataset Type κ ↑ \\kappa\\uparrow α ↑ \\alpha\\uparrow κ ↑ \\kappa\\uparrow α ↑ \\alpha\\uparrow κ ↑ \\kapp"
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE IV: VQA capability comparisons in terms of correlation (⟦SLOT_57⟧) with the fine-grained setting"
+  },
+  {
+   "id": "b0062",
+   "t": "keep",
+   "w": "table",
+   "en": "IDEFICS- mPLUG- XCompose- Q- GPT- Single Instruct Owl VL Instruct 4V subject AWGN 0.000 0.000 0.543 0.543 0.586 0.586 0.449 0.449 0.815 0.815 0.919 0.919 JPEG 0.000 0.000 0.482 0.482 0.148 0.148 0.560"
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "We conduct the experiments with the images from the same dataset owing to the varying MOS scales across different datasets. The results are shown in Table II, from which we can obtain several interesting observations. First, all open-source LMMs, i.e., IDEFICS-Instruct, mPLUG-Owl, XComposer-VL, and Q-Instruct, show poor performance in terms of prediction consistency, suggesting a tendency to provide biased responses regardless of image content. For instance, we count IDEFICS-Instruct and mPLUG-Owl to demonstrate a percentage exceeding ⟦SLOT_58⟧ of choosing the “second” image, while the XComposer-VL exhibits a preference for the “first” image with approximately ⟦SLOT_59⟧. Such biased predictions significantly impact the accuracy and consistency of model inference, leading to inferior performance in IQA. In addition, while Q-Instruct claims to achieve competitive low-level instruction performance for individual images, it shows subpar performance on comparing the visual quality of a pair of images and indicates the model may suffer from over-fitting issues. Subsequently, GPT-4V outperforms other LMMs across all datasets according to the three proposed evaluation criteria, suggesting its inherent capability to quantify visual quality. To mitigate potential data contamination issues associated with GPT-4V, we strategically select images from the KADIS-700k dataset, which lacks quality-related labels, and the recently released SQAD dataset. Despite these constraints, GPT-4V continues to demonstrate superior performance across these datasets. Notably, the accuracy ⟦SLOT_60⟧ of consistent pairs surpasses ⟦SLOT_61⟧ when compared to human preferences. Moreover, GPT-4V performs better on datasets with realistic distortion compared with synthetic distortion, as shown in Table II. This could be attributed to the fact that LMMs are trained on the pairs of text and images with realistic distortions. Last but not least, despite the increased complexity presented by pairs that contain mixed distortions, GPT-4V still obtains promising results, outperforming the majority of remaining LMMs."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE V: Quantitative comparison of GPT-4V aggregated by different global ranking methods in terms of PLCC"
+  },
+  {
+   "id": "b0065",
+   "t": "keep",
+   "w": "table",
+   "en": "Method CSIQ KADID-10k MM21 CLIVE KonIQ-10k SPAQ KADIS-700k SQAD MLE [ 25 ] 0.757 0.757 0.575 0.575 0.472 0.472 0.745 0.745 0.734 0.734 0.828 0.828 0.667 0.667 0.676 0.676 Perron [ 31 ] 0.708 0.708 0.5"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "h3",
+   "en": "III-C Fine-grained IQA Performance"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "We utilize sampled images from CSIQ and SPAQ to carry out the fine-grained quality assessment. Specifically, we sample four scenes from the CSIQ dataset. Each of them is degraded by five classical distortion types, including additive white Gaussian noise (AWGN), JPEG, JPEG 2000 (JP2K), pink noise, and blur, and five distortion levels. For realistic distortion, we select SPAQ as our target database, partition the normalized MOS scores at the range of ⟦SLOT_62⟧ into four equidistant intervals, and strictly limit the sampling to ⟦SLOT_63⟧ images per MOS interval."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "Since fine-grained quality comparisons are more challenging, we invite one subject to conduct the experiment in the same setting as the four LMMs. We present the consistency and accuracy in Table III. The correlation results are shown in Table IV. For the synthetically distorted images from the CSIQ dataset, we first compare the images with the same content and identical distortion types but varied distortion levels. From Tables III, IV and Fig. 2 (a)&(b), we observe that the existing LMMs struggle to distinguish the image with superior quality in such fine-grained comparisons. Although GPT-4V outperforms other LMMs, the average consistency and accuracy values are far from human performance. The AWGN is the most difficult distortion type compared with other distortions for the existing LMMs, possibly due to its rarity in the training data. The correlation of Q-Instruct underperforms IDEFICS-Instruct, indicating that the low-level information of single images does not improve the visual quality comparison capability of the Q-Instruct. Subsequently, we compare the images with the same content and distortion levels but different distortion types. We find that it is challenging to compare a pair of images with slight distortions (e.g., Level-1 and Level-2), and the LMMs recognize them as the same image. However, as the level of distortion increases, different distortions demonstrate distinct visual appearances, making it easier to discern the superior quality image (see Fig. 2 (c)&(d)). Additionally, mPLUG-Owl outperforms GPT-4V in terms of the consistency criterion and achieves the second-best average accuracy value, which reveals that mPLUG-Owl demonstrates better fine-grained IQA capability compared with other open-source LMMs. For realistically distorted images from the SPAQ dataset, we present four normalized MOS intervals to conduct the fine-grained comparison. Most LMMs perform better for realistic distortions than synthetic distortions. Subjects and LMMs can more readily discern preferences within the quality interval of ⟦SLOT_64⟧. It is reasonable for LMMs to exhibit inferior performance in the quality interval of ⟦SLOT_65⟧ and ⟦SLOT_66⟧ as they represent either severe distortion or high-quality visual appearance, both of which pose significant challenges for human observers in selecting an image of superior quality. Overall, GPT-4V demonstrates the best performance in the fine-grained IQA experiment, but there remains ample room for improvement."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "h3",
+   "en": "III-D Ablation Experiments"
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "In this subsection, we compare the MAP estimation to other global aggregation methods, including the maximum likelihood estimation (MLE) [25], the Perron rank method [31], and the TrueSkill rating system [32]. In contrast to MAP estimation, MLE directly optimizes the log-likelihood function to derive the global ranking scores. The Perron rank method uses the principal eigenvector of a pairwise comparison matrix to generate the global ranking, providing a robust and efficient solution for ranking problems [31]. TrueSkill rating system is a video game ranking algorithm that models the skill of each player as a univariate Gaussian random variable, with mean and variance representing the average skill of each player and the degree of uncertainty, respectively. As shown in Table V, we can observe MAP and TrueSkill perform better than other methods. While TrueSkill demonstrates competitive results to MAP, we continue to choose MAP estimation as our default method owing to its mathematically appealing properties."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "h2",
+   "en": "IV Conclusions"
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we have probed the low-level IQA capabilities of LMMs, an area that has been relatively under-explored. We devise coarse-grained and fine-grained pairing rules to evaluate the IQA ability of the state-of-the-art LMMs. The MAP estimation is used for aggregating global ranking scores of different LMMs. We further propose three evaluation criteria, providing a comprehensive evaluation of the LMM’s IQA abilities. Our analysis has revealed that most LMMs generally lack IQA capabilities and tend to exhibit biased preferences. The proprietary LMM, GPT-4V, shows promising performance in the coarse-grained subset, indicating potential applicability in IQA. However, there is still considerable room for improvement in the IQA ability of existing LMMs, particularly in the fine-grained subset. We hope that our benchmark and analysis will serve as a catalyst for the development of more advanced and versatile LMMs in the field of visual quality assessment."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgements"
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "The authors thank Kede Ma for his insightful discussions and diligent efforts in revising the paper."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0076",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] OpenAI, “GPT-4 technical report,” CoRR , vol. abs/2303.08774, 2023."
+  },
+  {
+   "id": "b0077",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] H. Face, “Introducing IDEFICS: An open reproduction of state-of-the-art visual language model,” https://huggingface.co/blog/idefics/ , 2023."
+  },
+  {
+   "id": "b0078",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] Q. Ye, H. Xu, G. Xu, J. Ye, M. Yan, Y. Zhou, J. Wang, A. Hu, P. Shi, Y. Shi, and et al. , “mPLUG-Owl: Modularization empowers large language models with multimodality,” CoRR , vol. abs/2304.14178,"
+  },
+  {
+   "id": "b0079",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] P. Zhang, X. D. B. Wang, Y. Cao, C. Xu, L. Ouyang, Z. Zhao, S. Ding, S. Zhang, and et al. , “InternLM-XComposer: A vision-language large model for advanced text-image comprehension and composition"
+  },
+  {
+   "id": "b0080",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] OpenAI, “GPT-4V(ision) system card,” https://cdn.openai.com/papers/GPTV_System_Card.pdf/ , 2023."
+  },
+  {
+   "id": "b0081",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] H. Touvron, T. Lavril, G. Izacard, X. Martinet, M. Lachaux, T. Lacroix, B. Rozière, N. Goyal, and et al. , “LLaMA: Open and efficient foundation language models,” CoRR , vol. abs/2302.13971, 2023."
+  },
+  {
+   "id": "b0082",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] T. Brown, B. Mann, N. Ryder, M. Subbiah, J. D. Kaplan, P. Dhariwal, A. Neelakantan, P. Shyam, G. Sastry, A. Askell, and et al. , “Language models are few-shot learners,” in Neural Information Proc"
+  },
+  {
+   "id": "b0083",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] J. Wei, X. Wang, D. Schuurmans, M. Bosma, F. Xia, E. Chi, Q. V. Le, D. Zhou, and et al. , “Chain-of-thought prompting elicits reasoning in large language models,” in Neural Information Processing "
+  },
+  {
+   "id": "b0084",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] H. Wu, Z. Zhang, E. Zhang, C. Chen, L. Liao, A. Wang, K. Xu, C. Li, J. Hou, G. Zhai et al. , “Q-Instruct: Improving low-level visual abilities for multi-modality foundation models,” CoRR , vol. ab"
+  },
+  {
+   "id": "b0085",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] R. Cai, Z. Song, D. Guan, Z. Chen, X. Luo, C. Yi, and A. Kot, “BenchLMM: Benchmarking cross-style visual capability of large multimodal models,” CoRR , vol. abs/2312.02896, 2023."
+  },
+  {
+   "id": "b0086",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] Q. Wu, H. Li, K. N. Ngan, and K. Ma, “Blind image quality assessment using local consistency aware retriever and uncertainty aware evaluator,” IEEE Trans. Circuits and Systems for Video Tech. , v"
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] W. Yang, H. Huang, J. Liu, and A. C. Kot, “Facial image compression via neural image manifold compression,” IEEE Trans. Circuits and Systems for Video Tech. , to appear 2023."
+  },
+  {
+   "id": "b0088",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] L. Zhao, W. Zheng, Y. Duan, J. Zhou, and J. Lu, “SPTR: Structure-preserving transformer for unsupervised indoor depth completion,” IEEE Trans. Circuits and Systems for Video Tech. , to appear 202"
+  },
+  {
+   "id": "b0089",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] H. Zhu, B. Chen, L. Zhu, and S. Wang, “Learning spatiotemporal interactions for user-generated video quality assessment,” IEEE Trans. Circuits and Systems for Video Tech. , vol. 33, no. 3, pp. 10"
+  },
+  {
+   "id": "b0090",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] H. Wu, Z. Zhang, E. Zhang, C. Chen, L. Liao, A. Wang, C. Li, W. Sun, Q. Yan, G. Zhai, and W. Lin, “Q-Bench: A benchmark for general-purpose foundation models on low-level vision,” CoRR , vol. abs"
+  },
+  {
+   "id": "b0091",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] Z. You, Z. Li, J. Gu, Z. Yin, T. Xue, and C. Dong, “Depicting beyond scores: Advancing image quality assessment through multi-modal language models,” CoRR , vol. abs/2312.08962, 2023."
+  },
+  {
+   "id": "b0092",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] E. C. Larson and D. M. Chandler, “Most apparent distortion: Full-reference image quality assessment and the role of strategy,” Journal of Electronic Imaging , vol. 19, no. 1, pp. 011 006–011 027,"
+  },
+  {
+   "id": "b0093",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] H. Lin, V. Hosu, and D. Saupe, “KADID-10k: A large-scale artificially distorted IQA database,” in IEEE Int. Conf. Multimedia and Expo , 2019, pp. 1–3."
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] Y. Li, S. Wang, X. Zhang, S. Wang, S. Ma, and Y. Wang, “Quality assessment of end-to-end learned image compression: The benchmark and objective measure,” in ACM Int. Conf. on Multimedia , 2021, p"
+  },
+  {
+   "id": "b0095",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] D. Ghadiyaram and A. C. Bovik, “Massive online crowdsourced study of subjective and objective picture quality,” IEEE Trans. Image Processing , vol. 25, no. 1, pp. 372–387, 2016."
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] V. Hosu, H. Lin, T. Sziranyi, and D. Saupe, “KonIQ-10k: An ecologically valid database for deep learning of blind image quality assessment,” IEEE Trans. Image Processing , vol. 29, pp. 4041–4056,"
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] Y. Fang, H. Zhu, Y. Zeng, K. Ma, and Z. Wang, “Perceptual quality assessment of smartphone photography,” in IEEE Int. Conf. Computer Vision and Pattern Recognition , 2020, pp. 3677–3686."
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] Z. Fang, A. Ignatov, E. Zamfir, and R. Timofte, “SQAD: Automatic smartphone camera quality assessment and benchmarking,” in IEEE Int. Conf. on Computer Vision , 2023, pp. 20 532–20 542."
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] H. Lin, V. Hosu, and D. Saupe, “DeepFL-IQA: Weak supervision for deep IQA feature learning,” CoRR , vol. abs/2001.08113, 2020."
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] K. Tsukida and M. R. Gupta, “How to analyze paired comparison data,” Technical Report UWEETR-2011-0004, University of Washington, 2011."
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] A. Mittal, R. Soundararajan, and A. C. Bovik, “Making a ‘completely blind’ image quality analyzer,” IEEE Signal Processing Letters , vol. 20, no. 3, pp. 209–212, 2013."
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] W. Zhang, K. Ma, J. Yan, D. Deng, and Z. Wang, “Blind image quality assessment using a deep bilinear convolutional neural network,” IEEE Trans. Circuits and Systems for Video Tech. , vol. 30, no."
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] VQEG, “Final report from the video quality experts group on the validation of objective models of video quality assessment,” 2000. [Online]. Available: http://www.vqeg.org"
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] B. T. ITU-R, “Methodology for the subjective assessment of the quality of television pictures,” https://www.itu.int/rec/R-REC-BT.500 , 2002."
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] S. Winkler, “Analysis of public image and video databases for quality assessment,” IEEE Journal of Selected Topics in Signal Processing , vol. 6, no. 6, pp. 616–625, 2012."
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] T. L. Saaty and L. G. Vargas, “Inconsistency and rank preservation,” Journal of Mathematical Psychology , vol. 28, no. 2, pp. 205–214, 1984."
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] R. Herbrich, T. Minka, and T. Graepel, “Trueskill tm {}^{\\textsc{tm}} : A bayesian skill rating system,” in Neural Information Processing Systems , 2007, pp. 569–576."
+  }
+ ]
+}

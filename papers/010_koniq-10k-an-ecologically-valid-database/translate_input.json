@@ -1,0 +1,1702 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "KonIQ-10k: An ecologically valid database for deep learning of blind image quality assessment"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Deep learning methods for image quality assessment (IQA) are limited due to the small size of existing datasets. Extensive datasets require substantial resources both for generating publishable conten"
+  },
+  {
+   "id": "b0003",
+   "t": "text",
+   "w": "h6",
+   "en": "Index Terms:"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "I Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Image Quality Assessment (IQA) plays an essential role in a broad range of applications ranging from image compression to machine vision, and more [1, 2, 3, 4]. Ideally, the visual quality of images is assessed by subjective user studies involving experts in a controlled environment to yield Mean Opinion Scores (MOS). The MOS is a direct measure of the perceived quality of images, which is important both for choosing the right technology and for making further improvements to existing imaging technologies. However, subjective studies are time-consuming and expensive and have limited applicability in practice. Hence, objective IQA, i.e., algorithmic estimation of visual quality has been a long-standing research topic, which has recently attracted more attention."
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "According to the availability of pristine reference images, objective IQA methods are categorized as Full-Reference (FR), e.g., SSIM [5], Reduced-Reference (RR), e.g., RRED [6], and No-Reference (NR), e.g., CORNIA [7], HOSA [8]. In comparison to FR and RR, NR or Blind IQA (BIQA) is the more challenging problem among the three. BIQA is also the most practical of the three since reference-based comparisons are not available in many applications."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "The development of objective IQA methods requires databases that provide images and carefully gathered subjective quality scores. Such databases are also required to improve existing methods via benchmarking and to provide a source of data for training and parameter fitting new models. In order for the trained models to be generally applicable, they need to use representative data from the real world, in terms of authenticity, scale, and diversity. The ecological validity of an IQA database refers to the representativeness of the visual collection for a wide range of real-world photos such as those available on the Internet, and the generalization potential of models trained on it. These are both important goals of our work."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "Conventionally, creating an IQA database has followed a standard procedure: collect pristine images and artificially degrade them. Then a few volunteers, usually naive participants, would be asked to assess the quality of the distorted images. The first drawback of this approach is that the diversity of image content is limited since all the distorted images are degraded from a small set of pristine images. Second, the distortions are applied in very limited combinations, whereas ecologically valid distortions, such as those of public Internet images, are caused by combinations of distortions of types that differ from those in the databases. For instance, some authentic degradation types such as wrong focus or motion blur due to object movement are hard to reproduce artificially by distorting a pristine image. Last, but not least, the conventional approach for creating IQA datasets results in smaller databases, since assessing the quality of a large number of images in a lab setting is too costly. Nonetheless, lab studies are usually well controlled and produce strongly consistent opinions."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Recently, deep learning has achieved promising results in a number of computer vision tasks: image classification [9] [10], object detection [11] [12], and BIQA [13] [14] [15]. It is widely believed that a large-scale IQA database, diverse in content and authentic in distortions, could benefit the development and evaluation of deep learning approaches. However, all existing deep-learning-based BIQA methods are trained and evaluated on small and artificially distorted IQA databases. Assessing the quality of a very large number of images in a lab setting would require too many participants and too much time for preparing and running the experiment."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "In order to address the limitations of existing databases, our work provides the following significant contributions:"
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "li",
+   "en": "• We designed an approach easily scaled, which allowed us to create the largest IQA database to date (KonIQ-10k), concerning the number of images and subjective scores: – Consisting of 10,073 images, selected from 10 million YFCC100M [16] entries. Our sampling algorithm ensures the diversity of content and distortions, making use of seven indicators for quality and one for content based on deep features. – For each image, 120 reliable quality ratings were obtained by crowdsourcing, performed by 1,459 crowd workers."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "li",
+   "en": "• We proposed an end-to-end deep-learning-based BIQA method: – It is a unified transfer learning approach based on fine-tuning a pre-trained Convolutional Neural Network (CNN). – With an unified architecture, compared the performance of five state-of-the-art CNNs. – Compared the performance of five loss functions governing the criteria by which the subjective scores are predicted, where two of them were used to predict MOS directly, and the other three were applied to predict distributions of ratings. – Explored the effect of the training set size on the performance of the proposed best model – KonCept512. – Showed that KonCept512, trained on KonIQ-10k, works well on another IQA database, all through cross-database testing."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "h2",
+   "en": "II Related work"
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE I: Comparison of existing IQA databases with KonIQ-10k."
+  },
+  {
+   "id": "b0015",
+   "t": "keep",
+   "w": "table",
+   "en": "No. of No. of No. of Ratings Database Year Content distorted images Distortion type distortion types rated images per image Environment IVC [ 17 ] 2005 10 185 artificial 4 185 15 lab LIVE [ 18 ] 2006 "
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "The related work is divided into two parts according to the contributions of the article. After briefly discussing the literature concerning the creation of benchmark IQA databases, we review state-of-the-art blind IQA methods."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h3",
+   "en": "II-A Creating benchmark IQA databases"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "A number of IQA databases have been released in recent years, aiming to help the development and evaluation of objective IQA methods, see Table I."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "The early, conventionally built IQA database IVC [17] was released in 2005. LIVE [18], TID2008 [19], and CSIQ [20] were the most commonly used to develop, improve, and evaluate objective IQA methods. TID2008 was further extended into TID2013 [21] by including seven more distortion types. Rather than exclusively degrading each reference image with one type of distortion, the distorted images in MDID [25] were degraded by multiple distortions of random types and levels. The databases above were small-scaled, thus were unable to benefit the development of deep-learning-based IQA methods. KADID-10k [26] was proposed to address the limitation with 10,125 distorted images. However, such a database still contains minimal content types (81 reference images) and a few types of artificial distortions (25 distortions)."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "Virtanen et al. [22] were the first to introduce more authentic distortions, creating 480 images of 8 different scenes captured by 79 different cameras. However, the creation method was time-consuming and expensive and thus impractical for large-scale databases. Ghadiyaram et al. [23] created LIVE in the Wild (LIVE-itW) by asking a few photographers to capture 1,169 images by a variety of mobile cameras. Their visual quality was assessed by crowdsourcing experiments. Although this method provided an alternative way to reduce the time and cost for the IQA subjective study, the database size, as well as the content diversity, were still relatively low, having near-duplicate photos – w.r.t. content – that were captured from the same scenes."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "Ma et al. [24] created a database with 4,744 pristine images and 94,880 distorted images to validate their proposed mechanism called group MAximum Differentiation (gMAD) competition. Their database was meant to provide an alternative evaluation for the performance of IQA models by means of paired comparisons. Although the Waterloo Exploration database was the largest available in the field, its images were artificially distorted, thus unauthentic, and due to the lack of subjective ratings, it could not easily be used for developing new IQA methods that rely on them."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "In comparison to lab-based IQA studies that are limited in size, crowdsourcing has been successfully applied for larger databases of images [23] and videos [27] (to about 1,000 stimuli). Although it was believed that data collected by crowdsourcing was less reliable, Siahaan et al. [28] and other studies [29] verified that crowd workers could generate reliable results under specific experimental setups."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "Taking a different approach to traditional rating datasets, Yu et al. [30] built an extensive, 12,853 natural images database annotating the severity of seven perceptual defect types via crowdsourcing. The authors collected a minimal number of ratings for each defect (five), resulting in less precise subjective scores. This database does not contain traditional quality scores, so we did not include it in Table I."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h3",
+   "en": "II-B Blind image quality assessment methods"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "In terms of the methodology used, we can categorize BIQA into conventional and deep-learning-based methods."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h4",
+   "en": "II-B1 Conventional BIQA methods"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "Similar to conventional image processing and computer vision tasks, conventional BIQA methods require domain experts to engineer and design a feature extractor carefully. The feature extractor will transform raw image data into a representative feature vector from which a regression model, e.g., Support Vector Regression (SVR), can predict the MOS."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "Many conventional BIQA methods were derived from the Natural Scene Statistics (NSS) model [31]. Such methods seek to capture the natural statistical behavior of images. Moorthy et al. proposed the BIQI [32] method, in which a description of Distorted Image Statistics (DIS) captures the NSS changes resulting from distortions. With DIS features, the method has a two-step framework: image distortion classification followed by a distortion-specific quality assessment. With the same two-step framework, two more methods, DIIVINE [33] and SSEQ [34], were proposed to improve the performance of quality assessment. BLIINDS-II [35] relies on a Bayesian inference model to predict MOS based on certain extracted features which were derived using an NSS model of the image’s discrete cosine transform coefficients. A simple but efficient method called BRISQUE, was proposed in [36]. Using scene statistics of locally normalized luminance coefficients, it quantified possible losses of naturalness in the image due to the presence of distortions."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "Another direction for conventional BIQA methods is the Bag-of-Words (BoW) model that uses local features. Ye et al. [7] proposed an unsupervised feature learning approach named CORNIA. It learned a dictionary by clustering raw image patches extracted from a set of unlabeled images. An image was represented with a histogram for quality assessment by softly assigning raw image patches to the dictionary with max pooling. Following the same idea, HOSA was proposed in [8]. Apart from softly assigning patches to the corresponding means of each cluster, HOSA softly aggregates the differences of high order statistics (mean, variance, and the skew present) between raw image patches and corresponding clusters. This global quality-aware image representation reduced computational costs and improved performance."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "h4",
+   "en": "II-B2 Deep-learning-based BIQA methods"
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "Instead of carefully designing handcrafted features, deep-learning-based BIQA methods strive to automatically discover representations from raw image data that are most suitable for predicting quality scores."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "Due to the small size of existing IQA databases unsuitable for end-to-end learning, several BIQA methods applied deep learning methods as feature extractors. Ghadiyaram et al. [37] used an unsupervised deep neural network, i.e., deep belief nets, to discover representative features for quality prediction. In [15], a VGG16 network was fine-tuned as a feature extractor. Their best method was called DeepBIQ, and it predicts image quality by average-pooling the predicted MOS on multiple image patches, where the score of each patch is determined by training an SVR."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "Similarly, the BLINDER model was proposed by Gao et al. [38]. By feeding an image into a VGG16 network and generating one feature vector in each layer, a quality score was created and then estimated for each feature vector by SVR. The overall quality of the image was the mean of these level-wise predicted quality scores."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "To address the limitation of small training data and to implement end-to-end learning, an alternative way was introduced to train on sampled image patches instead of entire images. The assumption made was that a set of sampled image patches has the same quality score as the entire image. The quality of an image was estimated by averaging the predicted quality scores of sampled image patches. This idea was implemented in [14] and [13] by training a CNN with ⟦SLOT_0⟧ RGB image patches. The CNN model in [13] is deeper, having 12 layers, compared to the seven layers in [14]. Training on image patches allowed it to train a deep CNN from scratch. However, it ignored content information of an image, whereas IQA had been shown to be content-dependent [39]."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Transfer learning was also applied to address the small data issue. Liu et al. proposed the RankIQA method [40]. By generating pairs of pristine and artificially distorted images (for which the quality ordering was known), the authors trained a Siamese Network to rank the quality of image pairs. The quality score of a single image was estimated by fine-tuning a network that relied on the knowledge represented (its features) in the Siamese Network. Ma et al. [41] proposed the MEON model. It was a multi-task model consisting of two sub-networks, a distortion identification network, and a quality prediction network, where both the networks shared their weights in early layers. Since it is easy to generate training data synthetically, it trained the distortion identification sub-network to have pre-trained weights in the first layers. With the pre-trained early layers and the outputs of the first sub-network, training a quality prediction sub-network on the small IQA databases became feasible. Transfer learning is not limited to blind IQA, Prabhushankar et al. [42] proposed MS-UNIQUE, an FR-IQA method. The quality feature vector of a given image was represented by multiple linear decoders, which had been previously trained on 100,000 image patches from ImageNet. The visual quality was estimated by comparing the feature vectors corresponding to the original and distorted images."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "Talebi et al. [43] introduced an end-to-end trained framework that relies on existing object-classification-architectures such as MobileNet, VGG16, and Inception-v2, with an added simple regression head to predict the distribution of scores for either aesthetics and image quality assessment. They used two fully-connected layers on top of the base network, thus limiting the application of their approach to images with a fixed size of ⟦SLOT_1⟧ pixels. They used Stochastic Gradient Descent with very low learning rates in order to avoid early over-fitting. We consider their suggestions for our framework, and further expand on them."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "Dendi et al. [44] used a convolutional auto-encoder for distortion map generation. The training ground-truth distortion map was estimated by a well-known FR-IQA measure, i.e., SSIM. The authors show that the performance of conventional BIQA methods can be improved by predicting distortion maps."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "Zhang et al. [45] used a Siamese network to learn to rank image pairs. The ground-truth binary labels for the Siamese network are obtained from the corresponding image MOS. The absolute quality score for an image is reconstructed from the pair-wise predictions using the Bradley-Terry model."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "h2",
+   "en": "III Database creation"
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "The primary use of our IQA database is training better deep learning models. Existing IQA databases are either too small or rely on a limited set of pristine images and artificial, non-authentic quality degradations. Since IQA is content-dependent and authentic image degradations are essential for accurate quality predictions, we created an extensive collection of images in-the-wild to depict a broad range of appropriate content and authentic distortions."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "To build a balanced dataset, we relied on multiple indicators that characterize image quality. Indicator values in-the-wild are predominantly imbalanced. Vonikakis et al. [46] have argued for creating better datasets via re-targeting the distribution of multiple indicators, such that all values along each dimension are more equally represented. In a similar vein, Hosu et al. [27] have employed quality-related indicators that are used to create diverse datasets by ”fair-sampling”, another way of describing the balancing process."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "h3",
+   "en": "III-A Overview"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "Our goal of creating an authentically distorted database was achieved by selecting images from a massive public multimedia database, YFCC100m [16]. We randomly selected approximately ten million (9,974,030) image records. Then we filtered them down in two stages obtaining the final database."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "In the first stage, we selected images with an appropriate Creative Commons (CC) license that allows editing and redistribution and chose those with available machine tags (from YFCC100m) and a resolution between ⟦SLOT_2⟧ and ⟦SLOT_3⟧. From this set of 4,807,816 images, we proposed a new tag-based sampling procedure that was used to select one million images such that their machine tag distribution covers the larger set well, see Fig. 1."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "In the second stage, all images in the set of one million that were larger than ⟦SLOT_4⟧ were downloaded and re-scaled to ⟦SLOT_5⟧ pixels, and cropping was applied to maintain the pixel-aspect ratio. In order to keep the faces’ salient parts of the image in the frame, we designed our own cropping method. It relies on the Viola-Jones face detector and the saliency method of Hou et al. [47]. 13,000 images were then sampled while enforcing a uniform distribution across eight image indicators. Duplicates were removed, using a sampling strategy that accounts for category and indicators. This collection was manually filtered for inappropriate content resulting in our KonIQ-10k11 1 The database and code is available at http://database.mmsp-kn.de dataset of 10,073 images, slightly above our target size that we had set to 10,000."
+  },
+  {
+   "id": "b0046",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 1: Sampling 1.0 from 4.8 million images. The tags were sorted according to increasing frequency in the pre-sample set (red). The histogram of the number of sampled images per tag is shown in cyan. The two histograms start diverging at the quota ⟦SLOT_6⟧ images per tag. Ideally, the sampled histogram (cyan) should be flat after the divergence point, however this cannot be achieved as each image can have multiple tags."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "h3",
+   "en": "III-B Initial tag-based content sampling"
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "Downloading 4.8 million images consumes significant bandwidth and storage space. Hence, we devised a way to shrink the set from one million images to maintain content diversity. We aimed to achieve a ”uniform” coverage of tags by sampling at least a certain number of images for each (a quota). This is generally not precisely possible, as images have more than one tag (9.2 on average). Therefore, we devised a simple and computationally efficient sampling heuristic while keeping the above objectives in mind. The heuristic chooses images filling the given quota for less popular tags first until the total number of required images is selected. See the appendix for more details. The distribution of images by tag is shown in Fig. 1."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 2: The distribution of indicator values as extracted from the larger subset of 866,976 YFCC100m images (blue) and from the sampled 10,073 images (red). The sampling procedure enforces a more uniform distribution on each indicator after post-processing compared to the original distribution."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "h3",
+   "en": "III-C Selective image cropping"
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "It is important to standardize the resolution of all images in our database. It applies to user studies, computing various measures, and using the images for training, or benchmarking IQA methods. We chose ⟦SLOT_7⟧ pixels as a standard resolution, as we found that 95% of our crowd workers’ devices have at least this resolution. Rather than shrinking images unevenly and thus changing their aspect ratio, we cropped them, as changing an image’s aspect ratio affects its perceived quality and reduces the authenticity of the image collection."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "p",
+   "en": "A naive approach to cropping images is choosing their central region and removing the rest. After trying this strategy in an early experiment, we observed that wrong crops such as those that remove essential parts of the image, like faces, reduce the perceived quality of images compared to the case where the entire image is presented. Hence, we devised a selective approach that does not create some of the more frequent unintended degradations."
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "The aim was to keep faces and salient areas inside the crop and to process one million images sufficiently fast. We combined the Viola-Jones face detector [48] over multiple poses (front, profile left, and right) with a saliency detection method [47] into an importance map, see Fig. 3. The authors in [47] argued that experimental data shows their method identifies foreground content well, which is important for us. Sharper areas are more likely to be relevant for image quality – for instance, in a case where an image has out of focus regions, and we would rather focus on the subject. Last, but not least, the saliency method we used has a small computational cost."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "The crop had to maximize the mean importance. We chose the crop location by convolving a kernel the size of ⟦SLOT_8⟧ with the importance map. The kernel value was ⟦SLOT_9⟧ everywhere except for a border of ⟦SLOT_10⟧ pixels on all sides where it was ⟦SLOT_11⟧. The convolution was efficiently done in the frequency domain leading to an average crop time below one second per image on a standard desktop CPU (2.4 GHz Xeon)."
+  },
+  {
+   "id": "b0064",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 3: We cropped each image in our database to a standard size of ⟦SLOT_12⟧ by accounting for the presence of faces, saliency, and a center-bias. The combination of the three middle maps forms the importance map. The cropping result, shown in light blue (solid line) on the rightmost image correctly includes the person’s face, which would have been otherwise removed from the picture using a naive centered crop (dashed, red line)."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "h3",
+   "en": "III-D Diversity sampling"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "Our objective was to select a subset of images while ensuring the diversity of content and distortion authenticity. The latter is implicit due to the source of the images. We ensured content diversity using a sampling procedure that relies on quality-related indicators and a category-features."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "h4",
+   "en": "III-D1 Image quality indicator selection"
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "We collected several image quality indicators relating to brightness, colorfulness, contrast, noise, sharpness, and No-Reference (NR) IQA measures. For some of them, several implementations were available. We discarded those that were too slow to be run on our set of one million images. We conducted preliminary subjective studies and kept four measures that are well-correlated with human perception, namely brightness, colorfulness [49], Root Mean Square (RMS) contrast, and sharpness [50]. Besides these, we considered three other indicators: image bitrate, resolution (height⟦SLOT_13⟧width), and JPEG compression quality (image meta-data); these are highly correlated with image quality."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "Each quality indicator identifies an image attribute, measuring its magnitude or presence as a scalar value. Extreme values for an indicator relate to severe distortion, either due to the absence or abnormal emphasis on that particular aspect. If we were to sample our image database randomly, it is unlikely that images having “abnormal” attribute values would be selected. Therefore, we sampled images with a broader range of indicator values, and thus potentially more distortions types."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "Nonetheless, the absolute extremes of the indicator ranges are distorted to an excessive degree and were uninformative, i.e., overly dark or bright, overly colorful, and others. Therefore, before performing the sampling procedure, we trimmed the extreme ends of each indicator distribution. We computed the z-score of an indicator value ⟦SLOT_14⟧ as ⟦SLOT_15⟧, where ⟦SLOT_16⟧ and ⟦SLOT_17⟧ are the mean and standard deviation of a sample for the given indicator. By removing all images with an absolute z-scored indicator value greater than 3, the dataset size shrank from one million to 866,976."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "h4",
+   "en": "III-D2 Choice of content indicator"
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "Until this point, we ensured content diversity by sampling one million images based on machine tags provided by YFCC100m. The tags had been assigned using a deep neural network for classification and represented a few most likely categories per image. Furthermore, we selected a subset of 866,976 images, such that to exclude extreme quality indicator values."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "To further improve the content description, we made use of more comprehensive ⟦SLOT_18⟧-dimensional deep-features extracted from a VGG-16 model pre-trained on ImageNet [9]. The features represent the activations of the last fully-connected layer (usually named FC7) before the final layer that returns class likelihoods."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "p",
+   "en": "Since the deep-features are 4096-dimensional vectors, we applied a bag-of-words model to quantize them. That is, we ran ⟦SLOT_19⟧-means to compute 200 centroids, mapping each deep-feature to the nearest cluster. The cluster indices came to represent our content indicator."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h4",
+   "en": "III-D3 Sampling strategy"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "For the actual sampling, we applied the method proposed by Vonikakis et al. [46], enforcing a uniform target distribution for each indicator. For the quality indicators, we quantize each indicator value into ⟦SLOT_20⟧ bins. The content indicator is already quantized as the cluster index. The sampling procedure jointly optimizes the shape of the histograms along all indicator dimensions, using Mixed Integer Linear Programming (MILP)."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "We used ⟦SLOT_21⟧ bins for all seven scalar indicators. We ran the sampling procedure – generating 13,000 images – with uniformly sampled indicators. The set is larger than the target of 10,000 to allow for removing duplicates and other post-filtering."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "h3",
+   "en": "III-E Removal of duplicates and inappropriate content"
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "p",
+   "en": "The uniform sampling strategy ensures the diversity of the image database on a broad scale. However, due to the binning procedure, identical copies or near-duplicate images can be sampled together, i.e., photos of a scene taken from slightly different views."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "We devised a way to remove near-duplicates. First, the values of each indicator were scaled to the interval ⟦SLOT_22⟧. We computed all pairwise euclidean distances ⟦SLOT_23⟧ between images ⟦SLOT_24⟧ from the source dataset in the 8-dimensional indicator, plus content space. The distance in the content space is set to 0 if two images are part of the same cluster, and one otherwise. Duplicate and near-duplicate images ⟦SLOT_25⟧ are expected to correspond to small distances ⟦SLOT_26⟧. Thus, by iteratively removing a member of the closest pair, we can effectively remove near-duplicates. We removed 2,000 images in this way.22 2 See Fig. 14, supplementary material, for examples."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "To ensure the quality of our database, we manually removed images showing too little content, namely text screenshots, text scans, heavily under-exposed images, or inappropriate images showing mature content.33 3 See Fig. 15, supplementary material, for examples. In the end, 10,073 images remained to make up our KonIQ-10k database; see Fig. 2."
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "equation",
+   "en": ""
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 4: Diversity comparison between TID2013, LIVE-itW, and KonIQ-10k. (a) - (d) distribution comparison in brightness, colorfulness, contrast, and sharpness, respectively. (f) - (h) deep feature embedding in 2D via t-SNE. (e) MOS distribution."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "h3",
+   "en": "III-F Diversity analysis"
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "We selected LIVE-itW and TID2013 to compare their diversity with KonIQ-10k in some aspects. Here, LIVE-itW and TID2013 are the most representative, authentically distorted, and artificially distorted databases. Their distributions in brightness, colorfulness, contrast, and sharpness are depicted in Fig. 4(a)-(d), respectively. KonIQ-10k is more diverse than compared databases in each of those indicators. Examples of images of KonIQ-10k are shown in Fig. 17 (Supplementary Material), where five images are uniformly sampled in each of the four indicators."
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "To compare the content diversity, we embedded the 4096-dimensional VGG-16 deep features from the databases into a 2D subspace by t-SNE [51]. The visualization is shown in Fig. 4(f)-(h). Since just a few photographers captured LIVE-itW images, their content only covered a small region of KonIQ-10k, not to mention TID 2013, which was generated from only 25 reference images. After aligning the scales, their MOS distributions are illustrated in Fig. 4(e). Examples of images with uniformly sampled MOS are shown in Fig. 18 (Supplementary Material)."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "h2",
+   "en": "IV Subjective Image Quality Assessment"
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "To assess the visual quality of the 10,073 selected images, we performed a large-scale crowdsourcing experiment at CrowdFlower.com (now Figure-Eight.com). The experiment first presented workers with a set of instructions, including the definition of “technical image quality”, some considerations when giving ratings, examples of often encountered distortion types, and images with different qualities. The subjects were then instructed to consider the following types of degradations: noise, JPEG artifacts, aliasing, lens and motion blur, over-sharpening, wrong exposure, color fringing, and over-saturation. We used the standard 5-point Absolute Category Rating (ACR) scale, i.e., bad (1), poor (2), fair (3), good (4), and excellent (5)."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "h3",
+   "en": "IV-A Domain experts and test questions"
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "We devised a set of test questions, i.e., rating questions with known answers, to filter reliable crowd workers and for analyzing the overall quality of the collected ratings. The opinions of domain experts are generally more reliable, and thus provide a good source of information for setting test questions. We involved 11 freelance photographers who had, on average, more than three years of professional experience. We asked them to rate the quality of 240 images: 29 were pristine high-quality images, carefully selected beforehand, 21 were artificially degraded using 12 types of distortions, and the remaining 190 images were randomly selected from Flickr (not part of our 10k dataset). The distortions included blur, artifacts, contrast, and color degradation."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "p",
+   "en": "Based on this set of images and the mean opinion score from the freelancers, we generated test questions for our crowdsourcing experiment. The correct answers were based on the rounded values of the freelancers’ MOS ⟦SLOT_28⟧ one standard deviation. We allowed a margin for error, tolerating some subjectivity in the participants’ rating behavior. As a result, all images had, at most, three valid answer choices."
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "h3",
+   "en": "IV-B Crowdsourcing experiment"
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "p",
+   "en": "A total of 2,302 crowd workers participated in the study, which took three weeks to complete. Several filtering steps were implemented and validated to ensure an acceptable level of quality for the resulting mean opinion scores (MOS)."
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "p",
+   "en": "Quiz. Before starting the actual experiment, workers took a quiz consisting of 20 test questions. Only 1,749 workers with an accuracy over 70% were eligible to continue."
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "p",
+   "en": "Hidden test questions. Hidden test questions were presented throughout the main part of the experiment to encourage contributors always to pay full attention. Again, only workers with an accuracy above 70% were allowed to complete their jobs, leaving 1,648 remaining contributors. Their ratings yielded a preliminary set of MOS values."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "p",
+   "en": "Outliers. Workers who had a very low agreement with the preliminary MOS were regarded as outliers. 68 workers with a PLCC of their votes and the preliminary MOS lower than ⟦SLOT_29⟧ were removed from the study."
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "p",
+   "en": "Line clickers. Line clickers are workers with an unusually high frequency for any single answer choice, in the context of a multiple-choice questionnaire [29]. To detect line clickers, we computed the score counts of each worker for all five answer choices. We then took the ratio between the maximum count and the sum of the four lower counts. 121 workers with a ratio larger than ⟦SLOT_30⟧ were removed."
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "p",
+   "en": "All in all, we arrived at 1,459 of 2,302 crowd workers who passed these filtering steps. As a result, to annotate the entire database of 10,073 images, with at least 120 scores each, more than 1.2 million trusted judgments were submitted."
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "p",
+   "en": "Finally, to compensate for differing ranges of the ratings of individual workers, we rescaled their scores to ⟦SLOT_31⟧ by"
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "table",
+   "en": "s i ​ j norm = 1 + 99 ​ s i ​ j − min j ⁡ ( s i ​ j ) max j ⁡ ( s i ​ j ) − min j ⁡ ( s i ​ j ) , s_{ij}^{\\text{norm}}=1+99\\frac{s_{ij}-\\min_{j}(s_{ij})}{\\max_{j}(s_{ij})-\\min_{j}(s_{ij})},"
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_32⟧ is the score of the ⟦SLOT_33⟧-th worker on the ⟦SLOT_34⟧-th image."
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "p",
+   "en": "To check the reliability of the crowd MOS, we compared them to those obtained from the group of 11 experts. Out of all 240 images for the test questions, we have 187 images, which had each been rated by 11 experts and 592 or more crowd workers. We can regard the expert opinion (⟦SLOT_35⟧) as “ground truth” and accept the crowdsourcing results as reliable when for the vast majority of these 187 images, the crowd MOS values are enclosed in the 95% confidence interval of the experts’ MOS."
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "p",
+   "en": "We compensated for the difference in the range of the MOS between the two data sources by fitting a linear model:"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "table",
+   "en": "MOS experts = 1.12 ⋅ MOS crowd − 10.43 . \\text{MOS}_{\\text{experts}}=1.12\\cdot\\text{MOS}_{\\text{crowd}}-10.43."
+  },
+  {
+   "id": "b0113",
+   "t": "text",
+   "w": "p",
+   "en": "Note that the alignment of the crowd to the expert MOS scale is not applied to transform the final scores that are part of the database."
+  },
+  {
+   "id": "b0114",
+   "t": "text",
+   "w": "p",
+   "en": "After the re-alignment, we compared the two data sources: experts and crowd. For the crowd data, we bootstrapped MOS computations for subsamples of size of up to 120 – the number of ratings in KonIQ-10k. Each set of MOS values was compared to the ground truth MOS, giving rise to a root-mean-square error (RMSE), see Fig. 5(a). We found that this RMSE quickly converges to a lower bound of 11.35 on the 100 point scale. We also bootstrapped expert groups of size 11 and found a standard deviation of bootstrapped MOS values of 6.63."
+  },
+  {
+   "id": "b0115",
+   "t": "text",
+   "w": "h3",
+   "en": "IV-C Reliability of the crowd"
+  },
+  {
+   "id": "b0116",
+   "t": "text",
+   "w": "p",
+   "en": "(a) average errors"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "equation",
+   "en": ""
+  },
+  {
+   "id": "b0118",
+   "t": "text",
+   "w": "p",
+   "en": "(b) per image errors"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "equation",
+   "en": ""
+  },
+  {
+   "id": "b0120",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 5: (a) Top red line: bootstrapped RMSE of crowd MOS against MOS of 11 experts; Bottom blue line: bootstrapped standard deviation of MOS of 11 experts; gray ribbon is the 95% CI of the RMSE. (b) Distributions of errors of crowd MOS against experts’ MOS, expressed in multiples of the standard deviation of the bootstrapped MOS of 11 experts."
+  },
+  {
+   "id": "b0121",
+   "t": "text",
+   "w": "p",
+   "en": "In Fig. 5(b), we show the distribution of the errors of the crowd MOS over all 187 images. We note that for 137 out of 187 images (73%), the errors are within the ⟦SLOT_38⟧ standard deviations of the experts’ MOS (95% confidence interval). Therefore, about three-quarters of the images are sufficiently well-rated by the crowd so that they can be confused with the ratings of experts."
+  },
+  {
+   "id": "b0122",
+   "t": "text",
+   "w": "p",
+   "en": "The crowd MOS on the remaining 50 images diverges more from the experts. A preliminary inspection shows that 11 of the 27 items that the crowd rated lower than the experts represent shallower depth-of-field images, e.g., the first five in Fig. 16 (Supplementary Material). Generally, for crowd workers, a large amount of blur was considered a significant degradation, whereas the professional photographers understood it as an artistic effect, which did not reduce the quality. The observed disagreement is, at least in part, a consequence of diverging domain knowledge between the expert (freelancers) and novice (crowd) groups."
+  },
+  {
+   "id": "b0123",
+   "t": "text",
+   "w": "p",
+   "en": "Furthermore, in support of the reliability of our experiment, the work of Hosu et al. [29] has shown that screening users based on image-quality-test questions improves the intra-class correlation coefficient (ICC). They have found that their IQA experiment ICC increased from 0.37 to 0.50 by requiring 70% accuracy on quality-based test questions. The approach in our work here has a similar effect, leading to an ICC of 0.46 on the entire database. This suggests KonIQ-10k has a better result than similar crowdsourcing assessment studies, such as those of Redi et al. [28]. In the latter work, the authors performed an aesthetic quality assessment for abstract images. After careful reliability checking, it achieved an ICC of 0.403 for the ACR scale."
+  },
+  {
+   "id": "b0124",
+   "t": "text",
+   "w": "p",
+   "en": "Another relevant metric for the consistency of the scoring produce is the mean inter-group agreement. In Fig. 6, we show that the mean agreement between the MOS values of non-overlapping random groups of users increases as the number of users grows. When considering the correlation between random halves of the contributors in our experiment, the mean SROCC reaches an excellent value of 0.973."
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0126",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 6: Mean agreement (SROCC) between MOS values when the number of observers increases, and thus the average number of votes per image. The agreement between group sizes of 700 observers reaches ⟦SLOT_39⟧ SROCC. In this case, the average number of ratings per image is ⟦SLOT_40⟧."
+  },
+  {
+   "id": "b0127",
+   "t": "text",
+   "w": "p",
+   "en": "For further analysis, we will provide the complete raw crowdsourcing data as part of the final release of our database. This includes information about observer context, such as screen resolution, browser zoom, answer timings, and more."
+  },
+  {
+   "id": "b0128",
+   "t": "text",
+   "w": "h2",
+   "en": "V Finding a better end-to-end deep BIQA architecture"
+  },
+  {
+   "id": "b0129",
+   "t": "text",
+   "w": "p",
+   "en": "Existing BIQA approaches rely on standard CNN architectures designed for image classification (ImageNet [52]). Some of the main factors that have been considered in the design of better methods are 1. The way the input images are presented to the network, such as down-sized versions of the original image or crops; 2. The choices for the base architecture; 3. The loss function to be minimized; 4. The aggregation strategy, in case multiple predictions are made, such as from multiple crops of the same image. Even though several existing works have shown promising results, there is no definite answer to which particular combination of factors is most suitable for BIQA when training end-to-end."
+  },
+  {
+   "id": "b0130",
+   "t": "text",
+   "w": "p",
+   "en": "Recent works, such as DeepRN [53], showed that training on large-resolution images, rather than downsized or cropped versions, improved prediction performance. Moreover, training to predict distributions of ratings compared to only MOS (a scalar) had been suggested to work better for BIQA [43, 53]. Various loss functions had been considered as well, including regression on scalars, such as MAE and MSE, but also distributional losses, Earth Mover’s Distance, and Huber loss on distributions being an example. Thus, we studied the effect of input size, loss function, and their combinations. In addition to the frequently used base architectures in previous works, such as VGG16 [9], InceptionV3 [54], and ResNet101 [10], we considered the performance of the more modern InceptionResNetV2 [55] and NasNetMobile [56]. Our study aims to show how close we have gotten to solving BIQA in the wild. Moreover, we tested the performance both on KonIQ-10k (test set) and cross-tested on LIVE-itW to get a better understanding of the generalization potential of each approach."
+  },
+  {
+   "id": "b0131",
+   "t": "text",
+   "w": "h3",
+   "en": "V-A The proposed architecture"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0133",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 7: Architecture of the end-to-end system. We test two types of training, one predicting the MOS values and the other predicting the distribution of ratings."
+  },
+  {
+   "id": "b0134",
+   "t": "text",
+   "w": "p",
+   "en": "The architecture of our proposed end-to-end method is displayed in Fig. 7. Given an image, it is passed through a state-of-the-art CNN body (the convolutional layers, without the final fully-connected layers), followed by a Global Average Pooling (GAP) layer. These layers are connected to four Fully-Connected (FC) layers: the first three layers have 2,048, 1,024, 256 units respectively, the output layer has either one output unit to predict MOS, or five units to predict distributions of ratings."
+  },
+  {
+   "id": "b0135",
+   "t": "text",
+   "w": "p",
+   "en": "All the three FC layers used the Rectified Linear Unit (ReLU) as the activation function and were followed by a dropout layer, each with rates of 0.25, 0.25, and 0.5 in order to avoid over-fitting. The final layer was linear when we predict MOS directly, and the soft-max activation was used when we predict the distribution of ratings."
+  },
+  {
+   "id": "b0136",
+   "t": "text",
+   "w": "h3",
+   "en": "V-B Loss functions"
+  },
+  {
+   "id": "b0137",
+   "t": "text",
+   "w": "p",
+   "en": "In machine learning, a loss function defines the ”cost” associated with a wrong prediction. Viewing training as an optimization problem, we seek to minimize the associated loss function. We evaluated the performance of five loss functions. For MOS prediction we used Mean Absolute Error (MAE loss) [14, 13] and Mean Squared Error (MSE loss) [57]. When we predicted the distribution of ratings, we used cross-entropy loss, Huber loss [58], and the Earth Mover’s Distance (EMD) loss [59]."
+  },
+  {
+   "id": "b0138",
+   "t": "text",
+   "w": "h4",
+   "en": "V-B1 Predicting MOS"
+  },
+  {
+   "id": "b0139",
+   "t": "text",
+   "w": "p",
+   "en": "Let ⟦SLOT_41⟧ be the training data, where x is the input image, ⟦SLOT_42⟧ is the MOS of the image x. Given the predicted MOS ⟦SLOT_43⟧ acquired by feeding x into our proposed system, the most straightforward way is to compute the MAE as loss function, ⟦SLOT_44⟧ An alternative loss function is the MSE, ⟦SLOT_45⟧ which is differentiable also at the origin, and thus can produce smoother gradients for small errors than the MAE, but penalizes larger deviations from the ground truth more heavily."
+  },
+  {
+   "id": "b0140",
+   "t": "text",
+   "w": "h4",
+   "en": "V-B2 Predicting distribution of ratings"
+  },
+  {
+   "id": "b0141",
+   "t": "text",
+   "w": "p",
+   "en": "To predict the distribution of ratings, we denote the input training data by ⟦SLOT_46⟧, where x is the input image, and ⟦SLOT_47⟧ is its distribution of ratings. We used 5-point ACR for subjective quality assessment of KonIQ-10k, so here ⟦SLOT_48⟧. Given the predicted distribution of ratings ⟦SLOT_49⟧, its predicted MOS can be estimated as"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "table",
+   "en": "MOS ⁡ ( p ^ ) = ∑ n = 1 N n ⋅ p ^ n p ^ 1 + ⋯ + p ^ N . \\mathrm{MOS}(\\hat{\\textbf{p}})=\\sum_{n=1}^{N}n\\cdot\\frac{\\hat{p}_{n}}{\\hat{p}_{1}+\\cdots+\\hat{p}_{N}}."
+  },
+  {
+   "id": "b0143",
+   "t": "text",
+   "w": "p",
+   "en": "For image classification, the cross-entropy loss is a standard. We can use the same loss definition for our regression problem:"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "table",
+   "en": "L cross-entropy ( p , p ^ ) = − ∑ n = 1 N p n log p ^ n . L_{\\text{cross-entropy}}(\\textbf{p},\\hat{\\textbf{p}})=-\\sum_{n=1}^{N}p_{n}\\log\\hat{p}_{n}."
+  },
+  {
+   "id": "b0145",
+   "t": "text",
+   "w": "p",
+   "en": "Huber loss for a scalar prediction error ⟦SLOT_50⟧ is defined by:"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "table",
+   "en": "h δ ​ ( x ) = { 1 2 ​ x 2 | x | ≤ δ , δ ⋅ ( | x | − δ 2 ) otherwise, h_{\\delta}(x)=\\begin{cases}\\frac{1}{2}x^{2}&|x|\\leq\\delta,\\\\ \\delta\\cdot(|x|-\\frac{\\delta}{2})&\\text{otherwise,}\\end{cases}"
+  },
+  {
+   "id": "b0147",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_51⟧ controls the degree of influence given to larger prediction errors. We chose ⟦SLOT_52⟧, the same as in [53]. As a result, the Huber loss for predicting distributions of ratings is given as: ⟦SLOT_53⟧"
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "table",
+   "en": "CNN body Depth Parameters ( 10 6 10^{6} ) VGG16 [ 9 ] 19 18.1 ResNet101 [ 10 ] 489 49.2 InceptionV3 [ 55 ] 311 28.4 InceptionResNetV2 [ 54 ] 780 59.8 NASNetMobile [ 56 ] 757 8.8"
+  },
+  {
+   "id": "b0149",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE II: The CNNs selected for transfer learning, where the depth excludes top layers."
+  },
+  {
+   "id": "b0150",
+   "t": "text",
+   "w": "p",
+   "en": "Talebi et al. [43] introduced the Earth Mover’s Distance (EMD) loss in their work on BIQA, suggesting an improved performance over cross-entropy. The loss is defined as the root mean squared difference between the predicted and ground truth cumulative distributions of scores. The EMD loss for a predicted distribution ⟦SLOT_54⟧ with cumulative distribution ⟦SLOT_55⟧ and ground truth distribution ⟦SLOT_56⟧ with cumulative distribution ⟦SLOT_57⟧ is"
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "table",
+   "en": "L EMD ​ ( p , p ^ ) = ( 1 N ​ ∑ n = 1 N ( c p , n − c p ^ , n ) 2 ) 1 / 2 . L_{\\text{EMD}}(\\textbf{p},\\hat{\\textbf{p}})=\\left(\\frac{1}{N}\\sum_{n=1}^{N}(c_{p,n}-c_{\\hat{p},n})^{2}\\right)^{1/2}."
+  },
+  {
+   "id": "b0152",
+   "t": "text",
+   "w": "h2",
+   "en": "VI Experimental results"
+  },
+  {
+   "id": "b0153",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluated our proposed deep BIQA model on two benchmark databases: the one proposed in this article, namely KonIQ-10k, and the other was LIVE in the Wild (LIVE-itW) [23]."
+  },
+  {
+   "id": "b0154",
+   "t": "text",
+   "w": "h3",
+   "en": "VI-A Setup"
+  },
+  {
+   "id": "b0155",
+   "t": "text",
+   "w": "p",
+   "en": "To make a fair and comprehensive comparison, we carried out our experiments as follows: We divided KonIQ-10k into three sets, a training set (7,058 images), a validation set (1,000 images), and a test set (2,015 images). The training set was used to train our model, the validation set was used to find the best generalizing model, and the test set was used to evaluate the final model performance that was reported. Similar to previous works, we used two metrics to evaluate our BIQA methods: the Spearman Rank Order Correlation Coefficient (SROCC) and the Pearson Linear Correlation Coefficient (PLCC). We fined-tuned five state-of-the-art CNNs, see Table II, each with all five loss functions given in Subsection V-B. All the CNN base models were initialized with pre-trained weights from ImageNet. The weights of the top fully-connected layers were initialized using the method of He et al. [60]."
+  },
+  {
+   "id": "b0156",
+   "t": "text",
+   "w": "p",
+   "en": "In all experiments, we used the Adam [61] optimizer, with the default parameters ⟦SLOT_58⟧, ⟦SLOT_59⟧ and a custom learning rate ⟦SLOT_60⟧. We first set the learning rate ⟦SLOT_61⟧ and trained for 40 epochs. In the training process, monitoring the PLCC on the validation set and saving the best performing model. On completion of the initial 40 epochs, we loaded the best model. We ran another 20 epochs with a lower learning rate ⟦SLOT_62⟧, and subsequently followed the same procedure for another ten epochs with learning rate ⟦SLOT_63⟧."
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "p",
+   "en": "All the models and loss functions were implemented using the Python Keras library with Tensorflow as a backend [62] and ran on two NVIDIA Titan Xp GPUs. The CNN models we used have different numbers of layers and parameters, so it was not possible to train all models with the same batch size in our experiments. We used the largest batch size of ⟦SLOT_64⟧ images that fit on the available GPU memory for each model."
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "h3",
+   "en": "VI-B Performance evaluation and discussion"
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "p",
+   "en": "(a) Trained and tested on KonIQ-10k"
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "p",
+   "en": "(b) Trained on KonIQ-10k, tested on LIVE-itW"
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 8: Loss function and base architecture comparison at ⟦SLOT_65⟧ px, trained on KonIQ-10k training set, tested on (a) KonIQ-10k test set and (b) entire LIVE-itW."
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0165",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 9: Resolution comparison on KonIQ-10k with MAE loss."
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "h4",
+   "en": "VI-B1 Best model selection: KonCept512"
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "p",
+   "en": "We considered three factors to establish the best model: input resolution, the loss functions, and the CNN base architectures."
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "p",
+   "en": "We first found the optimal input resolution for our model. For this purpose, we trained models using the original resolution (⟦SLOT_66⟧) and two down-sampled resolutions (⟦SLOT_67⟧ and ⟦SLOT_68⟧). With the default hyper-parameters for training, the results with the MAE loss are shown in Fig. 9. Models that were trained on the smallest input size (⟦SLOT_69⟧) had a lower performance than all the others. This suggests that much of the quality-related information was lost during the down-sampling process. Surprisingly, all of the models – trained on half-sized inputs – performed better than those trained with original size, except VGG16. Initially, we expected that the performance would improve with more information being available during training."
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "p",
+   "en": "A possible reason for the better performance on ⟦SLOT_70⟧ was that all CNN base architectures had been optimized for small resolution images, such as ⟦SLOT_71⟧ or ⟦SLOT_72⟧ pixels, and did not perform well for much larger input sizes. Another reason for this could be that training with very small batch sizes limits the best possible performance that could be achieved [63]. For some models, we were only able to use a maximum batch size of 4 when training on ⟦SLOT_73⟧ input images. We have not been able to confirm this hypothesis. However, later experiments – presented in Table V – suggest this to be the case. There, we were able to train on content features from pre-trained ImageNet architectures extracted from ⟦SLOT_74⟧ input images, and these performed better than the features extracted from lower resolutions."
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "p",
+   "en": "With the optimal input size of ⟦SLOT_75⟧, we evaluated the performance of the five CNN base architectures with five loss functions. Apart from testing them on the KonIQ-10k test set, we also cross-tested them on the entire LIVE-itW database. The SROCC measures are reported in Fig. 8. Our analysis showed that all tested CNN base architectures worked well for BIQA. “Deeper” architectures performed better, with InceptionResNetV2 achieving the best performance. Although the MSE-loss performed the best among the five losses on the KonIQ-10k test set, the improvement was marginal compared to MAE and Huber losses."
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "p",
+   "en": "Huber loss, applied to distributions, achieved the best performance (0.836 SROCC) when cross-tested on LIVE-itW. Furthermore, all models trained on KonIQ-10k had similar low performance when cross-tested on LIVE-itW (about 0.1 SROCC lower on LIVE-itW compared to KonIQ-10k test set), even though their performances on KonIQ-10k were substantially different."
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "p",
+   "en": "We named our best performing model as KonCept512. It applies the InceptionResNetV2 base architecture, with the MSE loss, and was trained and tested on downscaled ⟦SLOT_76⟧ images. LIVE-itW images were resized to this resolution (from the original ⟦SLOT_77⟧), which ensured the best cross-test performance in contrast to running the model on their original resolution."
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "h4",
+   "en": "VI-B2 Comparison with state-of-the-art BIQA methods"
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "p",
+   "en": "We compared KonCept512 with the state-of-the-art BIQA methods, both feature-based and deep-learning-based. We collected seven conventional BIQA methods, with the source code made available by their respective authors. These methods were BIQI [32], BLIINDS-II [35], BRISQUE [36], CORNIA [7], DIIVINE [33], HOSA [8], and SSEQ [34]. For conventional BIQA methods, we used an SVR (RBF kernel) to train and predict the quality from extracted handcrafted features. For deep-learning-based BIQA methods, we reimplemented BosICIP [13], CNN [14], and DeepBIQ [15]. BosICIP and CNN were trained from scratch, and DeepBIQ was trained on the pre-trained deep network backbone on ImageNet. All of them were trained only on the training set of KonIQ-10k and tested both on the test set of KonIQ-10k and the entire LIVE-itW database."
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "p",
+   "en": "TABLE III presents the results. The performance of conventional BIQA methods on KonIQ-10k was far from satisfactory, even if they had achieved promising performances on artificially distorted databases. The methods based on local features, such as CORNIA and HOSA, showed a better performance than those based on global features."
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "p",
+   "en": "Further, regarding the deep-learning-based methods, since both BosICIP and CNN are very “shallow” convolutional neural network architectures (trained from scratch), their performance was lower than most conventional BIQA methods and lower than our proposed model. Bianco et al. [15], in their work on DeepBIQ, relied on a base CNN architecture inspired by AlexNet. It predicts the overall quality of an image as the average of local patch-wise quality. In our re-implementation, we used the better-performing InceptionResNetV2 architecture, as well as VGG16, with ⟦SLOT_78⟧ crops taken from the half-sized images of KonIQ-10k (⟦SLOT_79⟧). This resolution gave a better performance than extracting patches from the original images (SROCC/PLCC on the KonIQ-10k test set was 0.890/0.892 and on LIVE-itW: 0.769/0.808). The predictor we used was the same three-layer fully-connected head as in the rest of our experiments with an MSE loss, predicting MOS values."
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE III: Comparison to state-of-the-art methods, trained on KonIQ-10k and tested on both KonIQ-10k and LIVE-itW."
+  },
+  {
+   "id": "b0178",
+   "t": "keep",
+   "w": "table",
+   "en": "Test on KonIQ-10k Test on LIVE-itW Method SROCC PLCC SROCC PLCC BIQI 0.559 0.616 0.364 0.447 BLIINDS-II 0.585 0.598 0.090 0.107 BRISQUE 0.705 0.707 0.561 0.598 CORNIA * 0.780 0.808 0.621 0.644 DIIVINE"
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "li",
+   "en": "* To reduce computational cost, we reduced CORNIA and HOSA feature vector from 20,000 dimensions and 14,700 dimensions respectively to 100 dimensions using PCA."
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "table",
+   "en": "Training set size 1000 2000 3000 4000 5000 6000 7000 SROCC on KonIQ-10k (test) Mean 0.831 0.871 0.889 0.899 0.908 0.912 0.915 SD 0.013 0.010 0.013 0.007 0.005 0.007 0.006 SROCC on LIVE-itW (all) Mean "
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE IV: Effect of changing the training/validation/test split. The results are based on repeating the training on 10 additional random splits of the KonIQ-10k database (1000 images for validation and 2000 for testing). The mean and standard-deviation (SD) of the SROCC to the ground-truth MOS is shown for each training set size."
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "p",
+   "en": "With the help of “deeper” architectures, the performance of DeepBIQ (InceptionResNetV2) increased by more than 0.1 compared to the best conventional BIQA methods. By training and testing on entire images to preserve content information, KonCept512 improved the SROCC by around 0.02 on both sets compared to the local patch-based DeepBIQ (InceptionResNetV2). Scatterplots of the IQA predictions from KonCept512 and the ground truth MOS are presented in Fig. 11. Some prediction examples from the KonIQ-10k test set are shown in Fig. 19 (Supplementary Material)."
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "p",
+   "en": "In another previous work, Varga et al. [53] proposed the DeepRN architecture based on ResNet101, which showed promising results on KonIQ-10k. For a better comparison of our work, we reimplemented DeepRN in our framework. The performance on the train/validation/test split used throughout our experiments was lower than previously reported. In the original experiments in [53], the authors used a different parameterization of the training procedure. While we consistently used a fixed validation set, DeepRN in [53] did not always follow this procedure. Moreover, the choice of the train/test split was different."
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "p",
+   "en": "For the cross-test on the LIVE-itW database, the performance was lower than for the test set in KonIQ-10k (SROCC of 0.825 versus 0.921, see Table III). This may be due to the different ways the images were collected in the two databases. In KonIQ-10k, the images were cropped from the originals as captured by cameras in order to maintain their original aspect ratio (and quality), whereas, in LIVE-itW, images were rescaled changing their original aspect-ratio, stretching them unevenly. This type of defect was improbable to happen in images that were selected as part of KonIQ-10k, and thus introduced a type of degradation that our trained models were not aware of."
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "p",
+   "en": "It should be noted that deep-learning-based methods generalized better than conventional methods when cross-tested, i.e., trained on KonIQ-10k and tested on LIVE-itW. When cross-testing conventional methods, they exhibited substantial performance drops, whereas the correlation decrease for deep-learning-based methods was only around 0.1 SROCC."
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "h4",
+   "en": "VI-B3 Effects of the training set size"
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "p",
+   "en": "The size of the training set can be expected to have a substantial effect on the performance of the machine learning system. This had been the case for image classification, where the training datasets contained millions of images [52]. For BIQA, we only trained on 7,000 images, so we studied the relationship between training set size and test performance in order to extrapolate it to larger training set sizes."
+  },
+  {
+   "id": "b0188",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 10: Performance of KonCept512 on the KonIQ-10k test set and the entire LIVE-itW database, when the training set size from KonIQ-10k is increased from 1,000 to 7,000 items. Multiple samples of training, validation, and test sets are used. For each re-sample, when training on a larger set size, items previously used from the smaller sets are included. A curve is fitted to the scatter plots, to extrapolate the performance of the model to larger training sizes. For more details, see Table IV."
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "p",
+   "en": "We ran the training procedure using KonCept512 with several intermediate training sizes (⟦SLOT_80⟧ images), validated, and tested the performance using the original validation and test set from KonIQ-10k. An additional ten resamples were created, consisting of random splits for training (of size ⟦SLOT_81⟧), validation (1000 images), and test sets (2000 images). Moreover, we cross-tested each retrained model on the LIVE-itW database."
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "p",
+   "en": "To extrapolate the SROCC performance for larger training-set sizes, we fitted the function ⟦SLOT_82⟧ to the multiple data points at training sizes ⟦SLOT_83⟧ from 1,000 to 7,000 images. This function was chosen for its simplicity (having only two parameters) to avoid over-fitting. Moreover, it has the desired properties of monotonicity and convergence to an SROCC of 1.0 as the training set size ⟦SLOT_84⟧. The results are presented in Fig. 10. The function type estimates the test performance on KonIQ-10k well."
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "p",
+   "en": "The extrapolated performances when ⟦SLOT_85⟧ “virtual” training images would be used, similar to those in KonIQ-10k, are ⟦SLOT_86⟧ SROCC w.r.t. the ground truth KonIQ-10k test data, and ⟦SLOT_87⟧ SROCC w.r.t. cross-test on LIVE-itW. We computed 95% observational confidence bounds by bootstrapping, giving ⟦SLOT_88⟧ and ⟦SLOT_89⟧, respectively."
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "p",
+   "en": "Crowdsourcing experiments in [29, 19] exhibited SROCC agreements with a range of the following ⟦SLOT_90⟧ between multiple repeats of the same experiment, depending on the source and number of participants. For KonIQ-10k, the mean agreement goes up to ⟦SLOT_91⟧ (SROCC) when half of the participants’ is compared to the other half’s, as mentioned in Section IV-C, see Fig. 6."
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "h4",
+   "en": "VI-B4 On the prediction power of IQA methods"
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "p",
+   "en": "The performance of IQA methods usually is assessed by SROCC values w.r.t. some benchmark IQA dataset. In our case, the quality predictions of KonCept512 on the test set of KonIQ-10k yielded an SROCC of 0.921 with the MOS values from 120 votes per image, see Table III. While SROCC values are useful when comparing competing IQA methods, they are difficult to interpret intuitively as absolute measures. How good is an SROCC on a particular test dataset, for example, 0.921 on KonIQ-10k? In this subsection, we provide such an intuitive understanding."
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "p",
+   "en": "Assuming a given ground truth for the image quality values in a test dataset, we may compare the performance in terms of SROCC, of an objective IQA method with that of a random group of ⟦SLOT_92⟧ users, each one providing one judgment for every stimulus in the test set. The MOS values of the group will give rise to some SROCC w.r.t. the ground truth values. Moreover, it is expected that, on average, the SROCC is monotonically increasing with the group size ⟦SLOT_93⟧ (if sufficiently many SROCC results are averaged). We may now ask for the maximal group size ⟦SLOT_94⟧, for which the SROCC does not exceed that which is provided by the objective IQA method. The interpretation than would be that the proposed objective IQA method gives results comparable to a group of ⟦SLOT_95⟧ judges. In the following, we will argue that with KonCept512 applied to the test set of KonIQ-10k, we have ⟦SLOT_96⟧, so KonCept512 provides the results that correlate with the ground truth as well as nine randomly chosen votes per stimulus."
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "p",
+   "en": "To carry out the program outlined in the previous paragraph, we need to define the “ground truth”, and then randomly sample a group of users providing ⟦SLOT_97⟧ ratings for each test set item. We have a total of 1,459 workers that have provided scores, however, for differing subsets of images. To define the ground truth, we have to rely on these scores, and we must take care that when we sample groups of users that these do not overlap with the workers who provided the scores for the ground truth. Therefore, we randomly sampled half of the participants and regarded their corresponding MOS values as ground truth. This resulted in ⟦SLOT_98⟧ votes per image on average. Thus, ⟦SLOT_99⟧ can be regarded as the “effective group size”. We have done 200 random bootstraps and found a very high average SROCC of ⟦SLOT_100⟧ between their MOS values, see Fig. 6. Therefore, we think that 57 crowdsourced votes suffice to define the ground truth."
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "p",
+   "en": "(a) Trained and tested on KonIQ-10k"
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "p",
+   "en": "(b) Trained on KonIQ-10k, tested on LIVE-itW"
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 11: Scatter plots of predicted MOS by KonCept512 versus ground truth MOS. The model was trained on KonIQ-10k training set (7,058 images), tested on (a) KonIQ-10k test set (2,015 images) and (b) Entire LIVE-itW (1,169 images). In the scatter plots, each point corresponds to an image, the x-axis denotes the ground truth MOS obtained from crowd workers, and y-axis denotes the predicted MOS."
+  },
+  {
+   "id": "b0203",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 12: Cyan curve: mean SROCC between MOS values from random groups (A) of increasing numbers of contributors and non-overlapping random groups of 700 contributors (B). SROCC is computed on the KonIQ-10k default test set of 2015 images. Red line: 0.918 mean SROCC between our KonCept512 predictions on the KonIQ-10k test set, and the MOS from 700 randomly chosen contributors. KonCept512 performs similar to MOS values obtained from 9 contributor votes per image."
+  },
+  {
+   "id": "b0205",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 13: Choices made when training on features: 1. extracted from either half or full-sized images from KonIQ-10k, 2. features coming from either pre-trained or fine-tuned InceptionResNetV2 base network, with 3. SPP[1,2,3] or GAP pooling."
+  },
+  {
+   "id": "b0207",
+   "t": "keep",
+   "w": "table",
+   "en": "Deep IQA features, from KonCept512 trained on KonIQ-10k at 512 × 384 512\\times 384 Content features, from InceptionResNetV2 pretrained on ImageNet 512 × 384 512\\times 384 1024 × 768 1024\\times 768 512"
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE V: Re-training on KonIQ-10k features: in the table on the left the features are extracted using our best performing KonCept512, and on the right content features are extracted using a pre-trained InceptionResNetV2 on ImageNet. The BIQA network KonCept512 is trained at ⟦SLOT_101⟧. Features are extracted from images at both resolutions ⟦SLOT_102⟧ and ⟦SLOT_103⟧. Two types of features are considered: Spatial Pyramid Pooling (SPP), with average pooling and sizes ⟦SLOT_104⟧, and Global Average Pooling (GAP). The cross-test on the LIVE-itW database is checks the generalization performance, which is obtained when imagesare resized to ⟦SLOT_105⟧. The training loss used in all cases is the Mean Squared Error and we predict MOS. SROCC/PLCC correlations are shown in each case: for the test set from KonIQ-10k and the entire LIVE-itW database. In the bottom left corner of the table, the SRCC of KonCept512 is slightly lower (0.916) than the best reported (0.921) even if the architectures are identical. This happens due to a different random initialization of the FC head during feature learning."
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "The other half of the participant group served as an independent source for a group sample to be compared with the MOS values of the first half, yielding a corresponding SROCC value. For example, sampling 300 contributors gave rise to an effective group size, ⟦SLOT_106⟧ respectively, to an average of ⟦SLOT_107⟧ judgments per image. Finally, the whole sampling procedure for half of the participants for the ground truth and the group from the other half and the SROCC computation was repeated 200 times, and the SROCC values were averaged."
+  },
+  {
+   "id": "b0210",
+   "t": "text",
+   "w": "p",
+   "en": "The results for increasing group sizes are given in Fig. 12 (cyan curve). Moreover, the average SROCC between the scores of KonCept512 and the ground truth MOS from a random half of all participants is 0.918 (red line in Fig. 12). The intersection of the two lines corresponds to the average number of scores per image required to achieve the same performance as KonCept512. Thus ⟦SLOT_108⟧. Hence, KonCept512, applied to the KonIQ-10k test set, is as powerful as groups of ⟦SLOT_109⟧ workers, providing a total of 9 ratings for each test image!"
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "h4",
+   "en": "VI-B5 Training on features"
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "p",
+   "en": "As we did not have the resources to run large batch sizes on images at the original resolution available in KonIQ-10k (⟦SLOT_110⟧ pixels), we studied the performance of features derived from the best architecture in our experiments: InceptionResNetV2. The base network was trained for BIQA on images with a resolution of ⟦SLOT_111⟧ pixels leading to KonCept512. A brief overview of the choices made is presented in Fig. 13."
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "p",
+   "en": "We extracted two types of IQA features. The first was from the GAP layer of the network (1,536 features), and for the second type, we replaced the GAP layer with a Spatial Pyramid Pooling layer with pooling sizes ⟦SLOT_112⟧, giving rise to ⟦SLOT_113⟧ features. For SPP, a pooling size of 1 was the same as the GAP features. We extracted these features both from ⟦SLOT_114⟧ and ⟦SLOT_115⟧ input images. With the extracted features, we retrained the same type of head network used in the primary architecture, made of fully connected layers of 2,048, 1,024, and 256 neurons with dropout rates of 0.25, 0.25, and 0.5, respectively. We used the MSE loss to predict mean opinion scores."
+  },
+  {
+   "id": "b0214",
+   "t": "text",
+   "w": "p",
+   "en": "In addition to IQA features, we also extracted content features from the InceptionResNetV2 network, pre-trained on ImageNet, and trained the previously mentioned head-network. The results44 4 In Table V we show the performance when training on features from KonCept512, the same model that was trained on the default train/validation/test split and is compared to in Table III. In Table IV we present the average performance over 11 train/validation/test splits (the default + 10 more) when retraining the KonCept512 model. are presented in TABLE V, comparing the performance on the KonIQ-10k test set and the performance resulting from cross-testing the trained network on the entire LIVE-itW database."
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "p",
+   "en": "The best performance on the KonIQ-10k test set was achieved when retraining on GAP features from ⟦SLOT_116⟧ input images. However, the improvement over SPP features was marginal. Moreover, SPP features outperformed GAP features in terms of cross-test performance on LIVE-itW. This suggests that having more information available in the features could help improve generalization. It could prove worthwhile to fine-tune the base architecture on ⟦SLOT_117⟧ images with sufficiently large batch sizes. This is supported by the effect of content features; those extracted from ⟦SLOT_118⟧ outperformed features from ⟦SLOT_119⟧ images."
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "p",
+   "en": "When training on features approach, there was no improvement over the baseline performance of KonCept512 on KonIQ-10k. There was a slight improvement when generalizing. The cross-test on LIVE-itW improved from an SROCC of 0.825 for KonCept512, to 0.831 for both GAP and SPP features extracted using the KonCept512 network from ⟦SLOT_120⟧ images."
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "h4",
+   "en": "VI-B6 Ecological validity"
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "p",
+   "en": "While there is no universally agreed-upon definition of ecological validity, according to Britannica [64], it is a measure of how well test performance predicts behaviors in real-world settings, or, in our case, generalization performance of our model to in-the-wild images."
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "p",
+   "en": "Users from a photography community have common interests, that can be very different w.r.t. category, style, and other factors from users from another community, e.g., Flickr.com (mostly amateur photographers) vs. 1x.com (professionals). Thus, randomly sampled images from one community are not necessarily representative of another. Ecological validity is tied to a particular community (environment). If we want to devise a database that is more broadly applicable (general ecological validity), we stipulate that a normalization of the distributions of various categories and style attributes has to be done. Our diversity sampling procedure is such a normalization."
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "p",
+   "en": "From another point of view, machine learning models exhibit an improved generalization performance when trained on representative and balanced datasets. While real-world images are more representative than artificially degraded ones, a balance was ensured via de-duplication and diversity sampling w.r.t. the indicators and category features."
+  },
+  {
+   "id": "b0221",
+   "t": "text",
+   "w": "p",
+   "en": "On the one hand, if sample diversity would not have been considered, we would have severely under-sampling extreme attribute values. On the other hand, we might have included too many extreme images relative to the natural distribution of online images. We strike a balance by excluding images at the far ends of each attribute dimension. The cut-offs were decided based on visual inspection."
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "p",
+   "en": "If one wants to benchmark methods for real-world attribute distributions, then one can repeatedly sample from the dataset using the natural distributions and report the average performance. The natural distribution of the indicators is available with our database for benchmarking purposes."
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "h2",
+   "en": "VII Conclusion"
+  },
+  {
+   "id": "b0224",
+   "t": "text",
+   "w": "p",
+   "en": "We proposed a new systematic and scalable approach to create KonIQ-10k, the largest ecologically valid IQA database to date. It consists of 10,073 images, more than eight times as many as the state-of-the-art Live-itW. Relying on this dataset, we propose a new deep learning model KonCept512, which performs best when tested on KonIQ-10k when compared to existing works, and generalizes very well to LIVE-itW. We have argued that the ability to generalize from KonIQ-10k to LIVE-itW is a consequence of (1) the diversity and representativeness of the training database (KonIQ-10k) for public Internet images, (2) having ran reliable crowdsourcing experiments for both databases, and (3) the technical improvements of our BIQA deep learning architecture, culminating in our best model KonCept512."
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "p",
+   "en": "A more diverse subset of items is more representative of the wider range of images in the wild. Thus, we have ensured KonIQ-10k contains images that are very diverse concerning category, quality-related indicators, and technical parameters, such as compression settings, bitrate, and capture device. For instance, the 10,073 images were taken by 1265 different camera models from about 100 manufacturers. The experimental design and the post-analysis ensure the quality of the subjective scoring procedure. We validated the quality of the experiments in connection to ratings coming from a panel of photography experts, and have shown a high level of inter-user agreement. Moreover, groups of crowd workers reached a very high inter-agreement – over 0.97 SROCC – when at least 57 scores are assigned to each image. Our database provides 120 scores per image. Thus, the MOS scores are precise, having a high agreement when simulating repetitions of the experiment, and are accurate with respect to the opinions of domain experts."
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "p",
+   "en": "Our best deep model, KonCept512, brings several improvements. It relies on the modern InceptionResNetV2 base architecture, which generally performs better than the alternatives tested. There is no clear winner between using the distribution of scores or MOS and among the various losses tested. However, on average, the simple standard losses, like MSE, outperform the ones presented in state-of-the-art deep learning methods, concerning the correlation (SROCC/PLCC) between the predictions and the ground truth MOS. KonCept512 derives its performance from several other design choices, such as (1) training on larger resolutions (⟦SLOT_121⟧) than existing works have employed (typically ⟦SLOT_122⟧), (2) choosing the best model that maximizes the correlation to the ground truth, and (3) using a fully connected head architecture for IQA that enables multi-resolution training/testing via a GAP layer."
+  },
+  {
+   "id": "b0227",
+   "t": "text",
+   "w": "p",
+   "en": "Overall, the main challenge for the further performance improvement of deep BIQA methods is the size of the training database, given a careful selection of images and their reliable annotation. We predict that datasets with about 100,000 images (built similarly to KonIQ-10k) will close the gap between objective BIQA and the aggregated opinion of large groups of observers in the wild."
+  },
+  {
+   "id": "b0228",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgements"
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "p",
+   "en": "Funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) – Project-ID 251654672 – TRR 161 (Project A05). The research was further supported by the Hungarian Scientific Research Fund (No. OTKA 120499). We would like to thank Domonkos Varga for his advice about deep learning, in particular for the DeepRN architecture [53]."
+  },
+  {
+   "id": "b0230",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0231",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] Z. Wang, “Applications of objective image quality assessment methods [applications corner],” IEEE Signal Processing Magazine , vol. 28, no. 6, pp. 137–142, 2011."
+  },
+  {
+   "id": "b0232",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] I. Kopilovic and T. Sziranyi, “Artifact reduction with diffusion preprocessing for image compression,” Optical Engineering , vol. 44, no. 2, pp. 027 003–1/14, 2005. [Online]. Available: https://do"
+  },
+  {
+   "id": "b0233",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] S. Dodge and L. Karam, “Understanding how image quality affects deep neural networks,” in International Conference on Quality of Multimedia Experience (QoMEX) . IEEE, 2016, pp. 1–6."
+  },
+  {
+   "id": "b0234",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] H. Men, H. Lin, V. Hosu, D. Maurer, A. Bruhn, and D. Saupe, “Visual quality assessment for motion compensated frame interpolation,” in International Conference on Quality of Multimedia Experience "
+  },
+  {
+   "id": "b0235",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] Z. Wang, A. C. Bovik, H. R. Sheikh, and E. P. Simoncelli, “Image quality assessment: from error visibility to structural similarity,” IEEE Transactions on Image Processing , vol. 13, no. 4, pp. 60"
+  },
+  {
+   "id": "b0236",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] R. Soundararajan and A. C. Bovik, “RRED indices: Reduced reference entropic differencing for image quality assessment,” IEEE Transactions on Image Processing , vol. 21, no. 2, pp. 517–526, 2012."
+  },
+  {
+   "id": "b0237",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] P. Ye, J. Kumar, L. Kang, and D. Doermann, “Unsupervised feature learning framework for no-reference image quality assessment,” in IEEE Conference on Computer Vision and Pattern Recognition (CVPR)"
+  },
+  {
+   "id": "b0238",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] J. Xu, P. Ye, Q. Li, H. Du, Y. Liu, and D. Doermann, “Blind image quality assessment based on high order statistics aggregation,” IEEE Transactions on Image Processing , vol. 25, no. 9, pp. 4444–4"
+  },
+  {
+   "id": "b0239",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] K. Simonyan and A. Zisserman, “Very deep convolutional networks for large-scale image recognition,” ArXiv preprint arXiv:1409.1556 , 2014."
+  },
+  {
+   "id": "b0240",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] K. He, X. Zhang, S. Ren, and J. Sun, “Deep residual learning for image recognition,” in IEEE Conference on Computer Vision and Pattern Recognition (CVPR) , 2016, pp. 770–778."
+  },
+  {
+   "id": "b0241",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] S. Ren, K. He, R. Girshick, and J. Sun, “Faster R-CNN: Towards real-time object detection with region proposal networks,” in Advances in Neural Information Processing Systems (NIPS) , 2015, pp. 9"
+  },
+  {
+   "id": "b0242",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] J. Redmon, S. Divvala, R. Girshick, and A. Farhadi, “You only look once: Unified, real-time object detection,” in IEEE Conference on Computer Vision and Pattern Recognition (CVPR) , 2016, pp. 779"
+  },
+  {
+   "id": "b0243",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] S. Bosse, D. Maniry, T. Wiegand, and W. Samek, “A deep neural network for image quality assessment,” in IEEE International Conference on Image Processing (ICIP) , 2016, pp. 3773–3777."
+  },
+  {
+   "id": "b0244",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] L. Kang, P. Ye, Y. Li, and D. Doermann, “Convolutional neural networks for no-reference image quality assessment,” in IEEE Conference on Computer Vision and Pattern Recognition (CVPR) , 2014, pp."
+  },
+  {
+   "id": "b0245",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] S. Bianco, L. Celona, P. Napoletano, and R. Schettini, “On the use of deep learning for blind image quality assessment,” Signal, Image and Video Processing , vol. 12, no. 2, pp. 355–362, 2018."
+  },
+  {
+   "id": "b0246",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] B. Thomee, D. A. Shamma, G. Friedland, B. Elizalde, K. Ni, D. Poland, D. Borth, and L.-J. Li, “YFCC100M: The new data in multimedia research,” Communications of the ACM , vol. 59, no. 2, pp. 64–7"
+  },
+  {
+   "id": "b0247",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] P. Le Callet and F. Autrusseau, “Subjective quality assessment irccyn/ivc database,” 2005, http://www.irccyn.ec-nantes.fr/ivcdb/."
+  },
+  {
+   "id": "b0248",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] H. R. Sheikh, M. F. Sabir, and A. C. Bovik, “A statistical evaluation of recent full reference image quality assessment algorithms,” IEEE Transactions on Image Processing , vol. 15, no. 11, pp. 3"
+  },
+  {
+   "id": "b0249",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] N. Ponomarenko, V. Lukin, A. Zelensky, K. Egiazarian, M. Carli, and F. Battisti, “TID2008 - a database for evaluation of full-reference visual quality assessment metrics,” Advances of Modern Radi"
+  },
+  {
+   "id": "b0250",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] E. C. Larson and D. M. Chandler, “Most apparent distortion: full-reference image quality assessment and the role of strategy,” Journal of Electronic Imaging , vol. 19, no. 1, p. 011006, 2010."
+  },
+  {
+   "id": "b0251",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] N. Ponomarenko, L. Jin, O. Ieremeiev, V. Lukin, K. Egiazarian, J. Astola, B. Vozel, K. Chehdi, M. Carli, F. Battisti et al. , “Image database TID2013: Peculiarities, results and perspectives,” Si"
+  },
+  {
+   "id": "b0252",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] T. Virtanen, M. Nuutinen, M. Vaahteranoksa, P. Oittinen, and J. Häkkinen, “CID2013: A database for evaluating no-reference image quality assessment algorithms,” IEEE Transactions on Image Process"
+  },
+  {
+   "id": "b0253",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] D. Ghadiyaram and A. C. Bovik, “Massive online crowdsourced study of subjective and objective picture quality,” IEEE Transactions on Image Processing , vol. 25, no. 1, pp. 372–387, 2016."
+  },
+  {
+   "id": "b0254",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] K. Ma, Q. Wu, Z. Wang, Z. Duanmu, H. Yong, H. Li, and L. Zhang, “Group MAD competition – a new methodology to compare objective image quality models,” in IEEE Conference on Computer Vision and Pa"
+  },
+  {
+   "id": "b0255",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] W. Sun, F. Zhou, and Q. Liao, “MDID: A multiply distorted image database for image quality assessment,” Pattern Recognition , vol. 61, pp. 153–168, 2017."
+  },
+  {
+   "id": "b0256",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] H. Lin, V. Hosu, and D. Saupe, “KADID-10k: A large-scale artificially distorted IQA database,” in International Conference on Quality of Multimedia Experience (QoMEX) . IEEE, 2019, pp. 1–3."
+  },
+  {
+   "id": "b0257",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] V. Hosu, F. Hahn, M. Jenadeleh, H. Lin, H. Men, T. Szirányi, S. Li, and D. Saupe, “The Konstanz Natural Video Database (KoNViD-1k),” in International Conference on Quality of Multimedia Experienc"
+  },
+  {
+   "id": "b0258",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] E. Siahaan, A. Hanjalic, and J. Redi, “A reliable methodology to collect ground truth data of image aesthetic appeal,” IEEE Transactions on Multimedia , vol. 18, no. 7, pp. 1338–1350, Jul. 2016."
+  },
+  {
+   "id": "b0259",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] V. Hosu, H. Lin, and D. Saupe, “Expertise screening in crowdsourcing image quality,” in International Conference on Quality of Multimedia Experience (QoMEX) , 2018, pp. 1–6."
+  },
+  {
+   "id": "b0260",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] N. Yu, X. Shen, Z. Lin, R. Mech, and C. Barnes, “Learning to detect multiple photographic defects,” in Winter Conference on Applications of Computer Vision (WACV) . IEEE, 2018, pp. 1387–1396."
+  },
+  {
+   "id": "b0261",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] A. Srivastava, A. B. Lee, E. P. Simoncelli, and S.-C. Zhu, “On advances in statistical modeling of natural images,” Journal of Mathematical Imaging and Vision , vol. 18, no. 1, pp. 17–33, 2003."
+  },
+  {
+   "id": "b0262",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] A. K. Moorthy and A. C. Bovik, “A two-step framework for constructing blind image quality indices,” IEEE Signal Processing Letters , vol. 17, no. 5, pp. 513–516, 2010."
+  },
+  {
+   "id": "b0263",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] ——, “Blind image quality assessment: From natural scene statistics to perceptual quality,” IEEE Transactions on Image Processing , vol. 20, no. 12, pp. 3350–3364, 2011."
+  },
+  {
+   "id": "b0264",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] L. Liu, B. Liu, H. Huang, and A. C. Bovik, “No-reference image quality assessment based on spatial and spectral entropies,” Signal Processing: Image Communication , vol. 29, no. 8, pp. 856–863, 2"
+  },
+  {
+   "id": "b0265",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] M. A. Saad, A. C. Bovik, and C. Charrier, “Blind image quality assessment: A natural scene statistics approach in the DCT domain,” IEEE Transactions on Image Processing , vol. 21, no. 8, pp. 3339"
+  },
+  {
+   "id": "b0266",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] A. Mittal, A. K. Moorthy, and A. C. Bovik, “No-reference image quality assessment in the spatial domain,” IEEE Transactions on Image Processing , vol. 21, no. 12, pp. 4695–4708, 2012."
+  },
+  {
+   "id": "b0267",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] D. Ghadiyaram and A. C. Bovik, “Blind image quality assessment on real distorted images using deep belief nets,” in IEEE Global Conference on Signal and Information Processing (GlobalSIP) , 2014,"
+  },
+  {
+   "id": "b0268",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] F. Gao, J. Yu, S. Zhu, Q. Huang, and Q. Tian, “Blind image quality prediction by exploiting multi-level deep representations,” Pattern Recognition , vol. 81, pp. 432–442, 2018."
+  },
+  {
+   "id": "b0269",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] E. Siahaan, A. Hanjalic, and J. A. Redi, “Does visual quality depend on semantics? A study on the relationship between impairment annoyance and image semantics at early attentive stages,” Electro"
+  },
+  {
+   "id": "b0270",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] X. Liu, J. van de Weijer, and A. D. Bagdanov, “RankIQA: Learning from rankings for no-reference image quality assessment,” in IEEE International Conference on Computer Vision (ICCV) , 2017, pp. 1"
+  },
+  {
+   "id": "b0271",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] K. Ma, W. Liu, K. Zhang, Z. Duanmu, Z. Wang, and W. Zuo, “End-to-end blind image quality assessment using deep neural networks,” IEEE Transactions on Image Processing , vol. 27, no. 3, pp. 1202–1"
+  },
+  {
+   "id": "b0272",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[42] M. Prabhushankar, D. Temel, and G. AlRegib, “MS-UNIQUE: Multi-model and sharpness-weighted unsupervised image quality estimation,” Electronic Imaging , vol. 2017, no. 12, pp. 30–35, 2017."
+  },
+  {
+   "id": "b0273",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[43] H. Talebi and P. Milanfar, “NIMA: Neural image assessment,” IEEE Transactions on Image Processing , vol. 27, no. 8, pp. 3998–4011, 2018."
+  },
+  {
+   "id": "b0274",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[44] S. V. R. Dendi, C. Dev, N. Kothari, and S. S. Channappayya, “Generating image distortion maps using convolutional autoencoders with application to no reference image quality assessment,” IEEE Sig"
+  },
+  {
+   "id": "b0275",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[45] W. Zhang, K. Ma, and X. Yang, “Learning to blindly assess image quality in the laboratory and wild,” arXiv preprint arXiv:1907.00516 , 2019."
+  },
+  {
+   "id": "b0276",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[46] V. Vonikakis, R. Subramanian, and S. Winkler, “Shaping datasets: Optimal data selection for specific target distributions across dimensions,” in IEEE International Conference on Image Processing "
+  },
+  {
+   "id": "b0277",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[47] X. Hou, J. Harel, and C. Koch, “Image signature: Highlighting sparse salient regions,” IEEE Transactions on Pattern Analysis and Machine Intelligence , vol. 34, no. 1, pp. 194–201, 2012."
+  },
+  {
+   "id": "b0278",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[48] P. Viola and M. J. Jones, “Robust real-time face detection,” International Journal of Computer Vision , vol. 57, no. 2, pp. 137–154, 2004."
+  },
+  {
+   "id": "b0279",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[49] D. Hasler and S. E. Suesstrunk, “Measuring colorfulness in natural images,” in Human Vision and Electronic Imaging VIII , vol. 5007. International Society for Optics and Photonics, 2003, pp. 87–9"
+  },
+  {
+   "id": "b0280",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[50] P. V. Vu and D. M. Chandler, “A fast wavelet-based algorithm for global and local image sharpness estimation,” IEEE Signal Processing Letters , vol. 19, no. 7, pp. 423–426, 2012."
+  },
+  {
+   "id": "b0281",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[51] L. Van der Maaten and G. Hinton, “Visualizing data using t-SNE,” Journal of Machine Learning Research , vol. 9, pp. 2579–2605, 2008."
+  },
+  {
+   "id": "b0282",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[52] J. Deng, W. Dong, R. Socher, L.-J. Li, K. Li, and L. Fei-Fei, “ImageNet: A large-scale hierarchical image database,” in IEEE Conference on Computer Vision and Pattern Recognition (CVPR) , 2009, p"
+  },
+  {
+   "id": "b0283",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[53] D. Varga, T. Szirányi, and D. Saupe, “DeepRN: A content preserving deep architecture for blind image quality assessment,” in IEEE International Conference on Multimedia and Expo (ICME) , 2018, pp"
+  },
+  {
+   "id": "b0284",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[54] C. Szegedy, S. Ioffe, V. Vanhoucke, and A. A. Alemi, “Inception-v4, Inception-ResNet and the impact of residual connections on learning.” in AAAI Conference on Artificial Intelligence (AAAI) , vo"
+  },
+  {
+   "id": "b0285",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[55] C. Szegedy, V. Vanhoucke, S. Ioffe, J. Shlens, and Z. Wojna, “Rethinking the inception architecture for computer vision,” in IEEE Conference on Computer Vision and Pattern Recognition (CVPR) , 20"
+  },
+  {
+   "id": "b0286",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[56] B. Zoph, V. Vasudevan, J. Shlens, and Q. V. Le, “Learning transferable architectures for scalable image recognition,” arXiv preprint arXiv:1707.07012 , vol. 2, no. 6, 2017."
+  },
+  {
+   "id": "b0287",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[57] Y. Li, L.-M. Po, L. Feng, and F. Yuan, “No-reference image quality assessment with deep convolutional neural networks,” in IEEE International Conference on Digital Signal Processing (DSP) , 2016,"
+  },
+  {
+   "id": "b0288",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[58] P. J. Huber, “Robust estimation of a location parameter,” The Annals of Mathematical Statistics , vol. 35, no. 1, pp. 73–101, 1964."
+  },
+  {
+   "id": "b0289",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[59] Y. Rubner, C. Tomasi, and L. J. Guibas, “The earth mover’s distance as a metric for image retrieval,” International Journal of Computer Vision , vol. 40, no. 2, pp. 99–121, 2000."
+  },
+  {
+   "id": "b0290",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[60] K. He, X. Zhang, S. Ren, and J. Sun, “Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification,” in IEEE International Conference on Computer Vision (ICCV) , 20"
+  },
+  {
+   "id": "b0291",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[61] D. P. Kingma and J. Ba, “ADAM: A method for stochastic optimization,” arXiv preprint arXiv:1412.6980 , 2014."
+  },
+  {
+   "id": "b0292",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[62] F. Chollet et al. , “Keras,” https://github.com/fchollet/keras , 2015."
+  },
+  {
+   "id": "b0293",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[63] N. S. Keskar, D. Mudigere, J. Nocedal, M. Smelyanskiy, and P. T. P. Tang, “On large-batch training for deep learning: Generalization gap and sharp minima,” arXiv preprint arXiv:1609.04836 , 2016."
+  },
+  {
+   "id": "b0294",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[64] W. D. Gouvier, A. A. Barker, and M. W. Musso, “Ecological validity.” [Online]. Available: https://www.britannica.com/science/ecological-validity"
+  },
+  {
+   "id": "b0295",
+   "t": "text",
+   "w": "h2",
+   "en": "VIII Appendix"
+  },
+  {
+   "id": "b0296",
+   "t": "text",
+   "w": "h3",
+   "en": "VIII-A Tag-based content sampling"
+  },
+  {
+   "id": "b0297",
+   "t": "text",
+   "w": "p",
+   "en": "Our heuristic algorithm for the initial tag-based content sampling in Section 3.2 is as follows. Considering the scale of the problem, we propose a computationally efficient method to find an approximate solution. Let ⟦SLOT_123⟧ be the number of images that contain tag ⟦SLOT_124⟧ in the set ⟦SLOT_125⟧ of 4.8 million. We choose a tag quota ⟦SLOT_126⟧ such that all images that contain a tag ⟦SLOT_127⟧ with ⟦SLOT_128⟧ are added to the sampled set ⟦SLOT_129⟧. Let ⟦SLOT_130⟧ be the set of tags in a set of images, ⟦SLOT_131⟧. For remaining tags ⟦SLOT_132⟧, we include images in ⟦SLOT_133⟧ such that at least each tag’s quota ⟦SLOT_134⟧ is reached. This procedure is as follows. For each tag ⟦SLOT_135⟧, in order of increasing counts ⟦SLOT_136⟧, we generate an ordered list of candidate images, ⟦SLOT_137⟧, where the list of images is sorted in decreasing order of ⟦SLOT_138⟧, the machine confidence in the presence of the tag ⟦SLOT_139⟧. ⟦SLOT_140⟧ is part of the YFCC100m meta-data and is derived from the object classification deep neural network that was used to estimate the most likely tags for each image. Then we add the top ⟦SLOT_141⟧ images from ⟦SLOT_142⟧ to ⟦SLOT_143⟧. To assure that ⟦SLOT_144⟧, one can apply the bisection method to choose the tag quota ⟦SLOT_145⟧. We ran the above algorithm with ⟦SLOT_146⟧ and stopped adding images to ⟦SLOT_147⟧ when ⟦SLOT_148⟧."
+  },
+  {
+   "id": "b0298",
+   "t": "keep",
+   "w": "table",
+   "en": "Vlad Hosu is a postdoc since 2016 at the Department of Computer and Information Science at the University of Konstanz, Germany. Previously he was a Research Fellow at NUS, Singapore, having received h"
+  },
+  {
+   "id": "b0299",
+   "t": "keep",
+   "w": "table",
+   "en": "Hanhe Lin completed his PhD at Department of Information Science, University of Otago, New Zealand in 2016. Now he is a postdoc researcher at the Department of Computer and Information Science, Univer"
+  },
+  {
+   "id": "b0300",
+   "t": "keep",
+   "w": "table",
+   "en": "Tamas Sziranyi received his Ph.D. and D.Sci. degrees in 1991 and 2001, by the Hungarian Academy of Sciences, Budapest. He was appointed to a Full Professor position in 2001 at Pannon University, Veszp"
+  },
+  {
+   "id": "b0301",
+   "t": "keep",
+   "w": "table",
+   "en": "Dietmar Saupe, since 2002, is a full professor for Computer Science at the University of Konstanz, Germany. He is head of a research group focusing on multimedia signal processing, including applicati"
+  }
+ ]
+}

@@ -1,0 +1,952 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Two Contrasting Data Annotation Paradigms for Subjective NLP Tasks"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Labelled data is the foundation of most natural language processing tasks. However, labelling data is difficult and there often are diverse valid beliefs about what the correct data labels should be. "
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Many natural language processing (NLP) tasks are subjective, in the sense that there are diverse valid beliefs about what the correct data labels should be. Some tasks, like hate speech detection, are highly subjective: different people have very different beliefs about what should or should not be labelled as hateful (Talat, 2016; Salminen et al., 2019; Davani et al., 2021a), and while some beliefs are more widely accepted than others, there is no single objective truth. Other examples include toxicity (Sap et al., 2019; Sap et al., 2021), harassment (Al Kuwatly et al., 2020), harmful content (Jiang et al., 2021) and stance detection (Luo et al., 2020; AlDayel and Magdy, 2021) as well as sentiment analysis (Kenyon-Dean et al., 2018; Poria et al., 2020). But even for seemingly objective tasks like part-of-speech tagging, there is subjective disagreement between annotators (Plank et al., 2014b)."
+  },
+  {
+   "id": "b0006",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Two key questions for dataset creators."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "In this article, we argue that dataset creators should consider the role of annotator subjectivity in the annotation process and either explicitly encourage it or discourage it. Annotators may subjectively disagree about labels (e.g., for hate speech) but dataset creators can and should decide, based on the intended downstream use of their dataset, whether they want to a) capture different beliefs or b) encode one specific belief in their data."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "As a framework, we propose two contrasting data annotation paradigms. Each paradigm facilitates a clear and distinct downstream use. The descriptive paradigm encourages annotator subjectivity to create datasets as granular surveys of individual beliefs. Descriptive data annotation thus allows for the capturing and modelling of different beliefs. The prescriptive paradigm, on the other hand, discourages annotator subjectivity and instead tasks annotators with encoding one specific belief, formulated in the annotation guidelines. Prescriptive data annotation thus enables the training of models that seek to consistently apply one belief. A researcher may, for example, want to model different beliefs about hate speech (⟦SLOT_0⟧ descriptive paradigm), while a content moderation engineer at a social media company may need models that apply their content policy (⟦SLOT_1⟧ prescriptive paradigm)."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "Neither paradigm is inherently superior, but explicitly aiming for one or the other is beneficial because it makes clear what an annotated dataset can and should be used for. For example, data annotated under the descriptive paradigm can provide insights into different beliefs (§2.1), but it cannot easily be used to train models with one pre-specified behaviour (§3.1). By contrast, leaving annotator subjectivity unaddressed, as has mostly been the case in NLP so far, leads to datasets that neither capture an interpretable diversity of beliefs nor consistently encode one specific belief; an undesirable middle ground without a clear downstream use.11 1 See Appx. A for a selective overview of existing datasets."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "The two paradigms are applicable to all data annotation. They can be used to compare existing datasets, and to make and communicate decisions about how new datasets are annotated as well as how annotator disagreement can be interpreted. We hope that by naming and explaining the two paradigms, and by discussing key benefits and challenges in their implementation, we can support more intentional annotation process design, which will result in more useful NLP datasets."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "h4",
+   "en": "Terminology"
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "Our use of the terms descriptive and prescriptive aligns with their use in both linguistics and ethics. In linguistics, descriptivism studies how language is used, whereas prescriptive grammar declares how language should be used (Justice, 2006). Descriptive ethics studies the moral judgments that people make, while prescriptive ethics considers how people ought to act (Thiroux and Krasemann, 2015). Accordingly, descriptive data annotation surveys annotators’ beliefs, whereas prescriptive data annotation aims to encode one specific belief, which is formulated in the annotation guidelines."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "h2",
+   "en": "2 The Descriptive Annotation Paradigm: Encouraging Annotator Subjectivity"
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Key Benefits"
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "h4",
+   "en": "Insights into Diverse Beliefs"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "Descriptive data annotation captures a multiplicity of beliefs in data labels, much like a very granular survey would. The distribution of data labels across annotators and examples can therefore provide insights into the beliefs of annotators, or the larger population they may represent. For example, descriptive data annotation has shown that non-Black annotators are more likely to rate African American English as toxic (Sap et al., 2019; Sap et al., 2021), and that people who identify as LGBTQ+ or young adults are more likely to rate random social media comments as toxic (Kumar et al., 2021). Similar correlations between sociodemographic characteristics and annotation outcomes have been found in stance (Luo et al., 2020), sentiment (Diaz et al., 2018) and hate speech detection (Talat, 2016)."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "Even very subjective tasks may have clear-cut entries on which most annotators agree. For example, crowd workers tend to agree more on the extremes of a hate rating scale (Salminen et al., 2019), and datasets which consist of clear hate and non-hate can have very high levels of inter-annotator agreement, even with minimal guidelines (Röttger et al., 2021). Descriptive data annotation can help to identify which entries are more subjective. Jiang et al. (2021), for instance, find that perceptions about the harmfulness of sexually explicit language vary strongly across the eight countries in their sample, whereas support for mass murder or human trafficking is seen as very harmful across all countries."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "h4",
+   "en": "Learning from Disagreement"
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "Annotator-level labels from descriptive data annotation have been shown to be a rich source of information for model training. First, they can be used to separately model annotators’ beliefs. For less subjective tasks such as question answering, this has served to mitigate undesirable annotator biases (Geva et al., 2019). Davani et al. (2021b) reframe and expand on this idea for more subjective tasks like abuse detection, showing that multi-annotator model architectures outperform standard single-label approaches on single label prediction. Second, instead of modelling each annotator separately, other work has grouped them into clusters based on sociodemographic attributes (Al Kuwatly et al., 2020) or polarisation measures derived from annotator labels (Akhtar et al., 2020; Akhtar et al., 2021), with similar results. Third, models can be trained directly on soft labels (i.e., distributions of labels given by annotators), rather than hard one-hot ground truth vectors (Plank et al., 2014a; Jamison and Gurevych, 2015; Uma et al., 2020; Fornaciari et al., 2021)."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h4",
+   "en": "Evaluating with Disagreement"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Descriptive data annotation facilitates model evaluation that accounts for different beliefs about how a model should behave (Basile et al., 2021b; Uma et al., 2021). This is particularly relevant when deploying NLP systems for practical tasks such as content moderation, where user-facing performance needs to be considered (Gordon et al., 2021). To this end, comparing a model prediction to a descriptive label distribution, the crowd truth (Aroyo and Welty, 2015), can help estimate how acceptable the prediction would be to users (Alm, 2011). Gordon et al. (2022) operationalise this idea by introducing jury learning, a recommender system approach to predicting how a group of annotators with specified sociodemographic characteristics would judge different pieces of content."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Key Challenges"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h4",
+   "en": "Representativeness of Annotators"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "The survey-like benefits of descriptive data annotation correspond to survey-like challenges. First, dataset creators must decide who their data aims to represent, by establishing a clear population of interest. Arora et al. (2020), for example, ask women journalists to annotate harassment targeted at them. Talat (2016) recruits feminist activists as well as crowd workers. Second, dataset creators must consider whether representativeness can practically be achieved. To capture a representative distribution of beliefs for each entry requires dozens, if not hundreds of annotators recruited from the population of interest. Sap et al. (2021), for example, collect toxicity labels from 641 annotators, but only for 15 examples. Other datasets generally use much fewer annotators per entry (see Appx. A) and therefore cannot be considered representative in the sense that large (i.e., many-participant) surveys are. A potential approach to mitigating this issue in modelling annotator beliefs is by introducing information sharing across groups of annotators (e.g. based on sociodemographics), where annotator behaviour updates group-specific priors rather than being considered in isolation, and thus fewer annotations are needed from each annotator (Gordon et al., 2022)."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h4",
+   "en": "Interpretation of Disagreement"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "In the descriptive paradigm, the absence of a (specified) ground truth label complicates the interpretation of any observed annotator disagreement: it may be due to a genuine difference in beliefs, which is desirable in this paradigm, or due to undesirable annotator error (Pavlick and Kwiatkowski, 2019; Basile et al., 2021a; Leonardelli et al., 2021). The same issue applies to inter-annotator agreement metrics like Fleiss’ Kappa. When subjectivity is encouraged, such metrics can at best measure task subjectiveness, but not task difficulty, annotator performance, or dataset quality (Zaenen, 2006; Alm, 2011)."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "h4",
+   "en": "Label Aggregation"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "Descriptive annotation has clear downstream uses (§2.1) but it is fundamentally misaligned with standard NLP methods that rely on single gold standard labels. When datasets are constructed to be granular surveys of beliefs, reducing those beliefs to a single label, through majority voting or otherwise, goes directly against that purpose. Aggregating labels conceals informative disagreements (Leonardelli et al., 2021; Basile et al., 2021b) and risks discarding minority beliefs (Prabhakaran et al., 2021; Basile et al., 2021a)."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "h2",
+   "en": "3 The Prescriptive Annotation Paradigm: Discouraging Annotator Subjectivity"
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Key Benefits"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "h4",
+   "en": "Specified Model Behaviour"
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "Encoding one specific belief in a dataset through data annotation is difficult (§3.2) but advantageous for many practical applications. Social media companies, for example, moderate content on their platforms according to specific and extensive content policies.22 2 In March 2021, a whistleblower shared 300-page content guidelines used by Facebook moderators (Hern, 2021). Therefore, they need data annotated in accordance with those policies to train their content moderation models. This illustrates that even for highly subjective tasks, where different model behaviours are plausible and valid, one specific behaviour may be practically desirable. Prescriptive data annotation specifies such desired behaviours in datasets for model training and evaluation."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "h4",
+   "en": "Quality Assurance"
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "In the prescriptive paradigm, annotator disagreements are a call to action because they indicate that a) the annotation guidelines were not correctly applied by annotators or b) the guidelines themselves were inadequate. Annotator errors can be found using noise identification techniques (Hovy et al., 2013; Zhang et al., 2017; Paun et al., 2018; Northcutt et al., 2021, e.g.,), corrected by expert annotators (Vidgen and Derczynski, 2020; Vidgen et al., 2021a) or their impact mitigated by label aggregation. Guidelines which are unclear or incomplete need to be clarified or expanded by dataset creators, which may require iterative approaches to annotation (Founta et al., 2018; Zeinert et al., 2021). Therefore, quality assurance under the prescriptive paradigm is a laborious but structured process, with inter-annotator agreement as a useful, albeit noisy, measure of dataset quality."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h4",
+   "en": "Visibility of Encoded Belief"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "In the prescriptive paradigm, the one belief that annotators are tasked with applying is made visible and explicit in the annotation guidelines. Well-formulated guidelines should give clear instructions on how to decide between different classes, along with explanations and illustrative examples. This creates accountability, in that people can review, challenge and disagree with the formulated belief. Like data statements (Bender and Friedman, 2018), prescriptive annotation guidelines can provide detailed insights into how datasets were created, which can then inform their downstream use."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Key Challenges"
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "h4",
+   "en": "Creation of Annotation Guidelines"
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "Creating guidelines for prescriptive data annotation is difficult because it requires topical knowledge and familiarity with the data that is to be annotated. Guidelines would ideally provide a clear judgment on every possible entry, but in practice, such perfectly comprehensive guidelines can only be approximated. Even extensive legal definitions of hate speech leave some room for subjective interpretation (Sellars, 2016). Further, creating guidelines for prescriptive data annotation requires deciding which one belief to encode in the dataset. This can be a complex process that risks disregarding non-majority beliefs if marginalised people are not included in it (Raji et al., 2020)."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "h4",
+   "en": "Application of Annotation Guidelines"
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "Annotators need to be familiar with annotation guidelines to apply them correctly, which may require additional training, especially if guidelines are long and complex. This is reflected in an increasing shift in the literature towards using annotators with task-relevant experience over non-trained crowd workers (Basile et al., 2019; Röttger et al., 2021; Vidgen et al., 2021a, e.g.). During annotation, annotators will need to refer back to the guidelines, which requires giving them sufficient time per entry and providing a well-designed annotation interface."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "h4",
+   "en": "Persistent Subjectivity"
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "Annotator subjectivity can be discouraged, but not eliminated. Inevitable gaps in guidelines leave annotators no choice but to apply their personal judgement for some entries, and even when there is explicit guidance, implicit biases may persist. Sap et al. (2019), for example, demonstrate racial biases in hate speech annotation, and show that targeted annotation prompts can reduce these biases but not definitively eliminate them. To address this issue, dataset creators should work with groups of annotators that are diverse in terms of sociodemographic characteristics and personal experiences, even when annotator subjectivity is discouraged."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "h2",
+   "en": "4 An Illustrative Annotation Experiment"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "h4",
+   "en": "Experimental Design"
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "To illustrate the contrast between the two paradigms, we conducted an annotation experiment. 60 annotators were randomly assigned to one of three groups of 20. Each group was given different guidelines to label the same 200 Twitter posts, taken from a corpus annotated for hate speech by Davidson et al. (2017), as either hateful or non-hateful. G1, the descriptive group, received a short prompt which directed them to apply their subjective judgement (‘Do you personally feel this post is hateful?’). G2, the prescriptive group, received a short prompt which discouraged subjectivity (‘Does this post meet the criteria for hate speech?’), along with detailed annotation guidelines. G3, the control group, received the prescriptive prompt and a short definition of hate speech but no further guidelines. This is to control for the difference in length and complexity of annotation guidelines between G1 and G2."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "h4",
+   "en": "Results"
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate average percentage agreement and Fleiss’ ⟦SLOT_2⟧ to measure dataset-level inter-annotator agreement in each group (Table 1). To test for significant differences in agreement between groups, we use confidence intervals computed with a 1000-sample bootstrap."
+  },
+  {
+   "id": "b0050",
+   "t": "keep",
+   "w": "table",
+   "en": "Group Avg. % Agree. Fleiss’ κ \\kappa G1 - Descriptive 73.90 0.20 G2 - Prescriptive 93.72 0.78 G3 - Control 72.50 0.15"
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Inter-annotator agreement metrics for the three groups of 20 annotators on our 200-post binary dataset."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "Agreement is very low in the descriptive group G1 (⟦SLOT_3⟧), which suggests that annotators hold varied beliefs about which posts are hateful. However, agreement is significantly higher (⟦SLOT_4⟧) in G2 (⟦SLOT_5⟧), which suggests that a prescriptive approach with detailed annotation guidelines can successfully induce annotators to apply a specified belief rather than their subjective view. Further, agreement in the control group G3 (⟦SLOT_6⟧) is as low as in descriptive G1, which suggests that comprehensive guidelines are instrumental in facilitating high agreement in the prescriptive paradigm. G1 and G3 also do not differ systematically on which posts annotators disagree on, which suggests that annotators with little prescriptive instruction (G3) tend to apply their subjective views (like G1)."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "h4",
+   "en": "Reproducibility"
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "For details on our dataset and annotators, see the data statement (Bender and Friedman, 2018) in Appendix B. Annotation prompts are given in Appendix C. Full guidelines, annotated data and code are available on GitHub."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Conclusion"
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "In this article, we named and explained two contrasting paradigms for data annotation. The descriptive paradigm encourages annotator subjectivity to create datasets as granular surveys of individual beliefs, which can then be analysed and modelled. The prescriptive paradigm tasks annotators with encoding one specific belief formulated in the annotation guidelines, to enable the training of models that seek to apply that one belief to unseen data. Dataset creators should explicitly aim for one paradigm or the other to facilitate the intended downstream use of their dataset, and to document for the benefit of others how exactly their dataset was annotated. We discussed benefits and challenges in implementing both paradigms, and conducted an annotation experiment that illustrates the contrast between them. We hope that the two paradigms can support more intentional annotation process design and thus facilitate the creation of more useful NLP datasets."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgments"
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "Paul Röttger was funded by the German Academic Scholarship Foundation. Bertie Vidgen and Paul Röttger were both supported by The Alan Turing Institute and Towards Turing 2.0 under the EPSRC Grant EP/W037211/1. Dirk Hovy received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation program (grant agreement No. 949944). He is a member of the Data and Marketing Insights (DMI) Unit of the Bocconi Institute for Data Science and Analysis (BIDSA). Janet B. Pierrehumbert was supported by EPSRC Grant EP/T023333/1. We thank the Milan NLP Group, the Groningen Computational Linguistics Group as well as the Pierrehumbert Language Modelling Group for helpful comments and all reviewers for their constructive feedback."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0060",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Akhtar et al. (2020) Sohail Akhtar, Valerio Basile, and Viviana Patti. 2020. Modeling annotator perspective and polarized opinions to improve hate speech detection. In Proceedings of the AAAI Conferen"
+  },
+  {
+   "id": "b0061",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Akhtar et al. (2021) Sohail Akhtar, Valerio Basile, and Viviana Patti. 2021. Whose opinions matter? perspective-aware models to identify opinions of hate speech victims in abusive language detection. "
+  },
+  {
+   "id": "b0062",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Al Kuwatly et al. (2020) Hala Al Kuwatly, Maximilian Wich, and Georg Groh. 2020. Identifying and measuring annotator bias based on annotators’ demographic characteristics . In Proceedings of the Fourt"
+  },
+  {
+   "id": "b0063",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "AlDayel and Magdy (2021) Abeer AlDayel and Walid Magdy. 2021. Stance detection on social media: State of the art and trends. Information Processing & Management , 58(4):102597."
+  },
+  {
+   "id": "b0064",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Alm (2011) Cecilia Ovesdotter Alm. 2011. Subjective natural language problems: Motivations, applications, characterizations, and implications . In Proceedings of the 49th Annual Meeting of the Associa"
+  },
+  {
+   "id": "b0065",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Arora et al. (2020) Ishaan Arora, Julia Guo, Sarah Ita Levitan, Susan McGregor, and Julia Hirschberg. 2020. A novel methodology for developing automatic harassment classifiers for Twitter . In Proceed"
+  },
+  {
+   "id": "b0066",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Aroyo and Welty (2015) Lora Aroyo and Chris Welty. 2015. Truth is a lie: Crowd truth and the seven myths of human annotation. AI Magazine , 36(1):15–24."
+  },
+  {
+   "id": "b0067",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Basile et al. (2019) Valerio Basile, Cristina Bosco, Elisabetta Fersini, Debora Nozza, Viviana Patti, Francisco Manuel Rangel Pardo, Paolo Rosso, and Manuela Sanguinetti. 2019. Semeval-2019 task 5: Mu"
+  },
+  {
+   "id": "b0068",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Basile et al. (2021a) Valerio Basile, Federico Cabitza, Andrea Campagner, and Michael Fell. 2021a. Toward a perspectivist turn in ground truthing for predictive computing. Conference of the Italian Ch"
+  },
+  {
+   "id": "b0069",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Basile et al. (2021b) Valerio Basile, Michael Fell, Tommaso Fornaciari, Dirk Hovy, Silviu Paun, Barbara Plank, Massimo Poesio, and Alexandra Uma. 2021b. We need to consider disagreement in evaluation "
+  },
+  {
+   "id": "b0070",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bender and Friedman (2018) Emily M. Bender and Batya Friedman. 2018. Data statements for natural language processing: Toward mitigating system bias and enabling better science . Transactions of the As"
+  },
+  {
+   "id": "b0071",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Caselli et al. (2020) Tommaso Caselli, Valerio Basile, Jelena Mitrović, Inga Kartoziya, and Michael Granitzer. 2020. I feel offended, don’t be abusive! implicit/explicit messages in offensive and abus"
+  },
+  {
+   "id": "b0072",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cercas Curry et al. (2021) Amanda Cercas Curry, Gavin Abercrombie, and Verena Rieser. 2021. ConvAbuse: Data, analysis, and benchmarks for nuanced detection in conversational AI . In Proceedings of the"
+  },
+  {
+   "id": "b0073",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Davani et al. (2021a) Aida Mostafazadeh Davani, Mohammad Atari, Brendan Kennedy, and Morteza Dehghani. 2021a. Hate speech classifiers learn human-like social stereotypes ."
+  },
+  {
+   "id": "b0074",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Davani et al. (2021b) Aida Mostafazadeh Davani, Mark Díaz, and Vinodkumar Prabhakaran. 2021b. Dealing with disagreements: Looking beyond the majority vote in subjective annotations. arXiv preprint arX"
+  },
+  {
+   "id": "b0075",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Davidson et al. (2017) Thomas Davidson, Dana Warmsley, Michael Macy, and Ingmar Weber. 2017. Automated hate speech detection and the problem of offensive language. In Proceedings of the 11th Internati"
+  },
+  {
+   "id": "b0076",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Diaz et al. (2018) Mark Diaz, Isaac Johnson, Amanda Lazar, Anne Marie Piper, and Darren Gergle. 2018. Addressing Age-Related Bias in Sentiment Analysis , page 1–14. Association for Computing Machinery"
+  },
+  {
+   "id": "b0077",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fornaciari et al. (2021) Tommaso Fornaciari, Alexandra Uma, Silviu Paun, Barbara Plank, Dirk Hovy, and Massimo Poesio. 2021. Beyond black & white: Leveraging annotator disagreement via soft-label mult"
+  },
+  {
+   "id": "b0078",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Founta et al. (2018) Antigoni Maria Founta, Constantinos Djouvas, Despoina Chatzakou, Ilias Leontiadis, Jeremy Blackburn, Gianluca Stringhini, Athena Vakali, Michael Sirivianos, and Nicolas Kourtellis"
+  },
+  {
+   "id": "b0079",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Geva et al. (2019) Mor Geva, Yoav Goldberg, and Jonathan Berant. 2019. Are we modeling the task or the annotator? an investigation of annotator bias in natural language understanding datasets . In Pro"
+  },
+  {
+   "id": "b0080",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gordon et al. (2022) Mitchell L Gordon, Michelle S Lam, Joon Sung Park, Kayur Patel, Jeffrey T Hancock, Tatsunori Hashimoto, and Michael S Bernstein. 2022. Jury learning: Integrating dissenting voices"
+  },
+  {
+   "id": "b0081",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gordon et al. (2021) Mitchell L Gordon, Kaitlyn Zhou, Kayur Patel, Tatsunori Hashimoto, and Michael S Bernstein. 2021. The disagreement deconvolution: Bringing machine learning performance metrics in "
+  },
+  {
+   "id": "b0082",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hern (2021) Alex Hern. 2021. Decoding emojis and defining ’support’: Facebook’s rules for content revealed. The Guardian ."
+  },
+  {
+   "id": "b0083",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hovy et al. (2013) Dirk Hovy, Taylor Berg-Kirkpatrick, Ashish Vaswani, and Eduard Hovy. 2013. Learning whom to trust with MACE . In Proceedings of the 2013 Conference of the North American Chapter of "
+  },
+  {
+   "id": "b0084",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jamison and Gurevych (2015) Emily Jamison and Iryna Gurevych. 2015. Noise or additional information? leveraging crowdsource annotation item agreement for natural language tasks. In Proceedings of the "
+  },
+  {
+   "id": "b0085",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jiang et al. (2021) Jialun Aaron Jiang, Morgan Klaus Scheuerman, Casey Fiesler, and Jed R Brubaker. 2021. Understanding international perceptions of the severity of harmful content online. PloS one , "
+  },
+  {
+   "id": "b0086",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Justice (2006) Paul Justice. 2006. Relevant Linguistics , 2nd edition. Center for the Study of Language and Information, Stanford University."
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kenyon-Dean et al. (2018) Kian Kenyon-Dean, Eisha Ahmed, Scott Fujimoto, Jeremy Georges-Filteau, Christopher Glasz, Barleen Kaur, Auguste Lalande, Shruti Bhanderi, Robert Belfer, Nirmal Kanagasabai, R"
+  },
+  {
+   "id": "b0088",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kumar et al. (2021) Deepak Kumar, Patrick Gage Kelley, Sunny Consolvo, Joshua Mason, Elie Bursztein, Zakir Durumeric, Kurt Thomas, and Michael Bailey. 2021. Designing toxic content classification for "
+  },
+  {
+   "id": "b0089",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Leonardelli et al. (2021) Elisa Leonardelli, Stefano Menini, Alessio Palmero Aprosio, Marco Guerini, and Sara Tonelli. 2021. Agreeing to disagree: Annotating offensive language datasets with annotator"
+  },
+  {
+   "id": "b0090",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Luo et al. (2020) Yiwei Luo, Dallas Card, and Dan Jurafsky. 2020. Detecting stance in media on global warming . In Findings of the Association for Computational Linguistics: EMNLP 2020 , pages 3296–33"
+  },
+  {
+   "id": "b0091",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Northcutt et al. (2021) Curtis Northcutt, Lu Jiang, and Isaac Chuang. 2021. Confident learning: Estimating uncertainty in dataset labels. Journal of Artificial Intelligence Research , 70:1373–1411."
+  },
+  {
+   "id": "b0092",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Paun et al. (2018) Silviu Paun, Bob Carpenter, Jon Chamberlain, Dirk Hovy, Udo Kruschwitz, and Massimo Poesio. 2018. Comparing Bayesian models of annotation . Transactions of the Association for Compu"
+  },
+  {
+   "id": "b0093",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Pavlick and Kwiatkowski (2019) Ellie Pavlick and Tom Kwiatkowski. 2019. Inherent disagreements in human textual inferences . Transactions of the Association for Computational Linguistics , 7:677–694."
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Plank et al. (2014a) Barbara Plank, Dirk Hovy, and Anders Søgaard. 2014a. Learning part-of-speech taggers with inter-annotator agreement loss . In Proceedings of the 14th Conference of the European Ch"
+  },
+  {
+   "id": "b0095",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Plank et al. (2014b) Barbara Plank, Dirk Hovy, and Anders Søgaard. 2014b. Linguistically debatable or just plain wrong? In Proceedings of the 52nd Annual Meeting of the Association for Computational L"
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Poria et al. (2020) Soujanya Poria, Devamanyu Hazarika, Navonil Majumder, and Rada Mihalcea. 2020. Beneath the tip of the iceberg: Current challenges and new directions in sentiment analysis research."
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Prabhakaran et al. (2021) Vinodkumar Prabhakaran, Aida Mostafazadeh Davani, and Mark Diaz. 2021. On releasing annotator-level labels and information in datasets . In Proceedings of The Joint 15th Ling"
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Raji et al. (2020) Inioluwa Deborah Raji, Andrew Smart, Rebecca N. White, Margaret Mitchell, Timnit Gebru, Ben Hutchinson, Jamila Smith-Loud, Daniel Theron, and Parker Barnes. 2020. Closing the ai acc"
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Röttger et al. (2021) Paul Röttger, Bertie Vidgen, Dong Nguyen, Zeerak Talat, Helen Margetts, and Janet Pierrehumbert. 2021. HateCheck: Functional tests for hate speech detection models . In Proceedin"
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Salminen et al. (2019) Joni Salminen, Hind Almerekhi, Ahmed Mohamed Kamel, Soon-gyo Jung, and Bernard J. Jansen. 2019. Online hate ratings vary by extremes: A statistical analysis . In Proceedings of "
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sap et al. (2019) Maarten Sap, Dallas Card, Saadia Gabriel, Yejin Choi, and Noah A. Smith. 2019. The risk of racial bias in hate speech detection . In Proceedings of the 57th Annual Meeting of the Ass"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sap et al. (2021) Maarten Sap, Swabha Swayamdipta, Laura Vianna, Xuhui Zhou, Yejin Choi, and Noah A. Smith. 2021. Annotators with attitudes: How annotator beliefs and identities bias toxic language de"
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sellars (2016) Andrew Sellars. 2016. Defining hate speech. Berkman Klein Center Research Publication , 20(2016):16–48."
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Talat (2016) Zeerak Talat. 2016. Are you a racist or am I seeing things? Annotator influence on hate speech detection on Twitter . In Proceedings of the First Workshop on NLP and Computational Social "
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Talat and Hovy (2016) Zeerak Talat and Dirk Hovy. 2016. Hateful symbols or hateful people? Predictive features for hate speech detection on Twitter . In Proceedings of the NAACL Student Research Works"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Thiroux and Krasemann (2015) Jacques P Thiroux and Keith W Krasemann. 2015. Ethics: Theory and Practice , 11th edition. Pearson."
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Uma et al. (2021) Alexandra Uma, Tommaso Fornaciari, Anca Dumitrache, Tristan Miller, Jon Chamberlain, Barbara Plank, Edwin Simpson, and Massimo Poesio. 2021. SemEval-2021 task 12: Learning with disag"
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Uma et al. (2020) Alexandra Uma, Tommaso Fornaciari, Dirk Hovy, Silviu Paun, Barbara Plank, and Massimo Poesio. 2020. A case for soft loss functions. Proceedings of the AAAI Conference on Human Comput"
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Vidgen and Derczynski (2020) Bertie Vidgen and Leon Derczynski. 2020. Directions in abusive language training data, a systematic review: Garbage in, garbage out . PLOS ONE , 15(12):e0243300."
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Vidgen et al. (2021a) Bertie Vidgen, Dong Nguyen, Helen Margetts, Patricia Rossini, and Rebekah Tromble. 2021a. Introducing CAD: the contextual abuse dataset . In Proceedings of the 2021 Conference of"
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Vidgen et al. (2021b) Bertie Vidgen, Tristan Thrush, Zeerak Talat, and Douwe Kiela. 2021b. Learning from the worst: Dynamically generated datasets to improve online hate detection . In Proceedings of "
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zaenen (2006) Annie Zaenen. 2006. Mark-up barking up the wrong tree . Comput. Linguist. , 32(4):577–580."
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zampieri et al. (2019) Marcos Zampieri, Shervin Malmasi, Preslav Nakov, Sara Rosenthal, Noura Farra, and Ritesh Kumar. 2019. Predicting the type and target of offensive posts in social media . In Proc"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zeinert et al. (2021) Philine Zeinert, Nanna Inie, and Leon Derczynski. 2021. Annotating online misogyny . In Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics an"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2017) Jing Zhang, Victor S Sheng, Tao Li, and Xindong Wu. 2017. Improving crowdsourced label quality using noise correction. IEEE transactions on neural networks and learning systems , 2"
+  },
+  {
+   "id": "b0116",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Overview of Subjective Task Datasets"
+  },
+  {
+   "id": "b0117",
+   "t": "text",
+   "w": "p",
+   "en": "This appendix gives a selective overview of how existing NLP dataset work has (or has not) engaged with annotator subjectivity. For reasons of scope, we focus on 11 English-language datasets annotated for hate speech and other forms of abuse. Entries are sorted from most descriptive to most prescriptive annotation, based on our assessment of information made available by the dataset creators."
+  },
+  {
+   "id": "b0118",
+   "t": "text",
+   "w": "p",
+   "en": "Sap et al. (2019) and Sap et al. (2021) annotate toxicity. They do not state explicitly that they encourage annotator subjectivity, but their annotation prompts clearly do. Each entry is labelled by up to 641 annotators. Overall, they are very aligned with the descriptive paradigm."
+  },
+  {
+   "id": "b0119",
+   "t": "text",
+   "w": "p",
+   "en": "Kumar et al. (2021) annotate toxicity and types of toxicity. They do not state explicitly that they encourage annotator subjectivity, but their annotation prompts clearly do. Each entry is labelled by five annotators. Overall, they are very aligned with the descriptive paradigm."
+  },
+  {
+   "id": "b0120",
+   "t": "text",
+   "w": "p",
+   "en": "Cercas Curry et al. (2021) annotate abuse. They gather ‘views of expert annotators’ based on guidelines that allow for significant subjectivity and do not attempt to resolve disagreements, but also do not explicitly encourage annotator subjectivity. On average, each entry is labelled by around three annotators. Overall, they are moderately aligned with the descriptive paradigm."
+  },
+  {
+   "id": "b0121",
+   "t": "text",
+   "w": "p",
+   "en": "Talat and Hovy (2016) annotate hate speech. They provide annotators with 11 fine-grained criteria for hate speech, but several criteria invite subjective responses (e.g., ‘uses a problematic hashtag’). Each entry is labelled by up to three annotators. Overall, they are not clearly aligned with either paradigm."
+  },
+  {
+   "id": "b0122",
+   "t": "text",
+   "w": "p",
+   "en": "Davidson et al. (2017) annotate hate speech. They provide annotators with a brief definition of hate speech and an explanatory paragraph, but their definition also includes subjective criteria like perceived ‘intent’. Most entries are labelled by three annotators. Overall, they are not clearly aligned with either paradigm."
+  },
+  {
+   "id": "b0123",
+   "t": "text",
+   "w": "p",
+   "en": "Zampieri et al. (2019) annotate offensive content. They provide annotators with some formal criteria for offensiveness (e.g., ‘use of profanity’), but as a whole their guidelines are very brief. Each entry is labelled by up to three annotators. Overall, they are moderately aligned with the prescriptive paradigm."
+  },
+  {
+   "id": "b0124",
+   "t": "text",
+   "w": "p",
+   "en": "Founta et al. (2018) annotate abuse. They provide annotators with fine-grained definitions for each category and iterate on their taxonomy to facilitate more agreement, but do not share comprehensive guidelines. Each entry is labelled by five annotators. Overall, they are moderately aligned with the prescriptive paradigm."
+  },
+  {
+   "id": "b0125",
+   "t": "text",
+   "w": "p",
+   "en": "Caselli et al. (2020) annotate abuse. They provide annotators with a brief fine-grained decision tree with the explicit intent of reducing annotator subjectivity, and discuss disagreements to resolve them. Each entry is labelled by up to three annotators. Overall, they are moderately aligned with the prescriptive paradigm."
+  },
+  {
+   "id": "b0126",
+   "t": "text",
+   "w": "p",
+   "en": "Vidgen et al. (2021b) annotate hate speech. They provide annotators with fine-grained definitions for each category as well as very detailed annotation guidelines, and disagreements are resolved by an expert. Each entry is labelled by up to three annotators. Overall, they are very aligned with the prescriptive paradigm."
+  },
+  {
+   "id": "b0127",
+   "t": "text",
+   "w": "p",
+   "en": "Vidgen et al. (2021a) annotate abuse. They provide annotators with fine-grained definitions for each category as well as very detailed annotation guidelines, and they use expert-driven group adjudication to resolve disagreements. Each entry is labelled by up to three annotators. Overall, they are very aligned with the prescriptive paradigm."
+  },
+  {
+   "id": "b0128",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Data Statement"
+  },
+  {
+   "id": "b0129",
+   "t": "text",
+   "w": "p",
+   "en": "Following Bender and Friedman (2018), we provide a data statement, which documents the generation and provenance of the dataset used for our annotation experiment."
+  },
+  {
+   "id": "b0130",
+   "t": "text",
+   "w": "h4",
+   "en": "A. CURATION RATIONALE"
+  },
+  {
+   "id": "b0131",
+   "t": "text",
+   "w": "p",
+   "en": "To create our dataset, we sampled 200 Twitter posts from a larger corpus annotated for hateful content by Davidson et al. (2017). Of the posts we sampled, 100 were originally annotated as hateful and 100 as non-hateful by majority vote between three annotators. We sampled only from those posts that had some disagreement among their annotators (i.e., two out of three rather than unanimous agreement), to encourage disagreement in our experiment. The purpose of our 200-post dataset is to enable the annotation experiment presented in §1, which illustrates the contrast between the descriptive and prescriptive data annotation paradigms."
+  },
+  {
+   "id": "b0132",
+   "t": "text",
+   "w": "h4",
+   "en": "B. LANGUAGE VARIETY"
+  },
+  {
+   "id": "b0133",
+   "t": "text",
+   "w": "p",
+   "en": "The dataset contains English-language text posts only."
+  },
+  {
+   "id": "b0134",
+   "t": "text",
+   "w": "h4",
+   "en": "C. SPEAKER DEMOGRAPHICS"
+  },
+  {
+   "id": "b0135",
+   "t": "text",
+   "w": "p",
+   "en": "All speakers are Twitter users. Davidson et al. (2017) do not share any information on their demographics."
+  },
+  {
+   "id": "b0136",
+   "t": "text",
+   "w": "h4",
+   "en": "D. ANNOTATOR RECRUITMENT"
+  },
+  {
+   "id": "b0137",
+   "t": "text",
+   "w": "p",
+   "en": "We recruited three groups of 20 annotators using Amazon’s Mechanical Turk crowdsourcing marketplace.33 3 https://www.mturk.com/. Annotators were made aware that the task contained instances of offensive language before starting their work, and they could withdraw at any point throughout the work."
+  },
+  {
+   "id": "b0138",
+   "t": "text",
+   "w": "h4",
+   "en": "E. ANNOTATOR DEMOGRAPHICS"
+  },
+  {
+   "id": "b0139",
+   "t": "text",
+   "w": "p",
+   "en": "All annotators were at least 18 years old when they started their work, and we recruited only annotators that were based in the UK. This was to facilitate comparability across groups of annotators. For each group, we recruited 10 male and 10 female annotators, based on self-reported gender. This was to encourage disagreement within groups, based on the assumption that men would on average disagree more about hateful content with women than with other men, and vice versa. No further annotator demographics were recorded."
+  },
+  {
+   "id": "b0140",
+   "t": "text",
+   "w": "h4",
+   "en": "F. ANNOTATOR COMPENSATION"
+  },
+  {
+   "id": "b0141",
+   "t": "text",
+   "w": "p",
+   "en": "All annotators were compensated for their work at a rate of at least £16 per hour. The rate was set 50% above the London living wage (£10.85), although all work was completed remotely."
+  },
+  {
+   "id": "b0142",
+   "t": "text",
+   "w": "h4",
+   "en": "G. SPEECH SITUATION"
+  },
+  {
+   "id": "b0143",
+   "t": "text",
+   "w": "p",
+   "en": "All entries in our dataset were originally posted to Twitter and then collected by Davidson et al. (2017), who do not share when the posts were made."
+  },
+  {
+   "id": "b0144",
+   "t": "text",
+   "w": "h4",
+   "en": "H. TEXT CHARACTERISTICS"
+  },
+  {
+   "id": "b0145",
+   "t": "text",
+   "w": "p",
+   "en": "All entries in our dataset are individual Twitter text posts, with a length of 140 characters or less. We perform only minimal text cleaning, replacing user mentions (e.g., \"@Obama\") with \"[USER]\" and URLs with \"[URL]\"."
+  },
+  {
+   "id": "b0146",
+   "t": "text",
+   "w": "h4",
+   "en": "I. LICENSE"
+  },
+  {
+   "id": "b0147",
+   "t": "text",
+   "w": "p",
+   "en": "Davidson et al. (2017) make the Twitter data they collected available for further research use via GitHub under an MIT license.44 4 https://github.com/t-davidson/hate-speech-and-offensive-language Our re-annotated subset of the data is made available under CC0-1.0 license at github.com/paul-rottger/annotation-paradigms, so that the results of our experiment can be reproduced."
+  },
+  {
+   "id": "b0148",
+   "t": "text",
+   "w": "h4",
+   "en": "J. ETHICS APPROVAL"
+  },
+  {
+   "id": "b0149",
+   "t": "text",
+   "w": "p",
+   "en": "We received approval for our experiment and the data annotation it entailed from our institution’s ethics review board."
+  },
+  {
+   "id": "b0150",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Annotation Prompts"
+  },
+  {
+   "id": "b0151",
+   "t": "text",
+   "w": "p",
+   "en": "The three groups of annotators in our experiment all annotated the same data in the same order, but each group received different annotation prompts. The full annotation guidelines for G2 are available at github.com/paul-rottger/annotation-paradigms."
+  },
+  {
+   "id": "b0152",
+   "t": "text",
+   "w": "h4",
+   "en": "G1 - Descriptive Group"
+  },
+  {
+   "id": "b0153",
+   "t": "text",
+   "w": "p",
+   "en": "“Imagine you come across the post below on social media. Do you personally feel this post is hateful? We want to understand your own opinions, so try to disregard any impressions you might have about whether other people would find it hateful.”"
+  },
+  {
+   "id": "b0154",
+   "t": "text",
+   "w": "h4",
+   "en": "G2 - Prescriptive Group"
+  },
+  {
+   "id": "b0155",
+   "t": "text",
+   "w": "p",
+   "en": "“Imagine you come across the post below on social media. Does this post meet the criteria for hate speech? We are trying to collect objective judgments, so try to disregard any feelings you might have about whether you personally find it hateful."
+  },
+  {
+   "id": "b0156",
+   "t": "text",
+   "w": "p",
+   "en": "Click here to view the criteria: LINK”"
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "h4",
+   "en": "G3 - Control Group"
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "p",
+   "en": "“Imagine you come across the post below on social media. Does this post meet the criteria for hate speech? A post is considered hate speech if it is 1) abusive and 2) targeted against a protected group (e.g., women) or at its members for being a part of that group.”"
+  }
+ ]
+}

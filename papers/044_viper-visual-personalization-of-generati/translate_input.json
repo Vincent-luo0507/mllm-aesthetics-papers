@@ -1,0 +1,1336 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "ViPer: Visual Personalization of Generative Models via Individual Preference Learning"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Different users find different images generated for the same prompt desirable. This gives rise to personalized image generation which involves creating images aligned with an individual’s visual prefe"
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "We propose to personalize the image generation process by first capturing the generic preferences of the user in a one-time process by inviting them to comment on a small selection of images, explaini"
+  },
+  {
+   "id": "b0004",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Our code and model weights are open sourced at https://viper.epfl.ch ."
+  },
+  {
+   "id": "b0005",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: We introduce ViPer, a method that personalizes the output of generative models to align with different users’ preferences for the same prompt. This is done via a one-time capture of the user’s general preferences and conditioning the generative model on them without the need for engineered detailed prompts. Notice how the results vary for the same prompt for different users based on their visual preferences."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "Text-to-image generative models [28, 12] have demonstrated the ability to produce high-fidelity images and exhibit remarkable generalization abilities. This capability has sparked considerable interest regarding their potential applications which include image editing [13, 25, 2, 23], style transfer [9, 3, 30], and generating training data [10, 31, 22, 41]."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "These applications generally require guiding the generative model towards certain desired outputs. In this work, we are interested in guiding the generations toward an individual’s preferences in images, or personalization."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "Current methods for producing personally desirable images require the users to iteratively refine their prompts until they achieve their preferred outcomes or incorporate sparse feedback. Some forms of this feedback include binary reactions [36], providing images that the individual likes or dislikes [33, 7, 29], or ranking a given set of images [35]."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "We propose to utilize the individuals’ comments on a given set of images for capturing their generic visual preferences. This allows them to express why they like or dislike certain images. We will demonstrate, through user studies, that this increased level of expressivity results in generations better aligned with individual preferences. To incorporate this feedback into a text-to-image model like Stable Diffusion [28, 26], we first transform these comments into a structured representation containing visual attributes, i.e., a set of features they like or dislike in images, e.g., surrealism, rough brushstrokes, monochromatic, etc. We demonstrate that we can condition Stable Diffusion on these visual preferences without any additional fine-tuning. We call our method Visual Personalization of Generative Models via Individual Preference Learning, or ViPer for short."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "Our user studies show that users prefer our method over other baselines most of the time. They also strongly favor personalized results tailored to their preferences compared to non-personalized results or results from other users."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "Aligning image generative models with general human preferences. Generative models such as Stable Diffusion [28] are trained on images from the internet. Thus, their generations may reflect the artifacts of such data e.g., unusual object poses. This is not ideal if the goal is to generate aesthetically pleasing images e.g., high quality images where the object is centered and unoccluded. To align image generative models with these general goals, as opposed to an individual’s preference, these models are often tuned with reinforcement learning from human feedback (RLHF) [37, 4, 27] to maximize scoring metrics [39, 14, 40, 32] and improve image quality. [8, 38] optimize input prompts instead to achieve the same. While these methods enhance the quality of results by making them aesthetically aligned with general human preferences, ViPer focuses on an individual’s preferences and generates personalized images."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "Aligning image generative models with individual’s preferences. Personalization methods seek to adapt generative models to specific concepts, such as styles, by leveraging feedback or direct inputs from individuals. Popular examples include [7] and [29], which aim to learn a representative token for desired concepts, and guidance methods [34, 6, 11, 18], which steer sampling towards images that satisfy a desired objective by adding an auxiliary term to the score function. [33] learns a new style by fine-tuning a few trainable parameters from a reference image and improving the quality via iterative training with either human or automated feedback while [36] is a training-free method that incorporates iterative feedback into the generation process of text-to-image models. These methods mostly rely on users to express their preference for a set of images by simply liking or disliking them, or by providing images themselves. In contrast, ViPer allows users to express their detailed opinions about a given set of images to generate personalized results. This is a one-time process and users aren’t required to provide further feedback. In section 4.2, we show that the additional flexibility and expressivity of comments result in generations more aligned with users’ preferences."
+  },
+  {
+   "id": "b0016",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: (Left) Capturing an individual’s preference from comments. We ask interested individuals to comment on a small set of images. These images are generated such that they have diverse styles (see fig. 7 for visuals and further details). Note that these comments are not required to be of a specific structure. Thus, users can write as much or as little as they like. Obviously, more detailed and expressive comments would lead to better personalization. We show an example of an individual’s comments on two images. Our method allows for such free-form comments as we make use of a language model to extract structured preferences, i.e. a visual preference extractor (⟦SLOT_0⟧). To get the ⟦SLOT_1⟧, we fine-tune IDEFICS2-8b. Converting the user’s free-form comments into structured visual preferences is a one-time process that provides us with a concise representation of the user’s preferences. In this example, ⟦SLOT_2⟧ extracts the individual’s preferences for the color palette, vibe, and lighting from the comments and translates them into attributes like \"Rich and Muted Color Palettes\", \"Gloomy\", and \"Highlights and Shadows\". (Right) Conditioning Stable Diffusion on an individual’s visual preference. The user’s visual preferences are then encoded and added to the prompt embedding (see eq. 1). This allows us to steer the generations towards certain styles. They’re also used in the guidance formula (see eq. 3) directly to guide Stable Diffusion’s results toward the user’s preferences. This step does not require any fine-tuning and can be used directly with the Stable Diffusion model. Note how the generations reflect the user’s preference by generating a \"Gloomy\" style while avoiding styles like \"Contemporary Abstract\", \"Vibrant Colors\", and \"Naive Art\"."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Method"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "We propose a method to align text-to-image models with an individual’s visual preferences. In section 3.1, we propose an approach for computing a signal that captures an individual’s preferences. In section 3.2, we demonstrate how we can use this signal to adapt a generative model to generate personalized images. Finally, in section 3.3, we introduce a proxy metric to evaluate how well-aligned the personalized images are with the individuals’ preferences. See fig. 2 for an overview of our method."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Capturing an individual’s visual preferences"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "Current methods for capturing preferences include utilizing signals such as whether an individual likes or dislikes a set of images [36], or how they rank each image within the set [35], while some require users to provide a set of representative images [7, 29, 33]. However, these signals are sparse and may only cover some aspects of an individual’s preferences."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Furthermore, our preferences and even the images themselves can be complex, making it challenging for these signals to fully capture the intricacies of an individual’s preferences. Take for example someone who likes cool colors and realistic art and dislikes warm colors and pixel style. In traditional binary choice or ranking methods, when presented with pixel art featuring cool colors, the individual must decide whether they like the image despite the pixel style, or rank how much they like it."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "Capturing an individual’s preferences with free-form comments. We propose to use comments on a given set of images to capture an individual’s preferences. To do so, we first generate around 50 images with diverse art features such as style (see the fig. 7 for visuals) and ask individuals to select a random subset to comment on. Note that one can also comment on their own provided set of images if they prefer. Individuals are encouraged to discuss why they like or dislike each selected image, their perception of it, and the emotions it evokes. Importantly, individuals are not bound to any specific writing structure when commenting. They can write as much or as little as they prefer since we utilize a language model to extract structured preferences from their free-form comments. Ideally, these comments are descriptive, covering most of the attributes present in the images that are important to the individual. We show that in this case, comments on as few as eight images are enough to get personalized results (see for examples.)"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "Converting free-form comments to a structured representation of an individual’s preferences. We propose representing an individual’s visual preferences through a set of attributes across 20 categories such as texture and color palette. Each category contains multiple attributes, e.g.within the texture category, attributes include smoothness, roughness, etc. To obtain this, we instructed several language models e.g., GPT-3.5†† † openai.com, Claude 2.1‡‡ ‡ claude.ai, and Llama 2 to output representative art categories and their corresponding attributes. By aggregating their results, we compiled a total of approximately 500 visual attributes. See page for the complete list."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "To transform the free-form comments into visual preferences, we require a dataset that maps comments and individual preferences. Since such data does not exist to our knowledge, we start by creating 5000 agents, or simulated individuals, who are characterized by their liked and disliked visual attributes. Each agent is randomly allocated an average of 50 liked and disliked attributes from the attributes list mentioned above. To ensure diversity, we generate them such that there is a minimum Jaccard distance of 85% between any two agents’ liked and disliked attributes."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "Next, we generate comments that each agent would write for various images based on their visual preferences. To keep the comments relevant to visual preferences and informative, we first generate an average of 10 images for each agent, concatenating a random subset of visual attributes they like or dislike in the input prompts. Although the images are still somewhat random since the input prompts are chosen randomly, this set is directly related to each agent’s visual preferences."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "To generate the agents’ comments on these images, we instruct GPT-4 [24] to create each agent’s comments based on their visual preferences. Typos and sarcasm are randomly allowed to add diversity and make the results more human-like. This process results in a paired dataset of visual attributes and comments for each agent."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "To extract an individual’s visual preference from their comments, we fine-tune IDEFICS2-8b [15, 17], an open-sourced vision-language model, on the agents’ paired dataset. We found this model to work best compared to other open-source vision-language models. We demonstrate the shortcomings of our initial experiments with other models in section A.4. We denote the fine-tuned IDEFICS model as the Visual Preference Extractor, or ⟦SLOT_3⟧. Note that the ⟦SLOT_4⟧’s output is not limited to the pre-defined attributes; it can extract attributes mentioned in comments, e.g., recognizing a color mentioned in the comments but not defined in our attribute set."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "Instead of converting comments to visual preferences, one might consider directly asking individuals to choose from visual attributes. However, we believe that this process can be tedious due to the large number of attributes (about 500) and certain attributes may be challenging to visualize out-of-context."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Personalizing a generative model based on an individual’s preference"
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "In the previous section, we described how we can capture an individual’s visual preference from their comments. Here, we are interested in how we can use these visual preferences to adapt a generative model. In this work, we employ Stable Diffusion [28, 26]. As described previously, each individual’s preferences are described by a set of preferred and disliked attributes, denoted as ⟦SLOT_5⟧ and ⟦SLOT_6⟧ respectively. Encoding these preferences using Stable Diffusion’s text encoder, ⟦SLOT_7⟧, gives us ⟦SLOT_8⟧ and ⟦SLOT_9⟧. We encode the input prompt, ⟦SLOT_10⟧, and modify the resulting embedding, ⟦SLOT_11⟧, with ⟦SLOT_12⟧ and ⟦SLOT_13⟧ to steer the generations towards the individual’s preferences as follows:"
+  },
+  {
+   "id": "b0032",
+   "t": "keep",
+   "w": "table",
+   "en": "𝐩 = E ⁡ ( p ) + β ⁡ ( E ⁡ ( V ​ P + ) − E ⁡ ( V ​ P − ) ) . \\displaystyle\\mathbf{p}=E(p)+\\beta(E(VP_{+})-E(VP_{-})). (1)"
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_14⟧ can be tuned by the individual to increase or decrease the ‘level’ of personalization according to their preferences. See fig. 5 for examples. We found in our experiments that ⟦SLOT_15⟧ ensures that the generations will be faithful to both the input prompt and visual preferences. To guide the process toward the individual’s preferences along with the prompt even further, we also modify the predicted noise by using classifier-free guidance [11, 21]. (see eq. 3). For a given timestep ⟦SLOT_16⟧,"
+  },
+  {
+   "id": "b0034",
+   "t": "keep",
+   "w": "table",
+   "en": "ϵ v ​ p ​ ( 𝐱 t , t ) \\displaystyle\\mathbf{\\epsilon}_{vp}(\\mathbf{x}_{t},t) = ϵ θ ​ ( 𝐱 t , t , E ⁡ ( V ​ P + ) ) − ϵ θ ​ ( 𝐱 t , t , E ⁡ ( V ​ P − ) ) \\displaystyle=\\mathbf{\\epsilon}_{\\theta}(\\mathbf"
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_17⟧ is Stable Diffusion’s denoising U-Net and ⟦SLOT_18⟧ is the guidance scale. The changes to the denoising process are shown in algorithm 1."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Algorithm 1 Personalized image generation with ViPer"
+  },
+  {
+   "id": "b0037",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0038",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0039",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0040",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0041",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0042",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0043",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0044",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0045",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0046",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Proxy for evaluating personalized generations"
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "We proposed a method to generate personalized images. To evaluate them, human evaluations are the gold standard, however, they are expensive and not scalable. In this section, we aim to introduce a proxy measure for evaluating these generations, thereby encouraging further research in this domain."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "This proxy measure would indicate how much an individual would like a given image. To obtain this proxy measure, we combine two sources of training data: one from our agents and another from the Pick-a-Pic dataset [14]. The latter contains the binary preferences of human users on a set of generated images. For the former, we employ two approaches to generate training data. Using the agents’ visual preferences, we produce a small set of personalized images for each agent with ViPer. Additionally, we generate personalized prompts with a language model and create images from them using standard Stable Diffusion XL (see section 4.2 and section C.3 for details). This is to ensure that the proxy measure will not be biased toward the generations from ViPer. Thus, for a given entity (agent or human), we either have a set of their personalized images or a set of several generated images that they like. We denote each image from this set for entity ⟦SLOT_19⟧ as ⟦SLOT_20⟧. An image that is disliked or not personalized is denoted as ⟦SLOT_21⟧. We denote the set of these image pairs as ⟦SLOT_22⟧. We use 5000 sets of image pairs to fine-tune IDEFICS2-8b, denoted by ⟦SLOT_23⟧, to output the probability of an individual liking a given image ⟦SLOT_24⟧, given a set of their liked and disliked images, ⟦SLOT_25⟧, as ⟦SLOT_26⟧. We use the cross-entropy loss for training, ⟦SLOT_27⟧ where ⟦SLOT_28⟧ is the prediction and ⟦SLOT_29⟧ is the label i.e., ⟦SLOT_30⟧. See fig. 3 for the schematics of a fine-tuning step."
+  },
+  {
+   "id": "b0050",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Learning a proxy measure for evaluating personalized generations. We fine-tune IDEFICS2-8b, denoted by ⟦SLOT_31⟧, using both the personalized/liked and non-personalized/disliked set of images, ⟦SLOT_32⟧, of an agent. ⟦SLOT_33⟧ is given the set of images ⟦SLOT_34⟧ from an individual for context and asked to predict if the user will like a given query image. We trained the model with cross-entropy loss."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Evaluation and Ablations"
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "We demonstrate that ViPer is capable of generating images that align with an individual’s preferences (see section 4.1), and when compared to current baselines, it achieves higher levels of user satisfaction (see section 4.2)."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Evaluating the personalized generations"
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "Comparing generation across users. In fig. 4, we display personalized outcomes from seven prompts for four users using ViPer. These results highlight each user’s distinct art preferences, underlining that visual taste is more than just liking a single art style or a color palette; rather it’s shaped by various visual attributes based on individual preferences."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "User studies. We assess our approach using user tests. We invited twenty users to our study, conducting two types of tests. Each participant was first asked to comment on 8 to 20 images (flexible and dependent on the user’s choice). Each user was then shown eight images generated from the same prompt, where only one of the eight was personalized for them using ViPer. This was then repeated for 15 prompts."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "In the first test, the other seven images were created using standard Stable Diffusion XL, without personalization (User’s Pers. vs. No Pers in table 1). Our top-one accuracy here is 86.1%, meaning the user’s most preferred images were overwhelmingly generated from their visual preference, surpassing random chance by 6.89 times."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "In the second test, they were generated based on the visual preferences of other users (User’s vs. Other Users’ Pers in table 1). The aim of this test is to showcase how ViPer goes beyond just enhancing general aesthetics and instead focuses on personalization. Our top-one accuracy here is 65.4%, which exceeds random selection by 5.23 times."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "The lower accuracy in the second test compared to the first one is because some users have similar preferences. Despite our efforts to address this for the sake of demonstration, users may still favor details in others’ results that weren’t explicitly mentioned in their own comments. We discuss this further in section 5. Our proxy metric’s results closely correlate with actual user tests, demonstrating its alignment with user preferences. Additional ablation studies can be found in the appendix C."
+  },
+  {
+   "id": "b0060",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Comparing the personalized generations between users. Each row shows images generated from the same prompt shown on the left. The first column displays generations without any personalization, while the next four columns show personalized generations for users with distinct preferences. Note that the generations are consistent with the input prompts, and each user’s preferences are reflected across prompts. Moreover, while the color palette is a dominating visual attribute and can be noticed at first glance, other visual attributes such as brush strokes, lines, vibe, etc., also have intricate effects (see last row where colors are specified through input prompt). Users’ visual preferences are included in table 6."
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: User study results. In the User’s Pers. vs. No Pers test, for a given prompt, each user is shown 8 images, one of which is personalized for them and the others are without any personalization. In the User’s vs. Other Users’ Pers test, each user is shown an image personalized for them and those personalized for 7 other users. In both tests, the users had to rank the images based on how much they appealed to them. This is done for 12-15 prompts per user. The last column shows the accuracy from random guessing. We report the top-1 to 4 accuracy (%), in columns 1 and 3 in the table below. We also show the accuracy from using our proposed proxy metric (see section 3.3). The accuracy from the user and the proxy metric are similar, indicating that the metric can be a proxy for user preferences."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "Accuracy User’s Pers. vs. No Pers User’s vs. Other Users’ Pers Users Proxy metric Users Proxy metric Random Top-1 86.1 86.7 65.4 71.6 12.5 Top-2 93.2 95.8 82.2 89.2 25.0 Top-3 98.6 100.0 96.6 98.3 37.5 Top-4 99.0 100.0 99.0 99.2 50.0"
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "Controlling the degree of personalization. Our approach offers flexibility by letting users adjust the personalization level with a simple slider. fig. 5 depicts how personalization increases for one user gradually. As ⟦SLOT_35⟧ increases from 0 to 1, results become more tailored to user preferences, departing from generic outcomes while keeping the original prompt’s intent."
+  },
+  {
+   "id": "b0065",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Controlling the degree of personalization. Each row displays images generated from the same prompt. The left column is generated without any personalization, i.e., ⟦SLOT_36⟧ in the guidance equation in eq. 3, while the next five columns increase this number by 0.2 consecutively. This user’s preference for soft, simple, dreamy vibes, and pastel colors increases in intensity as ⟦SLOT_37⟧ increases."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "Consistency with input prompts. In our sample runs, results follow the input prompts’ meaning. This is because the influence of visual preference embeddings on the final images can be limited by ⟦SLOT_38⟧, ensuring they never outweigh the input prompt embeddings. In fig. 4’s last row, we display the results of a prompt following specified art features. Despite maintaining personalization, our results adhere to the prompt’s characteristics. Additional examples and experiments are provided in section C.4."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluation through identifiability tests. We conduct two experiments to make sure that there is a significant connection between the agents’ preferences and their comments so that ⟦SLOT_39⟧ is able to extract preferences correctly from user comments."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "In the first experiment, which we denote as \"Author test\" in table 3, we aim to identify the author of a comment given the visual preferences of five agents. We conduct this using 100 random agents, each appearing at least twice as the author. GPT-4 ranks agents by likelihood of being the author and we measure accuracy by whether the true author is among the top ⟦SLOT_40⟧ predictions."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "The second experiment, which we call \"VP vs. VP\" in table 3, aims to assess how well an agent’s set of comments maintains their original visual preference. To do this, we first use GPT-4 to reconstruct the visual preferences of 50 random agents from all of their comments. Then for each agent, we consider the agent’s reconstructed visual preference (which was generated from the comments), the agent’s original visual preference (which the comments were generated from), and four random agents’ original visual preferences. We instruct GPT-4 to rank the reconstructed visual preference with the original visual preferences based on the likelihood of both belonging to the same agent."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "In both experiments, the top-one accuracy exceeds random selection significantly. The accuracy of the second test, VP vs. VP, is overall higher than the first test. This is because the reconstructed visual preferences contain more information than one comment, making the second test easier in general. These results are proof of alignment between our simulated agents’ preferences and their comments, making ⟦SLOT_41⟧’s training data reliable as a source to extract visual preference from comments."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: In the Author test, GPT-4 is instructed to identify the author of a comment among five given agents’ visual preferences by ranking them based on the likelihood of being the author. For the VP vs. VP test, we first reconstruct the visual preferences of agents from their comments with GPT-4, and then we instruct it to identify an agent given their reconstructed visual preference and five ground truth visual preferences, with only one belonging to the user. We perform variations of this test using both positive and negative visual preferences, denoted by ⟦SLOT_42⟧, and each separately, denoted by ⟦SLOT_43⟧ and ⟦SLOT_44⟧. The goal of these tests is to ensure alignment between comments and visual preferences so that we’re sure ⟦SLOT_45⟧ which is tuned on this data, can accurately extract visual preferences from comments. Note that the top-k results (%) exceed the random chance of agents being chosen by the language model, demonstrating the link between agents’ comments and their visual preferences. Additionally, it’s worth noting that in the second test, GPT-4 performs more accurately when given either the entire visual preference or its positive aspect."
+  },
+  {
+   "id": "b0073",
+   "t": "keep",
+   "w": "table",
+   "en": "Accuracy Author test VP vs. VP test Random V ​ P VP V ​ P + VP_{+} V ​ P − VP_{-} Top-1 83.4 89.9 92.4 45.8 20.0 Top-2 89.1 98.1 96.2 72.1 40.0 Top-3 91.2 100.0 96.4 88.3 60.0"
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Comparison with baselines"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "p",
+   "en": "In this subsection, we compare our approach to existing baselines. We’ll discuss the strengths and weaknesses of these methods and explain the advantages of our approach over them. We evaluate the following baselines and use Stable Diffusion 2 for the experiments:"
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "li",
+   "en": "No personalization: These generations are produced with the input prompts using standard Stable Diffusion."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "li",
+   "en": "ZO-RankSGD [35]: Users are required to rank several images in multiple iterations for each prompt. This algorithm converges to a stationary point based on the feedback received. This approach helps us compare our approach to ranking."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "li",
+   "en": "FABRIC [36]: For each prompt, users are asked to like/dislike the generated images in multiple steps. The diffusion process is conditioned on this set of liked and disliked feedback images. This method helps us understand which one—binary reactions or comments—is more effective in grasping user preferences."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "li",
+   "en": "Textual Inversion [7]: Users provide two sets of liked and disliked images. Textual Inversion generates special tokens for each. Tokens are incorporated into positive and negative prompts. This approach helps determine whether asking a user to provide their preferred and disliked images, or comment on images is better at capturing user preferences."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "li",
+   "en": "Fine-tuning Stable Diffusion [7]: We fine-tune Stable Diffusion with one user’s ⟦SLOT_46⟧, using the CLIP similarity score to align Stable Diffusion-generated outputs for each user with their ⟦SLOT_47⟧ to serve as a reward model [40, 4]. The key distinction from ViPer is in the incorporation of visual preferences into Stable Diffusion. This approach demonstrates the effectiveness of using ⟦SLOT_48⟧ embeddings as shown in eq. 1 and eq. 3."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "li",
+   "en": "Prompt Personalization: We instruct a language model to directly personalize prompts, based on the user’s visual preferences extracted from their comments by ⟦SLOT_49⟧. The modified prompt is given to standard Stable Diffusion to generate personalized images. The main difference with ViPer lies in how visual preferences are incorporated into Stable Diffusion. Thus, this method demonstrates the efficacy of using ⟦SLOT_50⟧ embeddings in eq. 1 and eq. 3."
+  },
+  {
+   "id": "b0082",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Left: Comparing the generations from ViPer versus the baselines for a single user. Each row displays images generated from the same prompt (except Prompt Personalization which manipulates the input prompt). The leftmost column is generated without any personalization, while the next five columns shows the generations from different methods. Note how ZO-RankSGD’s generations are similar to the generations without any personalization. FABRIC tends to generate images that are more realistic or saturated, which is not aligned with this user’s preferences. Textual Inversion’s learned patterns does not align with the user’s taste. Fine-tuning Stable Diffusion results in low-quality generations but there is some degree of personalization. Prompt Personalization generates images that are close to the user’s preferences, however, they are not always consistent with the input prompt (e.g., the first image in the fifth column). Finally, ViPer generates images that are both aligned with the user’s preferences and follow the input prompts. The user consistently preferred ViPer’s results. Our proxy metric’s average score for each method is presented at the bottom of each column. Right: User’s preference info. A user’s visual preference is extracted from their comments. Some of the user’s liked images and disliked images that were used for our metric’s context and Textual Inversion’s input images are shown below. Note how there is an alignment between the user’s visual preference, set of liked and disliked images, and ViPer’s results. The alignment is significantly less obvious in FABRIC and ZO-RankSGD."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "p",
+   "en": "fig. 6 depicts a comparison of personalized generations with these baselines versus ViPer, for a single user. Textual Inversion struggles when the user’s selected images are too diverse. Furthermore, users are not able to provide feedback on their reasons for liking/disliking the input images. This can be seen in column 4 in fig. 6, where the results contain textures and certain color palettes that are too extreme for the user’s taste. It is also challenging for users to provide a set of images that completely represents their preferences."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "p",
+   "en": "Prompt Personalization, which is dependent on a language model, may lead to lengthy prompts, parts of visual preferences being disregarded, and can adopt a conversational tone, despite explicit instructions. Additionally, the personalized prompts may also fail to include key concepts from the original prompts (examples in section C.4). The resulting generations can be seen in the fifth column of fig. 6. The results are aligned with the user’s visual preference but overlook the user’s favored attributes like \"Retro\", \"Creepy\", and \"Horror\" due to language models’ inclination towards generating lengthy outputs. Iterative prompt refinement helps, but the computational overhead of using a language model remains a challenge. We provide further examples of these shortcomings in section C.4."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "Fine-tuning Stable Diffusion results in personalized but low-quality outputs. Additionally, it is an expensive and time-consuming method because each user needs to fine-tune Stable Diffusion with their ⟦SLOT_51⟧."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "In our experiments, FABRIC consistently converged towards a more realistic and vibrant style of images. This can be seen in the third column in fig. 6, despite the user’s dislike for \"Realism\" and \"Vibrant Colors\". ZO-RankSGD does not deviate much from the unpersonalized results."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "Lastly, we use our proxy metric to calculate a personalization score for each of the methods in fig. 6. ViPer has the highest score, followed by Prompt Personalization and Fine-tuning Stable Diffusion. This aligns well with how the users ranked the images based on their preferences (we present the user’s ranking in fig. 21)."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Conclusion and Limitations"
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "We introduced ViPer, a method for personalizing generative models. It extracts and incorporate individuals’ generic preferences into Stable Diffusion. Moreover, we introduced a metric to automatically assess personalization, reducing the need for costly human evaluations of generated images. Our approach is flexible and scalable and can consider a wide range of preferences. We briefly discuss the limitations and potential future work:"
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "p",
+   "en": "Exploring other ways of extracting user’s preferences. Our method makes use of user’s comments on a given set of images. As discussed in section 3.1, this is more expressive than e.g., ranking images, however, articulating these preferences can still be difficult for some users. An ideal approach could involve accessing human brain signals directly or scalable proxies of it. Another useful angle is engineering the set of commentary images to maximally reveal the users’ preferences with least interactions."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "Set of visual attributes. We pre-defined a set of structred visual attributes, but despite our best efforts, it may not cover everything. To address this limitation, we explored using more powerful language models like GPT-4, eliminating the need for pre-defined attributes and allowing more flexibility in the interpretation of comments. However, these models are not open-sourced, and using them at a large scale can be expensive."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "Stable Diffusion limitations. Our current implementation relies on Stable Diffusion’s text encoder, which has limitations such as a 77-token restriction and sensitivity to word order, sometimes leading to some preferred attributes being overlooked. Randomization techniques can partially address this issue, but using an encoder without these limitations would be beneficial. Furthermore, if Stable Diffusion cannot grasp a visual attribute due to its training data distribution, it cannot include it in its results."
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "Exploring other ways of adapting Stable Diffusion. We attempted to fine-tune the Stable Diffusion by optimizing our proposed proxy introduced in section 3.3. However, the generations suffered in quality. Exploring alternative reward tuning strategies is an interesting future direction."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] AI@Meta. Llama 3 model card. 2024. URL https://github.com/meta-llama/llama3/blob/main/MODEL_CARD.md ."
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] Tim Brooks, Aleksander Holynski, and Alexei A. Efros. Instructpix2pix: Learning to follow image editing instructions, 2023."
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] Jiwoo Chung, Sangeek Hyun, and Jae-Pil Heo. Style injection in diffusion: A training-free approach for adapting large-scale diffusion models for style transfer, 2023."
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] Kevin Clark, Paul Vicol, Kevin Swersky, and David J Fleet. Directly fine-tuning diffusion models on differentiable rewards, 2023."
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] Wenliang Dai, Junnan Li, Dongxu Li, Anthony Meng Huat Tiong, Junqi Zhao, Weisheng Wang, Boyang Li, Pascale Fung, and Steven Hoi. Instructblip: Towards general-purpose vision-language models with i"
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] Prafulla Dhariwal and Alex Nichol. Diffusion models beat gans on image synthesis, 2021."
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] Rinon Gal, Yuval Alaluf, Yuval Atzmon, Or Patashnik, Amit H. Bermano, Gal Chechik, and Daniel Cohen-Or. An image is worth one word: Personalizing text-to-image generation using textual inversion, "
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] Yaru Hao, Zewen Chi, Li Dong, and Furu Wei. Optimizing prompts for text-to-image generation, 2023."
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] Feihong He, Gang Li, Mengyuan Zhang, Leilei Yan, Lingyu Si, and Fanzhang Li. Freestyle: Free lunch for text-guided style transfer using diffusion models, 2024."
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] Ruifei He, Shuyang Sun, Xin Yu, Chuhui Xue, Wenqing Zhang, Philip Torr, Song Bai, and Xiaojuan Qi. Is synthetic data from generative models ready for image recognition? arXiv preprint arXiv:2210."
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] Jonathan Ho and Tim Salimans. Classifier-free diffusion guidance, 2022."
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising diffusion probabilistic models, 2020."
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] Bahjat Kawar, Shiran Zada, Oran Lang, Omer Tov, Huiwen Chang, Tali Dekel, Inbar Mosseri, and Michal Irani. Imagic: Text-based real image editing with diffusion models, 2023."
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] Yuval Kirstain, Adam Polyak, Uriel Singer, Shahbuland Matiana, Joe Penna, and Omer Levy. Pick-a-pic: An open dataset of user preferences for text-to-image generation, 2023."
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] Hugo Laurençon, Lucile Saulnier, Léo Tronchon, Stas Bekman, Amanpreet Singh, Anton Lozhkov, Thomas Wang, Siddharth Karamcheti, Alexander M. Rush, Douwe Kiela, Matthieu Cord, and Victor Sanh. Obel"
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] Hugo Laurençon, Lucile Saulnier, Léo Tronchon, Stas Bekman, Amanpreet Singh, Anton Lozhkov, Thomas Wang, Siddharth Karamcheti, Alexander M. Rush, Douwe Kiela, Matthieu Cord, and Victor Sanh. Obel"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] Hugo Laurençon, Léo Tronchon, Matthieu Cord, and Victor Sanh. What matters when building vision-language models?, 2024."
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] Wei Li, Xue Xu, Xinyan Xiao, Jiachen Liu, Hu Yang, Guohao Li, Zhanpeng Wang, Zhifan Feng, Qiaoqiao She, Yajuan Lyu, and Hua Wu. Upainting: Unified text-to-image diffusion generation with cross-mo"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] Haotian Liu, Chunyuan Li, Yuheng Li, and Yong Jae Lee. Improved baselines with visual instruction tuning, 2023a."
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. Visual instruction tuning, 2023b."
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] Nan Liu, Shuang Li, Yilun Du, Antonio Torralba, and Joshua B. Tenenbaum. Compositional visual generation with composable diffusion models, 2023c."
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] Erpai Luo, Minsheng Hao, Lei Wei, and Xuegong Zhang. scdiffusion: conditional generation of high-quality single-cell data using diffusion model, 2024."
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] Ron Mokady, Amir Hertz, Kfir Aberman, Yael Pritch, and Daniel Cohen-Or. Null-text inversion for editing real images using guided diffusion models, 2022."
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] OpenAI, :, Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia Leoni Aleman, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shyamal Anadkat, Red Avila, Igor Babuschkin"
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] Gaurav Parmar, Krishna Kumar Singh, Richard Zhang, Yijun Li, Jingwan Lu, and Jun-Yan Zhu. Zero-shot image-to-image translation, 2023."
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] Dustin Podell, Zion English, Kyle Lacey, Andreas Blattmann, Tim Dockhorn, Jonas Müller, Joe Penna, and Robin Rombach. Sdxl: Improving latent diffusion models for high-resolution image synthesis, "
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] Mihir Prabhudesai, Anirudh Goyal, Deepak Pathak, and Katerina Fragkiadaki. Aligning text-to-image diffusion models with reward backpropagation, 2023."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn Ommer. High-resolution image synthesis with latent diffusion models, 2022."
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] Nataniel Ruiz, Yuanzhen Li, Varun Jampani, Yael Pritch, Michael Rubinstein, and Kfir Aberman. Dreambooth: Fine tuning text-to-image diffusion models for subject-driven generation, 2023."
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] Dan Ruta, Gemma Canet Tarrés, Andrew Gilbert, Eli Shechtman, Nicholas Kolkin, and John Collomosse. Diff-nst: Diffusion interleaving for deformable neural style transfer, 2023."
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] Mert Bülent Sarıyıldız, Karteek Alahari, Diane Larlus, and Yannis Kalantidis. Fake it till you make it: Learning transferable representations from synthetic imagenet clones. In Proceedings of the"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] Christoph Schuhmann and Romain Beaumont. Laion-aesthetics. URL https://laion.ai/blog/laion-aesthetics ."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] Kihyuk Sohn, Nataniel Ruiz, Kimin Lee, Daniel Castro Chin, Irina Blok, Huiwen Chang, Jarred Barber, Lu Jiang, Glenn Entis, Yuanzhen Li, Yuan Hao, Irfan Essa, Michael Rubinstein, and Dilip Krishna"
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] Yang Song, Jascha Sohl-Dickstein, Diederik P. Kingma, Abhishek Kumar, Stefano Ermon, and Ben Poole. Score-based generative modeling through stochastic differential equations, 2021."
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] Zhiwei Tang, Dmitry Rybin, and Tsung-Hui Chang. Zeroth-order optimization meets human feedback: Provable learning via ranking oracles, 2024."
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] Dimitri von Rütte, Elisabetta Fedele, Jonathan Thomm, and Lukas Wolf. Fabric: Personalizing diffusion models with iterative feedback, 2023."
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] Bram Wallace, Meihua Dang, Rafael Rafailov, Linqi Zhou, Aaron Lou, Senthil Purushwalkam, Stefano Ermon, Caiming Xiong, Shafiq Joty, and Nikhil Naik. Diffusion model alignment using direct prefere"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] Yuxin Wen, Neel Jain, John Kirchenbauer, Micah Goldblum, Jonas Geiping, and Tom Goldstein. Hard prompts made easy: Gradient-based discrete optimization for prompt tuning and discovery, 2023."
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] Xiaoshi Wu, Keqiang Sun, Feng Zhu, Rui Zhao, and Hongsheng Li. Human preference score: Better aligning text-to-image models with human preference, 2023."
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] Jiazheng Xu, Xiao Liu, Yuchen Wu, Yuxuan Tong, Qinkai Li, Ming Ding, Jie Tang, and Yuxiao Dong. Imagereward: Learning and evaluating human preferences for text-to-image generation, 2023."
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] Teresa Yeo, Andrei Atanov, Harold Benoit, Aleksandr Alekseev, Ruchira Ray, Pooya Esmaeil Akhoondi, and Amir Zamir. Controlled training data generation with diffusion models. arXiv preprint arXiv:"
+  },
+  {
+   "id": "b0137",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix"
+  },
+  {
+   "id": "b0138",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Experimental Setup"
+  },
+  {
+   "id": "b0139",
+   "t": "text",
+   "w": "h3",
+   "en": "A.1 Visuals of Generated Images Used for Comments"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0141",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Query image set: We generate around 50 images with different art styles and concepts. Individuals are encouraged to choose a subset of these images to comment on."
+  },
+  {
+   "id": "b0142",
+   "t": "text",
+   "w": "p",
+   "en": "We employ Stable Diffusion XL [28] to generate around 50 images spanning diverse art styles and concepts. To ensure diversity, we first generated approximately 2000 visual attributes using the same method we used for creating our agents’ visual preferences. Next, we used multiple language models, such as Llama 3 [1] and GPT-4 [24], to generate 50 concepts. We then concatenated the visual attributes with these concepts and selected the top 50 unique images generated from them based on CLIP similarity. Finally, we manually included some images that seemed missing from the final set. While acknowledging that art cannot be fully represented by just 50 images, we opted for this smaller set to spare individuals from the burden of choosing from an extensive selection. However, recognizing the limitations in capturing all aspects of art with this limited set, we ask individuals to provide their own images to comment on if our set fails to evoke strong reactions. We show the generated images in fig. 7."
+  },
+  {
+   "id": "b0143",
+   "t": "text",
+   "w": "h3",
+   "en": "A.2 Prompt Templates"
+  },
+  {
+   "id": "b0144",
+   "t": "text",
+   "w": "p",
+   "en": "We use the following prompt template to generate comments using GPT4."
+  },
+  {
+   "id": "b0145",
+   "t": "text",
+   "w": "p",
+   "en": "The prompt template for fine-tuning ⟦SLOT_52⟧ is as follows:"
+  },
+  {
+   "id": "b0146",
+   "t": "text",
+   "w": "h3",
+   "en": "A.3 Visual Attributes"
+  },
+  {
+   "id": "b0147",
+   "t": "text",
+   "w": "p",
+   "en": "The full set of visual attributes is presented on page . In this set, we tried to consider the main features that describe and affect the individual’s perception of image. Some categories include subcategories that contain similar visual attributes. We randomly select several of these attributes for each agent, prioritizing more popular categories such as style, color palette, composition, mood, and medium over movement, depth, lines, etc. This prioritization is done by giving a larger weight to popular categories that we observed mentioned frequently in Lexica’s§§ § lexica.art prompts. The results of 10 sample agents are shown in fig. 8."
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0149",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8: The personalized generations of 10 agents, generated with 10 different prompts from the same seed, are presented here. These agents’ visual preferences differ not only in color palette and style but also in various attributes such as texture, pattern, vibe, etc. Note how the preference pattern of each agent’s results remains consistent, with some being more extreme than others."
+  },
+  {
+   "id": "b0150",
+   "t": "text",
+   "w": "h3",
+   "en": "A.4 Experiments with Other Models"
+  },
+  {
+   "id": "b0151",
+   "t": "text",
+   "w": "p",
+   "en": "We use GPT4 to generate comments since our initial experiments with the open-source vision-language models, such as IDEFICS2-8b [16, 17], IDEFICS1-80b [16], LLaVA [20, 19], and InstructBLIP [5], hallucinated more often than not. We show some samples in fig. 9. We input the image, and the individual’s preferences, ⟦SLOT_53⟧ and ⟦SLOT_54⟧, to the model with the same comment generation template as the one shown in section A.2."
+  },
+  {
+   "id": "b0152",
+   "t": "text",
+   "w": "p",
+   "en": "The sample results of these vision-language models shown in fig. 9 mostly discard the input image’s semantics, vibe, and details, and sometimes even discard the given visual preference. In some extreme cases, we witnessed that LLaVA and InstructBLIP would write captions for the images rather than comments, or simply repeat some of the attributes of the given visual preferences without further context."
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0154",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a) IDEFICS1-80b: I’m not really feeling this artwork. It’s too busy and vibrant for my taste. I prefer minimalist and abstract pieces with subtlety and open spaces. LLaVA: I find the artwork to be unsettling and creepy, which I appreciate. The melancholic atmosphere and psychological depth and extreme details make it a thought-provoking piece. InstructBLIP: I like the artwork because it has a dark and eerie feel to it. It also has a lot of symbolism and meaning behind it, which is why I like it so much."
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0156",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(b) IDEFICS1-80b: I’m not sure about this artwork. It seems a bit too dark and gloomy for my taste. I prefer art that is more uplifting and positive, with vibrant colors and details. LLaVA: The sketch lines and dark themes add to the eerie vibe of the painting. The overall mood remains melancholic and psychologically deep. InstructBLIP: the painting of a woman in a field of flowers is not something that I would like to look at."
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9: The comments are generated given an image and an individual’s visual preference. We present some shortcomings we witnessed for different individuals. In fig. 9, neither of the generated comments follows the input image’s content. They discard its minimal and contemporary style. In fig. 9, IDEFICS1-80b and LLaVA’s results do not follow the input image’s content, discarding its happy vibe, while InstructBLIP ignores the given visual preference of a user who loved happy and colorful images depicting flowers."
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B User and Proxy Metric Alignment"
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 10: On the left, we display the results of users, and on the right, we display proxy ⟦SLOT_55⟧’s results from the User’s vs. Other Users’ Pers test for eight users. By providing each user’s preferences (liked and disliked images) to ⟦SLOT_56⟧, we simulate their behavior. Images generated from 15 distinct prompts personalized for the eight users are organized within each matrix according to real user rankings or ⟦SLOT_57⟧’s predictions. A score is assigned to indicate the preference of user ⟦SLOT_58⟧ towards user ⟦SLOT_59⟧’s images, with higher scores reflecting greater preference. The scores are averaged over prompts and the matrices are normalized for analysis. Note how both users and ⟦SLOT_60⟧ preferred the personalized image on average in most cases. It’s crucial to understand that attaining 100% alignment between users and ⟦SLOT_61⟧ is impossible due to the complexity of users’ preferences, which aren’t solely influenced by personalization factors. These variations are intrinsic to Stable Diffusion rather than personalization itself. ⟦SLOT_62⟧ is limited in its ability to accommodate these nuances as it’s tuned solely to recognize users’ preference patterns based on their liked and disliked images."
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "p",
+   "en": "To demonstrate the alignment between users and the proxy metric, we closely examine the User’s vs. Other Users’ Pers test for eight users. We emulate each user’s behavior with our metric ⟦SLOT_63⟧ by providing ⟦SLOT_64⟧ with their liked and disliked images. In fig. 10, we present the confusion matrices of the user test alongside the metric’s simulation of the exact same test. Within each confusion matrix, images generated from 15 distinct prompts personalized for the eight users are arranged based on real user rankings, or ⟦SLOT_65⟧’s predictions. Rank 1 indicates that the user (or ⟦SLOT_66⟧) preferred that image over the others, while Rank 8 indicates the user’s (or ⟦SLOT_67⟧’s) least liked image. In most cases, users only ranked from 1 to 4, as they felt indifferent toward the other images present in the test for that prompt. The score in the ⟦SLOT_68⟧th row and ⟦SLOT_69⟧th column indicates how much user ⟦SLOT_70⟧ likes the images of user ⟦SLOT_71⟧: for each row ⟦SLOT_72⟧, a score of ⟦SLOT_73⟧ is added to the element ⟦SLOT_74⟧ if user ⟦SLOT_75⟧ ranks an image of user ⟦SLOT_76⟧ in the ⟦SLOT_77⟧th place (or if ⟦SLOT_78⟧ ranks it for them). These scores are then averaged over the prompts, and each row of the matrices is normalized. Note how the users’ results are aligned with ⟦SLOT_79⟧’s predictions. On average, both users and ⟦SLOT_80⟧ ranked their personalized images as the most preferred. It is important to note that achieving 100% alignment between users and ⟦SLOT_81⟧ is unattainable. This is due to the nuanced nature of users’ choices, which are not solely dependent on personalization factors. For instance, one user selected an image that deviated significantly from their indicated preference. Their rationale for not choosing the personalized image was that \"the person in this image is too thin, like she’s starving\". These deviations are inherent to Stable Diffusion itself rather than the concept of personalization. ⟦SLOT_82⟧ is unable to account for such deviations as it is solely tuned to discern users’ preference patterns from their favored and disliked images."
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 11: Each user is represented to ⟦SLOT_83⟧ by the set of images they like. Notice how, given this set of images, ⟦SLOT_84⟧ manages to output a higher score to query images that share the same preferred features and a lower score to those that do not."
+  },
+  {
+   "id": "b0164",
+   "t": "text",
+   "w": "p",
+   "en": "In fig. 11, we demonstrate how a user is represented to ⟦SLOT_85⟧ by the set of images they like (disliked images are not shown for the sake of simplicity). Notice how ⟦SLOT_86⟧ assigns a significantly higher score to query images that share the same visual pattern and vibe as the liked images for each user."
+  },
+  {
+   "id": "b0165",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Additional Experiments"
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "h3",
+   "en": "C.1 Large-scale Automated Evaluation"
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "p",
+   "en": "To compare the performance of ViPer with other personalization methods, we conducted multiple tests on images personalized for 1000 agents using both Prompt Personalization and ViPer. We use ⟦SLOT_87⟧, CLIP similarity, and PickScore [14] to calculate accuracy. Personalized vs. Non-Personalized Comparison In this experiment, we utilize the proxy metrics to distinguish between agents’ personalized images and random non-personalized images. We anticipate these proxies assigning higher scores to personalized images compared to non-personalized ones. Accuracy is measured as the ratio of correct comparisons to the total number of comparisons. To conduct this test with ⟦SLOT_88⟧, for each agent, we input their set of personalized images as liked images and random non-personalized images as disliked images to act as the preference signal. When using CLIP and PickScore, the preference signal becomes the ⟦SLOT_89⟧ text itself. Subsequently, for each agent, we consider two query images: one personalized and one non-personalized. The proxy metrics are then run on all agents, and alignment between preference signals and query images is calculated. The results are outlined in table 3. It’s notable that ViPer consistently outperforms Prompt Personalization across all three metrics. Despite CLIP and PickScore showing lower accuracy as they are not specifically fine-tuned for this task, their evaluations largely align with ⟦SLOT_90⟧’s. Prompt-Image Alignment We evaluate the alignment of base prompts and personalized images to determine which personalization method prioritizes results following the users’ input prompts. For each agent, we consider two query images, both personalized. Then, we run CLIP similarity and PickScore on the initial input prompt and the queries. We anticipate that the score will be higher for the personalized image generated from the input prompt compared to the one that is not generated from that input prompt. The results can be seen in table 4. Note how, once again, ViPer outperforms Prompt Personalization."
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: We use three proxy metrics to differentiate between personalized and non-personalized images of 1000 agent, expecting higher scores for personalized ones. Accuracy is the ratio of correct comparisons to total comparisons. For each agent, their personalized images are compared to random non-personalized ones as the preference signal. With CLIP and PickScore, the preference signal is the VP text. Two query images, one personalized and one non-personalized, are considered per agent. See how ViPer consistently outperforms Prompt Personalization across all metrics. While CLIP and PickScore, not fine-tuned for this task, show lower accuracy, their evaluations largely align with ⟦SLOT_91⟧’s."
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "table",
+   "en": "CLIP PickScore M M Prompt Personalization 69.5% 62.4% 83.9% ViPer 73.3% 67.0% 89.1 %"
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: We utilize CLIP and PickScore to assess the alignment between personalized images and input prompts, anticipating higher scores for images generated from the input prompt compared to those that are not. Accuracy is measured by the ratio of correct comparisons to total comparisons. Notice how ViPer consistently outperforms Prompt Personalization across both metrics."
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "table",
+   "en": "CLIP PickScore Prompt Personalization 83.5% 79.6% ViPer 90.3% 87.8%"
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "h3",
+   "en": "C.2 Effect of Number of Comments"
+  },
+  {
+   "id": "b0173",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 12: Each column is generated from visual preferences extracted from the same set of comments. In the leftmost column, we selected only one random comment, while in the rightmost column, we generated the visual preference from all the user’s provided comments. The prompts are displayed on the left. It is evident that as the number of comments increases, the results become more aligned with the user’s artistic preferences. While the first column only considered attributes such as distaste for \"Abstract\", \"Contemporary\", and \"Vibrant Colors\" along with a preference for \"Delicate\" and \"Detailed\" images, the second column included elements regarding color palette and historical vibe. These visual attributes expanded to the complete set presented in fig. 12."
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "p",
+   "en": "After selecting which images to comment on, individuals are encouraged to discuss their likes or dislikes for each selected image, expressing their perception of it and the emotions it evokes. Importantly, individuals are not bound to any specific writing structure when commenting. They can write as much or as little as they prefer, as we utilize a language model to extract structured preferences from their free-form comments. Ideally, these comments are descriptive, covering most of the attributes present in the images that are important to the individual. We demonstrate that in this case, comments on as few as eight images are enough to obtain personalized results."
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "p",
+   "en": "Consider a user who has the following visual preference:"
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "p",
+   "en": "Likes: Transparent Texture, Glassy, Delicate, Detailed, Story-telling, Intricate Lines, Smooth Texture, Muted Earthy Colors, Historical, Realistic Lighting, Classicism, Busy Composition, Neo-classicism, Balanced, Open Space, Matte, Depth, Matching Colors, Renaissance, Blending Colors, Subtle Lighting, Ethereal, Atmospheric Perspective, Illusion of Depth, Oil Painting, Creativity, Soft Texture, Romanticism, Desaturated, Majestic, Watercolor"
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "p",
+   "en": "Dislikes: Abstract, Contemporary, Vibrant Colors, Incoherent Shapes, Chaotic Brushstrokes, Simplistic, Blood and Gore, Bright and Blunt Colors, Single-focused, Realism, Flat, Polished, Modern Architecture, Extreme Colors, Monochromatic, Cold Colors, Picasso, Geometric Patterns, Somber, Dark, Dominating Red, Dry Brushstrokes, Monochromatic, Minimalism, Artificial Colors, Color Splash, Photorealistic, Cartoon, Childish"
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "p",
+   "en": "In fig. 12 we randomly select a subset of this user’s comments and extract their visual preferences from them. In the leftmost column, where only one random comment was selected, the results do not exactly align with the user’s preferences in images. As the number of comments increases, they converge towards their general preference for classic art and related visual attributes, and with eight comments, the results are almost perfectly aligned with their taste, though the user still preferred the last column consistently. It is notable that this experiment is also dependent on the random subset chosen. If the user’s selected comment in the first column indicated their extreme preference toward \"Classicism\", \"Renaissance\", or \"Muted Earthy Colors\", etc., the results would have aligned more with their preference. To avoid cases where commenting on an image fails to give us a lot of information about the user, we ask users to provide an average number of eight to ten comments on images that provoke strong reactions from them."
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "h3",
+   "en": "C.3 Prompt Personalization"
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "p",
+   "en": "This approach involves modifying prompts using language models based on an individual’s visual preference signal. We instruct the language model to adjust a given prompt based on the provided visual preference text. The objective is to obtain a tailored prompt that, when given to a generative model, can produce a personalized image. This approach serves as a baseline to explore another method of utilizing the ⟦SLOT_92⟧ signals aside from ViPer’s approach. The input prompt to the language model is as follows:"
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "p",
+   "en": "This method has some shortcomings due to being dependent on a language model. This may lead to lengthy prompts, disregarding parts of visual preferences, and adopting a conversational tone, even against explicit instructions. Additionally, the personalized prompts may fail to include key concepts from the original prompts, e.g., the prompt \"Paper clouds, brown origami birds\" was transformed into \"German Expressionism-inspired clouds float gracefully alongside birds in a sky painted with earthy tones and azure hues. The scene is illuminated by the golden hour, casting a surreal glow over the vibrant landscape. The birds soar amidst dynamic, fragmented clouds, creating a pensive yet lively atmosphere\" when using ChatGPT. This resulted in the loss of the instructed materials in the prompt, such as paper and the concept of using origami, as well as the color brown, for the sake of incorporating visual attributes the individual prefers."
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "p",
+   "en": "We show some of these samples in fig. 13. Each row represents a user’s preference. We can see that ViPer considers the input prompts’ consistently. However, depending on the language model in use, Llama 2-70b or ChatGPT, Prompt Personalization either misses the input prompt or the visual preference. Note that one cannot simply rely on appending the visual preference text to the input prompt, as Stable Diffusion would ignore most parts of the visual preference due to the length of the prompt."
+  },
+  {
+   "id": "b0184",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 13: Each row represents a different user and prompt, highlighting the shortcomings of Prompt Personalization. The input prompts are displayed on the left. The leftmost column presents generated responses without any personalization, while the subsequent three columns are personalized using either ViPer or Prompt Personalization with Llama 2 or ChatGPT. While losing the input prompt due to a lengthy personalized prompt is more common, the last row illustrates how ChatGPT completely ignored the user’s visual preference (In this case, the personalized prompt became Solitary figure stands amidst a gathering crowd). In contrast, ViPer personalized the results while still adhering to the instructions provided in the input prompt. It’s also notable that sometimes, the language model gets fixated on a specific visual attribute, leading to extreme results such as Llama 2’s third row, which totally lost the concept of the input prompt by emphasizing minimalism, even though it was one of the many visual attributes present in the user’s preference."
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "h3",
+   "en": "C.4 Consistency with Input Prompts"
+  },
+  {
+   "id": "b0187",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 14: Each column is generated from a user’s preference using ViPer, and the prompts are shown on the left. While the results are still somewhat personalized, they follow the visual attributes defined in the prompts."
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "p",
+   "en": "In our tests, input prompts dictate results, with visual preference embeddings limited by ⟦SLOT_93⟧ to prevent overshadowing prompt embeddings. In fig. 14, we present the results of seven users for seven prompts that explicitly define the art style, medium, or color palette. We can see that even though the results are still personalized and there is a clear preference pattern in each column, they consistently adhere to the input prompt’s meaning. In fig. 15 we compare the baseline results for a single prompt when the style is specified. Note how ZO-RankSGD’s [35] generations are similar to the generations without any personalization. While FABRIC [36] changes the images, the results are not only not personalized but also sometimes lose the prompt’s original style (see row 2 in column 3). Textual Inversion’s [7] results are too vibrant for the user’s taste and lose the prompt’s specified style as well (see row 3 and 4 in column 4). Prompt Personalization misses the \"Van Gogh\" style but is mostly aligned with the user’s preference. However, ViPer follows both the input prompt’s style and the user’s visual preference. It’s important to note that since the effect of input prompt is more than visual preferences, due to ⟦SLOT_94⟧’s limitation, individuals can generate images with attributes they dislike by mentioning them in the prompt (see row 5 in column 5)."
+  },
+  {
+   "id": "b0190",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 15: For the \"Cityscape\" prompt, we’re comparing ViPer with baselines with specified styles in prompts. Each row follows the style on the left. The leftmost column has no personalization, while the next five columns show different methods’ generations. ZO-RankSGD’s results resemble those without personalization. FABRIC changes images, but the user doesn’t find them personalized and they sometimes lose the original style (see row 2 in column 3). Textual inversion’s results are too vibrant for the user’s taste and lose the specified style (see row 4 in column 4). Prompt Personalization misses the \"Van Gogh\" style but aligns well with the user’s preference. ViPer follows both the prompt’s style and the user’s visual preference. Note how the user dislikes \"Cubism,\" yet it appeared in the result (see row 5 in column 5) when specified in the prompt. The user’s visual preference and a small set of images they like and dislike are presented at right."
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "h3",
+   "en": "C.5 Effect of Visual Attributes"
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "p",
+   "en": "While visual attributes such as color palette and art style are immediately apparent to the eye upon first glance at images, it’s important to note that other visual attributes also exert a significant effect on the results. To analyze this, we create 100 agents within three categories: those without preferred colors, those without preferred art styles, and those without both colors and styles. We then conduct an identifiability test on these agents, using our proxy metric to observe how distinguishable the results are. In this test, we initially generate images based on each agent’s preferences. We then use these generated images as examples of images the agent likes, while selecting random images from other agents’ preferences to represent images the agent doesn’t like. Our expectation is that our proxy will assign higher scores to the images generated specifically for each agent and lower scores to the random images. We show the results of the test in table 5. It’s evident that defining colors or art styles enhances our proxy’s ability to better distinguish between liked and disliked images; however, other visual attributes are also undoubtedly important in this process. We show an individual’s results in fig. 16. Notice how, even without defining specific colors or art styles, the overall pattern of the images remains consistent and all of the generations are personalized."
+  },
+  {
+   "id": "b0194",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 16: For an individual with preference for Bold Outlines, Sharpie, High-contrast, Simplified, Color-pencil, Kawaii, Alex Katz Style, Iwona Lifsches Style, Cartoon, Comic, Naive Art, Bright Colors, Playful, Pastel Palette, Paper Texture, Sketch Lines, Gouache, Opaque Watercolor, Nostalgic, Pink, Yellow, Blue, Lilac, in each column we remove either the color palette attributes, art style attributes, or both, to show the effect of the other visual attributes in more detail. See page for the grouping and definition of visual attributes. There are 20 categories of attributes in general. Excluding color palette and art style, these categories include composition, mood, etc. The first column shows the non-personalized generations. Note how in the other columns, the overall pattern of the images remains consistent. This consistency arises because many visual attributes already establish the foundation of the preferred art styles and colors. Clearly, these effects vary for each unique visual preference, depending on the preferred attributes."
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: To analyze the effect of different visual attributes, we study 100 agents divided into three groups: without preferred colors, without preferred art styles, and without both colors and styles. Results show that specifying color or art style helps our metric identify liked and disliked images better, but other visual attributes are also significant."
+  },
+  {
+   "id": "b0197",
+   "t": "keep",
+   "w": "table",
+   "en": "No Color - No Style Style Defined Color Defined Both defined Random Accuracy 71.6% 78.8% 83.1% 91.4% 50.0%"
+  },
+  {
+   "id": "b0198",
+   "t": "text",
+   "w": "h3",
+   "en": "C.6 Diversity Concerns"
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "p",
+   "en": "One potential concern is that the proposed system might cause the diversity of outputs to collapse for a particular prompt. To address this, we compared the diversity of outputs from non-personalized and personalized models on the same prompt. ViPer allows users to adjust diversity through the personalization degree, similar to the classifier-free guidance (⟦SLOT_95⟧) scale (see Fig. 5 of the main paper). Non-personalized Stable Diffusion tends to produce similar outputs with high ⟦SLOT_96⟧ scales, indicating a trade-off between prompt-image alignment and diversity. Similarly, ViPer presents a trade-off between diversity and personalization, modifiable by the personalization degree. By adjusting the personalization degree, users can control the balance between the specificity of the personalization and the diversity of the generated outputs. In fig. 17 we show some images generated from different ⟦SLOT_97⟧ scales and personalization degrees. We can see that as we decrease these hyperparameters, the outputs become less similar."
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 17: We generate multiple images from the same prompt with different ⟦SLOT_98⟧ scales and personalization degrees. Note how the outputs become more similar as the ⟦SLOT_99⟧ scale and personalization degree increase. One can increase the level of diversity by lowering these two hyperparameters."
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "h3",
+   "en": "C.7 Effect of Number of Images on Proxy"
+  },
+  {
+   "id": "b0203",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 18: We generate 100 agents and 10 images based on each of their visual preferences. Then, for each agent, we conduct a test with our proxy ⟦SLOT_100⟧ to determine if it can assign a higher score to an agent’s personalized images compared to random images, while varying the number of input images (both personalized and non-personalized). We observe that as the number of images in the context increases, the accuracy of the ⟦SLOT_101⟧ also increases, stabilizing at 91.1% after approximately 18 input images."
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "p",
+   "en": "To understand the impact of the number of images (both personalized and non-personalized for each agent) in the input prompt for the proxy, we evaluate the proxy’s ability to distinguish between an agent’s personalized and non-personalized query images. This evaluation involves providing the proxy with a varying number of personalized and non-personalized images (ranging from 0 to 28) as context in the input prompt."
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "p",
+   "en": "For each agent, we measure accuracy based on whether the proxy assigns a higher score to the personalized query compared to a non-personalized image. In fig. 18, we depict the relationship between accuracy and the number of input images in the context by testing 100 agents. We can see that with fewer input images, the metric’s predictions are closer to random. However, as we increase the number of images in the input prompt, the proxy’s accuracy improves for both test sets, stabilizing at approximately 91.1% accuracy after around 18 images in the context. This indicates that with more data (i.e., more input images), the proxy gains a better understanding of the agents’ visual preferences, resulting in more reliable outcomes."
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "h3",
+   "en": "C.8 Fine-Tuning Stable Diffusion with Individual Preferences"
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "p",
+   "en": "To align Stable Diffusion to users’ visual preferences, we conducted experiments involving fine-tuning the model based on each individual’s preferences. We used the CLIP similarity score in this experiment, comparing Stable Diffusion-generated outputs for each user against their specified visual preference text to serve as a reward model [40, 4]. In fig. 19, we showcase the outcomes of this approach for four distinct agents, with each row depicting personalized images corresponding to an agent’s visual preference (displayed on the right), and each column containing images generated from the same prompt."
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "While the results of this approach were promising, it exhibited several shortcomings compared to ViPer. Notably, this method is quite expensive due to the necessity of tuning Stable Diffusion for each user. Moreover, it’s sensitive to over-optimization (reward-hacking)[4], resulting in loss of diversity and collapsing as training steps increase. In severe instances, the tuned model disregards input prompts entirely, only to output the same high-reward images. In milder cases, it generates the same facial features, textures, or extreme patterns, resulting in lower-quality images. Additionally, this method may lead to certain visual attributes being overlooked in favor of emphasizing those that yield higher scores from the reward model."
+  },
+  {
+   "id": "b0210",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 19: In this experiment, we fine-tune Stable Diffusion on each agent’s visual preferences using the CLIP similarity score for the generated images at each step and the visual preference texts. Note how, for each agent, the results align with the visual preference texts shown at right."
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D Broader Impact"
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "p",
+   "en": "Visual preferences vary widely based on personal experiences and backgrounds. However, current generative models often fail to capture this diversity due to limited training data, resulting in generic outputs. For example, prompts like nostalgia may lean towards Western aesthetics, love often depicts heterosexual monogamous couples, religion incorporates Christian symbols, and human may exclude minority races. Our method addresses these limitations by allowing users to express their preferences thoroughly and in various concepts. In our user tests, some participants favored Queer art and depicted gender nonconforming roles, highlighting the need for more inclusive representation in generative models. Our approach easily incorporates these preferences without requiring additional training data or constant prompt tuning from individuals. Some of these samples are shown for different individuals in fig. 20."
+  },
+  {
+   "id": "b0214",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 20: We present the non-personalized (base) results of standard Stable Diffusion in the top row. The bottom row displays personalized samples generating the same concepts for different users. While standard Stable Diffusion often discards diversity due to its training data, our method provides individuals with the opportunity to express themselves and their experiences, which are reflected in their visual preferences."
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix E Human Subjects Data"
+  },
+  {
+   "id": "b0217",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 21: We present the user’s ranking in Fig. 6 of the main paper. For each prompt, the user ranked the images based on their preference. They consistently preferred ViPer over other baselines. Note how the user’s rankings for different baselines align with the average scores of metric ⟦SLOT_102⟧."
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "p",
+   "en": "We only use human subjects to evaluate the accuracy of our method and its alignment with actual human preferences. This data contains no identifiable information, and whenever an annotation or a part of a user’s data was solicited, their consent was requested. In table 6, we show the visual preferences of different individuals shown in Fig. 4 of the main paper. The user’s ranking in Fig. 6 of the main paper is presented in fig. 21."
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Visual preferences of different users shown in Fig. 4 of the main paper."
+  },
+  {
+   "id": "b0221",
+   "t": "text",
+   "w": "p",
+   "en": "User Likes Dislikes 1 Dark, Edgy, Detailed, Busy Composition, Eye Symbolism, Eerie, Creepy, Soft Brushstrokes, Raw, Unsettling, Surrealism, Chiaroscuro Lighting, Monochromatic, Ominous, Symbolic, Horror, Grey Colors, Illusory, Distorted Perspective, Dramatic, Theatrical, Fluid Lines, Desaturated, Classic Contemporary Abstraction, Cheerful Colors, Colorful, Cartoonish, Anime, Manga, Basic, Hyper-realistic, Minimalism, Bright, Flat, Cubism, Repetitive Patterns, Pops of Color, Vibrant Hues, Art Deco, De Stijl, Pixel Art 2 Realism, Representational, Vibrant, Lighter Colors, Bright, Light and Vivid Shades, Detailed, Cheerful, Positive, Uplifting, Soft, Natural Elements, Organic, Atmospheric Perspective, Hopeful, Harmony, Figure-Ground Relationship, Open Space Composition, Dynamic, Colored Pencil Melancholic, Gore, Muted Colors, Dark Themes, Monochromatic, Graffiti, Bad Painting, Abstract, Ambiguous, Artificial Hues, Grayscale, Fog Lighting, Collage, Linocut, Woodcut, Cyanotype Photography, Black and White, Harsh Lighting 3 Psychological and Emotional Depth, Queer Art, Sketch Lines, Dark Themes, Magical, Gloomy, Melancholy, Various Color Palettes, Eerie Vibes, Melancholic, Hand-drawn Textures, Dramatic Lighting, Storytelling, Gothic, Surrealism, Expressionism, Fantastical Elements, Somber Colors, Complex Composition, Innovative, Intricacy, Wonder, Fluid, Freehand Lines, Purples and Blues Realism, Cheerful Colors, Vibrant, Minimalism, Contemporary Abstract, Yellow Hues, Direct Lighting, Monochromatic, Black and white, Grayscale, Static, Lyrical Abstraction, Art Informel, Naive, Rough Texture, Strict, Straight and Thin Lines, Photography, 3D 4 Minimalist, Abstract, Simple Compositions, Room for Interpretation, Limited Color Palettes, Flat, Subtlety, Open Spaces, Muted Colors, Desaturated Palettes, Monochromatic, Complementary Colors, Aqueous Texture, Washed Out, Soothing, Subtle Texture, Contemporary Abstraction, Buttercream Hues, Harmonious, Compressed, Measured Detailed, Busy Composition, Vibrant Colors, Realism, Baroque, Neo-Impressionism, Vivid, Complex, Intricate details, Mechanical Lines, High Contrast, Chaotic, Maximalist Juxtaposition"
+  }
+ ]
+}

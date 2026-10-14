@@ -1,0 +1,682 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Assessing the Aesthetic Evaluation Capabilities of GPT-4 with Vision: Insights from Group and Individual Assessments"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Recently, it has been recognized that large language models demonstrate high performance on various intellectual tasks. However, few studies have investigated alignment with humans in behaviors that i"
+  },
+  {
+   "id": "b0004",
+   "t": "keep",
+   "w": "table",
+   "en": "The University of Tokyo"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "h2",
+   "en": "1. Introduction"
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "In recent years, Large Language Models (LLMs) have been shown to be effective for a number of tasks, such as Q&A tasks and logical reasoning tasks. While these types of intellectual problem-solving abilities have been widely investigated, there have not been many investigations on performance for tasks requiring sensibility [Ye 24, OpenAI 23]. In this paper, we investigate how closely state-of-the-art LLMs align with humans in one of the sensibility behaviors, aesthetic evaluation."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "Humans perform aesthetic evaluations on information accross various modalities. In addition to aesthetic evaluation of textual information (e.g. stories and poems), which can be handled by LLMs, humans also perceive beauty in images, music, and moral behaviors. In this paper, we focus on the beauty of images, a modality where substantial knowledge about aesthetic evaluations has been established."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "Recently, GPT-4, one of the most powerful LLMs, has begun to support image input [OpenAI 23, Yang 23]. Among various types of Vision Language Models that can handle images and text, in this paper, we adopt GPT-4 with vision (GPT-4V) as the language model under investigation."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "The purpose of this paper is to investigate the aesthetic evaluation performance of GPT-4V. A comparison of prompt engineering methods and an analysis of the behavior of predictions are also conducted. The experimental results reveal the nature of the current LLM’s aesthetic evaluation performance and behavior, and provide insight for improvement. In the last of this paper, we discuss the direction of future developments: we should take scientific knowledge of beauty into account and build an aesthetic evaluation model using agent technology that integrates traditional deep learning models and LLMs."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "h2",
+   "en": "2. Related Works"
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "There has been a lot of research on approximating the aesthetic evaluation of images using AI technologies [Deng 17]. Initially, image features were desined directly by humans [Ke 06], or by machine learning models using generic image features such as the Fisher vector [Marchesotti 11]."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "In the past decade or so, deep learning technology has advanced, and research has emerged on approximating the aesthetic evaluation of images using neural networks in a black box manner. For example, studies have been reported that use convolutional neural networks to acquire image features through learning [Kao 15, Talebi 18]. These studies have been contributed to by the fact that large-scale aesthetic evaluation datasets (e.g. AVA [Murray 12]) were constructed using platform sites on the Internet. These large datasets are beneficial for deep learning, which requires a large amount of training data. Most of the above studies set the mean value of the people’s aesthetic evaluation as the ground truth for regression or classification. This is called the Generic Image Aesthetics Assessment (GIAA) [Li 20]."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "On the other hand, there has been recent progress in adressing the task of approximating the aesthetic evaluation of a particular individual, which is called the Personalized Image Aesthetics Assessment (PIAA) [Li 20]. Several methods have been proposed for constructing PIAA models using deep learning: a method where a model that takes an image as an input, receives the individual’s attributes as conditioning, and outputs the individual’s aesthetic evaluation [Yang 22]. Another method is to firstly train a GIAA model using a dataset of people’s aesthetic evaluations and then convert into a PIAA model by fine-tuning with personal data [Yang 22]. Another method is to use the GIAA model as a sub-module, make a sub-module that predicts the difference between the output values of the GIAA model and the individual aesthetic evaluations, and build a PIAA model by adding these two sub-modules [Ren 17]."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "However, the problem with these methods is that the use of the average value of the aesthetic evaluation of the masses neutralizes the differences in individual processes of perception of beauty [Zhu 22]. In the PIAA task, there are the problem of such individual differences in aesthetic evaluation [Ren 17] and the problem of the small amount of data for each individual person. These problems are currently hindering the construction of PIAA models because they are incompatible with deep learning, which requires a large amount of data and consistent labeling."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "One possible solution to such problems might be to use LLMs. This is because the perception of beauty is said to be strongly influenced not only by the objective features of the input stimuli, but also by the prior and background knowledge that a person has acquired through past experiences [Chatterjee 16, Reber 04]. LLMs have extensive knowledge acquired from vast amount of text data, which may be transferable to aesthetic evaluation. Therefore, as a first step, this study aims to investigate the current LLM’s performance for aesthetic evaluation."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "h2",
+   "en": "3. Methods"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "Using the OpenAI API of GPT-4V, we investigate how well a LLM performs on aesthetic evaluation of images."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "Two tasks, GIAA and PIAA, are employed. GIAA is a task in which GPT-4V predicts the average aesthetic evaluation of an image given by a group of users, as a three-class classification problem. PIAA is a task in which GPT-4V understands the tendncy of a user’s aesthetic evaluation using few-shot prompting, and predicts the user’s aesthetic evaluation for a newly presented image based on the understanding. This is also a three-class classification problem."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "PARA [Yang 22] exists as a dataset of aesthetic evaluation of images that can be used for both GIAA and PIAA. PARA stores aesthetic evaluations by 438 raters for a total of 31220 images."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "In both cases of GIAA and PIAA, basically, the performance indicator is the percentage of correct answers in the three-class classification problem (accuracy). This indicator is appropriate because the number of samples in each class (low/middle/high) is the same in our experiments. In some cases, we also report the precision, recall, and f1-score for each class as additional performance measures."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h2",
+   "en": "4. Exp. 1: GIAA"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "PARA dataset contains images of 10 semantic patterns: portrait, animal, scene, building, still life, night scene, food, indoor, plant, and others. In this experiment, we use six of them (portrait, animal, scene, night scene, food, and plant), which we call ”target-semantics”."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "PARA dataset stores the average aesthetic score (1-5 floating point number) of the aesthetic evaluation by multiple raters for each image. In this experiment, this value is divided into the following three intervals and used as the correct label for the aesthetic evaluation. The values greater than 1.0 and up to 2.5 are defined as ”low”, greater than 2.5 and up to 3.5 are defined as ”middle”, and greater than 3.5 and up to 5.0 are defined as ”high”."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "Considering the number of patterns to be explored and the GPT-4V’s API usage fee, it is not efficient to obtain GPT-4V’s aesthetic evaluation for all images in the PARA dataset, so a subset of the entire dataset is used in this experiment. Among the images belonging to the 6 patterns of target-semantics, ⟦SLOT_0⟧ images are extracted from each of the aesthetic evaluation labels (low/middle/high). The resulting ⟦SLOT_1⟧ image are used as the subset for validation to measure the aesthetic evaluation performance of GPT-4V. This is done for 5 random seeds to account for variation."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "The prompt for GPT-4V is designed as follows. First, the following text is input as a system attribute prompt that presents the premise of the interaction."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "blockquote",
+   "en": "You will be asked to provide an aesthetic evaluation of the image that will be presented to you. The aesthetic evaluation of the image will be conducted in three levels: 0: low, 1: middle, 2: high. First, the image will be presented, followed by a question. Provide your answer after the question is presented. When answering, output only in JSON format. Refrain from outputting anything other than JSON format."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "Next, after inputting a tokenized image to be evaluated, we input the following text as a user attribute prompt for question about aesthetic evaluation. GPT-4V’s output is limited to JSON format, so it can be parsed mechanically. We call the following prompt the ⟦SLOT_2⟧ prompt to distinguish it from the variations used in Exp. 1-B and 1-C."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "blockquote",
+   "en": "Predict the aesthetic evaluation of the image by choosing from three classes (0: low, 1: middle, 2: high) as an integer value (0,1,2), and explain the reason and your confidence level (as a floating-point number ranging from 0 to 1). Note: - Answer in English. - Answer from the perspective of your position. - Ensure that your output is strictly in JSON format without any additional characters or formatting symbols such as ‘‘‘ before and after the JSON object. - Strictly adhere to the example format provided below: {\"reason\": \"~~~\", \"prediction\": 0, \"confidence\": 0.5}"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "In making the prompts, we employ various methods of prompt engineering that are often used: clear and specific task instruction, output format settings, example responses, task segmentation and so on. In addition, since it is said that GPT-4V currently performs better in English, all the information is written in English."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Exp. 1-A: Comparison of Resolution"
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "GPT-4V can receive tokenized images with text data as input. When tokenizing images, two resolution modes, low and high, are available (as of 2024/2). When the resolution mode is low, the image is resized to 512x512 and tokenized. When the resolution mode is high, the image is reduced to within 2048x2048 with a fixed aspect ratio, then resized to 768 on the short side and tokenized. In Exp. 1-A, we examine the difference in the prediction performance of the aesthetic evaluation of an image when the resolution mode is set to low or high."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "The GIAA performance for the two resolution modes low/high is shown in Fig. 1. This graph shows a box-and-whisker plot of the percentage of correct responses (accuracy) for each of the five seed trials. The upper and lower whiskers indicate the range of ⟦SLOT_3⟧ times the quartile range from the lower and upper quartiles, respectively, and values outside this range are indicated by white circles as outliers. The red diamonds indicate the mean values, and the red upper and lower whiskers indicate the 95% confidence intervals. (The box-and-whisker plot and the red dots are the same for subsequent experiments.) A Welch’s t-test (significance level ⟦SLOT_4⟧) was conducted on the sample group of the mean percentage of correct responses (accuracy) in these two conditions, and the p-value was ⟦SLOT_5⟧, indicating that there was no significant difference. Since these results indicate that there is no difference between low and high resolution modes, we decided to use the low resolution mode for all the subsequent experiments."
+  },
+  {
+   "id": "b0033",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Comparison of accuracy in different resolusion modes"
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Exp. 1-B: Comparison of Question"
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "It is well known that when we ask LLMs to perform some reasoning task, it is better to divide the question into subproblems [Zhou 23] or to make them think in logical steps [Wei 23]. Although it is debatable whether or not logical reasoning is necessary for the image aesthetic evaluation task we are dealing with now, we assume that when a person evaluates an image aesthetically, he/she evaluates the various items first, integrates them, and then makes a final judgment. We create two patterns of prompts that follow this assumption. In the first pattern ⟦SLOT_6⟧, GPT-4V is asked to evaluate eight items (composition, shade, color, lightness, darkness, sharpness, depth of field, emotion, and creativity) that can be related to the aesthetic evaluation of an image first, and then answer the final aesthetic evaluation based on these evaluations. In the second pattern ⟦SLOT_7⟧, the participants are asked to evaluate the three perspectives known as the basic techniques for taking beautiful pictures [Deng 17] first, and then answer the final aesthetic evaluation based on these evaluations. The three perspectives are: rule of thirds (dividing the image vertically and horizontally into three sections each and placing the subject on the four intersections of the dividing lines to improve balance), low depth of field (showing the subject clearly and blurring the background to make the subject stand out), and opposing colors (combining colors that are opposite to each other on the color wheel to create a strong visual contrast)."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "We compared the three prompt patterns ⟦SLOT_8⟧, ⟦SLOT_9⟧, and ⟦SLOT_10⟧. The results are shown in Fig. 2. A Welch’s t-test (significance level ⟦SLOT_11⟧) was conducted on the sample groups of any two conditions taken from the groups of the three conditions, and the results were as follows. (⟦SLOT_12⟧, ⟦SLOT_13⟧) pair had p-value of ⟦SLOT_14⟧ and (⟦SLOT_15⟧, ⟦SLOT_16⟧) pair had p-value ⟦SLOT_17⟧, indicating a significant difference. Although in the (⟦SLOT_18⟧, ⟦SLOT_19⟧) pair, the p-value was ⟦SLOT_20⟧, indicating no significant difference, the graph shows that the mean and its 95% confidence interval were higher in the ⟦SLOT_21⟧ condition. These results indicate that ⟦SLOT_22⟧ is the best question prompt, so we decided to use ⟦SLOT_23⟧ prompt in the subsequent experiment."
+  },
+  {
+   "id": "b0038",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Comparison of accuracy in different question cases (GIAA)"
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Exp. 1-C: Comparison of Persona"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "It is know that it is better to specify a persona when having LLMs perform some inference task [Xu 23]. In Exp. 1-A and 1-B, we investigated the GIAA performance of GPT-4V without specifying a persona, but in Exp. 1-C, we investigate the difference depending on the persona specified."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "Persona information is given at the beginning of the system attribute prompt. We use 6 patterns of personas: photographer, artist, critic, ordinary person+ (a person interested in photography and painting), ordinary person- (a person not interested in photography or painting), and none (no persona specification)."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "The result of the comparison of these six personas is shown in Fig. 3. A one-way ANOVA (Analysis of Variance) (significance level ⟦SLOT_24⟧) was conducted to test for significant differences among the six conditions for the sample group of the mean accuracy. The result was p-value ⟦SLOT_25⟧, indicating no significant difference. However, considering the variation in accuracy seen in Fig. 3, we can see that the case with no persona specification (None) may be relatively the most effective. In this case, the prediction performances other than accuracy for the three aesthetic evaluation classes are shown in Table 1. All of these are averages over ⟦SLOT_26⟧ seeds, rounded to the third decimal place. For each indicator, maximum value is shown in bold and the minimum value in underline."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "The precision, recall, and f1-score indices all show that the performance of the other two classes is higher than that of the ”middle” aesthetics evaluation class. This indicates the obvious phenomenon that the classes with extreme ratings are more predictable than the class with intermediate ratings, regardless of whether they are superior or inferior. On the other hand, a different phenomenon is observed for precision and recall. Precision, i.e., the percentage of instances predicted as a certain class that actually belong to that class, is higher for ”high” than for ”low”. Conversely, the recall, i.e., the proportion of correctly predicted instances of a class among the instances actually belonging to that class, shows that ”low” is higher than ”high”. These results suggest that the reliability of judgments of beauty is high and ugliness is easy to detect. These results indicate the different nature of beauty and ugliness in the GPT-4V’s GIAA."
+  },
+  {
+   "id": "b0045",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Comparison of accuracy in different persona cases"
+  },
+  {
+   "id": "b0047",
+   "t": "keep",
+   "w": "table",
+   "en": "class precision recall f1-score 0: low 0.771 0.860 0.813 1: middle 0.563 0.600 0.580 2: high 0.814 0.663 0.730"
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Comparison of metrics among three classes (GIAA)"
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "h2",
+   "en": "5. Exp. 2: PIAA"
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "It is said that when an LLM is asked to perform some inference task, a method that provides several examples of correct answer to the task (called ”few-shot examples”) improves the performance [Brown 20]. This method, few-shot prompting is used in this experiment to make GPT-4V perform the PIAA task."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "In this experiment, we measure GPT-4V’s PIAA performance using verification subset extracted from PARA dataset, as in Exp. 1. Since PARA dataset contains information on what score each user gave to which images, we extract a subset for verification from the set of images evaluated by a user. Six semantic patterns in ”target-semantics” are used as in Exp. 1."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "On the other hand, the correct labels for the aesthetic evaluation are assigned in a different way than in Exp. 1. This is because a user’s aesthetic evaluation of an image is a discrete value ranging from ⟦SLOT_27⟧ to ⟦SLOT_28⟧ in ⟦SLOT_29⟧ increments. The scores of ⟦SLOT_30⟧ are ”low”, ⟦SLOT_31⟧ are ”middle”, and ⟦SLOT_32⟧ are ”high”. Among the images in PARA dataset that were evaluated by the user under consideration, for each of the six ”target-semantics” patterns, ⟦SLOT_33⟧ images are extracted from each of the three aesthetic evaluation classes. The resulting ⟦SLOT_34⟧ images are used as a subset for validation for one user, and the PIAA performance of GPT-4V is measured. This is done for ⟦SLOT_35⟧ users to account for variation. (In Exp. 2, only one random number seed is used.)"
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "Here, the issue is how the number of users for verification ”m” is determined. In PARA dataset, which consists of the ratings from ⟦SLOT_36⟧ users, ⟦SLOT_37⟧ users rated more than ⟦SLOT_38⟧ images. Among these ⟦SLOT_39⟧ users, we plot the number of users who have at least threshold ⟦SLOT_40⟧ images in each of the 18 patterns (resulting from the product of ⟦SLOT_41⟧ semantic patterns and ⟦SLOT_42⟧ aesthetic evaluation classes) in Fig. 4. We consider that it is better to select ⟦SLOT_43⟧ so that up to ⟦SLOT_44⟧ pictures per one pattern in the ⟦SLOT_45⟧ patterns can be used as few-shot examples and ⟦SLOT_46⟧ pictures can be used for testing. So we select the corresponding ⟦SLOT_47⟧ users as target users for PIAA task (we call them ”target-users”)."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "Therefore, for one pattern in the ⟦SLOT_48⟧ patterns, the number of images ⟦SLOT_49⟧ is ⟦SLOT_50⟧, the number of candidates of few-shot examples is ⟦SLOT_51⟧, the number of few-shot examples that are actually presented ⟦SLOT_52⟧ is variable, and the number of test images ⟦SLOT_53⟧ is ⟦SLOT_54⟧. That is, in a subset of ⟦SLOT_55⟧ images for verification for a user, ⟦SLOT_56⟧ images are test images, ⟦SLOT_57⟧ images are candidates of few-shot examples, and ⟦SLOT_58⟧ images are actually used as few-shot examples."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "The presentation of few-shot examples and testing are conducted independently for each semantic patterns. For example, when portraits is used as a semantic pattern, we present ⟦SLOT_59⟧ portrait images for each of three aesthetic evaluation classes, as few-shot examples. GPT-4V predicts the aesthetic evaluation of newly presented portrait images in the test set based on the understanding of the tendency gained from ⟦SLOT_60⟧ images."
+  },
+  {
+   "id": "b0056",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: The number of users to be used in Exp. 2"
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "The prompt is designed as follows. First, the following text is input as the system attribute prompt to show few-shot examples."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "blockquote",
+   "en": "You will be tasked with understanding a user’s \"aesthetic evaluation tendencies towards images.\" A total of {⟦SLOT_61⟧} images will be presented for this purpose, all of which are themed around {⟦SLOT_62⟧}. The aesthetic evaluation of the images will be conducted in three levels (0: low, 1: middle, 2: high)."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "Then, the tokenized images for few-shot examples and their aesthetic labels made by the target user are input as a system attribute prompt."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "blockquote",
+   "en": "{⟦SLOT_63⟧} The aesthetic evaluation of the above image is {⟦SLOT_64⟧}. #############################################"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "Finally, the following text is input as a system attribute prompt."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "blockquote",
+   "en": "Based on the examples provided, you will now be asked to predict the user’s aesthetic evaluation of the images that will be presented."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "Next, after inputting a tokenized image to be evaluated, the following text is input as a user attribute prompt. GPT-4V’s output is limited to JSON format, so it can be parsed mechanically."
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "blockquote",
+   "en": "Based on the initial {⟦SLOT_65⟧} example images presented and your interpretation of the user’s aesthetic evaluation tendencies, evaluate the aesthetic value of the last image shown. Predict the aesthetic evaluation of the image by choosing from three classes (0: low, 1: middle, 2: high) as an integer value (0,1,2), and explain the reason and your confidence level (as a floating-point number ranging from 0 to 1). Note: - Answer in English. - Answer from the perspective of the user’s position. - Ensure that your output is strictly in JSON format without any additional characters or formatting symbols such as ‘‘‘ before and after the JSON object. - Be careful not to make any mistakes in the JSON format key names. - Strictly adhere to the example format provided below: {\"reason\": \"~~~\", \"prediction\": 0, \"confidence\": 0.5}"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 Exp. 2-A: Comparison of Question"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "As mentioned in Exp. 1-B, it is known that if we want LLMs to perform some reasoning task, it is better to divide the question into subproblems [Zhou 23] or to think in logical steps [Wei 23]. In this PIAA task, we hypothesize that it would be better to ask the GPT-4V to understand the tendency in the few-shot example images and their ratings from the user, and then to ask GPT-4V to predict the aesthetic evaluation of the newly presented test image. In Exp. 2-A, we investigate whether the performance on the PIAA task varies depending on the presence or absence of the tendency understanding question. The number of few-shot examples ⟦SLOT_66⟧ is set to ⟦SLOT_67⟧. When asking the tendency understanding, the following prompt (user attribute) is used after presenting few-shot examples."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "blockquote",
+   "en": "Please describe the user’s ’aesthetic evaluation’ tendencies towards images, based on the {⟦SLOT_68⟧} images illustrated above."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "In this experiment, data for ⟦SLOT_69⟧ users out of ⟦SLOT_70⟧ target-users are excluded because the images used were sometimes rejected due to GPT-4V’s content restriction policy, and the data for the remaining ⟦SLOT_71⟧ users are used in the analysis."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "The difference in PIAA performance with and without the tendency understanding question is shown in Fig. 5. ”True” and ”False” in the figure correspond to the cases with and without the question, respectively. A Welch’s t-test (significance level ⟦SLOT_72⟧) was conducted on the sample group of the mean accuracy in these two conditions, and the p-value was ⟦SLOT_73⟧, indicating no significant difference. Since these results indicate that there is no difference in the performance with and without the tendency understanding question, we decided to use the condition of ”True” (with the question) in the subsequent experiment."
+  },
+  {
+   "id": "b0071",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Comparison of accuracy in different question cases (PIAA)"
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2 Exp. 2-B: Comparison of Few-Shots"
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "The few-shot example in this PIAA task is important information for understanding the tendency of a target user’s aesthetic evaluation. We hypothesize that the amount of this information will affect how well GPT-4V can predict the user’s aesthetic evaluation. In Exp. 2-B, we investigate whether there is a difference in PIAA evaluation performance depending on the number of the few-shot examples ⟦SLOT_74⟧ by varying ⟦SLOT_75⟧."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "p",
+   "en": "In this experiment, in the case of ⟦SLOT_76⟧, we use the same data obtained in the condition of ”True” in Exp. 2-A, so the data used for the analysis is from the ⟦SLOT_77⟧ users. The difference in PIAA performance due to the difference in the number of few-shot examples is shown in Fig. 6. A Welch’s t-test (significance level ⟦SLOT_78⟧) was conducted on the two sample groups of the mean accuracy from the sample groups of the four conditions. The p-values for the three pairs of ⟦SLOT_79⟧ were ⟦SLOT_80⟧, respectively, indicating significant differences. On the other hand, the p-values for the three pairs of ⟦SLOT_81⟧ were ⟦SLOT_82⟧, respectively, indicating no significant differences."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "p",
+   "en": "These results indicate that there is a difference between using no examples and using examples with a few shots, but that if examples are used, there may not be a large difference in the number of examples with a few shots. However, the number of few-shot examples is only ⟦SLOT_83⟧ in this experiment, which is not a broad generalization. Perhaps performance could be improved if the number of examples were ⟦SLOT_84⟧ or ⟦SLOT_85⟧, or if the number of examples were ⟦SLOT_86⟧ or ⟦SLOT_87⟧. There must be a tradeoff between the need for more information to capture individual tendencies and the fact that a larger context length would degrade LLM’s performance on inference tasks, so it will be important to find the best parameter ⟦SLOT_88⟧. This should be addressed in future works."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "Table 2 shows the prediction performance, other than accuracy, for the three aesthetic evaluation classes, when ⟦SLOT_89⟧. All of these are averages over ⟦SLOT_90⟧ target-users, rounded to the third decimal place. For each indicator, maximum value is shown in bold and the minimum value in underline. The maximum value for each indicator is shown in class ”high” for precision, and in class ”low” for recall and f1-score, as in the case of GIAA (Table 1). This indicates that the reliability of judgments of beauty is high and ugliness is easy to detect."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "On the other hand, the trend of the mimimum value is different from that of the GIAA case. In the case of GIAA, the minimum value corresponds to class ”middle” for all indicators, while in the case of PIAA, the minimum value of recall was seen in the class ”high”. The fact that the class ”high” is the largest in precision but the smallest in recall indicates that it is difficult to determine the tendency of what an individual perceives as beauty, probably because of individual differences, and that if the tendency is understood, the reliability of the prediction is high. On the other hand, the high recall of the class ”low” is considered to indicate that it is easy to grasp the tendency of ugliness, i.e., there are few individual differences. These results of the PIAA experiments also show the different nature of beauty and ugliness in aesthetic evaluation."
+  },
+  {
+   "id": "b0079",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Comparison of accuracy in different ⟦SLOT_91⟧ cases"
+  },
+  {
+   "id": "b0081",
+   "t": "keep",
+   "w": "table",
+   "en": "class precision recall f1-score 0: low 0.667 0.622 0.640 1: middle 0.418 0.585 0.487 2: high 0.702 0.464 0.555"
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Comparison of metrics among three classes (PIAA)"
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "h2",
+   "en": "6. Discussion"
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "p",
+   "en": "The purpose of this paper was to investigate the performance of current LLMs in aesthetic evaluation of images. There are two different aesthetic evaluation tasks, GIAA and PIAA, which were tested in Exp. 1 and 2, respectivey. We used the percentage of correct response (accuracy) to a three-classes classification task as an index to evaluate performance. At the same time, since the performance of LLMs is known to vary widely across prompts, we examine the image resolution mode, the question items, and the persona patterns in Exp. 1, and the influence of question of understanding target user’s aesthetic evaluation tendency and the number of few-shot examples in Exp. 2."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "p",
+   "en": "The results of Exp. 1 show that there is no difference in performance between different image resolution modes in GPT-4V’s API. The results also show that performance is higher when no questions were used and no persona was specified. This suggests that because GIAA is a task to predict the average aesthetic evaluation of the group of users, the addition of question items or personas may lead to a limitation or misdirection of perspectives and thoughts. The performance on the GIAA task in the best condition, in other words, in the case where no question is used and no persona is specified in Exp. 1-C, was ⟦SLOT_92⟧ (rounded to the third decimal places) in accuracy. The fact that, although GPT-4V has not been specially trained for the task of aesthetic evalution of images, it achieved a correct response rate of ⟦SLOT_93⟧, which is much higher than the chance level ⟦SLOT_94⟧ for the three-classes classification task, is surprising."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "The results of Exp. 2 show that there is no difference in performance depending on whether or not the question is about understanding individual tendencies, and that as long as the number of few-shot examples is not zero, similar performance levels are demonstrated. The performance on the PIAA task in the best condition, in other words, in the case where GPT-4V is asked a question of tendency understanding and the number of few-shot examples ⟦SLOT_95⟧ in Exp. 2-B, was ⟦SLOT_96⟧ (rounded to the third decimal places) in accuracy. Compared to the GIAA task where the average aesthetic evaluation is predicted, it is natural that the accuracy is lower for the PIAA task where individual differences must be considered. Nevertheless, it is again surprising that GPT-4V achieved a correct response rate of ⟦SLOT_97⟧ for the three-classes classification task, which is much higher than the chance level of ⟦SLOT_98⟧."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "The analysis of indices other than accuracy revealed differences in the nature of beauty and ugliness in the aesthetic evaluation of GPT-4V for both GIAA and PIAA. The results show that the prediction performance is higher when evaluations are biased towards either beauty or ugliness, and that the reliability of judging beauty is higher, while ugliness is easier to detect. These results suggest that different approaches may be needed for beauty and ugliness in the same aesthetic evaluation task."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "The limitations of the experiments in this paper are as follows. First, the experiments in this paper explored what kind of prompts are best for GIAA and PIAA, but the search range was limited to question items, personas, and the number of few-shot examples. A lot of new methods have been proposed for designing prompts, so it is necessary to incorporate them. In addition, we only used GPT-4V as a validation target, so comparisons with other language models and deep learning-based models are needed. Furthermore, more detailed understanding of the prediction tendencies, other than the comparisons of prediction performance among classes, is required: the analysis of output texts, image features, and user personality traits. If we can gain insight into human perception of beauty through the analysis of the behavior of LLMs, it would be an excellent scientific contribution."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "Experiments in this paper show that the current LLM, especially GPT-4V, perform well to some extent on GIAA tasks with accuracy more than ⟦SLOT_99⟧%, even though it has not been trained specifically for the aesthetic evaluation task. This suggests the possibility that, in creating a superior aesthetic evaluator, there is an effective strategy not only in training a black-box neural network from scratch but also in using LLMs that already may possess some structure of aesthetic evaluation as a foundation. The method of appropriately integrating conventional deep learning models and LLMs to improve the behavior of an AI system is known as agent technology [Wang 23] in recent years. In the context of creating AI models for aesthetic evaluation, research should be accelerated in this direction in the future."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "This also points to the importance of model-based development that assumes some structure in the aesthetic evaluation process, rather than model-free construction that does not assume any structure to the evaluation process. An LLM trained on the vast amount of text data on the Internet may already have some structure embedded in it. It can be compared to a fabric woven from countless intricately intertwined threads. Within this, we have to carefully find and unravel a thread that closely approximates the aesthetic evaluation process. This would contribute to creating a better aesthetic evaluator, especially for the PIAA task, because an individual’s perception of beauty is influenced by knowledge or contexts [Chatterjee 16]. For this purpose, a deeper understanding of what factors shape an individual’s aesthetic evaluation is also necessary. In this regard, AI systems for aesthetic evaluation should be developed based on knowledge of other scientific fields such as the humanities related to beauty and neuroaesthetics."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "h2",
+   "en": "7. Conclusion"
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "The experiments in this paper reveal the performance of GPT-4V on aesthetic evaluation tasks, providing insights for enhancing its effectiveness and highlighting areas for further investigation. Future research directions will be to construct AI systems that capture human aesthetic evaluation processes using agent technologies that integrate conventional deep learning models and LLMs, based on scientific knowledge about perception of beauty. ACKNOWLEDGMENT This research was supported by Next Generation AI Research Center of The University of Tokyo and JST SPRING GX project (Grant Number JPMJSP2108)."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Brown 20] Brown, T. B., Mann, B., Ryder, N., Subbiah, M., Kaplan, J., Dhariwal, P., Neelakantan, A., Shyam, P., Sastry, G., Askell, A., Agarwal, S., Herbert-Voss, A., Krueger, G., Henighan, T., Child"
+  },
+  {
+   "id": "b0095",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Chatterjee 16] Chatterjee, A. and Vartanian, O.: Neuroscience of aesthetics, Annals of the New York Academy of Sciences , Vol. 1369, No. 1, pp. 172–194 (2016)"
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Deng 17] Deng, Y., Loy, C. C., and Tang, X.: Image Aesthetic Assessment: An experimental survey, IEEE Signal Processing Magazine , Vol. 34, No. 4, pp. 80–106 (2017)"
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Kao 15] Kao, Y., Wang, C., and Huang, K.: Visual aesthetic quality assessment with a regression model, in 2015 IEEE International Conference on Image Processing (ICIP) , pp. 1583–1587 (2015)"
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Ke 06] Ke, Y., Tang, X., and Jing, F.: The design of high-level features for photo quality assessment, in 2006 IEEE Computer Society Conference on Computer Vision and Pattern Recognition (CVPR’06) , "
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Li 20] Li, L., Zhu, H., Zhao, S., Ding, G., and Lin, W.: Personality-Assisted Multi-Task Learning for Generic and Personalized Image Aesthetics Assessment, IEEE Transactions on Image Processing , Vol"
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Marchesotti 11] Marchesotti, L., Perronnin, F., Larlus, D., and Csurka, G.: Assessing the aesthetic quality of photographs using generic image descriptors, in 2011 International Conference on Compute"
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Murray 12] Murray, N., Marchesotti, L., and Perronnin, F.: AVA: A large-scale database for aesthetic visual analysis, in 2012 IEEE Conference on Computer Vision and Pattern Recognition , pp. 2408–241"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[OpenAI 23] OpenAI, : GPT-4 Technical Report (2023), arXiv:2303.08774"
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Reber 04] Reber, R., Schwarz, N., and Winkielman, P.: Processing Fluency and Aesthetic Pleasure: Is Beauty in the Perceiver’s Processing Experience?, Personality and Social Psychology Review , Vol. 8"
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Ren 17] Ren, J., Shen, X., Lin, Z., Mech, R., and Foran, D. J.: Personalized Image Aesthetics, in Proceedings of the IEEE International Conference on Computer Vision (ICCV) (2017)"
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Talebi 18] Talebi, H. and Milanfar, P.: NIMA: Neural image assessment, IEEE Transactions on Image Processing , Vol. 27, No. 8, pp. 3998–4011 (2018)"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Wang 23] Wang, L., Ma, C., Feng, X., Zhang, Z., Yang, H., Zhang, J., Chen, Z., Tang, J., Chen, X., Lin, Y., Zhao, W. X., Wei, Z., and Wen, J.-R.: A Survey on Large Language Model based Autonomous Age"
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Wei 23] Wei, J., Wang, X., Schuurmans, D., Bosma, M., Ichter, B., Xia, F., Chi, E., Le, Q., and Zhou, D.: Chain-of-Thought Prompting Elicits Reasoning in Large Language Models (2023), arXiv:2201.1190"
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Xu 23] Xu, B., Yang, A., Lin, J., Wang, Q., Zhou, C., Zhang, Y., and Mao, Z.: ExpertPrompting: Instructing Large Language Models to be Distinguished Experts (2023), arXiv:2305.14688"
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Yang 22] Yang, Y., Xu, L., Li, L., Qie, N., Li, Y., Zhang, P., and Guo, Y.: Personalized Image Aesthetics Assessment With Rich Attributes, in Proceedings of the IEEE/CVF Conference on Computer Vision"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Yang 23] Yang, Z., Li, L., Lin, K., Wang, J., Lin, C.-C., Liu, Z., and Wang, L.: The Dawn of LMMs: Preliminary Explorations with GPT-4V(ision) (2023), arXiv:2309.17421"
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Ye 24] Ye, S., Kim, D., Kim, S., Hwang, H., Kim, S., Jo, Y., Thorne, J., Kim, J., and Seo, M.: FLASK: Fine-grained Language Model Evaluation based on Alignment Skill Sets (2024), arXiv:2307.10928"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Zhou 23] Zhou, D., SchÃ¤rli, N., Hou, L., Wei, J., Scales, N., Wang, X., Schuurmans, D., Cui, C., Bousquet, O., Le, Q., and Chi, E.: Least-to-Most Prompting Enables Complex Reasoning in Large Languag"
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[Zhu 22] Zhu, H., Li, L., Wu, J., Zhao, S., Ding, G., and Shi, G.: Personalized Image Aesthetics Assessment via Meta-Learning With Bilevel Gradient Optimization, IEEE Transactions on Cybernetics , Vol"
+  }
+ ]
+}

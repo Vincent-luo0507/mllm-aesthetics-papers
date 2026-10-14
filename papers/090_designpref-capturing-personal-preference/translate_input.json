@@ -1,0 +1,1084 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "DesignPref: Capturing Personal Preferences in Visual Design Generation"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Generative models, such as large language models and text-to-image diffusion models, are increasingly used to create visual designs like user interfaces (UIs) and presentation slides. Finetuning and b"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "blockquote",
+   "en": "“Beauty is no quality in things themselves: It exists merely in the mind which contemplates them; and each mind perceives a different beauty.”— David Hume"
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "Modern generative models can now support visual design tasks across UI layout and presentation slides composition. Design quality matters at scale: a classic survey reports that about half of an application’s code and a similar share of development time focus on the user interface [33]. With advances in large language, vision-language and multimodal models (LLMs/VLMs/LMMs), recent work begins to assess visual design quality automatically. Across designs, methods pair compiler or runtime diagnostics with text–image alignment to estimate intent match [60], train scorers that judge design screenshots against written goals and align with professional judgments [59, 66], and add region‑level critiques for design to turn scores into design suggestion [10]. These works suggest that model‑based evaluation can potentially guide design workflows at scale."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "Despite rapid progress, off‑the‑shelf evaluators do not yet deliver accurate personalized assessment of visual design. Most preference data is collected for the purpose of aggregation in benchmark [67, 28] or training settings such as RLHF and DPO [35, 44]. Yet, previous work has shown that visual preference can vary widely among individuals and be poorly approximated by globally aggregated data [23, 25, 15]. This is especially true for UI design, which has been shown to vary based on aesthetic taste, user needs [58, 41], cultural background [47], and design trends [14, 61, 27]. Prior work has attempted to apply rubric-guided ratings and rankings to collect designer feedback [10, 30] but found that subjectivity within the guidelines and differing preferences among designers led to a noisy learning signal for model training [10, 59]."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "To better support visual design personalization, we introduce DesignPref, a dataset of 12,000 pairwise comparisons over generative UI designs, each with binary and four-class preference ratings from one of 20 professional graphic designers. Analysis reveals substantial disagreement across trained designers (Krippendorff’s alpha = 0.25 for binary preferences). 28.5% of comparisons have 96% or more pair-wise disagreement rate. We further collect the rationale on top of pairs that raise highly divergent preferences. Our results show that designers can have different preferences on color contrast (dark or bright), how dense the screen should be (detailed vs simple), or how strongly hierarchy is marked. To show the utility of individual design preference data in improving model performance, we conduct several experiments. We show that finetuning an existing design assessment model [59] on a designer’s individual labels leads to better preference prediction accuracy and rating correlation than the same model trained on a 20 times larger aggregated dataset. We conduct a similar experiment with an existing RAG-based UI assessment system [10] and show similar improvements when retrieving from a smaller, personalized pool of examples."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "In summary, our work makes three contributions towards personalizing design assessment. First, we introduce DesignPref, a benchmark of 12k identity‑linked, designer‑authored pairwise comparisons with rationales that supports research on personalized evaluation of visual UI design. Second, we conduct an analysis of this dataset where we quantify the prevalence of inter-rater disagreements and perform a coding-based analysis of designers’ rationales to better understand the reasons behind divergence. Finally, we conduct a series of modeling experiments that demonstrate a smaller amount of personalized data leads to better preference prediction than a 20 times larger aggregated dataset in a finetuning and RAG setting."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "To contextualize our work, we review previous research on automated UI design assessment, visual model-as-a-judge systems, and personalized image assessment."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "h5",
+   "en": "Automated Assessment of UI Design."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "Recent advances in LLMs/LMMs make automatic UI design assessment feasible. Early work prompts GPT‑4 with written heuristics; expert designers report helpful suggestions yet low stability across revisions [11]. Followed with that, researchers released UICrit, which is a dataset contains expert critiques with region boxes and quality ratings and showed that few‑shot and visual prompts raise LLM feedback quality [10]. Recent benchmark treated LMM as unified UI judges and found only moderate alignment with human preferences across absolute and pairwise evaluations [59, 29]. To make design quality modeling effective, recent UI design autorater adopts UI- and quality-aware signals instead of generic vision-language objectives. UIClip introduced a design quality-oriented encoder that scores prompt relevance and design quality and matched professional designer preferences better than off-the-shelf LMM-as-a-judge while also producing design suggestions [59]. All these prior efforts focus on optimizing aggregated, universal visual design judges. Our work instead focuses on modeling personal judgment, where we retain rater identity and a four‑level intensity scale to make models better predict each designer’s choices."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "h5",
+   "en": "Model-as-a-Judge for Generative Visuals."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "Work on visual generation often relies on model judges that capture population preferences and then steer and improve generators with those rewards. Two lines of progress set the stage. First, automatic evaluators replace generic proxies with task-aware checks: TIFA asks a VQA system questions about the prompt to measure faithfulness and shows stronger agreement with humans than CLIP-style metrics [18]. Second, preference-trained reward models turn large-scale human choices into scalar scores: ImageReward, Pick-a-Pic, and HPSv2/v3 are examples of models trained using expert pairwise comparisons and votes [62, 23, 31]. These types of automated judges can enable preference optimization for generative models [52, 20] without hand‑crafted rewards. Most of these works aim to learn a single global utility and collapse diverse tastes into an average score. DesignPref complements this setting by keeping rater identity and a four-level confidence label on each comparison, so a judge can learn whose preference to predict and at what strength. This personalized view matters for design-centric visuals where trained professionals still disagree at a high rate, and where downstream tuning can potentially benefit from identity-aware targets."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "h5",
+   "en": "Personalized Image Assessment."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "Personalized visual preference research models user‑specific taste instead of a population mean. The field first framed personalized aesthetics as a supervised problem with rater identity: Ren et al. introduced a task with AMT rater IDs and owner‑rated albums and showed that content and attribute cues predict user‑level deviations from a generic scorer [48]. PARA broadened scale and subject coverage and added rich user attributes, which enables identity‑conditioned prediction [64]. Personalized image quality assessment (IQA) work has also trained models for specific age groups and individuals [57, 5] to improve traditional metrics such as NIMA, MUSIQ, and CLIP-IQA [50, 21, 55] In our paper, we seek to extend this research to UI design assessment, where individual preferences could be influenced by a range of factors such as aesthetic taste, accessibility needs [58, 40, 36], cultural background [47], and evolving design trends [14, 27]. To this end, we contribute a dataset of identify-linked designer preferences and reasoning which we show can personalize VLMs through fine-tuning and retrieval-augmented generation (RAG) approaches."
+  },
+  {
+   "id": "b0018",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Our annotation interface includes a prompt that defines the design task. Two variants generated from the prompt appear side by side. The rater selects one of four preference options."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "h2",
+   "en": "3 DesignPref Dataset"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "Our work aims to understand and model how individual design preferences arise for UIs. We introduce DesignPref, a dataset that captures personalized preferences for generative visual design. We focus on the domain of mobile UI, where A/B testing and comparisons are standard practice [22, 7]."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Dataset Construction"
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "Existing UI datasets do not include annotations for preference personalization, yet they provide screenshots, text descriptions, and other metadata that we reuse to build controlled pairs and collect judgments from individual designers [53, 2, 59, 10]. The resulting dataset, methods, and findings can be potentially extended to other graphic design domains such as presentation slides [12, 37, 66, 42] and posters [16, 17]. We choose GPT-5 and Gemini-2.5-Pro, two strong-performing language models from WebDev Arena [28], as base generators. Each model produces executable UI code (HTML, CSS, and JavaScript) to render mobile screens. Our study measures how people judge visual design quality and how those judgments vary across individuals, capturing shared criteria as well as personal taste."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h4",
+   "en": "3.1.1 Design Generation"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "We sampled 100 human-written screen descriptions from existing dataset [53] and extended them to a more complete screen descriptions using established method [38] as seed prompts. To ensure coverage across UI types, we stratified samples in different categories from prior defined taxonomy [26]. For each description, each model produced four variants with a high temperature to increase diversity. We used similar standard Design Arena [8] prompts to elicit high-quality, renderable UI code and included explicit quality checks in the instructions. In total, our dataset contains 400 generative designs. Each prompt yields 6 within-prompt pairs, which gives 600 unique comparison pairs across all generation."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h4",
+   "en": "3.1.2 Data Annotation Protocol"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "We recruited 20 designers via a university mailing list and online platforms. Each designer who participated in our study had at least one year of professional UI design experience. We designed our data annotation task to take approximately 90 minutes to complete. Designers who participated in our study were compensated $15.55 an hour, and our data collection protocol was approved by our institution’s IRB."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "Each designer viewed a pair of UI screens ⟦SLOT_0⟧ in each trial. The rater chose both direction and strength of preference on a four‑point Likert‑scale (Fig. 1): “A much better than B” (A⟦SLOT_1⟧B), “A better than B” (A⟦SLOT_2⟧B), “B better than A” (B⟦SLOT_3⟧A) or “B much better than A” (B⟦SLOT_4⟧A). We chose an even-numbered scale (i.e., no neutral option) to encourage raters to express even subtle preferences. The protocol follows recent works that use fine‑grained preference options for model alignment and evaluation [51, 49, 54]. We linked every label to a persistent rater identifier to support per‑rater models and personalization analyses, consistent with work that estimates judge‑specific reliability in crowdsourcing settings [4, 3, 6, 45]."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Dataset Analysis"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "Each designer rated 600 UI pairs under two label granularities: a binary direction label that records which variant wins, and a four-way label that encodes preference strength. Group-level reliability remains modest in both schemes. For binary preferences, the mean pairwise agreement is ⟦SLOT_5⟧, and both mean Cohen’s ⟦SLOT_6⟧ and multi-rater Krippendorff’s ⟦SLOT_7⟧ equal ⟦SLOT_8⟧. For the four-way labels, the corresponding values drop to ⟦SLOT_9⟧ for agreement, ⟦SLOT_10⟧ for ⟦SLOT_11⟧, and ⟦SLOT_12⟧ for ⟦SLOT_13⟧. These values confirm substantial disagreement among trained designers and align with prior designer studies [59, 10]. Direction and four-way ⟦SLOT_14⟧ correlate at ⟦SLOT_15⟧, so designer pairs who agree on winners also tend to agree on strength, although strength judgments add additional noise."
+  },
+  {
+   "id": "b0031",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Cohen’s kappa agreement for pairwise binary preferences across designers."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "Label-use patterns help explain the reliability gap between direction and four-way evaluation. Class frequencies for the four-way choices are A⟦SLOT_16⟧B ⟦SLOT_17⟧, B⟦SLOT_18⟧A ⟦SLOT_19⟧, A⟦SLOT_20⟧B ⟦SLOT_21⟧, and B⟦SLOT_22⟧A ⟦SLOT_23⟧. When aggregated by strength, ⟦SLOT_24⟧ of judgments use the middle options (A⟦SLOT_25⟧B or B⟦SLOT_26⟧A), and ⟦SLOT_27⟧ use the extreme options (A⟦SLOT_28⟧B or B⟦SLOT_29⟧A). Usage varies markedly across designers: the middle-option share has mean ⟦SLOT_30⟧ with values from ⟦SLOT_31⟧ to ⟦SLOT_32⟧, and the extreme-option share has mean ⟦SLOT_33⟧ with values from ⟦SLOT_34⟧ to ⟦SLOT_35⟧. The distribution suggests frequent reliance on slight preferences and highly heterogeneous thresholds for strong claims."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "h5",
+   "en": "Effect of Screen Type."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "We hypothesized that the type of UI screen may have contributed to designers’ preference distribution, as some screens (e.g., social media feeds) may surface more variations than others (e.g., login screens). To analyze the agreement level on different UI screen types, we group items by screen types defined by prior taxonomy [26] and measure direction consensus with the per-item mean pairwise agreement and the entropy of binary votes, then average within each type. Form screens show the strongest consensus, with mean pairwise agreement of 72.11% and the highest share of extreme choices 32.71%. List, Dialer, and Search screens follow with agreement around 66%–68%. Designers disagree most on Terms pages, Camera interfaces, Media Player screens, and Login flows, all of which stay near 54%–57% agreement. Across the 20 types, mean agreement and the share of extreme judgments correlate strongly (⟦SLOT_36⟧), so screen types that yield clearer winners also elicit stronger preference consensus. Overall, structured layouts with clear primary actions (e.g., forms, search pages) support more unified and decisive preferences, whereas visually complex or multifunctional screens lead to more diffuse judgments."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Understanding Rationale Behind Preferences"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "We explore how designers explain their preferences with a rationale annotation study. We invited the same 20 designers from the preference study; 13 participated. The interface resembled the original one but added a text box under each selected pair. For each chosen comparison, designers saw their earlier choice and wrote a brief rationale. To understand disagreements, we sampled highly contested pairs with majority margin ⟦SLOT_37⟧, which corresponds to splits of 55% versus 45% or closer. This process yielded 106 design pairs. Across these pairs, designers wrote 1,378 rationales, with about 3 hours of work per participant (we paid $15.55 per hour)."
+  },
+  {
+   "id": "b0038",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Embedding clusters for preference rationale themes."
+  },
+  {
+   "id": "b0040",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a) In the upgrade screen, designers diverge mainly on preference for light versus dark themes and contrast."
+  },
+  {
+   "id": "b0042",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(b) In the Bible app screen, designers diverge between decorative imagery and a more utility-focused layout."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Rationales behind divergent preferences. Each pair shows an example where half of the designers chose A and half chose B."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "h4",
+   "en": "3.3.1 Common Themes in Preference Rationale"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "We characterize common patterns in the rationales with a two-stage, embedding-based clustering pipeline that follows recent work on automatic and human-centered thematic analysis [43, 56, 1, 39]. We split each rationale into sentences and treat each sentence as a basic reasoning unit. A transformer-based sentence encoder maps each unit into a high-dimensional vector space [46]. We cluster these vectors into fine-grained groups and ask GPT-5 to assign each group a neutral label, short summary, and key concerns. A second GPT-5 pass merges related groups into broader themes. Our analysis of 1,378 written rationales surfaces six recurrent themes (Figure 3), listed in order of how often designers mention them: clean layout and readability, primary actions and controls, perceived modernity and polish, color, contrast, and theme, information architecture (IA) and scannability, and icon clarity and affordance. Clean layout and readability covers comments about generous spacing, clear alignment, and larger type. Primary actions and controls reflects a preference for obvious, reachable call-to-actions that stand apart from secondary options. When screens already satisfy basic readability, perceived modernity and polish often decides between functionally similar variants. Designers often favored crisper typography, smoother spacing, and cohesive accent colors and describe the preferred screen as more “modern” or “professional”. Color, contrast, and theme focuses on background tone and palette cohesion, where contrast helps key controls stand out. Information architecture and scannability emphasizes clear sections and hierarchy, such as plan comparison screens with card-based layouts. Icon clarity and affordance captures choices on dialer and camera screens, where fewer, larger icons with higher contrast and short labels make each control easier to interpret."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "h4",
+   "en": "3.3.2 Divergence between Preference Rationale"
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "While the previous analysis surfaces what designers generally agree on, contested pairs reveal structured disagreement in how designers weigh the same concerns. We focus on the selected contested pairs and treat each pair as a unit of analysis. For each pair, we give GPT-5 the full set of rationales from designers on each side. The model describes the main design trade-off in that pair and the main reasons respondents favor each version. A second GPT-5 pass groups related trade-offs into broader divergent themes. The analysis highlights four recurrent themes. The first theme concerns information density. Some designers prefer calm layouts with a short list of options or plans, while others favor denser pricing or support screens that surface more channels or help paths in one view. The second theme concerns visual style and tone. Across login, consent, and fintech screens, some rationales emphasize light, neutral themes that feel legible and trustworthy. Others praise darker or more saturated palettes as more premium, expressive, or more institutional language that signals seriousness (Figure 4(a)). The third theme concerns decorative imagery versus focused utility. On some screens (e.g., media page), one side values large photos, gradients, or illustrations that add warmth and brand expression, while the other side prefers restrained, text-led layouts where icons and controls keep attention on the task or main goal of the app (Figure 4(b)). The fourth theme concerns how strongly the interface foregrounds actions and task scope. Task-first rationales prefer a single high-contrast primary button and minimal chrome, such as camera screens with one clear capture control and little status text. Feature-first rationales endorse richer layouts that expose more modes, filters, alerts, or secondary actions and describe very sparse screens as underpowered."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Modeling Approaches"
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we describe approaches for incorporating DesignPref into machine learning models and pipelines to improve their performance in predicting personalized design preferences. We focused on two example setups that have been used by previous work to assess UI design quality: i) finetuning a CLIP-style dual-encoder VLM [59], and ii) improving a decoder VLM/LMM with a multimodal RAG pipeline [10]."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "h5",
+   "en": "Data Processing."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "We took steps to prepare the DesignPref for our modeling experiments. First, we processed our collected data into a consistent format that could be used for fine-tuning and RAG pipelines."
+  },
+  {
+   "id": "b0053",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒟 pref = { ( t , I A , I B , c ) : c ∈ { − 2 , − 1 , 1 , 2 } } \\mathcal{D}_{\\mathrm{pref}}\\;=\\;\\{\\,(t,\\,I^{A},\\,I^{B},c)\\;:\\;c\\in\\{-2,-1,1,2\\}\\} (1)"
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "In the above equation, we construct tuples for every labeled example consisting of the text ⟦SLOT_38⟧, image choices ⟦SLOT_39⟧ and ⟦SLOT_40⟧, and the recorded choice ⟦SLOT_41⟧ mapped to an integer value."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "In addition, we created stratified data splits for our modeling experiments. We chose to use ⟦SLOT_42⟧ train, ⟦SLOT_43⟧ validation, and ⟦SLOT_44⟧ test split proportions to provide a large enough sample size for measuring performance metrics. Our splits were constructed so that all pairs containing the a given screen ID belonged to the same split, preventing data leakage. Across the entire dataset, this resulted in 7200 samples for the training set and 2400 samples for both the validation and test splits. For each designer, this resulted in 360 samples for their training split and 120 samples for the validation and test splits."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 CLIP Finetuning"
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "We show the utility of our preference data in improving a CLIP-style dual-encoder VLM, which has previously been used to assess UI design quality and relevance [59, 60]. The CLIP architecture contains two transformer-based encoders and previous work [59, 60] has used it to score UI by computing the cosine similarity between its embedded screenshot and a natural language description of the screen, e.g., “ui screenshot. well-designed. settings page of an e-reader.”"
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "Previous work [59] found that the original CLIP model does not perform well on UI design assessment, and the authors finetuned a derivative model, called UIClip, on a large dataset of webpages screenshots with varying levels of synthetically-induced design flaws to better calibrate the predicted score [59]. In our experiments, we used UIClip’s released model and inference code as a starting point. Specifically, because we wanted to isolate the effect of our collected dataset, we chose to use UIClip’s pretraining checkpoint11 1 https://huggingface.co/biglab/uiclip_jitteredwebsites-2-224-paraphrased, which was not fine-tuned on the authors’ previously collected human preferences. Our training approach largely followed the pairwise contrastive learning approach used by UIClip to finetune on preference pairs [59]. However, we incorporate additional granularity from our data and better support model personalization."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "h4",
+   "en": "4.1.1 Strength-aware Margin"
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "First, we altered the originally proposed pairwise contrastive loss to a formulation with a cost-sensitive margin [19], which allowed us to incorporate the strength of designers’ preferences. We used the following loss function for finetuning UIClip on preference examples from our dataset."
+  },
+  {
+   "id": "b0061",
+   "t": "keep",
+   "w": "table",
+   "en": "ℒ ⁡ ( s A , s B , m ^ ) \\displaystyle\\mathcal{L}(s^{A},s^{B};\\hat{m}) = max ⁡ { 0 , m ^ − ( s A − s B ) } , \\displaystyle=\\max\\left\\{0,\\ \\hat{m}-(s^{A}-s^{B})\\right\\}, (2) m ^ \\displaystyle\\hat{m} = {"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "In the above equation, ⟦SLOT_45⟧ is the margin used for loss computation, which depends on the ground truth label. ⟦SLOT_46⟧ and ⟦SLOT_47⟧ represent the model’s predicted scores for a preferred sample ⟦SLOT_48⟧ and rejected sample ⟦SLOT_49⟧, respectively."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "During model inference, the difference between predicted screens’ scores is used to make a four-way classification prediction."
+  },
+  {
+   "id": "b0064",
+   "t": "keep",
+   "w": "table",
+   "en": "y ^ ​ ( s A , s B , m ^ ) = { A > B , 0 ≤ s A − s B < m 2 , A ≫ B , s A − s B ≥ m 2 . \\hat{y}(s^{A},s^{B};\\hat{m})=\\begin{cases}\\text{A}>\\text{B},&0\\leq s^{A}-s^{B}<m_{2},\\\\ \\text{A}\\gg\\text{B},&s^{A}"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "Negating these values leads to the thresholds for the opposite preference (e.g., B is better than A)."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "h4",
+   "en": "4.1.2 Model Personalization"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "In addition to using a strength-aware margin, we trained separate models on their preference pairs to better reflect their individual preferences. Due to the limited amount of training data from each participant (360 examples), we found that only unfreezing the last layer of UIClip during training reduced the risk of overfitting and led to better performance in our early experiments. We also introduced other regularization measures, such as weight decay to further combat overfitting. All designers’ models were trained using the same set of hyperparameters and early stopping schedule. This set of hyperparameters was initialized from previously published values [59] and further refined through manual experimentation. Hyperparameter values can be found in the supplemental material."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Retrieval-Augmented Generation"
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "Prior work reports that decoder-style LMMs perform poorly on zero-shot UI design assessment tasks [59, 11, 10, 9]. We hypothesized that retrieval-augmented generation (RAG) with our dataset could improve performance. Rather than relying only on knowledge stored in model weights, our RAG setup retrieves a small set of labeled designer preference examples as few-shot context for each query. We build this retrieval pipeline on the design critique generation framework from UICrit [10], and we adapt the prompt to predict pairwise design preferences instead of natural language comments."
+  },
+  {
+   "id": "b0070",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Group Setup Preference Acc. (%) Four-way Acc. (%) SRCC Personalized models CLIP (UIClip) Personalized, strength-aware margin 60.16 34.37 0.217 Personalized, binary margin 57.24 28.89 0.180 LMM j"
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Comparison of personalized and non-personalized models on each designer’s test split. We report binary accuracy, four-way accuracy, and Spearman’s rank correlation coefficient (SRCC) between predictions and ground-truth preference labels."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "h4",
+   "en": "4.2.1 Sample Indexing"
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "We largely followed UICrit’s approach to generating index vectors using textual (screen description) and visual information (UI screenshot). Following UICrit, we used an off-the-shelf text-embedding model, Sentence BERT [46], to generate a fixed-length embedding from the UI’s natural language description. We chose to use UIClip’s visual encoder to generate embeddings for the screenshots, as opposed to the originally used CLIP model [10], since previous work suggested it had stronger UI screenshot retrieval performance [59]. We used these three outputs to generate two index vectors for each preference pair in the training set, by concatenating the text embedding with both potential orderings of the screenshot embeddings. We used two index vectors for each training example because we wanted our retrieval metric to be invariant to the pair order. The retrieval score for a training example was computed as the maximum of the cosine similarity between the query vector and two index vectors."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "h4",
+   "en": "4.2.2 Personalized and Pooled Inference"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "p",
+   "en": "During inference, a retrieval score was computed for each example in training set and the results from the top ⟦SLOT_50⟧ were injected into the input prompt. The prompt format can be found in the supplemental materials of this paper. When running RAG with a single designer’s labeled data, this process resulted in exactly ⟦SLOT_51⟧ retrieved samples, since each designer was only asked to label a pair once. However, when running RAG on the entire dataset of ⟦SLOT_52⟧ designers’ data, ⟦SLOT_53⟧ samples are returned, since each designer labeled the exact same pairs, which result in the same retrieval scores. In this case, we aggregate designers’ labels by averaging all their assigned scores into a single number then rounding to the nearest integer. If the final score rounded to 0, then we randomly chose between A ⟦SLOT_54⟧ B and A ⟦SLOT_55⟧ B for the few-shot example."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Model Evaluations"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "To demonstrate the utility of our dataset in improving ML-based UI design assessment, we conducted experiments that compared data and model configurations with access to personalized data."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 Evaluation Procedure"
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "h5",
+   "en": "Tested Models."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "p",
+   "en": "We tested several configurations and baselines to measure the effect of our data on CLIP finetuning and RAG. For our CLIP finetuning experiments, we compared the following conditions:"
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "li",
+   "en": "1. Personalized, strength-aware margin. We fine-tuned a separate UIClip model for each designer using our strength-aware margin loss."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "li",
+   "en": "2. Personalized, normal margin. We fine-tuned a separate UIClip model for each designer using a standard binary contrastive margin loss."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "li",
+   "en": "3. Pooled, full training set. We fine-tuned a single UIClip model using the combined training data from all designers."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "li",
+   "en": "4. Pooled, matched training size. We first combined the training data from all designers then randomly selected 1/20 of the samples, to match the training size of a single designer’s data."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "p",
+   "en": "We tested our RAG pipeline with four LMMs: GPT-5 [34], Gemini-2.5-Pro [13], Qwen3-VL-235B-Thinking [63], and Qwen3-VL-30B-Thinking. At the time of our experiments, GPT-5 and Gemini-2.5-Pro were the top-performing proprietary VLMs, and Qwen3-VL-235B and Qwen3-VL-30B were the top-performing open source VLMs that could fit on a GPU server and consumer GPU. For each RAG model, we varied the pool of data that the RAG system had access to: i) each designer’s own training set (personalized) and ii) all designers’ labels used our pooled inference strategy (non-personalized). We set our RAG pipeline to retrieve 8 of the most relevant examples, following the best performing configuration found by previous work [10]."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "h5",
+   "en": "Performance Metrics."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "To measure model performance, we chose three metrics based on those that have previously been used to measure the alignment of automated scoring metrics with human ratings [50]: i) binary accuracy, ii) four-way accuracy, and iii) Spearman rank correlation coefficient (SRCC) on four-way ratings. Metrics were computed individually on each designers’ test split then averaged among 20 designers, i.e., macro-averaging."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2 Results"
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "Table 1 shows the overall results. Our analysis focuses on two questions: how designer-specific supervision compares to pretrained or zero-shot judges, and whether personalization helps when compared to global models pool labels across designers."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "h4",
+   "en": "5.2.1 Personalized vs. pretrained and zero-shot judges"
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "p",
+   "en": "Across backbones, designer-specific supervision improves alignment with individual preferences. The per-designer UIClip model with a strength-aware margin reaches 60.16% binary accuracy and 0.217 SRCC, compared to 55.07% and 0.126 for the frozen UIClip encoder and 46.68% and ⟦SLOT_56⟧ for CLIP B/32. A personalized model that uses a strength-aware loss performs better than the binary variant on all three metrics, suggesting that four-level labels provide useful signal when the loss exposes preference strength."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "Personalized RAG with LMM on each designer’s preference also shows various levels of improvements over zero-shot LMM judges. For GPT-5, personalization raises binary accuracy from 57.70% to 58.89% and four-way accuracy from 31.35% to 38.53% with similar SRCC. Personalization also helps both Qwen models gain about 1–2 points in binary accuracy and more than 20 points in four-way accuracy when retrieval conditions on each designer’s own labels, while SRCC stays roughly unchanged. The two selected metrics show different aspects of the performance: four-way accuracy measures exact matches to discrete preference strengths, reflecting class imbalance and designers’ differing thresholds between slight and strong choices. SRCC instead assesses how consistently model scores preserve overall rankings across the four levels. Given uneven distributions with most labels in the middle, and varied use of extreme ratings among designers, strength predictions remain noisier than binary winner predictions."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "h4",
+   "en": "5.2.2 Personalized vs. pooled models"
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "Per-designer models consistently bring better personalized prediction than global pooling. In UIClip, the per-designer strength-aware model achieves higher binary accuracy and SRCC than pooled four-class models, even when the pooled judge sees roughly twenty times more labels per designer. With a matched training set size, the personalized models improve all three metrics. RAG experiments with LMM show similar pattern but with more marginal improvements. For GPT-5, Qwen-235B-Thinking, and Qwen-30B-Thinking, retrieval over each designer’s own preference labels yields higher binary and four-way accuracy and equal or better SRCC than pooled RAG that averages labels across designers. Gemini-2.5-Pro behaves close to neutral under personalization, which suggests that the base model already encodes a strong consensus prior. Overall, identity-aware personalization helps both finetuned CLIP and few-shot LLM judges align with individual design preferences more closely than global pooling."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Limitations"
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "Although our work suggests that personalization is important for design, we note several limitations and provide avenues for future improvement. First, our dataset is limited to feedback from 20 designers. In contrast to existing crowd-sourced design benchmarks [28, 8], we intentionally chose to focus on skilled (and compensated) designers, who we felt were more likely to understand and accurately apply design guidelines. Yet, a larger sample size might facilitate new types of analyses, such as the emergence of “clusters” of designers who might have similar design tastes, e.g., minimalism or Bauhaus school. Another limitation of our data is that it focused primarily on labeling noise resulting from inter-rater disagreement; although personal uncertainty might be another strong contributing factor. Anecdotally, we observed that designers in our study sometimes changed their own answer during decision process, which further suggests the difficulty of the task for ML models."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "Our modeling experiments explored only a subset of possibilities enabled by DesignPref, and we specifically focused on replicating and improving two existing published examples [59, 10]. Applying personalization approaches led to the best-performing model (60.16% binary accuracy), which is offers a similar level of performance as reward models for challenging tasks such as math and instruction following [24, 32]. Other modeling experiments, e.g., using preference data to finetune a decoder VLM, or using designers’ critiques as reasoning traces are promising next steps for further improving performance, and we expect our dataset to enable additional future exploration."
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "Finally, our results show that, in our tested configurations, a smaller amount of personalized data could lead to better preference prediction than a 20 times larger aggregated dataset. However, we did not attempt to study the amount of individually-collected data needed for effective model personalization. Each designer in our study spent approximately 90 minutes to construct their dataset of 600 labels, a lengthy process for most practical applications. A promising future direction is to study the scaling trend of personal preference data or apply related techniques to improve sample efficiency [50, 21, 55, 65]."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "h2",
+   "en": "7 Conclusion"
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "p",
+   "en": "DesignPref establishes a benchmark for personalized visual design evaluation with identity-linked judgments. The dataset logs 12,000 pairwise UI comparisons from 20 professional designers with four-class strength labels, which enables per-designer modeling. Analyses show low cross-designer consensus and reveal the agreement varies among different designers and evaluated UI types. Per-designer UIClip models beat the best pooled judges on held-out pairs, showing the sample efficiency of personalized data. DesignPref shifts evaluation and alignment from a single global objective toward models that reflect individual taste and lays foundations for personalized design generation."
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] D. Beeferman and N. Gillani (2023) FeedbackMap: a tool for making sense of open-ended survey responses . In Companion Publication of the 2023 Conference on Computer Supported Cooperative Work and "
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] S. Bunian, K. Li, C. Jemmali, C. Harteveld, Y. Fu, and M. S. Seif El-Nasr (2021) Vins: visual search for mobile user interface design . In Proceedings of the 2021 CHI Conference on Human Factors i"
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] F. Caron and A. Doucet (2012) Efficient bayesian inference for generalized Bradley–Terry models . Journal of Computational and Graphical Statistics 21 ( 1 ), pp. 174–196 . External Links: Document"
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] X. Chen, P. N. Bennett, K. Collins-Thompson, and E. Horvitz (2013) Pairwise ranking aggregation in a crowdsourced setting . In Proceedings of the sixth ACM international conference on Web search a"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] O. Cherepkova, S. A. Amirshahi, and M. Pedersen (2024) Individual contrast preferences in natural images . Journal of Imaging 10 ( 1 ), pp. 25 . External Links: Document Cited by: §2 ."
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] A. P. Dawid and A. M. Skene (1979) Maximum likelihood estimation of observer error-rates using the em algorithm . Journal of the Royal Statistical Society: Series C (Applied Statistics) 28 ( 1 ), "
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] M. E. Delamaro, J. C. Maldonado, and A. P. Mathur (1996) Integration testing using interface mutation . In Proceedings of ISSRE’96: 7th International Symposium on Software Reliability Engineering "
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] Design Arena (2025) Design arena . Note: https://www.designarena.ai/ Accessed: 2025-11-05 Cited by: §3.1.1 , §6 ."
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] P. Duan, C. Cheng, B. Hartmann, and Y. Li (2024) Visual prompting with iterative refinement for design critique generation . arXiv preprint arXiv:2412.16829 . Cited by: §4.2 ."
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] P. Duan, C. Cheng, G. Li, B. Hartmann, and Y. Li (2024) Uicrit: enhancing automated design evaluation with a ui critique dataset . In Proceedings of the 37th Annual ACM Symposium on User Interfac"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] P. Duan, J. Warner, Y. Li, and B. Hartmann (2024) Generating automatic feedback on ui mockups with large language models . In Proceedings of the 2024 CHI Conference on Human Factors in Computing "
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] J. Ge, Z. Z. Wang, X. Zhou, Y. Peng, S. Subramanian, Q. Tan, M. Sap, A. Suhr, D. Fried, G. Neubig, et al. (2025) Autopresent: designing structured visuals from scratch . In Proceedings of the Com"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] Google DeepMind (2025) Gemini 2.5 pro model card . Technical report Google DeepMind . Note: Model card updated June 27, 2025 External Links: Link Cited by: §5.1 ."
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] S. Goree, B. Doosti, D. Crandall, and N. M. Su (2021) Investigating the homogenization of web design: a mixed-methods approach . In Proceedings of the 2021 CHI Conference on Human Factors in Comp"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] S. Goree, W. Khoo, and D. J. Crandall (2023) Correct for whom? subjectivity and the evaluation of personalized image aesthetics assessment models . In Proceedings of the AAAI Conference on Artifi"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] H. Y. Hsu, X. He, Y. Peng, H. Kong, and Q. Zhang (2023) Posterlayout: a new benchmark and approach for content-aware visual-textual presentation layout . In Proceedings of the IEEE/CVF Conference"
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] H. Hsu and Y. Peng (2025) PosterO: structuring layout trees to enable language models in generalized content-aware layout generation . In Proceedings of the Computer Vision and Pattern Recognitio"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] Y. Hu, B. Liu, J. Kasai, Y. Wang, M. Ostendorf, R. Krishna, and N. A. Smith (2023) Tifa: accurate and interpretable text-to-image faithfulness evaluation with question answering . In Proceedings "
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] A. Iranmehr, H. Masnadi-Shirazi, and N. Vasconcelos (2019) Cost-sensitive support vector machines . Neurocomputing 343 , pp. 50–64 . Cited by: §4.1.1 ."
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] S. Karthik, H. Coskun, Z. Akata, S. Tulyakov, J. Ren, and A. Kag (2025) Scalable ranked preference optimization for text-to-image generation . In Proceedings of the IEEE/CVF International Confere"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] J. Ke, Q. Wang, Y. Wang, P. Milanfar, and F. Yang (2021) MUSIQ: multi-scale image quality transformer . In Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV) , pp. 512"
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] R. King, E. F. Churchill, and C. Tan (2017) Designing with data: improving the user experience with a/b testing . ” O’Reilly Media, Inc.” . Cited by: §3 ."
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] Y. Kirstain, A. Polyak, U. Singer, S. Matiana, J. Penna, and O. Levy (2023) Pick-a-pic: an open dataset of user preferences for text-to-image generation . Advances in neural information processin"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] N. Lambert, V. Pyatkin, J. Morrison, L. J. V. Miranda, B. Y. Lin, K. Chandu, N. Dziri, S. Kumar, T. Zick, Y. Choi, et al. (2025) Rewardbench: evaluating reward models for language modeling . In F"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] J. Lee and C. Kim (2019) Image aesthetic assessment based on pairwise comparison a unified approach to score regression, binary classification, and personalization . In Proceedings of the IEEE/CV"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] L. A. Leiva, A. Hota, and A. Oulasvirta (2020) Enrico: a dataset for topic modeling of mobile ui designs . In 22nd International Conference on Human-Computer Interaction with Mobile Devices and S"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] A. Li, Y. Peng, J. Nichols, J. Bigham, and J. Wu (2025) WaybackUI: a dataset to support the longitudinal analysis of web user interfaces . Note: arXiv, 2025.12 Cited by: §1 , §2 ."
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] LMSYS Org. (2025) WebDev arena leaderboard . Note: https://web.lmarena.ai/leaderboard Cited by: §1 , §3.1 , §6 ."
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] R. A. Luera, R. Rossi, F. Dernoncourt, S. Basu, S. Kim, S. Mukherjee, P. Mathur, R. Zhang, J. Kil, N. Lipka, et al. (2025) Mllm as a ui judge: benchmarking multimodal llms for predicting human pe"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] K. Luther, A. Pavel, W. Wu, J. Tolentino, M. Agrawala, B. Hartmann, and S. P. Dow (2014) CrowdCrit: crowdsourcing and aggregating visual design critique . In Computer Supported Cooperative Work, "
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] Y. Ma, X. Wu, K. Sun, and H. Li (2025) Hpsv3: towards wide-spectrum human preference score . In Proceedings of the IEEE/CVF International Conference on Computer Vision , pp. 15086–15095 . Cited b"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] S. Malik, V. Pyatkin, S. Land, J. Morrison, N. A. Smith, H. Hajishirzi, and N. Lambert (2025) RewardBench 2: advancing reward model evaluation . arXiv preprint arXiv:2506.01937 . Cited by: §6 ."
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] B. A. Myers and M. B. Rosson (1992) Survey on user interface programming . In Proceedings of the SIGCHI conference on Human factors in computing systems , pp. 195–202 . Cited by: §1 ."
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] OpenAI (2025) GPT-5 system card . Technical report OpenAI . External Links: Link Cited by: §5.1 ."
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] L. Ouyang, J. Wu, X. Jiang, D. Almeida, C. Wainwright, P. Mishkin, C. Zhang, S. Agarwal, K. Slama, A. Ray, et al. (2022) Training language models to follow instructions with human feedback . Adva"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] Y. Peng, J. P. Bigham, and A. Pavel (2021) Slidecho: flexible non-visual exploration of presentation videos . In Proceedings of the 23rd International ACM SIGACCESS Conference on Computers and Ac"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] Y. Peng, P. Chi, A. Kannan, M. R. Morris, and I. Essa (2023) Slide gestalt: automatic structure extraction in slide decks for non-visual access . In Proceedings of the 2023 CHI Conference on Huma"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] Y. Peng, F. Huq, Y. Jiang, J. Wu, X. Y. Li, J. P. Bigham, and A. Pavel (2024) Dreamstruct: understanding slides and user interfaces via synthetic data generation . In European Conference on Compu"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] Y. Peng, J. Jang, J. P. Bigham, and A. Pavel (2021) Say it all: feedback for improving non-visual presentation accessibility . In Proceedings of the 2021 CHI Conference on Human Factors in Comput"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] Y. Peng, D. Li, J. P. Bigham, and A. Pavel (2025) Morae: proactively pausing ui agents for user choices . In Proceedings of the 38th Annual ACM Symposium on User Interface Software and Technology"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] Y. Peng, M. Lin, Y. Chen, T. Chen, P. S. Ku, P. Taele, C. G. Lim, and M. Y. Chen (2019) Personaltouch: improving touchscreen usability by personalizing accessibility settings based on individual "
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[42] Y. Peng, J. Wu, J. Bigham, and A. Pavel (2022) Diffscriber: describing visual design changes to support mixed-ability collaborative presentation authoring . In Proceedings of the 35th Annual ACM "
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[43] T. Qiao, C. Walker, C. Cunningham, and Y. S. Koh (2025) Thematic-lm: a llm-based multi-agent system for large-scale thematic analysis . In Proceedings of the ACM on Web Conference 2025 , pp. 649–"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[44] R. Rafailov, A. Sharma, E. Mitchell, C. D. Manning, S. Ermon, and C. Finn (2023) Direct preference optimization: your language model is secretly a reward model . Advances in neural information pr"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[45] V. C. Raykar, S. Yu, L. H. Zhao, G. H. Valadez, C. Florin, L. Bogoni, and L. Moy (2010) Learning from crowds . Journal of Machine Learning Research 11 , pp. 1297–1322 . Cited by: §3.1.2 ."
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[46] N. Reimers and I. Gurevych (2019) Sentence-bert: sentence embeddings using siamese bert-networks . arXiv preprint arXiv:1908.10084 . Cited by: §3.3.1 , §4.2.1 ."
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[47] K. Reinecke and K. Z. Gajos (2014) Quantifying visual preferences around the world . In Proceedings of the SIGCHI conference on human factors in computing systems , pp. 11–20 . Cited by: §1 , §2 "
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[48] J. Ren, X. Shen, Z. Lin, R. Mech, and D. J. Foran (2017) Personalized image aesthetics . In Proceedings of the IEEE International Conference on Computer Vision (ICCV) , pp. 638–647 . External Lin"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[49] Y. Song, Y. Kim, and M. Iyer (2024) VERISCORE: evaluating the factuality of verifiable claims in long-form text generation . In Findings of the Association for Computational Linguistics: EMNLP 20"
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[50] H. Talebi and P. Milanfar (2018) NIMA: neural image assessment . IEEE Transactions on Image Processing 27 ( 8 ), pp. 3998–4011 . External Links: Document Cited by: §2 , §5.1 , §6 ."
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[51] H. Touvron, L. Martin, K. Stone, et al. (2023) Llama 2: open foundation and fine-tuned chat models . arXiv:2307.09288 . Cited by: §3.1.2 ."
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[52] B. Wallace, M. Dang, R. Rafailov, L. Zhou, A. Lou, S. Purushwalkam, S. Ermon, C. Xiong, S. Joty, and N. Naik (2024) Diffusion model alignment using direct preference optimization . In Proceedings"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[53] B. Wang, G. Li, X. Zhou, Z. Chen, T. Grossman, and Y. Li (2021) Screen2words: automatic mobile ui summarization with multimodal learning . In The 34th Annual ACM Symposium on User Interface Softw"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[54] C. Wang, Y. Gan, Y. Huo, Y. Mu, Q. He, M. Yang, T. Xiao, C. Zhang, T. Liu, and J. Zhu (2024) LRHP: learning representations for human preferences via preference pairs . arXiv:2410.04503 . Cited b"
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[55] J. Wang, K. C. K. Chan, and C. C. Loy (2023) Exploring CLIP for assessing the look and feel of images . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 37 , pp. 2555–2563 "
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[56] Q. Wang, M. Erqsous, K. E. Barner, and M. L. Mauriello (2025) LATA: a pilot study on llm-assisted thematic analysis of online social network data generation experiences . Proceedings of the ACM o"
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[57] Y. Wang, A. Chubarau, H. Yoo, T. Akhavan, and J. Clark (2023) Age-specific perceptual image quality assessment . In IS&T International Symposium on Electronic Imaging 2023, Image Quality and Syst"
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[58] J. O. Wobbrock, S. K. Kane, K. Z. Gajos, S. Harada, and J. Froehlich (2011) Ability-based design: concept, principles and examples . ACM Transactions on Accessible Computing (TACCESS) 3 ( 3 ), pp"
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[59] J. Wu, Y. Peng, X. Y. A. Li, A. Swearngin, J. P. Bigham, and J. Nichols (2024) UIClip: a data-driven model for assessing user interface design . In Proceedings of the 37th Annual ACM Symposium on"
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[60] J. Wu, E. Schoop, A. Leung, T. Barik, J. P. Bigham, and J. Nichols (2024) Uicoder: finetuning large language models to generate user interface code through automated feedback . arXiv preprint arX"
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[61] J. Wu, S. Wang, S. Shen, Y. Peng, J. Nichols, and J. P. Bigham (2023) Webui: a dataset for enhancing visual ui understanding with web semantics . In Proceedings of the 2023 CHI Conference on Huma"
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[62] J. Xu, X. Liu, Y. Wu, Y. Tong, Q. Li, M. Ding, J. Tang, and Y. Dong (2023) Imagereward: learning and evaluating human preferences for text-to-image generation . Advances in Neural Information Pro"
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[63] A. Yang, A. Li, B. Yang, et al. (2025) Qwen3 technical report . arXiv preprint arXiv:2505.09388 . External Links: 2505.09388 , Document , Link Cited by: §5.1 ."
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[64] Y. Yang, L. Xu, L. Li, N. Qie, Y. Li, P. Zhang, and Y. Guo (2022) Personalized image aesthetics assessment with rich attributes . arXiv preprint arXiv:2203.16754 . External Links: Link Cited by: "
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[65] J. Yun and J. Choo (2024) Scaling up personalized image aesthetic assessment via task vector customization . arXiv preprint arXiv:2407.07176 . External Links: Link Cited by: §6 ."
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[66] J. Yun, H. Wang, Y. Shimose, J. Choo, and S. Takamatsu (2025) Designlab: designing slides through iterative detection and correction . arXiv preprint arXiv:2507.17202 . Cited by: §1 , §3.1 ."
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[67] L. Zheng, W. Chiang, Y. Sheng, S. Zhuang, Z. Wu, Y. Zhuang, Z. Lin, Z. Li, D. Li, E. Xing, et al. (2023) Judging llm-as-a-judge with mt-bench and chatbot arena . Advances in neural information pr"
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "p",
+   "en": "Supplementary Material"
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "h2",
+   "en": "S1 Model Hyperparameters"
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "p",
+   "en": "Here are the hyperparameteres we used for training and prompting VLMs:"
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Training hyperparameters for UIClip."
+  },
+  {
+   "id": "b0173",
+   "t": "keep",
+   "w": "table",
+   "en": "Model UIClip Learning rate 5 × 10 − 4 5\\times 10^{-4} Schedule Cosine ( T max = 24 T_{\\max}=24 , η min = 10 − 4 \\eta_{\\min}=10^{-4} ) Weight decay 10 − 2 10^{-2} Batch size 64 Gradient clipping 1.0 Pa"
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "p",
+   "en": "All the LMM’s parameters for randomness or reasoning are set to default."
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "h2",
+   "en": "S2 Prompt Sets"
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "h2",
+   "en": "S3 Guidelines for Preference Annotations"
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  }
+ ]
+}

@@ -1,0 +1,838 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Investigating Spatial Attention Bias in Vision-Language Models"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Vision-Language Models have demonstrated remarkable capabilities in understanding visual content, yet systematic biases in their spatial processing remain largely unexplored. This work identifies and "
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Vision-Language Models (VLMs) have achieved significant advances in multimodal understanding by jointly modeling visual and textual modalities, enabling applications such as image captioning, visual question answering, and multimodal reasoning Krishna and others (2017); Lu et al. (2019); Li et al. (2020); Radford and others (2021). Large-scale pretrained VLMs now serve as general-purpose multimodal systems and exhibit strong zero-shot and in-context learning capabilities Alayrac et al. (2022); Li et al. (2023a)."
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "Despite these achievements, systematic biases in how VLMs process spatial information remain poorly understood Zhu et al. (2025). Such biases can compromise model reliability in real-world applications, particularly those requiring fair and balanced visual interpretation, including user interfaces, robotics, and decision-support systems."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "This work investigates a specific manifestation of spatial processing bias: when presented with horizontally concatenated images containing two distinct objects, do VLMs exhibit systematic preferences in the order they describe spatial content? We focus on two fundamental questions. First, do VLMs demonstrate consistent spatial attention bias across different architectures and model generations? Second, what factors contribute to this bias. Does it stem from language reading direction, training data annotation patterns, or architectural design choices?"
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "We conduct experiments using a controlled dataset of 100 image pairs from Caltech-101 Fei-Fei et al. (2004), where 50 unique pairs are presented alongside their horizontal flips to isolate positional effects from content-specific biases. We evaluate seven models spanning both open-source architectures including InternVL2-8B and InternVL3-8B Chen et al. (2024); OpenGVLab (2025a); OpenGVLab (2025b), Qwen2-VL-7B Qwen Team (2024); Qwen Team (2025), and Qwen2.5-VL-7B Bai and others (2025) and closed-source systems, including GPT-5 Nano OpenAI (2025), Gemini 2.0 Flash Google (2025), and Claude 4.5 Haiku Anthropic (2025). Each model is tested with both simple directional prompts and structured JSON-format prompts to assess natural behavior and responsiveness to explicit instructions.The key contributions of this work are as follows:"
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "li",
+   "en": "• We provide a systematic characterization of spatial attention bias across seven diverse VLM architectures, identifying a consistent left-to-right processing preference in open-source models."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "li",
+   "en": "• We demonstrate through Arabic-finetuned model testing MBZUAI Oryx-Lab (2025) that this bias persists regardless of language reading direction (right-to-left), ruling out language priors as the primary cause."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "li",
+   "en": "• We analyze annotation guidelines from PixMo Deitke and others (2024) and Visual Genome Krishna and others (2017), showing that explicit left-first ordering instructions are absent from major training datasets."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "li",
+   "en": "• We evaluate bias on a Desktop UI dataset consisting of dense interface elements, highlighting how spatial preferences shift in information-rich contexts."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0014",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Overview of the experimental setup for detecting spatial attention bias."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Vision-Language Models"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "Vision-Language Models (VLMs) typically feature a modular architecture comprising a frozen visual encoder Radford et al. (2021); Zhai et al. (2023), a large language model backbone Touvron et al. (2023); Chiang et al. (2023), and a cross-modal alignment projector Alayrac et al. (2022); Li et al. (2023a); Liu et al. (2024) that bridges the semantic gap between modalities. These systems are initially grounded on massive image-text corpora Schuhmann et al. (2022) and subsequently refined through visual instruction tuning Dai et al. (2024) or direct preference optimization Zhao et al. (2023); Yu et al. (2023) to enhance instruction adherence. This paradigm has yielded remarkable proficiency across diverse applications, including open-ended dialogue Bai et al. (2023); Chen et al. (2024), complex visual reasoning Wang et al. (2023b); Zhu et al. (2023), and domain-specific tasks such as biomedical analysis Li et al. (2024). However, despite these advancements, recent research suggests that mapping high-dimensional visual features into the causal attention mechanisms of LLMs introduces structural vulnerabilities, particularly regarding how spatial information is encoded, preserved, and prioritized during cross-modal interactions."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Biases in Multimodal Models"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "Recent work has identified various biases in VLMs. Gender bias in image captioning has been extensively documented, with models often making stereotypical associations based on statistical correlations in training data Hendricks et al. (2018); Zhao et al. (2021). Object co-occurrence biases are also prevalent, causing models to hallucinate commonly associated objects even when the object is absent from the image Rohrbach et al. (2018); Li et al. (2023b). While these semantic biases have been widely studied, systematic biases in spatial processing remain comparatively underexplored."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "h3",
+   "en": "2.3 Spatial and Positional Bias"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "Recent investigations have begun to explore the spatial robustness of LVLMs, though the focus has largely remained on reasoning accuracy rather than scanning priority. Notably, Zhu et al. (2025) conducted a systematic study demonstrating that current LVLMs often produce inconsistent semantic outputs when identical visual content is shifted to different spatial locations. More recently, Tian et al. (2025) investigated position bias in multi-image contexts, identifying a \"recency bias\" in open-source models (preferring the last image) and a \"lost-in-the-middle\" phenomenon in proprietary models when performing specific reasoning tasks."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "While these studies highlight vulnerabilities in performance stability (specifically whether a model answers correctly depending on image placement), they do not address the distinct phenomenon of sequential attention bias, or the intrinsic preference to describe specific spatial regions first. Furthermore, existing literature has not sufficiently isolated visual scanning biases from linguistic reading directionality, nor evaluated how these spatial priors manifest in information-dense environments like user interfaces. Our work addresses these gaps by decoupling text generation order from visual processing and examining how entrenched spatial habits can lead to instruction-following failures in state-of-the-art models."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Methodology"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Dataset Construction"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "To evaluate spatial bias across different levels of visual complexity and information density, we constructed two distinct datasets: one focusing on object-centric natural images and another on dense, text-rich user interfaces."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h4",
+   "en": "3.1.1 Caltech-101 Controlled Pairs"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "We constructed a controlled dataset to isolate positional bias from content-specific effects. From Caltech-101 Fei-Fei et al. (2004), we selected 50 diverse image pairs from different object categories. For each pair, we created the original left-right arrangement and a horizontally flipped version, yielding 100 total test images. This design ensures that observed bias cannot be attributed to specific image content being inherently more description-worthy. All images were resized to 512×512 pixels using bicubic interpolation before horizontal concatenation."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "h4",
+   "en": "3.1.2 Desktop UI Dataset"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "To investigate model behavior in high-density information contexts, we curated a \"Desktop UI\" dataset comprising 10 distinct screenshots of common digital interfaces (e.g., LinkedIn feed, Google News, Twitter/X feed, YouTube homepage, Gmail inbox, and LeetCode). From these 10 base screenshots, we generated all unordered pairwise combinations (10C2 = 45 unique pairs), and horizontally concatenated each pair to form the evaluation set. This design allows us to systematically evaluate spatial bias across diverse UI layouts while controlling for the underlying content. Unlike the object-centric Caltech dataset, these images contain dense textual information and complex UI elements, testing whether spatial scanning habits shift when models are presented with reading-heavy tasks."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Experimental Design"
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "We conducted three sets of experiments to investigate different aspects of spatial bias."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "h4",
+   "en": "3.2.1 Neutral Prompting Experiment"
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "To establish baseline spatial preference without explicit directional instructions, we tested Qwen2.5-VL-7B and the Arabic-finetuned AIN model using the neutral prompt \"Describe the image\" with no directional guidance. Responses were analyzed to determine which image (left or right) was mentioned first in the description."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "h4",
+   "en": "3.2.2 Directional Prompting Experiments"
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Models were evaluated under two prompting conditions. Simple prompts used \"Describe the image from left to right\" and \"Describe the image from right to left.\" Structured prompts used \"Describe the image from left to right in structured JSON format, Left image: <Description> Right Image: <Description>\" and the corresponding right-to-left variant. These conditions test both natural behavior and responsiveness to explicit format constraints."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h4",
+   "en": "3.2.3 Dataset Annotation Analysis"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "We examined annotation guidelines from two major vision-language training datasets: PixMo, which uses high-quality human annotations collected through speech-based descriptions, and Visual Genome, a widely-used dataset for vision-language pretraining. This analysis aimed to determine whether explicit left-to-right ordering instructions exist in dataset creation protocols."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Models Evaluated"
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "We selected seven models representing diverse architectures and training approaches. Open-source models include InternVL2-8B OpenGVLab (2025a), InternVL3-8B OpenGVLab (2025b), Qwen2-VL-7B Qwen Team (2024); Qwen Team (2025), and Qwen2.5-VL-7B Bai and others (2025). Closed-source systems include GPT-5 Nano OpenAI (2025), Gemini 2.0 Flash Google (2025), and Claude 4.5 Haiku Anthropic (2025). Additionally, we tested the AIN model fine-tuned for Arabic MBZUAI Oryx-Lab (2025) to examine whether language reading direction influences spatial processing bias."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "All models were run using consistent inference configuration with temperature set to 0.5 and top-p sampling at 0.9 to balance generation diversity with consistency."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "h3",
+   "en": "3.4 Evaluation Metrics"
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "For the neutral prompting experiment, we determined which spatial position was mentioned first in model responses and calculated the percentage of left-first descriptions."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "For the Directional Prompting Experiments we measured bias through description length analysis, calculating the difference between response lengths for left-to-right versus right-to-left prompting. The metric is defined as the length of the left-to-right response minus the length of the right-to-left response. Positive values indicate longer descriptions when prompted to describe from left to right, suggesting models allocate more descriptive attention to left-positioned content even when explicitly instructed to prioritize right-positioned content."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "We established a threshold of ±60 characters to identify cases of substantial bias while tracking the full distribution of differences. For each model and prompting condition, we calculated the percentage of cases exceeding +60 character difference (strong left bias), percentage below -60 characters (strong right bias), percentage within ±60 characters (relatively balanced), average difference across all test cases, and maximum and minimum observed differences."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Results"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Neutral Prompting Baseline"
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "Before evaluating the magnitude of bias using character counts, we first established the baseline scanning preference of VLMs using a neutral prompt. We evaluated Qwen2.5-VL-7B Bai and others (2025) and the Arabic-finetuned AIN model MBZUAI Oryx-Lab (2025) on the 100-pair Caltech-101 dataset."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "Both models were given the instruction \"Describe the image\" with no directional constraints or formatting cues. We manually analyzed the responses to identify which image in the pair was described first."
+  },
+  {
+   "id": "b0049",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Training Prior Left-First Preference Qwen2.5-VL-7B English (LTR) 97% AIN (Arabic) Arabic (RTL) 97%"
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Results of the Neutral Prompting Experiment. Despite the AIN model being fine-tuned on Right-to-Left (RTL) Arabic data, it exhibits an identical Left-to-Right scanning bias to the English-trained Qwen2.5-VL."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "The results, presented in Table 1, reveal a near-universal preference for left-to-right processing. Both models described the left image first in 97% of cases. This finding is critical because the AIN model is specifically fine-tuned on Arabic instructions and data, which naturally follows a Right-to-Left (RTL) reading order. If the spatial bias were driven by the language model’s learned text generation direction, the Arabic model should favor a Right-to-Left description order. The fact that it instead adheres to a Left-to-Right visual scan strongly suggests that this bias is intrinsic to the visual encoder or the cross-modal alignment process, operating independently of the language decoder’s textual training."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Spatial Bias in Object-Centric Images"
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "Our initial experiments on the Caltech-101 dataset reveal significant spatial bias across all tested models, though with considerable variation in magnitude. Table 2 presents the key findings for object-centric image pairs."
+  },
+  {
+   "id": "b0054",
+   "t": "keep",
+   "w": "table",
+   "en": "Bias Frequency (%) Character Difference Magnitude Model Left Bias Balanced Right Bias Avg Diff Max Min (>+60) (Within ± \\pm 60) (<-60) InternVL2-8B 80 12 8 +472.8 +1619 -600 InternVL3-8B 77 18 5 +393."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Summary of spatial bias on the Caltech-101 dataset under Simple Prompt. Left Bias indicates the percentage of cases where the Left-to-Right description was significantly longer (>60 chars) than the Right-to-Left description. Balanced indicates cases with negligible difference (⟦SLOT_0⟧60 chars)."
+  },
+  {
+   "id": "b0056",
+   "t": "keep",
+   "w": "table",
+   "en": "Bias Frequency (%) Character Difference Magnitude Model Left Bias Balanced Right Bias Avg Diff Max Min (>+60) (Within ± \\pm 60) (<-60) InternVL2-8B 47 24 29 +33.8 +445 -413 InternVL3-8B 44 40 16 +41.0"
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Summary of spatial bias on the Caltech-101 dataset under Structured Prompting (JSON format). Explicit formatting instructions increase the frequency of Balanced responses, particularly in closed-source models."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "Open-source models demonstrate a pronounced left-to-right bias. InternVL2-8B exhibits the strongest effect, with an average difference of +472.8 characters, indicating substantially longer descriptions when following the natural left-to-right tendency. InternVL3-8B shows similar patterns (+393.5 characters), suggesting architectural improvements did not resolve this spatial preference."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "Closed-source models generally show better balance on object-centric data. GPT-5 Nano achieves near-zero average difference (+3.3), and Claude 4.5 Haiku shows only a modest preference (+14.0). However, individual variance remains high, indicating that while the aggregate behavior is balanced, specific instances still trigger directional preferences."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Spatial Bias in Dense UI Contexts"
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "p",
+   "en": "We extended our evaluation to the \"Desktop UI\" dataset to determine if spatial bias persists or shifts in dense, text-rich UI contexts. The results, summarized in Table 4, indicate that high information density significantly alters scanning behaviors for certain models."
+  },
+  {
+   "id": "b0062",
+   "t": "keep",
+   "w": "table",
+   "en": "Bias Frequency (%) Character Difference Magnitude Model Left Bias Balanced Right Bias Avg Diff Max Min (>+60) (Within ± \\pm 60) (<-60) InternVL2-8B 42 27 31 +30.7 +344 -301 InternVL3-8B 60 7 33 +114.6"
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Summary of spatial bias on the Desktop UI dataset under Simple Prompt. High information density triggers a shift toward Right Bias (negative Average Difference) in models like GPT-5 Nano and Gemini 2.0 Flash."
+  },
+  {
+   "id": "b0064",
+   "t": "keep",
+   "w": "table",
+   "en": "Bias Frequency (%) Character Difference Magnitude Model Left Bias Balanced Right Bias Avg Diff Max Min (>+60) (Within ± \\pm 60) (<-60) InternVL2-8B 44 16 40 -17.4 +1558 -2032 InternVL3-8B 33 16 51 -75"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Summary of spatial bias on the Desktop UI dataset under Structured Prompting. In dense UI contexts, structured formatting fails to enforce balance, with models like Gemini 2.0 Flash and InternVL3 exhibiting significant Right Bias."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "h5",
+   "en": "Shift in Polarity"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "Unlike the consistent left-bias seen in object recognition, the Desktop UI dataset induced a strong right-favoring bias (negative average difference) in several capable models. GPT-5 Nano shifted from a low bias on Caltech to a significant -179.7 on Dense UI data, with 67% of cases favoring the right image. Similarly, Gemini 2.0 Flash shifted to -33.9. This suggests that when presented with dense text or UI feeds, these models may allocate more attention to the latter half of the context window or the right side of the visual field."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "h5",
+   "en": "Qualitative Observation: Directional Refusal in Qwen2.5"
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "A distinct behavioral anomaly emerged with Qwen2.5-VL-7B Bai and others (2025). While the quantitative metrics show a balanced average difference of -7.6, qualitative analysis reveals a systematic failure in instruction following. In a majority of cases under the \"Right-to-Left\" simple prompt, the model failed to start its description from the right image. Instead, it described the left image first before transitioning to the right, effectively ignoring the directional constraint."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "h3",
+   "en": "4.4 Mitigation via Structured Prompting"
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "Structured prompting (requesting JSON output) significantly reduced bias magnitude in open-source models, though it did not eliminate it. For InternVL2-8B on Caltech data, structured prompting reduced the percentage of strongly left-biased cases from 80% to 47%, and the average difference from +472.8 to +33.8 characters."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "h3",
+   "en": "4.5 Investigating the Origins of Spatial Bias"
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "Having established the consistent presence of spatial bias across models and datasets, we investigated three potential sources: language reading direction, explicit dataset annotation instructions, and architectural design choices."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "h4",
+   "en": "4.5.1 Language Reading Direction"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "p",
+   "en": "The neutral prompting experiment with the Arabic-finetuned AIN model provides crucial evidence. Despite being fine-tuned on right-to-left (RTL) Arabic text, the model described left-positioned content first in 97% of cases identical to the English-trained Qwen2.5-VL-7B."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "p",
+   "en": "This finding suggests language reading direction is not the primary driver of spatial bias. However, we acknowledge a limitation: AIN is fine-tuned on an existing architecture rather than trained from scratch on RTL languages. While this indicates architectural priors may dominate over fine-tuning, a model pre-trained entirely on RTL data would provide more conclusive evidence."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "h4",
+   "en": "4.5.2 Training Data Annotation Patterns"
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "We examined annotation protocols from two major vision-language datasets: PixMo Deitke and others (2024) and Visual Genome Krishna and others (2017). Neither dataset contains explicit instructions mandating left-to-right description ordering. PixMo annotators are instructed to describe salient objects first through speech-based descriptions, while Visual Genome guidelines emphasize prominent elements without specifying spatial sequences."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "This rules out explicit annotation directives as the source. However, implicit human tendencies could still influence training data annotators might naturally describe images left-to-right despite lacking explicit instructions. A quantitative analysis of actual annotations (rather than just guidelines) would be needed to assess this possibility."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "h4",
+   "en": "4.5.3 Architectural Factors"
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "With explicit language and dataset instructions eliminated, we hypothesize architectural origins. Two mechanisms warrant investigation:"
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "Positional Embeddings: The encoding of spatial location for image tokens may introduce systematic processing differences between left and right positions. If positional embeddings (such as RoPE) create asymmetric attention patterns, this could manifest as the observed bias. This hypothesis is consistent with prior work by Zhu et al. (2025), which identified unbalanced position embedding design in the language model component as a root cause of spatial inconsistencies."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "Vision Encoder Design: Vision transformers process images by dividing them into patches. If patch ordering or spatial relationship encoding favors left-to-right patterns, this architectural choice could produce positional bias independent of language or training data."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Discussion"
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 Need for Mechanistic Understanding"
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "Our work identifies behavioral manifestations of bias but does not reveal underlying mechanisms. Future research should employ mechanistic interpretability techniques:"
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "li",
+   "en": "• Attention Pattern Analysis: Visualizing attention weights Vig (2019) across spatial positions during generation could reveal which regions receive preferential processing."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "li",
+   "en": "• Activation Patching: Systematically modifying representations at specific components Wang et al. (2023a) could identify which architectural elements are necessary and sufficient for producing spatial bias."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "li",
+   "en": "• Intervention Studies: Testing models with modified positional embeddings or altered patch ordering could causally test the architectural hypothesis."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "Additionally, quantitative analysis of training data annotations (beyond just guidelines) is needed to measure implicit human left-first tendencies that could influence learned behavior despite the absence of explicit instructions."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Conclusion"
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "This work demonstrates that Vision-Language Models exhibit systematic spatial attention bias, describing left-positioned content first in 97% of neutral prompting cases. Through experiments across seven architectures and two datasets, we show this bias persists despite Arabic fine-tuning and explicit spatial instructions, suggesting architectural rather than linguistic origins."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "Key findings include: (1) near-universal left-first description preference under neutral prompting, (2) substantial residual bias even under explicit directional instructions, (3) variations in bias magnitude across different visual contexts, and (4) the elimination of language direction and explicit dataset instructions as primary causes."
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "Achieving position-invariant spatial processing will require explicit architectural interventions informed by mechanistic understanding of how positional embeddings and visual encoders interact during multimodal reasoning. Future VLM development must prioritize interpretability-driven design to identify and address the components responsible for spatial biases."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "h2",
+   "en": "7 Limitations and Future Work"
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "Several limitations should be considered when interpreting these results. Our experiments use horizontally concatenated image pairs from Caltech-101, which contains relatively simple, centered objects. Real-world scenes with complex spatial relationships may exhibit different bias patterns. We tested seven models, but the VLM landscape continues evolving rapidly, and newer architectures may show different characteristics."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "Our analysis focuses on behavioral manifestations of bias rather than internal mechanisms producing it. While we propose architectural origins based on elimination of other hypotheses, direct evidence through interpretability studies is needed to confirm these proposals. Future research should investigate mechanistic interpretability studies using attention visualization Vig (2019) and activation patching Wang et al. (2023a) to reveal which architectural components produce spatial bias. Additionally, \"LLM-as-a-Judge\" evaluation pipelines should be utilized to verify semantic adherence to spatial instructions."
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgments"
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "p",
+   "en": "The authors wish to acknowledge the use of ChatGPT in improving the presentation and grammar of the paper. The paper remains an accurate representation of the authors’ underlying contributions."
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Alayrac et al. (2022) J. Alayrac, J. Donahue, P. Luc, A. Miech, I. Barr, Y. Hasson, K. Lenc, A. Mensch, K. Millican, M. Reynolds, et al. Flamingo: a visual language model for few-shot learning . In Ad"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Anthropic (2025) Anthropic Introducing claude haiku 4.5 . Note: https://www.anthropic.com/news/claude-haiku-4-5 Cited by: §1 , §3.3 ."
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al. (2023) J. Bai, S. Bai, S. Yang, S. Wang, S. Tan, P. Wang, J. Lin, C. Zhou, and J. Zhou Qwen-vl: a versatile vision-language model for understanding, localization, text reading, and beyond ."
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al. (2025) S. Bai et al. Qwen2.5-vl: a family of strong vision-language models . arXiv preprint arXiv:2502.13923 . External Links: Link Cited by: §1 , §3.3 , §4.1 , §4.3 ."
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024) Z. Chen, J. Wu, W. Wang, W. Su, G. Chen, S. Xing, M. Zhong, Q. Zhang, X. Zhu, L. Lu, et al. Internvl: scaling up vision foundation models and aligning for generic visual-linguistic "
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chiang et al. (2023) W. Chiang, Z. Li, Z. Lin, Y. Sheng, Z. Wu, H. Zhang, L. Zheng, S. Zhuang, Y. Zhuang, J. E. Gonzalez, et al. Vicuna: an open-source chatbot impressing gpt-4 with 90%* chatgpt quali"
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dai et al. (2024) W. Dai, J. Li, D. Li, A. M. H. Tiong, J. Zhao, W. Weis, B. Li, P. Fung, and S. Hoi Instructblip: towards general-purpose vision-language models with instruction tuning . In Advances "
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Deitke et al. (2024) M. Deitke et al. Molmo and pixmo: open weights and open data for state-of-the-art vision-language models . arXiv preprint arXiv:2409.17146 . External Links: Link Cited by: 3rd ite"
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fei-Fei et al. (2004) L. Fei-Fei, R. Fergus, and P. Perona Learning generative visual models from few training examples: an incremental bayesian approach tested on 101 object categories . In Proceedin"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Google (2025) Google Gemini 2.0 flash model card . Note: https://modelcards.withgoogle.com/assets/documents/gemini-2-flash.pdf Cited by: §1 , §3.3 ."
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hendricks et al. (2018) L. A. Hendricks, K. Burns, K. Saenko, T. Darrell, and A. Rohrbach Women also snowboard: overcoming bias in captioning models . In Proceedings of the European Conference on Comp"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Krishna et al. (2017) R. Krishna et al. Visual genome: connecting language and vision using crowdsourced dense image annotations . arXiv preprint arXiv:1602.07332 . External Links: Link Cited by: 3rd "
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024) C. Li, C. Wong, S. Zhang, N. Usuyama, H. Liu, J. Yang, T. Naumann, H. Poon, and J. Gao Llava-med: training a large language-and-vision assistant for biomedicine in one day . In Advanc"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023a) J. Li, D. Li, S. Savarese, and S. Hoi Blip-2: bootstrapping language-image pre-training with frozen image encoders and large language models . In International conference on machine "
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2020) X. Li, X. Yin, C. Li, P. Zhang, X. Zhang, X. Hu, J. Wang, J. Tang, and F. Wei Oscar: object-semantics aligned pre-training for vision-language tasks . In European Conference on Comput"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023b) Y. Li, Y. Du, K. Zhou, J. Wang, W. X. Zhao, and J. Wen Evaluating object hallucination in large vision-language models . In Proceedings of the 2023 Conference on Empirical Methods in"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2024) H. Liu, C. Li, Q. Wu, and Y. J. Lee Visual instruction tuning . In Advances in neural information processing systems , Vol. 36 . Cited by: §2.1 ."
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lu et al. (2019) J. Lu, D. Batra, D. Parikh, and S. Lee ViLBERT: pretraining task-agnostic visiolinguistic representations for vision-and-language tasks . In Advances in Neural Information Processing "
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "MBZUAI Oryx-Lab (2025) MBZUAI Oryx-Lab AIN: the arabic inclusive large multimodal model . arXiv preprint arXiv:2502.00094 . External Links: Link Cited by: 2nd item , §3.3 , §4.1 ."
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2025) OpenAI GPT-5 nano docs . Note: https://platform.openai.com/docs/models/gpt-5-nano Cited by: §1 , §3.3 ."
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenGVLab (2025a) OpenGVLab InternVL2-8b (model card) . Note: https://huggingface.co/OpenGVLab/InternVL2-8B Cited by: §1 , §3.3 ."
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenGVLab (2025b) OpenGVLab InternVL3-8b (model card) . Note: https://huggingface.co/OpenGVLab/InternVL3-8B Cited by: §1 , §3.3 ."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qwen Team (2024) Qwen Team Qwen2-vl: enhancing vision-language model’s perception, reasoning, and compositionality . arXiv preprint arXiv:2409.12191 . External Links: Link Cited by: §1 , §3.3 ."
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qwen Team (2025) Qwen Team Qwen2-vl-7b-instruct (model card) . Note: https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct Cited by: §1 , §3.3 ."
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Radford et al. (2021) A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark, et al. Learning transferable visual models from natural language sup"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Radford et al. (2021) A. Radford et al. Learning transferable visual models from natural language supervision . International Conference on Machine Learning (ICML) . External Links: Link Cited by: §1 "
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Rohrbach et al. (2018) A. Rohrbach, L. A. Hendricks, K. Burns, T. Darrell, and K. Saenko Object hallucination in image captioning . In Proceedings of the 2018 Conference on Empirical Methods in Natura"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Schuhmann et al. (2022) C. Schuhmann, R. Beaumont, R. Vencu, C. Gordon, R. Wightman, M. Cherti, T. Coombes, A. Katta, C. Mullis, M. Wortsman, et al. Laion-5b: an open large-scale dataset for training "
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tian et al. (2025) X. Tian, S. Zou, Z. Yang, and J. Zhang Identifying and mitigating position bias of multi-image vision-language models . In Proceedings of the Computer Vision and Pattern Recognition"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Touvron et al. (2023) H. Touvron, T. Lavril, G. Izacard, X. Martinet, M. Lachaux, T. Lacroix, B. Rozière, N. Goyal, E. Hambro, F. Azhar, et al. Llama: open and efficient foundation language models . a"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Vig (2019) J. Vig A multiscale visualization of attention in the transformer model . In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics: System Demonstrations ,"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2023a) K. Wang, A. Variengien, A. Conmy, B. Shlegeris, and J. Steinhardt Interpretability in the wild: a circuit for indirect object identification in gpt-2 small . In International Confe"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2023b) W. Wang, Q. Lv, W. Yu, W. Hong, J. Qi, Y. Wang, J. Ji, Z. Yang, L. Zhao, X. Song, et al. Cogvlm: visual expert for pretrained language models . arXiv preprint arXiv:2311.03079 . Ci"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yu et al. (2023) T. Yu, Y. Yao, Y. Zhang, Y. He, Y. Wu, and X. Han RLHF-v: towards trustworthy mllms via behavior alignment from fine-grained correctional human feedback . arXiv preprint arXiv:2312.00"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhai et al. (2023) X. Zhai, B. Mustafa, A. Kolesnikov, and L. Beyer Sigmoid loss for language image pre-training . In Proceedings of the IEEE/CVF International Conference on Computer Vision , pp. 1197"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhao et al. (2021) D. Zhao, A. Wang, and O. Russakovsky Understanding and evaluating racial biases in image captioning . In Proceedings of the IEEE/CVF International Conference on Computer Vision , pp"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhao et al. (2023) Z. Zhao, Y. Wang, J. Wu, and W. Li Silky: exploring internet-scale image-text data for multimedia foundation models . arXiv preprint arXiv:2312.06752 . Cited by: §2.1 ."
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2023) D. Zhu, J. Chen, X. Shen, X. Li, and M. Elhoseiny Minigpt-4: enhancing vision-language understanding with advanced large language models . arXiv preprint arXiv:2304.10592 . Cited by:"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2025) Y. Zhu, X. Bai, K. Chen, Y. Xiang, W. Guan, J. Yu, and M. Zhang From bias to balance: exploring and mitigating spatial bias in lvlms . arXiv preprint arXiv:2509.21984 . Cited by: §1 "
+  }
+ ]
+}

@@ -1,0 +1,2000 @@
+# 视觉语言模型能够评估平面设计美学吗？——基准、评测与数据集视角
+
+> 原标题：Can Vision Language Models Assess Graphic Design Aesthetics? A Benchmark, Evaluation, and Dataset Perspective
+> 作者：Arctanx An, Shizhao Sun, Danqing Huang, Mingxi Cheng, Yan Gao, Ji Li, Yu Qiao, Jiang Bian · arXiv:2603.01083 · 2026-03-01
+
+**EN** [Page 1]
+
+**ZH** [第 1 页]
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** CAN VISION–LANGUAGE MODELS ASSESS GRAPHICDESIGN AESTHETICS? A BENCHMARK, EVALUATION,AND DATASET PERSPECTIVE
+
+**ZH** 视觉语言模型能够评估平面设计美学吗？——基准、评测与数据集视角
+
+**EN** Arctanx An1,2∗Shizhao Sun2† Danqing Huang3Mingxi Cheng3
+
+**ZH** Arctanx An1,2∗Shizhao Sun2† Danqing Huang3Mingxi Cheng3
+
+**EN** Yan Gao4Ji Li 3Yu Qiao4Jiang Bian 2
+
+**ZH** Yan Gao4Ji Li 3Yu Qiao4Jiang Bian 2
+
+**EN** 1Peking University2Microsoft Research Asia3Microsoft4Central South University
+
+**ZH** 1北京大学 2微软亚洲研究院 3微软 4中南大学
+
+**EN** ABSTRACT
+
+**ZH** 摘要
+
+**EN** Assessing the aesthetic quality of graphic design is central to visual communica-tion, yet remains underexplored in vision–language models (VLMs). We investi-gate whether VLMs can evaluate design aesthetics in ways comparable to humans.Prior work faces three key limitations: benchmarks restricted to narrow principlesand coarse evaluation protocols, a lack of systematic VLM comparisons, and lim-ited training data for model improvement. In this work, we introduce AesEval-Bench, a comprehensive benchmark spanning four dimensions, twelve indicators,and three fully quantifiable tasks: aesthetic judgment, region selection, and pre-cise localization. Then, we systematically evaluate proprietary, open-source, andreasoning-augmented VLMs, revealing clear performance gaps against the nu-anced demands of aesthetic assessment. Moreover, we construct a training datasetto fine-tune VLMs for this domain, leveraging human-guided VLM labeling toproduce task labels at scale and indicator-grounded reasoning to tie abstract indi-cators to concrete design regions. Together, our work establishes the first system-atic framework for aesthetic quality assessment in graphic design. Our code anddataset will be released at: https://github.com/arctanxarc/AesEval-Bench.
+
+**ZH** 评估平面设计的美学质量是视觉传达的核心，但在视觉语言模型（VLM）中仍欠缺探索。我们考察 VLM 能否以接近人类的方式评价设计美学。已有工作面临三方面的关键局限：基准局限于狭窄的设计原则与粗粒度的评测协议、缺少系统性的 VLM 比较、以及用于改进模型的训练数据不足。本文提出 AesEval-Bench，一个涵盖四个维度、十二项指标与三项完全可量化任务（审美判断、区域选择与精确定位）的综合基准。随后，我们系统评测了闭源、开源与推理增强型 VLM，揭示出它们与美学评估的细腻要求之间的明显性能差距。此外，我们构建了一个训练数据集用于在该领域微调 VLM，通过人类引导的 VLM 标注规模化地产出任务标签，并通过指标锚定推理把抽象指标关联到具体的设计区域。综上，我们的工作建立了首个面向平面设计美学质量评估的系统性框架。代码与数据集将发布于：https://github.com/arctanxarc/AesEval-Bench。
+
+**EN** 1INTRODUCTION
+
+**ZH** 1 引言
+
+**EN** The rapid development of vision-language models (VLMs) (Yang et al., 2025; Li et al., 2024a; Hurstet al., 2024) has opened new opportunities for understanding and acting upon multimodal informa-tion. While they have already achieved remarkable progress in traditional vision tasks such as imagecaptioning (Lin et al., 2024b; Li et al., 2025b) and visual question answering (An et al., 2024; Zhanget al., 2024; Lin et al., 2025), VLMs are increasingly expected to contribute to new applications.Among these, graphic design—which integrates textual and visual elements to convey informationacross advertising, branding, and digital media—represents a promising direction given its broadsocietal and practical impact. Crucially, the success of graphic design critically depends on its aes-thetic quality, shaped by principles such as balance, contrast, and hierarchy.
+
+**ZH** 视觉语言模型（VLM）的快速发展（Yang 等，2025；Li 等，2024a；Hurst 等，2024）为理解与处理多模态信息带来了新的机遇。尽管它们在图像描述（Lin 等，2024b；Li 等，2025b）与视觉问答（An 等，2024；Zhang 等，2024；Lin 等，2025）等传统视觉任务上已取得显著进展，人们对 VLM 的期待正转向新的应用方向。其中，平面设计融合文字与视觉元素，在广告、品牌与数字媒体中传递信息，凭借其广泛的社会影响与实用价值，成为一个颇具前景的方向。关键在于，平面设计的成败在很大程度上取决于其美学质量，而后者由平衡、对比、层级等设计原则所塑造。
+
+**EN** In this work, we aim to explore a central question: can VLMs understand and evaluate aestheticquality of graphic design in a manner comparable to humans? This question is of significant im-portance for at least three reasons. First, it can assist human designers by identifying where a designfalls short and explaining why, thereby enabling more effective improvement. Second, for generativeAI systems, it provides the basis for automatic feedback loops that can guide iterative refinementwithout extensive human intervention. Third, it suggests an opportunity to extend VLMs beyondfactual recognition toward aesthetic evaluation.
+
+**ZH** 本文旨在探讨一个核心问题：VLM 能否以接近人类的方式理解并评价平面设计的美学质量？这一问题的重要性至少体现在三方面。其一，它能辅助人类设计师，指出设计在何处不足并解释原因，从而实现更有效的改进。其二，对于生成式 AI 系统，它提供了自动反馈闭环的基础，可在无需大量人工干预的情况下引导迭代式优化。其三，它提示了一条把 VLM 从事实性识别拓展到美学评估的路径。
+
+**EN** Despite its importance, research along this direction remains limited (see Table 1). First, benchmarksare inadequate. Those (Zhou et al., 2024; Huang et al., 2024) developed for natural photos often ig-nore design-specific factors such as typography, while early ones for graphic design typically coveronly a narrow subset of design principles (Lin et al., 2023; 2024a; Jiang & Chen, 2025). Moreover,
+
+**ZH** 尽管意义重大，这一方向的研究仍然有限（见表 1）。首先，基准尚不完善。那些面向自然照片构建的基准（Zhou 等，2024；Huang 等，2024）往往忽略字体排版等设计特有的因素，而早期的平面设计基准通常只覆盖设计原则的一个狭窄子集（Lin 等，2023；2024a；Jiang & Chen，2025）。此外，
+
+**EN** ∗Work was done during an internship at Microsoft Research Asia†Project Leader
+
+**ZH** ∗工作完成于在微软亚洲研究院实习期间 †项目负责人
+
+**EN** 1
+
+**ZH** 1
+
+**EN** arXiv:2603.01083v1 [cs.CV] 1 Mar 2026
+
+**ZH** arXiv:2603.01083v1 [cs.CV] 1 Mar 2026
+
+**EN** [Page 2]
+
+**ZH** [第 2 页]
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** existing evaluation protocols are limited. Scoring-based methods fail to indicate where poor aesthet-ics occur (Haraguchi et al., 2024), while description-based ones provide qualitative feedback that isdifficult to quantify (Jung et al., 2025). Second, comparisons between VLMs are missing. Therehas been no systematic evaluation across different VLMs, whether open-source or closed-source, inthe context of design aesthetics. Third, training datasets are lacking, leaving the question of how tofurther improve VLM performance in this domain underexplored.
+
+**ZH** 现有评测协议同样存在局限。基于打分的方法无法指出美学缺陷出现在何处（Haraguchi 等，2024），而基于描述的方法给出的是难以量化的定性反馈（Jung 等，2025）。其次，缺少 VLM 之间的比较。在设计美学这一语境下，尚无面向不同 VLM（无论开源还是闭源）的系统性评测。第三，训练数据集匮乏，使得如何进一步提升 VLM 在该领域的性能这一问题少有人探索。
+
+**EN** As a first step toward addressing these limitations, we introduce AesEval-Bench, a new benchmarkfor evaluating the aesthetic quality of graphic designs (see Figure 1). Drawing on prior literature (Li& Chen, 2009; Wangwiwattana & Meeyen, 2024), we identify four critical dimensions—typography,layout, color, and graphics—that together comprehensively capture design aesthetics. These dimen-sions reflect the major factors that humans consistently emphasize when assessing visual appeal. Toprovide finer granularity, we further define twelve indicators that specify concrete aspects withineach dimension, such as hierarchy and legibility under typography. For each indicators, we then de-sign three challenging tasks: 1) aesthetic judgment, which asks models to decide whether a designis aesthetically pleasing (yes/no), providing a straightforward measure of overall perception; 2) re-gion selection, which requires models to choose from candidate regions where unpleasing elementsappear, testing their ability to pinpoint problematic areas beyond a global judgment; 3) precise local-ization, which challenges models to predict the exact bounding box (bbox) coordinates of unpleasingareas, offering the most detailed diagnosis and reflecting a deeper understanding of aesthetics. Un-like prior benchmarks (), AesEval-Bench not only covers a broad range of aesthetic factors throughits dimensions and indicators, but also defines evaluation tasks that are fully quantifiable via choiceor bbox prediction formats, enabling systematic and reproducible assessment of design aesthetics.
+
+**ZH** 作为弥补上述不足的第一步，我们提出 AesEval-Bench，一个用于评估平面设计美学质量的新基准（见图 1）。借鉴已有文献（Li & Chen，2009；Wangwiwattana & Meeyen，2024），我们识别出四个关键维度——字体排版、版式、色彩与图形，它们合在一起全面刻画了设计美学。这些维度反映了人类在评判视觉吸引力时一贯强调的主要因素。为提供更细的粒度，我们进一步定义了十二项指标，用以规定每个维度下的具体方面，例如字体排版维度下的层级与易读性。针对每一项指标，我们设计了三项具有挑战性的任务：1）审美判断，要求模型判断一件设计是否美观（是/否），为整体感知提供直观度量；2）区域选择，要求模型从候选区域中选出出现不佳元素的位置，考察其在全局判断之外定位问题区域的能力；3）精确定位，要求模型预测不佳区域的确切边界框（bbox）坐标，提供最细致的诊断，反映对美学更深层的理解。与已有基准不同，AesEval-Bench 不仅通过其维度与指标覆盖了广泛的美学因素，还定义了可通过选择或 bbox 预测格式完全量化的评测任务，从而支持对设计美学的系统化、可复现评估。
+
+**EN** With AesEval-Bench, we systematically evaluate VLMs on their ability to assess the aesthetic qual-ity of graphic designs (see Table 1). For each design, models perform three tasks across twelveindicators. We use human annotation as ground truth, and measure performance by accuracy (foraesthetic judgment and region selection) and bbox IoU (for precise localization). Overall, our resultsreveal clear gaps between current state-of-the-art VLMs and the nuanced demands of aesthetic qual-ity assessment. Specifically, proprietary VLMs (e.g., GPT series (Achiam et al., 2023)) outperformopen-source ones (e.g., Qwen-VL (Wang et al., 2024), Intern-VL (Zhu et al., 2025), LLaVA (Liuet al., 2023)). Among open-source models, larger variants (32B, 72B) generally achieve better per-formance than smaller ones (7B). Surprisingly, reasoning-augmented VLMs (e.g., GPT-o1 (Jaechet al., 2024), GPT-o3, Gemini-2.5-Pro (Comanici et al., 2025)) offer no clear advantage over theirnon-reasoning counterparts. Together, these findings expose the limitations of existing VLMs andunderscore the need for domain-specific training tailored to aesthetic quality assessment.
+
+**ZH** 借助 AesEval-Bench，我们系统评测了 VLM 评估平面设计美学质量的能力（见表 1）。对于每件设计，模型需围绕十二项指标完成三项任务。我们以人工标注作为真值，用准确率（审美判断与区域选择）和 bbox IoU（精确定位）衡量性能。总体而言，结果揭示了当前最优 VLM 与美学质量评估的细腻要求之间的明显差距。具体而言，闭源 VLM（如 GPT 系列（Achiam 等，2023））优于开源模型（如 Qwen-VL（Wang 等，2024）、Intern-VL（Zhu 等，2025）、LLaVA（Liu 等，2023））。在开源模型中，更大的变体（32B、72B）通常优于更小的（7B）。令人意外的是，推理增强型 VLM（如 GPT-o1（Jaech 等，2024）、GPT-o3、Gemini-2.5-Pro（Comanici 等，2025））相比其非推理版本并无明显优势。这些发现共同暴露了现有 VLM 的局限，也凸显了面向美学质量评估的领域专用训练的必要性。
+
+**EN** Building on these findings, we move beyond evaluation and turn to training VLMs for aestheticquality assessment. To this end, we construct a training dataset consisting of three components: thetask (what the model is asked to do), the task label (the expected answer), and the reasoning path(the explanation leading to the answer) (see Figure 2). We treat the reasoning path as essential,since generic reasoning has shown little benefit. However, constructing such data poses two keychallenges: producing task labels at scale is costly, and generating reasoning paths that genuinelyimprove performance requires new approaches. To address these, we introduce two solutions. First,human-guided VLM labeling, where a small set of human annotations serve as in-context exam-ples to instruct powerful VLMs in producing task labels. This approach maintains alignment withhuman understanding while reducing manual annotation costs. Second, indicator-grounded reason-ing, where abstract indicators (e.g., hierarchy or layering) are explicitly tied to concrete regions inthe design. Each reasoning path consists of bounding-box coordinates linked to the indicator andtextual explanations for their relevance, providing fine-grained and interpretable supervision. Wefine-tune VLMs with the task as input and both the reasoning path and the task label as supervision,and evaluate on AesEval-Bench. The results show consistent performance gains across all tasks andindicators (e.g., 5.97%, 2.70% and 17.17%), demonstrating that human-guided VLM labeling yieldsreliable labels and indicator-grounded reasoning supplies effective supervision.
+
+**ZH** 在上述发现的基础上，我们不止于评测，转而研究如何训练 VLM 进行美学质量评估。为此，我们构建了一个训练数据集，包含三个组成部分：任务（要求模型做什么）、任务标签（期望的答案）与推理路径（通向答案的解释）（见图 2）。我们认为推理路径不可或缺，因为通用推理的收益甚微。然而，构建这类数据面临两个关键挑战：规模化产出任务标签代价高昂，而生成真正能提升性能的推理路径需要新的方法。为此，我们提出两项解决方案。其一，人类引导的 VLM 标注：以少量人工标注作为上下文示例，指导强大的 VLM 生成任务标签。该方式在保持与人类理解一致的同时降低了人工标注成本。其二，指标锚定推理：把抽象指标（如层级或层次）显式绑定到设计中的具体区域。每条推理路径由与该指标关联的边界框坐标以及说明其相关性的文本解释组成，提供了细粒度且可解释的监督信号。我们以任务为输入、以推理路径与任务标签为监督对 VLM 做微调，并在 AesEval-Bench 上评测。结果显示各项任务与指标上均有一致的性能增益（例如 5.97%、2.70% 与 17.17%），说明人类引导的 VLM 标注能产出可靠标签，而指标锚定推理提供了有效的监督。
+
+**EN** To sum up, our contributions are as follows:
+
+**ZH** 综上，我们的贡献如下：
+
+**EN** • We introduce AesEval-Bench, a comprehensive benchmark for assessing aesthetic qualityof graphic designs spanning four dimensions, twelve indicators and three quantifiable tasks.• We systematically evaluate proprietary, open-source, and reasoning-augmented VLMs, re-vealing clear performance gaps in aesthetic quality assessment.
+
+**ZH** • 我们提出 AesEval-Bench，一个用于评估平面设计美学质量的综合基准，涵盖四个维度、十二项指标与三项可量化任务。• 我们系统评测了闭源、开源与推理增强型 VLM，揭示了美学质量评估上明显的性能差距。
+
+**EN** 2
+
+**ZH** 2
+
+**EN** [Page 3]
+
+**ZH** [第 3 页]
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Table 1: A comparison of AesEval-Bench with existing benchmarks for both image aesthetics anddesign aesthetics. We highlight key differences in their scale, task formats, source data, covereddesign dimensions, and the inclusion of reasoning paths.
+
+**ZH** 表 1：AesEval-Bench 与现有图像美学及设计美学基准的对比。我们突出展示了它们在规模、任务格式、来源数据、覆盖的设计维度以及是否包含推理路径等方面的关键差异。
+
+**EN** Benchmark#DataTaskFormatSourceSource TypeDimensionTraining SetReasoning PathOpen-sourceFontLayoutGraphicsColor
+
+**ZH** 基准 #数据 任务格式 来源 来源类型 维度 训练集 推理路径 开源 字体 版式 图形 色彩
+
+**EN** Image Aesthetics Benchmark
+
+**ZH** 图像美学基准
+
+**EN** AesBench(Huang et al., 2024)∼10kFree-formPhotographic
+
+**ZH** AesBench（Huang 等，2024）∼10k 自由格式 摄影图像
+
+**EN** ImageImage-only××✓✓××✓
+
+**ZH** 图像 仅图像 ××✓✓××✓
+
+**EN** UNIAA-Bench(Zhou et al., 2024)∼6kFree-formPhotographic
+
+**ZH** UNIAA-Bench（Zhou 等，2024）∼6k 自由格式 摄影图像
+
+**EN** ImageImage-only×✓×✓××✓
+
+**ZH** 图像 仅图像 ×✓×✓××✓
+
+**EN** FineArtBench(Jiang & Chen, 2025)-ChoiceFree-form
+
+**ZH** FineArtBench（Jiang & Chen，2025）- 选择 自由格式
+
+**EN** Art Work +Photographic ImageImage-only×××✓×✓×
+
+**ZH** 艺术作品 + 摄影图像 仅图像 ×××✓×✓×
+
+**EN** Design Aesthetics Benchmark
+
+**ZH** 设计美学基准
+
+**EN** DesignBench(Lin et al., 2023)-ChoiceFree-formGraphic DesignImage+Json✓✓×✓××✓
+
+**ZH** DesignBench（Lin 等，2023）- 选择 自由格式 平面设计 图像+Json ✓✓×✓××✓
+
+**EN** DesignProbe(Lin et al., 2024a)∼1.6kChoiceGraphic DesignImage+Json✓✓×✓×××
+
+**ZH** DesignProbe（Lin 等，2024a）∼1.6k 选择 平面设计 图像+Json ✓✓×✓×××
+
+**EN** GPT-Eval Bench(Haraguchi et al., 2024)∼2kScoringGraphic DesignImage+Json×✓×××××
+
+**ZH** GPT-Eval Bench（Haraguchi 等，2024）∼2k 打分 平面设计 图像+Json ×✓×××××
+
+**EN** UI-Bench(Jung et al., 2025)∼3kChoiceDescriptionUI DesignImage-only✓✓×✓×××
+
+**ZH** UI-Bench（Jung 等，2025）∼3k 选择 描述 UI 设计 仅图像 ✓✓×✓×××
+
+**EN** UICrit(Jung et al., 2025)∼3kFree-formBbox regressionUI DesignImage-only✓✓×✓××✓
+
+**ZH** UICrit（Jung 等，2025）∼3k 自由格式 边界框回归 UI 设计 仅图像 ✓✓×✓××✓
+
+**EN** AesEval-Bench (Ours)∼4.5kChoiceBbox RegressionGraphic DesignImage+Json✓✓✓✓✓✓✓
+
+**ZH** AesEval-Bench（本文）∼4.5k 选择 边界框回归 平面设计 图像+Json ✓✓✓✓✓✓✓
+
+**EN** • We construct a training dataset to fine-tune VLMs for this domain. Our approach intro-duces human-guided VLM labeling to produce task labels at scale and indicator-groundedreasoning to tie abstract indicators to concrete design regions. Experiments on AesEval-Bench show that this dataset consistently improves performance across all tasks.
+
+**ZH** • 我们构建了一个训练数据集，用于在该领域微调 VLM。我们的方法引入人类引导的 VLM 标注以规模化地产出任务标签，并提出指标锚定推理，把抽象指标绑定到具体的设计区域。在 AesEval-Bench 上的实验表明，该数据集一致提升了所有任务上的性能。
+
+**EN** 2RELATED WORKS
+
+**ZH** 2 相关工作
+
+**EN** Aesthetic Quality Assessment. Aesthetic quality assessment (Deng et al., 2017) aims to automat-ically evaluate visual appeal, serving as a computational proxy for human judgment. Within thisarea, two major lines of research have emerged (see Table 1). Image aesthetics assessment (Huanget al., 2024; Zhou et al., 2024; Jiang & Chen, 2025) focuses on photographic images, where qualityis determined by factors such as color harmony, lighting, and subject placement. Design aestheticsassessment (Lin et al., 2023; 2024a; Haraguchi et al., 2024; Jung et al., 2025) targets graphic designssuch as posters, advertisements, or user interfaces, which depend on design-related factors includingtypography, hierarchy, and alignment. Our work falls within design aesthetics assessment.
+
+**ZH** 美学质量评估（Deng 等，2017）旨在自动评价视觉吸引力，作为人类判断的计算代理。该领域形成了两条主要研究脉络（见表 1）。图像美学评估（Huang 等，2024；Zhou 等，2024；Jiang & Chen，2025）聚焦摄影图像，其质量由色彩和谐、光照与主体位置等因素决定。设计美学评估（Lin 等，2023；2024a；Haraguchi 等，2024；Jung 等，2025）则面向海报、广告或用户界面等平面设计，后者取决于字体排版、层级与对齐等设计相关因素。我们的工作属于设计美学评估。
+
+**EN** Despite its importance, design aesthetics assessment remains underexplored. Existing benchmarkscapture only a narrow subset of design dimensions. For instance, (Lin et al., 2024a) omits graphics-related factors, while (Haraguchi et al., 2024) ignores both fonts and graphics. Furthermore, theirtask formulations lack rigor. Some adopt free-form question answering, which is difficult to quan-tify (Lin et al., 2023), while others provide only holistic scores without identifying problematicregions, limiting interpretability and actionability (Jung et al., 2025). Our work introduces a bench-mark that comprehensively covers design-related aesthetic factors across font, layout, graphics andcolor, defining well-structured and quantifiable tasks using choice and bbox prediction formats.
+
+**ZH** 尽管意义重大，设计美学评估仍欠缺探索。现有基准只捕捉了设计维度的一个狭窄子集。例如（Lin 等，2024a）遗漏了图形相关因素，而（Haraguchi 等，2024）同时忽略了字体与图形。此外，它们的任务形式不够严谨：有的采用自由问答，难以量化（Lin 等，2023）；有的只给出整体分数而不指出问题区域，限制了可解释性与可操作性（Jung 等，2025）。我们的工作提出了一个基准，全面覆盖字体、版式、图形与色彩等设计相关的美学因素，并用选择与 bbox 预测格式定义了结构良好、可量化的任务。
+
+**EN** Vision-Language Models. Vision-Language Models (VLMs) (Wang et al., 2024; Comanici et al.,2025; Li et al., 2024a; Zhang et al., 2025c) have achieved remarkable performance on tasks suchas image captioning (Luo et al., 2025a; Li et al., 2024b; Zhang et al., 2025d) and visual questionanswering (An et al., 2024; Lin et al., 2024b; Luo et al., 2025b). Yet, their ability to assess theaesthetic quality of graphic designs remains largely unexplored. Prior work typically evaluates onlyone or two VLMs (e.g., (Haraguchi et al., 2024) studies GPT). We provide a systematic comparisonacross a broad set of VLMs, including proprietary, open-source, and reasoning-augmented models.
+
+**ZH** 视觉语言模型（VLM）（Wang 等，2024；Comanici 等，2025；Li 等，2024a；Zhang 等，2025c）在图像描述（Luo 等，2025a；Li 等，2024b；Zhang 等，2025d）与视觉问答（An 等，2024；Lin 等，2024b；Luo 等，2025b）等任务上取得了出色表现。然而，它们评估平面设计美学质量的能力仍基本未被探索。已有工作通常只评测一两个 VLM（例如（Haraguchi 等，2024）只研究了 GPT）。我们提供了覆盖闭源、开源与推理增强模型在内的大量 VLM 的系统性比较。
+
+**EN** Recently, increasing attention has been devoted to the reasoning capabilities of VLMs (Li et al.,2025a; Zhang et al., 2025b). For example, (Sarch et al., 2025) employs tree-based search to improvereasoning chains, (Li et al., 2025a) visualizes reasoning trajectories for transparency, and (Sun et al.,2024; Shao et al., 2024; Cao et al., 2025; Wu et al., 2025) explores grounded visual reasoning byjointly generating bounding boxes and textual explanations. In our work, we observe that genericreasoning in current VLMs provides limited benefit for assessing design aesthetics. To address this,we construct a training dataset with reasoning paths that explicitly link abstract design indicators
+
+**ZH** 近来，VLM 的推理能力受到越来越多关注（Li 等，2025a；Zhang 等，2025b）。例如，（Sarch 等，2025）用基于树的搜索改进推理链，（Li 等，2025a）可视化推理轨迹以提升透明度，（Sun 等，2024；Shao 等，2024；Cao 等，2025；Wu 等，2025）则探索通过联合生成边界框与文本解释来实现有锚定的视觉推理。在我们的工作中，我们观察到当前 VLM 的通用推理对设计美学评估助益有限。为此，我们构建了一个带推理路径的训练数据集，把抽象的设计指标显式关联到
+
+**EN** 3
+
+**ZH** 3
+
+**EN** [Page 4]
+
+**ZH** [第 4 页]
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 4
+
+**ZH** 第 4 页的图
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Figure 1: Overview of AesEval-Bench. (A) The four dimensions and twelve indicators consideredin the benchmark. Numbers inside the circles indicate how many designs are labeled as flawed foreach indicator. (B) Example designs illustrating the indicators, with regions exhibiting aestheticissues highlighted by red boxes. Detailed textual explanations of all indicators are provided in theAppendix. (C) The three tasks, along with example questions and their expected answers.
+
+**ZH** 图 1：AesEval-Bench 概览。(A) 该基准所考虑的四个维度与十二项指标；圆圈内的数字表示各指标下被标注为存在缺陷的设计数量。(B) 展示各项指标的示例设计，其中存在美学问题的区域以红框标出；所有指标的详细文字说明见附录。(C) 三项任务，以及示例问题与其预期答案。
+
+**EN** to concrete regions of the design. Unlike grounded visual reasoning, which localizes semanticallysalient entities (e.g., a “dog” or “chair”), our regions are indicator-centric, capturing higher-levelconcepts such as hierarchy, alignment, and spacing that directly embody design principles.
+
+**ZH** 设计的具体区域。与定位语义显著实体（如“狗”或“椅子”）的有锚定视觉推理不同，我们的区域以指标为中心，捕捉层级、对齐、间距等直接体现设计原则的更高层概念。
+
+**EN** 3BENCHMARK CONSTRUCTION
+
+**ZH** 3 基准构建
+
+**EN** 3.1OVERVIEW
+
+**ZH** 3.1 概览
+
+**EN** AesEval-Bench formulates design aesthetics assessment as a question–answering task. The inputcontains a task description and a design image, optionally accompanied by metadata such as layout,font, or color information in JSON format. The output is the answer corresponding to the task.
+
+**ZH** AesEval-Bench 把设计美学评估表述为问答任务。输入包含任务描述与一幅设计图像，并可选附带 JSON 格式的元数据，如版式、字体或色彩信息；输出为任务对应的答案。
+
+**EN** To capture different aspects of design aesthetics assessment, we introduce three task types (Fig-ure 1(C)): 1) aesthetic judgment asks whether a design is aesthetically pleasing (yes/no), providinga measure of overall perception. 2) region selection requires choosing from candidate regions whereaesthetic issues appear, testing the ability to localize problematic areas beyond a global judgment. 3)precise localization requires predicting the exact bounding box coordinates of problematic regions,offering a fine-grained diagnosis. Each task is accompanied by the explanation of an indicator—thekey factor humans consistently emphasize when evaluating visual appeal (e.g., hierarchy, layering,contrast). We consider twelve indicators (Figure 1(B)), grouped into four dimensions (Figure 1(A)).
+
+**ZH** 为捕捉设计美学评估的不同侧面，我们引入三类任务（图 1(C)）：1）审美判断，询问一件设计是否美观（是/否），度量整体感知；2）区域选择，要求从候选区域中选出美学问题所在，考察在全局判断之外定位问题区域的能力；3）精确定位，要求预测问题区域的精确边界框坐标，提供细粒度诊断。每项任务都附有指标说明——即人类评价视觉吸引力时一贯强调的关键因素（如层级、层次、对比）。我们考虑十二项指标（图 1(B)），归为四个维度（图 1(A)）。
+
+**EN** For design images, we sample 1200 designs from the test split of Crello dataset (Yamaguchi, 2021),which contains professional graphic designs with both the design image and its metadata. Theexpected answers differ across tasks. For aesthetic judgment, the answer is yes or no. For regionselection, it is the index of one region among four candidates. For precise localization, it is thebounding box coordinates of the identified region or None if the design has no aesthetic issues.
+
+**ZH** 设计图像方面，我们从 Crello 数据集（Yamaguchi，2021）的测试划分中采样 1200 件设计，该数据集包含专业平面设计，同时提供设计图像与元数据。各任务的预期答案不同：审美判断的答案为“是”或“否”；区域选择为四个候选区域中某一区域的索引；精确定位为所识别区域的边界框坐标，若该设计没有美学问题则为 None。
+
+**EN** Overall, AesEval-Bench comprises 4500 base question–answer pairs (three tasks across 1500 de-signs), each further instantiated across twelve indicators to enable fine-grained evaluation.
+
+**ZH** 总体而言，AesEval-Bench 包含 4500 个基础问答对（1500 件设计 × 三项任务），每个问答对又进一步在十二项指标上实例化，以支持细粒度评估。
+
+**EN** 3.2CURATION PIPELINE
+
+**ZH** 3.2 构建流程
+
+**EN** Establishing Dimensions and Indicators. Aesthetic quality in graphic design is inherently mul-tidimensional. To define a rigorous benchmark, we first conducted a comprehensive literature re-view of classical and contemporary design principles (McCormack & Lomas, 2020; Lou et al.,2022; Lu et al., 2020). We then consulted professional designers to refine this taxonomy, ensur-
+
+**ZH** 确立维度与指标。平面设计中的美学质量本质上是多维的。为定义一个严谨的基准，我们首先对经典与当代设计原则做了全面的文献综述（McCormack & Lomas，2020；Lou 等，2022；Lu 等，2020）。随后咨询专业设计师以完善这一分类体系，确保其
+
+**EN** 4
+
+**ZH** 4
+
+**EN** [Page 5]
+
+**ZH** [第 5 页]
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 5
+
+**ZH** 第 5 页的图
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Figure 2: (A) Illustration of two key steps in training data construction. Human-guided VLM label-ing enables scalable determination of whether designs exhibit aesthetic issues. Indicator-groundedreasoning generates reasoning paths that explicitly link abstract indicators to concrete design regions(represented as bbox coordinates). (B) Example highlighting the difference between non-reasoningmodels, generic reasoning models, and our indicator-grounded reasoning model.
+
+**ZH** 图 2：(A) 训练数据构建中两个关键步骤的示意。人类引导的 VLM 标注可规模化地判定设计是否存在美学问题；指标锚定推理生成的推理路径把抽象指标显式关联到具体的设计区域（以 bbox 坐标表示）。(B) 突出非推理模型、通用推理模型与我们的指标锚定推理模型之间差异的示例。
+
+**EN** ing alignment with both theoretical foundations and practical expertise. This process yielded fourcore dimensions—layout, font, graphics, and color (Figure 1(A))—each further specified by con-crete indicators consistently emphasized in human aesthetic judgment. In total, we distilled twelveindicators that together capture the essential factors of design aesthetics (Figure 1(B)).
+
+**ZH** 既与理论基础契合，也符合实践经验。这一过程产出了四个核心维度——版式、字体、图形与色彩（图 1(A)），每个维度又由人类美学判断中一贯强调的具体指标加以细化。我们共提炼出十二项指标，合在一起捕捉了设计美学的基本要素（图 1(B)）。
+
+**EN** Constructing Potentially Flawed Designs. As introduced in Section 3.1, the design images inAesEval-Bench are sourced from the Crello dataset, which contains professional-quality graphic de-signs. To effectively evaluate design aesthetics, the benchmark must include not only well-designedbut also less appealing examples. We therefore repurpose Crello by introducing controlled perturba-tions, such as repositioning elements, altering font choices, or adjusting colors. These perturbationsmay either degrade the visual quality or leave it largely intact. For example, slightly enlarging aheading might preserve hierarchy, whereas shifting it left could disrupt balance. Each base designundergoes one to three random perturbations, generating a spectrum of variations that range fromaesthetically unchanged to noticeably flawed, while still appearing realistic. Since Crello (Yam-aguchi, 2021) provides element-level metadata in JSON format along with separate design layers,these perturbations can be applied directly at the JSON level and rendered into new design imagesby recombining the modified metadata with the corresponding layers.
+
+**ZH** 构建潜在缺陷设计。如第 3.1 节所述，AesEval-Bench 中的设计图像取自 Crello 数据集，该数据集包含专业质量的平面设计。为有效评估设计美学，基准不仅要包含设计精良的样例，也要包含吸引力较弱的样例。因此我们对 Crello 加以改造，引入受控扰动，例如重新摆放元素、更换字体选择或调整配色。这些扰动可能降低视觉质量，也可能基本不造成影响。例如，略微放大标题可能保持层级关系，而把它左移则可能破坏平衡。每个基础设计会经历一到三次随机扰动，生成一系列从美学上无变化到明显有缺陷的变化样本，同时仍然显得真实可信。由于 Crello（Yamaguchi，2021）提供 JSON 格式的元素级元数据和独立的设计图层，这些扰动可以直接在 JSON 层面施加，并通过把修改后的元数据与相应图层重新组合，渲染成新的设计图像。
+
+**EN** Human-in-the-Loop Aesthetic Review. We engage human annotators to verify whether the per-turbed designs truly exhibit aesthetic issues. Before annotation, all annotators receive a tutorialthat includes examples of both well-designed and flawed cases, along with detailed explanations ofthe underlying reasons. During the review, each annotator is shown a design image together witha description of the focal indicator and asked to determine whether the design contains the corre-sponding flaw (yes or no). For each design, we derive the final label by applying majority votingacross multiple annotators to ensure consensus.
+
+**ZH** 人在环路的美学审核。我们请人工标注者核实被扰动的设计是否确实存在美学问题。标注前，所有标注者都要接受培训，内容包括设计良好与有缺陷的样例，以及对背后原因的详细说明。审核过程中，向每位标注者展示一张设计图像以及所关注指标的描述，请其判断该设计是否存在相应缺陷（是或否）。对于每件设计，我们通过多名标注者的多数投票得出最终标签，以确保达成共识。
+
+**EN** Generating Question-Answer Pairs. With metadata in JSON format, records of applied perturba-tions and human annotations, we can systematically construct answers corresponding to each task.For aesthetic judgment, the rule is straightforward: if human annotators label a design as good, theground-truth answer is no (i.e., no aesthetic issue); otherwise, it is yes. For region selection, if adesign is labeled as good, the four answer choices consist of three randomly sampled bboxes fromthe metadata and a None option, with the ground-truth answer being None. If the design is labeledas flawed, the four choices include the bbox of the perturbed element, two randomly sampled bboxesfrom the metadata, and None, with the ground-truth answer set to the bbox of the perturbed element.For precise localization, if a design is labeled as good, the ground-truth answer is None; otherwise,it corresponds to the exact bbox of the perturbed element.
+
+**ZH** 生成问答对。借助 JSON 格式的元数据、所施加扰动的记录以及人工标注，我们可以系统地构建各任务对应的答案。对于审美判断，规则很直接：若标注者认为设计良好，则真值答案为“否”（即无美学问题），否则为“是”。对于区域选择，若设计被判为良好，四个选项由从元数据中随机采样的三个 bbox 与一个 None 选项构成，真值答案为 None；若设计被判为有缺陷，四个选项包含被扰动元素的 bbox、从元数据中随机采样的两个 bbox 以及 None，真值答案设为被扰动元素的 bbox。对于精确定位，若设计被判为良好，真值答案为 None；否则为被扰动元素的精确 bbox。
+
+**EN** 5
+
+**ZH** 5
+
+**EN** [Page 6]
+
+**ZH** [第 6 页]
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** 3.3EVALUATION PROTOCOLS
+
+**ZH** 3.3 评测协议
+
+**EN** For aesthetic judgment and region selection, both formulated as choice problems, we adopt accuracyas the metric, measuring the exact match between model predictions and the ground truth. Forprecise localization, the task combines two components: a choice problem (predicting None whenno aesthetic issue exists) and a bounding box regression problem (predicting the exact bbox whenan issue is present). Accordingly, we use accuracy for cases where the ground truth is None, andintersection over union (IoU)—which quantifies the overlap between the predicted and ground-truthbboxes—for cases where a bbox is required.
+
+**ZH** 对于审美判断与区域选择，两者都被表述为选择题，我们采用准确率作为指标，衡量模型预测与真值之间的精确匹配。对于精确定位，该任务包含两个部分：一个选择题（当不存在美学问题时预测 None）与一个边界框回归问题（当存在问题时预测精确的 bbox）。相应地，我们对真值为 None 的情形使用准确率，对需要 bbox 的情形使用交并比（IoU）——它量化预测 bbox 与真值 bbox 之间的重叠程度。
+
+**EN** 4TRAINING DATA CONSTRUCTION
+
+**ZH** 4 训练数据构建
+
+**EN** Evaluation on popular VLMs reveals clear gap between the capabiliteis of current state-of-the-arts VLMs and the nuanced requirements of aesthetic quality assessment. Moreover, reasoning-augmented VLMs show no clear performance gains (see Section 5.1).
+
+**ZH** 在主流 VLM 上的评测显示，当前最优 VLM 的能力与美学质量评估的细腻要求之间存在明显差距。此外，推理增强型 VLM 并未表现出清晰的性能增益（见第 5.1 节）。
+
+**EN** To this end, we construct a training dataset, named AesEval-Train, to fine-tune VLMs for this do-main. First, we adopt the same procedure as benchmark construction to construct potentially flaweddesigns (see Section 3.2). Next, since relying solely on human annotation to determine whetherperturbed designs exhibit aesthetic issues is neither scalable nor cost-effective for training at largescale, we introduce human-guided VLM labeling. Then, we follow the benchmark construction togenerate question–answer pairs (see Section 3.2). Finally, we introduce indicator-grounded rea-soning to generate domain-specific reasoning paths aimed at improving task performance. In thefollowing, we describe in detail the two steps that differ from benchmark construction.
+
+**ZH** 为此，我们构建了一个名为 AesEval-Train 的训练数据集，用于在该领域微调 VLM。首先，我们采用与基准构建相同的流程来构建潜在缺陷设计（见第 3.2 节）。其次，由于仅靠人工标注来判定被扰动的设计是否存在美学问题，在大规模训练时既不具扩展性也不经济，我们引入了人类引导的 VLM 标注。然后，我们沿用基准构建的方式生成问答对（见第 3.2 节）。最后，我们引入指标锚定推理，生成面向该领域的推理路径，以提升任务性能。下面详述与基准构建不同的两个步骤。
+
+**EN** Human-Guided VLM Labeling. We leverage a small set of human annotations as demonstrations,together with the bbox coordinates of perturbed regions, as input to strong VLMs. The model isinstructed to generate a binary label indicating whether the perturbed design exhibits an aestheticissue (see Figure 2(A)). By incorporating human annotations, we preserve alignment with humanjudgment while substantially reducing manual annotation costs. Moreover, providing the perturba-tion region as a prior, which is unavailable in real-world scenarios, simplifies the labeling processand improves reliability. With these two sources of guidance, while the generated labels may not beperfectly accurate, they yield a training set of sufficient quality to enhance fine-tuning performance.
+
+**ZH** 人类引导的 VLM 标注。我们以少量人工标注作为示范，连同被扰动区域的 bbox 坐标一起输入给强大的 VLM，并指示模型生成一个二值标签，表明被扰动的设计是否存在美学问题（见图 2(A)）。通过引入人工标注，我们保持了与人类判断的一致性，同时大幅降低了人工标注成本。此外，把扰动区域作为先验（这一信息在真实场景中并不可得）提供出来，简化了标注过程并提升了可靠性。在这两种引导之下，尽管生成的标签未必完全准确，它们足以形成质量达标的训练集，从而提升微调性能。
+
+**EN** Indicator-Grounded Reasoning. As illustrated in Figure 2(B), generic reasoning often explainsor analyzes a given indicator and task without grounding the discussion in relevant regions of thedesign. To address this limitation, we propose explicitly linking abstract indicators to concreteregions within the design. Specifically, we include both the bounding box (bbox) coordinates ofrelevant regions and textual explanations of their relevance to the indicator in the reasoning path.
+
+**ZH** 指标锚定推理。如图 2(B) 所示，通用推理往往只是解释或分析给定指标与任务，而没有把讨论锚定到设计中的相关区域。为克服这一局限，我们提出把抽象指标显式关联到设计内的具体区域。具体而言，我们在推理路径中同时包含相关区域的边界框（bbox）坐标，以及说明其与指标相关性的文本解释。
+
+**EN** To obtain such reasoning paths, we instruct powerful VLMs (e.g., GPT in our experiments) byproviding them with the bbox coordinates of the target regions and the corresponding design layers(Figure 2(A)). The model is required to output the provided coordinates alongside an explanationof how the region relates to the indicator, thereby ensuring that the reasoning path consistentlycontains the desired information. We further adopt task-specific strategies to determine the regionsof interest. For aesthetic judgment, we directly use the bbox of the perturbed regions. For regionselection, we include both the perturbed and non-perturbed regions to strengthen the model’s abilityto discriminate among candidate regions. For precise localization, we not only highlight the bbox ofperturbed regions but also emphasize their relationship to the overall design, enabling the model tobetter localize problematic regions within the global design context.
+
+**ZH** 为获得这样的推理路径，我们向强大的 VLM（实验中为 GPT）提供目标区域的 bbox 坐标与相应的设计图层（图 2(A)），并要求模型输出给定的坐标，同时解释该区域与指标的关系，从而确保推理路径始终包含所需信息。我们还采用任务特定策略来确定关注区域。对于审美判断，我们直接使用被扰动区域的 bbox。对于区域选择，我们同时纳入被扰动与未被扰动的区域，以强化模型在候选区域之间的判别能力。对于精确定位，我们不仅突出被扰动区域的 bbox，还强调其与整体设计的关系，使模型能在全局设计语境下更好地定位问题区域。
+
+**EN** 5EXPERIMENT
+
+**ZH** 5 实验
+
+**EN** 5.1BENCHMARKING VLMS ON AESEVAL-BENCH
+
+**ZH** 5.1 在 AesEval-Bench 上评测 VLM
+
+**EN** Setups. We conduct a comprehensive evaluation of 10 VLMs spanning diverse model familiesand parameter scales. For non-reasoning models, we consider open-source representatives such asLLaVA (Liu et al., 2023), Qwen2.5-VL (Bai et al., 2025), and Intern-VL3 (Zhu et al., 2025), as wellas closed-source GPT models (Jaech et al., 2024). For reasoning-augmented models, we evaluate
+
+**ZH** 设置。我们对涵盖不同模型家族与参数规模的 10 个 VLM 做了全面评测。对于非推理模型，我们考虑开源代表，如 LLaVA（Liu 等，2023）、Qwen2.5-VL（Bai 等，2025）与 Intern-VL3（Zhu 等，2025），以及闭源的 GPT 模型（Jaech 等，2024）。对于推理增强模型，我们评测
+
+**EN** 6
+
+**ZH** 6
+
+**EN** [Page 7]
+
+**ZH** [第 7 页]
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Table 2: Evaluation on aesthetic judgment task. Overall acc is the average value of all indicators.The best and second-best results are highlighted in bold and underlined, respectively.
+
+**ZH** 表 2：审美判断任务上的评测结果。Overall acc（总体准确率）为所有指标的平均值。最优与次优结果分别以粗体与下划线标出。
+
+**EN** ModelOverall AccLayoutColorFontGraphics
+
+**ZH** 模型 总体准确率 版式 色彩 字体 图形
+
+**EN** balancelayeringwhitespacealignmentharmonycontrastappealpsycholoylegibilityhierarchyqualityrelevance
+
+**ZH** 平衡 层次 留白 对齐 和谐 对比 吸引力 心理 易读性 层级 质量 相关性
+
+**EN** Non-reasoning Models
+
+**ZH** 非推理模型
+
+**EN** LLaVA-13B0.56360.65060.50630.69750.67590.44110.24090.26150.28510.76600.82600.73860.6733Qwen-VL-7B0.63900.82720.45080.80760.84130.82230.91360.40090.13550.94300.31000.81830.3970Qwen-VL-32B0.64580.67620.56890.68620.69410.62090.57760.49480.18620.80230.76180.77080.9001Qwen-VL-72B0.67240.67520.69250.71310.67310.69210.78040.26200.24470.87390.79520.77290.8734Intern-VL3-8B0.63310.46170.64520.75770.77510.34870.33290.30820.51800.94860.69510.85710.9491Intern-VL3-14B0.68830.74060.38260.75630.76010.77060.85940.52760.19120.83090.83040.83730.7729GPT-4o0.70310.75880.67890.65970.46880.81290.81900.82370.32920.75060.73440.78570.8160GPT-50.72520.83780.78320.72750.65100.69530.83750.40000.52370.74720.74190.90230.8551
+
+**ZH** LLaVA-13B0.56360.65060.50630.69750.67590.44110.24090.26150.28510.76600.82600.73860.6733Qwen-VL-7B0.63900.82720.45080.80760.84130.82230.91360.40090.13550.94300.31000.81830.3970Qwen-VL-32B0.64580.67620.56890.68620.69410.62090.57760.49480.18620.80230.76180.77080.9001Qwen-VL-72B0.67240.67520.69250.71310.67310.69210.78040.26200.24470.87390.79520.77290.8734Intern-VL3-8B0.63310.46170.64520.75770.77510.34870.33290.30820.51800.94860.69510.85710.9491Intern-VL3-14B0.68830.74060.38260.75630.76010.77060.85940.52760.19120.83090.83040.83730.7729GPT-4o0.70310.75880.67890.65970.46880.81290.81900.82370.32920.75060.73440.78570.8160GPT-50.72520.83780.78320.72750.65100.69530.83750.40000.52370.74720.74190.90230.8551
+
+**EN** Reasoning-augmented Models
+
+**ZH** 推理增强模型
+
+**EN** GPT-o10.67050.73840.75310.55220.33980.71490.54390.74270.67500.70490.72660.75180.8030GPT-o30.71050.74500.75970.65880.39640.77150.70050.79930.63160.76150.73320.80840.7596Gemini-2.5-Pro0.63680.73550.69240.59360.50890.73330.64950.67760.56040.58880.69970.52170.6803
+
+**ZH** GPT-o10.67050.73840.75310.55220.33980.71490.54390.74270.67500.70490.72660.75180.8030GPT-o30.71050.74500.75970.65880.39640.77150.70050.79930.63160.76150.73320.80840.7596Gemini-2.5-Pro0.63680.73550.69240.59360.50890.73330.64950.67760.56040.58880.69970.52170.6803
+
+**EN** Expert Models for Image Aesthetics Assessment
+
+**ZH** 面向图像美学评估的专家模型
+
+**EN** AesExpert-7B0.40560.50250.41420.33170.46360.30170.41470.32530.23180.26700.50730.61660.4904UNIAA-LLaVA0.29000.23930.21200.24710.22070.27330.33160.30410.30730.28930.52660.24100.2879
+
+**ZH** AesExpert-7B0.40560.50250.41420.33170.46360.30170.41470.32530.23180.26700.50730.61660.4904UNIAA-LLaVA0.29000.23930.21200.24710.22070.27330.33160.30410.30730.28930.52660.24100.2879
+
+**EN** Table 3: Evaluation on region selection task. Overall acc is the average value of all indicators. Thebest and second-best results are highlighted in bold and underlined, respectively.
+
+**ZH** 表 3：区域选择任务上的评测结果。Overall acc（总体准确率）为所有指标的平均值。最优与次优结果分别以粗体与下划线标出。
+
+**EN** ModelOverall AccLayoutColorFontGraphics
+
+**ZH** 模型 总体准确率 版式 色彩 字体 图形
+
+**EN** balancelayeringwhitespacealignmentharmonycontrastappealpsycholoylegibilityhierarchyqualityrelevance
+
+**ZH** 平衡 层次 留白 对齐 和谐 对比 吸引力 心理 易读性 层级 质量 相关性
+
+**EN** Non-reasoning Models
+
+**ZH** 非推理模型
+
+**EN** LLaVA-13B0.60650.58230.57130.56120.59180.61710.51660.63190.68560.61300.70030.63290.5745Qwen-VL-7B (Base)0.57950.51280.53700.57480.54430.58220.54330.54120.63840.59740.63790.62580.6190Qwen-VL-32B0.63110.59330.53970.50120.52520.56780.70650.63670.57350.78330.62780.76500.7533Qwen-VL-72B0.66260.51050.58390.45470.53480.59770.72250.64950.79400.77280.79340.73600.8015Intern-VL3-8B0.57990.52420.49480.56060.53630.55270.55680.58050.63420.65830.61570.60310.6415Intern-VL3-14B0.63780.58720.52040.59450.57450.62820.69970.64190.70340.72440.68700.61090.6818GPT-4o0.67450.47140.48940.50070.60110.74060.85910.71660.81350.66330.90800.64440.6865GPT-50.69890.64840.59290.66300.63960.72290.72140.75100.68470.80380.75650.69530.7070
+
+**ZH** LLaVA-13B0.60650.58230.57130.56120.59180.61710.51660.63190.68560.61300.70030.63290.5745Qwen-VL-7B (Base)0.57950.51280.53700.57480.54430.58220.54330.54120.63840.59740.63790.62580.6190Qwen-VL-32B0.63110.59330.53970.50120.52520.56780.70650.63670.57350.78330.62780.76500.7533Qwen-VL-72B0.66260.51050.58390.45470.53480.59770.72250.64950.79400.77280.79340.73600.8015Intern-VL3-8B0.57990.52420.49480.56060.53630.55270.55680.58050.63420.65830.61570.60310.6415Intern-VL3-14B0.63780.58720.52040.59450.57450.62820.69970.64190.70340.72440.68700.61090.6818GPT-4o0.67450.47140.48940.50070.60110.74060.85910.71660.81350.66330.90800.64440.6865GPT-50.69890.64840.59290.66300.63960.72290.72140.75100.68470.80380.75650.69530.7070
+
+**EN** Reasoning-augmented Models
+
+**ZH** 推理增强模型
+
+**EN** GPT-o10.63470.63190.57460.63970.59340.61780.63230.68800.77340.63200.70920.59360.5305GPT-o30.65810.64830.62630.53250.36530.82720.54860.71130.79810.65860.77440.66010.7466Gemini-2.5-Pro0.61000.68100.69810.60960.29920.60500.65380.66780.60500.61640.65390.56960.6605
+
+**ZH** GPT-o10.63470.63190.57460.63970.59340.61780.63230.68800.77340.63200.70920.59360.5305GPT-o30.65810.64830.62630.53250.36530.82720.54860.71130.79810.65860.77440.66010.7466Gemini-2.5-Pro0.61000.68100.69810.60960.29920.60500.65380.66780.60500.61640.65390.56960.6605
+
+**EN** Expert Models for Image Aesthetics Assessment
+
+**ZH** 面向图像美学评估的专家模型
+
+**EN** AesExpert-7b0.28830.29540.22800.31740.26310.34260.26460.31760.31760.31760.25880.27650.2602UNIAA-LLaVA0.24180.16190.29150.15520.40750.17000.15160.17600.24790.27770.37960.28610.1968
+
+**ZH** AesExpert-7b0.28830.29540.22800.31740.26310.34260.26460.31760.31760.31760.25880.27650.2602UNIAA-LLaVA0.24180.16190.29150.15520.40750.17000.15160.17600.24790.27770.37960.28610.1968
+
+**EN** GPT-o1, GPT-o3, and Gemini-2.5-Pro (Comanici et al., 2025). In addition, we include expert modelsspecifically designed for image aesthetic assessment, namely AesExpert (Huang et al., 2024) andUNIAA-LLAVA (Zhou et al., 2024). All models are evaluated under the same input setting, whichconsists of a question (see Figure 1), a design image, and metadata in JSON format.
+
+**ZH** GPT-o1、GPT-o3 与 Gemini-2.5-Pro（Comanici 等，2025）。此外，我们还纳入了专为图像美学评估设计的专家模型，即 AesExpert（Huang 等，2024）与 UNIAA-LLAVA（Zhou 等，2024）。所有模型在相同的输入设置下评测，输入包括一个问题（见图 1）、一张设计图像以及 JSON 格式的元数据。
+
+**EN** Results. The performance of VLMs are evaluated following the protocols introduced in Section 3.3.Specifically, in addition to reporting scores for each individual indicator, we also provide an overallscore computed as the average across all indicators.
+
+**ZH** 结果。VLM 的性能按第 3.3 节介绍的协议评测。具体而言，除报告各单项指标的分数外，我们还给出在所有指标上取平均得到的总体分数。
+
+**EN** Aesthetic Judgment. Table 2 presents the results.First, among non-reasoning models, GPT-5achieves the highest performance, with an overall accuracy of 0.7252. This suggests that eventhe strongest VLMs still struggle with design aesthetics assessment. Second, reasoning-augmentedmodels do not outperform their non-reasoning counterparts (e.g., GPT-o1 (Jaech et al., 2024) andGPT-o3 vs. GPT-4o (Hurst et al., 2024) and GPT-5), indicating that generic reasoning provideslittle benefit in this domain. Third, expert models designed for image aesthetics assessment per-form worse overall, highlighting a substantial gap between design aesthetics and image aesthetics.Finally, model performance varies across indicators. For instance, the Qwen-VL series tends toperform better on legibility but worse on psychology compared to other VLMs.
+
+**ZH** 审美判断。表 2 给出了结果。首先，在非推理模型中，GPT-5 性能最高，总体准确率为 0.7252。这说明即便是最强的 VLM，在设计美学评估上仍然吃力。其次，推理增强模型并未超过其非推理对应模型（例如 GPT-o1（Jaech 等，2024）、GPT-o3 对比 GPT-4o（Hurst 等，2024）与 GPT-5），说明通用推理在该领域助益甚微。第三，专为图像美学评估设计的专家模型整体表现更差，凸显了设计美学与图像美学之间的巨大差距。最后，模型在不同指标上的表现存在差异。例如，与其他 VLM 相比，Qwen-VL 系列往往在易读性上表现更好，而在心理指标上更差。
+
+**EN** Region Selection. Table 3 reports the results. First, VLM performance on this task is generally worsethan on aesthetic judgment, likely because it requires not only assessing whether a design is pleasingbut also identifying where flaws occur. Second, consistent with aesthetic judgment, GPT-5 achievesthe best performance, while reasoning-augmented models show no clear advantage. Finally, acrossmodel families, larger models (e.g., 72B) typically outperform smaller ones (e.g., 7B). We find somemodel has the phenomenon of overfitting, so we adopt a weighted sum when calculating final score.
+
+**ZH** 区域选择。表 3 报告了结果。首先，VLM 在该任务上的表现普遍差于审美判断，可能因为它不仅需要判断设计是否美观，还要指出缺陷出现在哪里。其次，与审美判断一致，GPT-5 取得最佳性能，而推理增强模型没有明显优势。最后，跨模型家族来看，更大的模型（如 72B）通常优于更小的（如 7B）。我们发现某些模型存在过拟合现象，因此在计算最终分数时采用了加权求和。
+
+**EN** 7
+
+**ZH** 7
+
+**EN** [Page 8]
+
+**ZH** [第 8 页]
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Table 4: Evaluation on precise localization task for the choice component where the model shouldpredict None if no aesthetic issues are present. Overall score is the average accuracy of all indicators.The best and second-best results are highlighted in bold and underlined, respectively.
+
+**ZH** 表 4：精确定位任务中选择题部分的评测结果——当不存在美学问题时模型应预测 None。Overall score（总体分数）为所有指标准确率的平均值。最优与次优结果分别以粗体与下划线标出。
+
+**EN** ModelOverall ScoreLayoutColorFontGraphics
+
+**ZH** 模型 总体分数 版式 色彩 字体 图形
+
+**EN** balancelayeringwhitespacealignmentharmonycontrastappealpsycholoylegibilityhierarchyqualityrelevance
+
+**ZH** 平衡 层次 留白 对齐 和谐 对比 吸引力 心理 易读性 层级 质量 相关性
+
+**EN** Non-reasoning Models
+
+**ZH** 非推理模型
+
+**EN** LLaVA-13B0.44550.45230.61300.56990.47140.33560.37230.28980.24740.73010.24530.56110.4573Qwen-VL-7B0.51920.51040.58390.45460.53470.43760.56250.54950.53390.45280.53340.53600.5415GPT-4o0.56800.64170.20630.59540.16790.86260.63720.72000.67130.45940.51640.77620.5618GPT-50.60900.63060.61420.69100.62470.60570.61700.56430.59890.54640.61340.62170.5804
+
+**ZH** LLaVA-13B0.44550.45230.61300.56990.47140.33560.37230.28980.24740.73010.24530.56110.4573Qwen-VL-7B0.51920.51040.58390.45460.53470.43760.56250.54950.53390.45280.53340.53600.5415GPT-4o0.56800.64170.20630.59540.16790.86260.63720.72000.67130.45940.51640.77620.5618GPT-50.60900.63060.61420.69100.62470.60570.61700.56430.59890.54640.61340.62170.5804
+
+**EN** Reasoning-augmented Models
+
+**ZH** 推理增强模型
+
+**EN** GPT-o10.52950.46280.48700.52480.49430.53220.49330.49120.58840.54740.58790.62580.5190GPT-o30.58000.59220.38680.53690.65700.75540.65950.60110.69850.73960.39520.53110.4063Gemini-2.5-Pro0.60470.63190.57460.53970.59340.61780.63230.68800.77340.53200.70920.43360.5305
+
+**ZH** GPT-o10.52950.46280.48700.52480.49430.53220.49330.49120.58840.54740.58790.62580.5190GPT-o30.58000.59220.38680.53690.65700.75540.65950.60110.69850.73960.39520.53110.4063Gemini-2.5-Pro0.60470.63190.57460.53970.59340.61780.63230.68800.77340.53200.70920.43360.5305
+
+**EN** Expert Models for Image Aesthetics Assessment
+
+**ZH** 面向图像美学评估的专家模型
+
+**EN** AesExpert-7b0.33770.32290.31460.37560.31720.42760.35820.31460.32670.33140.38030.30250.2804
+
+**ZH** AesExpert-7b0.33770.32290.31460.37560.31720.42760.35820.31460.32670.33140.38030.30250.2804
+
+**EN** Table 5: Evaluation on precise localization task for the bbox prediction component where the modelshould output coordinates of the aesthetic issues. Overall score is the average IoU of all indicators.The best and second-best results are highlighted in bold and underlined, respectively.
+
+**ZH** 表 5：精确定位任务中 bbox 预测部分的评测结果——模型应输出美学问题所在位置的坐标。Overall score（总体分数）为所有指标 IoU 的平均值。最优与次优结果分别以粗体与下划线标出。
+
+**EN** ModelOverall ScoreLayoutColorFontGraphics
+
+**ZH** 模型 总体分数 版式 色彩 字体 图形
+
+**EN** balancelayeringwhitespacealignmentharmonycontrastappealpsycholoylegibilityhierarchyqualityrelevance
+
+**ZH** 平衡 层次 留白 对齐 和谐 对比 吸引力 心理 易读性 层级 质量 相关性
+
+**EN** Non-reasoning Models
+
+**ZH** 非推理模型
+
+**EN** LLaVA-13B0.05590.06530.00800.03020.01720.10240.07920.04270.03030.01880.01020.15100.1160Qwen-VL-7B (Base)0.05140.00670.16690.01010.02590.01090.00360.00390.23060.00120.04520.09940.0063GPT-4o0.17120.18220.29740.13990.25520.08830.13530.06640.21860.21440.05860.27070.1270GPT-50.19930.18660.15460.20770.16130.18290.15250.15290.33480.17450.18350.26670.2338
+
+**ZH** LLaVA-13B0.05590.06530.00800.03020.01720.10240.07920.04270.03030.01880.01020.15100.1160Qwen-VL-7B (Base)0.05140.00670.16690.01010.02590.01090.00360.00390.23060.00120.04520.09940.0063GPT-4o0.17120.18220.29740.13990.25520.08830.13530.06640.21860.21440.05860.27070.1270GPT-50.19930.18660.15460.20770.16130.18290.15250.15290.33480.17450.18350.26670.2338
+
+**EN** Reasoning-augmented Models
+
+**ZH** 推理增强模型
+
+**EN** O10.12860.09070.07670.14120.12260.17190.02040.15460.12360.14400.14410.19120.1617O30.14180.06190.19150.05520.30750.07000.05160.07600.14790.17770.27960.18610.0968Gemini-2.5-Pro0.09770.05180.16200.10520.07100.07600.04870.04900.22570.09630.09030.09450.1014
+
+**ZH** O10.12860.09070.07670.14120.12260.17190.02040.15460.12360.14400.14410.19120.1617O30.14180.06190.19150.05520.30750.07000.05160.07600.14790.17770.27960.18610.0968Gemini-2.5-Pro0.09770.05180.16200.10520.07100.07600.04870.04900.22570.09630.09030.09450.1014
+
+**EN** Expert Models for Image Aesthetics Assessment
+
+**ZH** 面向图像美学评估的专家模型
+
+**EN** AesExpert-7b0.03270.04400.02030.00930.10840.08610.00630.00490.01180.00010.03480.06010.0067
+
+**ZH** AesExpert-7b0.03270.04400.02030.00930.10840.08610.00630.00490.01180.00010.03480.06010.0067
+
+**EN** Precise Localization. As described in Section 3.3, this task consists of two components, each eval-uated separately: a choice problem, where the model predicts None if no aesthetic issue exists(Table 4), and a bbox prediction problem, where the model outputs the exact bbox of the aestheticissue (Table 5). We exclude some VLMs (e.g., Intern-VL series and small Qwen-VL models) be-cause they failed to produce meaningful bbox predictions. For the choice problem, VLMs achievereasonable performance, with the best model reaching an overall score of 0.6090. For the bboxprediction problem, even the best-performing model, GPT-5, scores below 0.20, highlighting thesubstantial difficulty of precisely localizing aesthetic issues.
+
+**ZH** 精确定位。如第 3.3 节所述，该任务包含两个部分，分别单独评测：选择题部分，模型在不存在美学问题时预测 None（表 4）；bbox 预测部分，模型输出美学问题的精确 bbox（表 5）。我们排除了部分 VLM（如 Intern-VL 系列与较小的 Qwen-VL 模型），因为它们无法给出有意义的 bbox 预测。对于选择题部分，VLM 取得了合理的性能，最佳模型总体分数达 0.6090。对于 bbox 预测部分，即便是表现最好的 GPT-5，分数也低于 0.20，凸显了精确定位美学问题的巨大难度。
+
+**EN** Discussions on Input Components. When benchmarking VLMs, the input consists of three compo-nents: (1) the question, which includes a detailed explanation of the target indicator; (2) the designimage; and (3) metadata in JSON format, containing layout, color, and font information. We analyzethe contribution of each component to model performance using GPT-4o as a representative exam-ple. Figure 3 presents the results, where Full Model denotes the setting that uses all three compo-nents; Without Images removes the design image; Without Explanation omits the detailed indicatordescription; and Without Metainfo excludes the metadata. Our findings reveal three key insights.First, across all tasks, the design image is indispensable—its removal results in the largest perfor-mance drop. Second, indicator explanations have limited influence for more intuitive indicators(e.g., balance), but they play a crucial role for subjective indicators (e.g., relevance or psychology),where clearer definitions are necessary. Finally, metadata has the greatest effect on precise localiza-tion, where its absence causes a larger decline in performance compared to aesthetic judgment orregion selection. We hypothesize that this is because metadata provides explicit layout information,which aids bbox prediction in localization tasks.
+
+**ZH** 输入组件的讨论。在评测 VLM 时，输入由三部分组成：（1）问题，其中包含对目标指标的详细解释；（2）设计图像；（3）JSON 格式的元数据，包含版式、色彩与字体信息。我们以 GPT-4o 为代表，分析各组件对模型性能的贡献。图 3 给出了结果，其中 Full Model 表示使用全部三个组件的设置；Without Images 去掉设计图像；Without Explanation 省略详细的指标描述；Without Metainfo 排除元数据。我们的发现揭示了三点关键认识。第一，在所有任务上，设计图像都不可或缺——移除它导致的性能下降最大。第二，指标解释对较直观的指标（如平衡）影响有限，但对主观性指标（如相关性或心理）至关重要，后者需要更清晰的定义。最后，元数据对精确定位影响最大，其缺失造成的性能下滑超过审美判断或区域选择。我们推测这是因为元数据提供了显式的版式信息，有助于定位任务中的 bbox 预测。
+
+**EN** 5.2FINE-TUNING VLMS WITH AESEVAL-TRAIN
+
+**ZH** 5.2 用 AesEval-Train 微调 VLM
+
+**EN** Setups. We construct the training set following the pipeline described in Section 4, resulting in 30kquestion–answer pairs. In our experiments, we use Qwen2.5-VL-7B-Instruct (Bai et al., 2025) as arepresentative model and adopt full-parameter finetuning on the constructed dataset. The learningrate is set to 1e-6, with a cosine scheduler and a 3% warmup ratio. For computational efficiency,
+
+**ZH** 设置。我们按第 4 节所述的流程构建训练集，得到 30k 个问答对。实验中，我们使用 Qwen2.5-VL-7B-Instruct（Bai 等，2025）作为代表性模型，并在构建好的数据集上做全参数微调。学习率设为 1e-6，采用余弦调度与 3% 的预热比例。为提升计算效率，
+
+**EN** 8
+
+**ZH** 8
+
+**EN** [Page 9]
+
+**ZH** [第 9 页]
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Balance
+
+**ZH** 平衡
+
+**EN** Layering
+
+**ZH** 层次
+
+**EN** Whitespace
+
+**ZH** 留白
+
+**EN** Alignment
+
+**ZH** 对齐
+
+**EN** Harmony
+
+**ZH** 和谐
+
+**EN** ContrastAppeal
+
+**ZH** 对比 吸引力
+
+**EN** Psychology
+
+**ZH** 心理
+
+**EN** Legibility
+
+**ZH** 易读性
+
+**EN** Hierarchy
+
+**ZH** 层级
+
+**EN** Quality
+
+**ZH** 质量
+
+**EN** Relevance
+
+**ZH** 相关性
+
+**EN** 0.0
+
+**ZH** 0.0
+
+**EN** 0.2
+
+**ZH** 0.2
+
+**EN** 0.4
+
+**ZH** 0.4
+
+**EN** 0.6
+
+**ZH** 0.6
+
+**EN** 0.8
+
+**ZH** 0.8
+
+**EN** 1.0
+
+**ZH** 1.0
+
+**EN** 0.7423
+
+**ZH** 0.7423
+
+**EN** 0.6624
+
+**ZH** 0.6624
+
+**EN** 0.6432
+
+**ZH** 0.6432
+
+**EN** 0.4523
+
+**ZH** 0.4523
+
+**EN** 0.7964
+
+**ZH** 0.7964
+
+**EN** 0.8025
+
+**ZH** 0.8025
+
+**EN** 0.8072
+
+**ZH** 0.8072
+
+**EN** 0.31270.7342
+
+**ZH** 0.31270.7342
+
+**EN** 0.7179
+
+**ZH** 0.7179
+
+**EN** 0.7692
+
+**ZH** 0.7692
+
+**EN** 0.7995
+
+**ZH** 0.7995
+
+**EN** Full Model (Baseline)Without ImagesWithout ExplanationsWithout Metainfo
+
+**ZH** 完整模型（基线） 无图像 无解释 无元信息
+
+**EN** Balance
+
+**ZH** 平衡
+
+**EN** Layering
+
+**ZH** 层次
+
+**EN** Whitespace
+
+**ZH** 留白
+
+**EN** Alignment
+
+**ZH** 对齐
+
+**EN** Harmony
+
+**ZH** 和谐
+
+**EN** Contrast
+
+**ZH** 对比
+
+**EN** Appeal
+
+**ZH** 吸引力
+
+**EN** Psychology
+
+**ZH** 心理
+
+**EN** Legibility
+
+**ZH** 易读性
+
+**EN** Hierarchy
+
+**ZH** 层级
+
+**EN** Quality
+
+**ZH** 质量
+
+**EN** Relevance
+
+**ZH** 相关性
+
+**EN** 0.0
+
+**ZH** 0.0
+
+**EN** 0.2
+
+**ZH** 0.2
+
+**EN** 0.4
+
+**ZH** 0.4
+
+**EN** 0.6
+
+**ZH** 0.6
+
+**EN** 0.8
+
+**ZH** 0.8
+
+**EN** 1.0
+
+**ZH** 1.0
+
+**EN** 0.43320.4512
+
+**ZH** 0.43320.4512
+
+**EN** 0.4625
+
+**ZH** 0.4625
+
+**EN** 0.5629
+
+**ZH** 0.5629
+
+**EN** 0.7024
+
+**ZH** 0.7024
+
+**EN** 0.82090.67840.7753
+
+**ZH** 0.82090.67840.7753
+
+**EN** 0.6251
+
+**ZH** 0.6251
+
+**EN** 0.8698
+
+**ZH** 0.8698
+
+**EN** 0.6062
+
+**ZH** 0.6062
+
+**EN** 0.6483
+
+**ZH** 0.6483
+
+**EN** Full Model (GPT-4o)Without ImagesWithout ExplanationsWithout Metainfo
+
+**ZH** 完整模型（GPT-4o） 无图像 无解释 无元信息
+
+**EN** Balance
+
+**ZH** 平衡
+
+**EN** Layering
+
+**ZH** 层次
+
+**EN** Whitespace
+
+**ZH** 留白
+
+**EN** Alignment
+
+**ZH** 对齐
+
+**EN** Harmony
+
+**ZH** 和谐
+
+**EN** Contrast
+
+**ZH** 对比
+
+**EN** Appeal
+
+**ZH** 吸引力
+
+**EN** Psychology
+
+**ZH** 心理
+
+**EN** Legibility
+
+**ZH** 易读性
+
+**EN** Hierarchy
+
+**ZH** 层级
+
+**EN** Quality
+
+**ZH** 质量
+
+**EN** Relevance
+
+**ZH** 相关性
+
+**EN** 0.0
+
+**ZH** 0.0
+
+**EN** 0.20.1737
+
+**ZH** 0.20.1737
+
+**EN** 0.2889
+
+**ZH** 0.2889
+
+**EN** 0.1314
+
+**ZH** 0.1314
+
+**EN** 0.2467
+
+**ZH** 0.2467
+
+**EN** 0.0798
+
+**ZH** 0.0798
+
+**EN** 0.1268
+
+**ZH** 0.1268
+
+**EN** 0.0579
+
+**ZH** 0.0579
+
+**EN** 0.2101
+
+**ZH** 0.2101
+
+**EN** 0.2059
+
+**ZH** 0.2059
+
+**EN** 0.0501
+
+**ZH** 0.0501
+
+**EN** 0.26220.1185
+
+**ZH** 0.26220.1185
+
+**EN** Full Model (GPT-4o)Without ImagesWithout ExplanationsWithout Metainfo
+
+**ZH** 完整模型（GPT-4o） 无图像 无解释 无元信息
+
+**EN** Figure 3: Results for model variants using different input components.
+
+**ZH** 图 3：使用不同输入组件时各模型变体的结果。
+
+**EN** Table 6: Results and ablation study of fine-tuning VLMs using our constructed training set.
+
+**ZH** 表 6：使用我们所构建训练集微调 VLM 的结果与消融研究。
+
+**EN** Model SettingOverall ScoreOverall GainOverall RankLayoutColorFontGraphics
+
+**ZH** 模型设置 总体分数 总体增益 总体排名 版式 色彩 字体 图形
+
+**EN** balancelayeringwhitespacealignmentharmonycontrastappealpsycholoylegibilityhierarchyqualityrelevance
+
+**ZH** 平衡 层次 留白 对齐 和谐 对比 吸引力 心理 易读性 层级 质量 相关性
+
+**EN** Aesthetic Judgment (Accuracy)
+
+**ZH** 审美判断（准确率）
+
+**EN** Qwen-VL-7B (Base)0.6390-90.82720.45080.80760.84130.82230.91360.40090.13550.94300.31000.81830.3970+ AesEval-Train0.6987+ 5.97%40.71230.67890.72150.68680.70310.66540.73290.65770.74360.64820.70960.7244- Reasoning Path0.6576--0.65110.65890.64130.66870.63090.67910.62070.68930.61150.69850.65080.6904- Positive Samples0.2072--0.21010.19990.22020.18930.20580.21470.19550.22460.18550.22960.20040.2108
+
+**ZH** Qwen-VL-7B（基座）0.6390 - 9 0.8272 0.4508 0.8076 0.8413 0.8223 0.9136 0.4009 0.1355 0.9430 0.3100 0.8183 0.3970 + AesEval-Train 0.6987 + 5.97% 4 0.7123 0.6789 0.7215 0.6868 0.7031 0.6654 0.7329 0.6577 0.7436 0.6482 0.7096 0.7244 −推理路径 0.6576 - - 0.6511 0.6589 0.6413 0.6687 0.6309 0.6791 0.6207 0.6893 0.6115 0.6985 0.6508 0.6904 −正样本 0.2072 - - 0.2101 0.1999 0.2202 0.1893 0.2058 0.2147 0.1955 0.2246 0.1855 0.2296 0.2004 0.2108
+
+**EN** Region Selection (Accuracy)
+
+**ZH** 区域选择（准确率）
+
+**EN** Qwen-VL-7B (Base)0.5795-100.51280.53700.57480.54430.58220.54330.54120.63840.59740.63790.62580.6190+ AesEval-Train0.6065+ 2.70%80.58270.61080.59630.62890.57140.62360.65410.64120.63890.64870.58990.5915- Reasoning Path0.5795--0.57320.52790.56970.53220.57410.53220.53410.62830.59530.63180.66670.5885- Positive Samples0.5327--0.50890.54110.52570.55430.50130.55870.52910.57090.52120.57880.51460.4878
+
+**ZH** Qwen-VL-7B（基座）0.5795 - 10 0.5128 0.5370 0.5748 0.5443 0.5822 0.5433 0.5412 0.6384 0.5974 0.6379 0.6258 0.6190 + AesEval-Train 0.6065 + 2.70% 8 0.5827 0.6108 0.5963 0.6289 0.5714 0.6236 0.6541 0.6412 0.6389 0.6487 0.5899 0.5915 −推理路径 0.5795 - - 0.5732 0.5279 0.5697 0.5322 0.5741 0.5322 0.5341 0.6283 0.5953 0.6318 0.6667 0.5885 −正样本 0.5327 - - 0.5089 0.5411 0.5257 0.5543 0.5013 0.5587 0.5291 0.5709 0.5212 0.5788 0.5146 0.4878
+
+**EN** Precise Localization (IoU)
+
+**ZH** 精确定位（IoU）
+
+**EN** Qwen-VL-7B (Base)0.0514-80.00670.16690.01010.02590.01090.00360.00390.23060.00120.04520.09940.0063+ AesEval-Train0.2231+ 17.17%10.25180.19820.31030.08570.22040.28460.15520.39010.06070.23130.11520.2745- Reasoning Path0.0782--0.15230.02110.19870.00950.07500.12040.03480.08120.01590.05550.06010.1139- Positive Samples0.0641--0.18660.15460.20770.16130.18290.15250.15290.33480.17450.18350.26670.2338
+
+**ZH** Qwen-VL-7B（基座）0.0514 - 8 0.0067 0.1669 0.0101 0.0259 0.0109 0.0036 0.0039 0.2306 0.0012 0.0452 0.0994 0.0063 + AesEval-Train 0.2231 + 17.17% 1 0.2518 0.1982 0.3103 0.0857 0.2204 0.2846 0.1552 0.3901 0.0607 0.2313 0.1152 0.2745 −推理路径 0.0782 - - 0.1523 0.0211 0.1987 0.0095 0.0750 0.1204 0.0348 0.0812 0.0159 0.0555 0.0601 0.1139 −正样本 0.0641 - - 0.1866 0.1546 0.2077 0.1613 0.1829 0.1525 0.1529 0.3348 0.1745 0.1835 0.2667 0.2338
+
+**EN** training is performed with bfloat16 mixed precision and FlashAttention-2 (Dao et al., 2022). Thevision encoder is kept frozen, while the language model parameters are tuned.
+
+**ZH** 训练采用 bfloat16 混合精度与 FlashAttention-2（Dao 等，2022）。视觉编码器保持冻结，仅微调语言模型参数。
+
+**EN** Main Results. Table 6 presents the results, where Qwen-VL-7B (Base) denotes the base model with-out finetuning, and +AesEval-Train refers to the model finetuned on our constructed training set.First, across all three tasks, finetuning with AesEval-Train yields substantial performance improve-ments. Moreover, on aesthetic judgment, the finetuned model surpasses even the largest Qwen-VLvariant (72B parameters), and on precise localization, it outperforms GPT-5 despite the latter havingfar more parameters. These results demonstrate that our proposed pipeline effectively constructstraining data that significantly enhances model performance.
+
+**ZH** 主要结果。表 6 给出了结果，其中 Qwen-VL-7B（Base）表示未经微调的基座模型，+AesEval-Train 表示在我们构建的训练集上微调后的模型。首先，在三项任务上，用 AesEval-Train 微调都带来了显著的性能提升。此外，在审美判断上，微调后的模型甚至超过了最大的 Qwen-VL 变体（72B 参数）；在精确定位上，它优于参数量远多于自己的 GPT-5。这些结果表明，我们所提出的流程能有效构建出显著提升模型性能的训练数据。
+
+**EN** Ablation Studies. We investigate the impact of different data recipes on model performance. Ta-ble 6 reports the results, where -Reasoning Path denotes training with plain question–answer pairswithout the proposed indicator-grounded reasoning, and -Positive Samples denotes training onlyon flawed designs. We observe that -Reasoning Path still improves performance across all threetasks, suggesting that incorporating domain-specific knowledge of design aesthetics is beneficial.However, its performance remains notably lower than that of the full variant with reasoning paths(+AesEval-Train), underscoring the effectiveness of indicator-grounded reasoning. In addition, -Positive Samples performs worse than both +AesEval-Train and -Reasoning Path, highlighting theimportance of maintaining label balance in the training set.
+
+**ZH** 消融研究。我们考察了不同数据配方对模型性能的影响。表 6 报告了结果，其中 -Reasoning Path 表示不使用所提出的指标锚定推理、仅用朴素问答对训练，-Positive Samples 表示只在有缺陷的设计上训练。我们观察到，-Reasoning Path 在三项任务上仍能提升性能，说明引入设计美学领域知识是有益的。但其性能明显低于带推理路径的完整变体（+AesEval-Train），凸显了指标锚定推理的有效性。此外，-Positive Samples 的表现既差于 +AesEval-Train 也差于 -Reasoning Path，说明在训练集中保持标签平衡十分重要。
+
+**EN** 6CONCLUSION
+
+**ZH** 6 结论
+
+**EN** In this work, we introduce AesEval-Bench for design aesthetics assessment, which spans four di-mensions, twelve indicators and three quantifiable tasks. Based on it, we systematically evaluateproprietary, open-source and reasoning-augmented VLMs, revealing clear gaps in design aesthet-ics assessment. Furthermore, we construct a training dataset to fine-tune VLMs for this domain.Experiments show that this dataset significantly improves model performance across all tasks.
+
+**ZH** 本文提出 AesEval-Bench 用于设计美学评估，它涵盖四个维度、十二项指标与三项可量化任务。基于此，我们系统评测了闭源、开源与推理增强型 VLM，揭示了设计美学评估上明显的差距。此外，我们构建了一个训练数据集用于在该领域微调 VLM。实验表明，该数据集显著提升了模型在所有任务上的性能。
+
+**EN** Limitations. First, as Crello serves as the source dataset, the benchmark does not cover all typesof graphic design, such as infographics or mobile UIs. Second, a fully disentangled taxonomy forindicators is not yet available. Should a more rigorously disentangled taxonomy be proposed inthe future, it would be valuable to adopt it and update our indicators accordingly. Third, highly
+
+**ZH** 局限性。首先，由于 Crello 作为来源数据集，本基准并未覆盖所有类型的平面设计，例如信息图或移动端 UI。其次，目前尚不存在完全解耦的指标分类体系；若未来提出更严格解耦的分类体系，采纳并相应更新我们的指标将是有价值的。第三，高度
+
+**EN** 9
+
+**ZH** 9
+
+**EN** [Page 10]
+
+**ZH** [第 10 页]
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** subjective aspects of design, such as creativity, are not included. Finally, leveraging reinforcementlearning to further enhance reasoning capabilities is left for future exploration.
+
+**ZH** 主观的设计方面（如创意）未被纳入。最后，利用强化学习进一步增强推理能力将留待未来探索。
+
+**EN** REFERENCES
+
+**ZH** 参考文献
+
+**EN** Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia Leoni Ale-
+
+**ZH** Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia Leoni Ale-
+
+**EN** man, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shyamal Anadkat, et al. Gpt-4 technicalreport. arXiv preprint arXiv:2303.08774, 2023.
+
+**ZH** man, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shyamal Anadkat, et al. Gpt-4 technicalreport. arXiv preprint arXiv:2303.08774, 2023.
+
+**EN** Ruichuan An, Sihan Yang, Ming Lu, Renrui Zhang, Kai Zeng, Yulin Luo, Jiajun Cao, Hao Liang,
+
+**ZH** Ruichuan An, Sihan Yang, Ming Lu, Renrui Zhang, Kai Zeng, Yulin Luo, Jiajun Cao, Hao Liang,
+
+**EN** Ying Chen, Qi She, et al. Mc-llava: Multi-concept personalized vision-language model. arXivpreprint arXiv:2411.11706, 2024.
+
+**ZH** Ying Chen, Qi She, et al. Mc-llava: Multi-concept personalized vision-language model. arXivpreprint arXiv:2411.11706, 2024.
+
+**EN** Ruichuan An, Sihan Yang, Ziyu Guo, Wei Dai, Zijun Shen, Haodong Li, Renrui Zhang, Xinyu Wei,
+
+**ZH** Ruichuan An, Sihan Yang, Ziyu Guo, Wei Dai, Zijun Shen, Haodong Li, Renrui Zhang, Xinyu Wei,
+
+**EN** Guopeng Li, Wenshan Wu, et al. Genius: Generative fluid intelligence evaluation suite. arXivpreprint arXiv:2602.11144, 2026.
+
+**ZH** Guopeng Li, Wenshan Wu, et al. Genius: Generative fluid intelligence evaluation suite. arXivpreprint arXiv:2602.11144, 2026.
+
+**EN** Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, Sibo Song, Kai Dang, Peng Wang,
+
+**ZH** Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, Sibo Song, Kai Dang, Peng Wang,
+
+**EN** Shijie Wang, Jun Tang, et al. Qwen2. 5-vl technical report. arXiv preprint arXiv:2502.13923,2025.
+
+**ZH** Shijie Wang, Jun Tang, et al. Qwen2. 5-vl technical report. arXiv preprint arXiv:2502.13923,2025.
+
+**EN** Meng Cao, Haoze Zhao, Can Zhang, Xiaojun Chang, Ian Reid, and Xiaodan Liang.Ground-r1:Incentivizing grounded visual reasoning via reinforcement learning.arXiv preprintarXiv:2505.20272, 2025.
+
+**ZH** Meng Cao, Haoze Zhao, Can Zhang, Xiaojun Chang, Ian Reid, and Xiaodan Liang.Ground-r1:Incentivizing grounded visual reasoning via reinforcement learning.arXiv preprintarXiv:2505.20272, 2025.
+
+**EN** Gheorghe Comanici, Eric Bieber, Mike Schaekermann, Ice Pasupat, Noveen Sachdeva, Inderjit
+
+**ZH** Gheorghe Comanici, Eric Bieber, Mike Schaekermann, Ice Pasupat, Noveen Sachdeva, Inderjit
+
+**EN** Dhillon, Marcel Blistein, Ori Ram, Dan Zhang, Evan Rosen, et al. Gemini 2.5: Pushing thefrontier with advanced reasoning, multimodality, long context, and next generation agentic capa-bilities. arXiv preprint arXiv:2507.06261, 2025.
+
+**ZH** Dhillon, Marcel Blistein, Ori Ram, Dan Zhang, Evan Rosen, et al. Gemini 2.5: Pushing thefrontier with advanced reasoning, multimodality, long context, and next generation agentic capa-bilities. arXiv preprint arXiv:2507.06261, 2025.
+
+**EN** Tri Dao, Dan Fu, Stefano Ermon, Atri Rudra, and Christopher R´e. Flashattention: Fast and memory-
+
+**ZH** Tri Dao, Dan Fu, Stefano Ermon, Atri Rudra, and Christopher R´e. Flashattention: Fast and memory-
+
+**EN** efficient exact attention with io-awareness. Advances in neural information processing systems,35:16344–16359, 2022.
+
+**ZH** efficient exact attention with io-awareness. Advances in neural information processing systems,35:16344–16359, 2022.
+
+**EN** Yubin Deng, Chen Change Loy, and Xiaoou Tang. Image aesthetic assessment: An experimental
+
+**ZH** Yubin Deng, Chen Change Loy, and Xiaoou Tang. Image aesthetic assessment: An experimental
+
+**EN** survey. IEEE Signal Processing Magazine, 34(4):80–106, 2017.
+
+**ZH** survey. IEEE Signal Processing Magazine, 34(4):80–106, 2017.
+
+**EN** Ziyu Guo, Xinyan Chen, Renrui Zhang, Ruichuan An, Yu Qi, Dongzhi Jiang, Xiangtai Li, Manyuan
+
+**ZH** Ziyu Guo, Xinyan Chen, Renrui Zhang, Ruichuan An, Yu Qi, Dongzhi Jiang, Xiangtai Li, Manyuan
+
+**EN** Zhang, Hongsheng Li, and Pheng-Ann Heng. Are video models ready as zero-shot reasoners? anempirical study with the mme-cof benchmark. arXiv preprint arXiv:2510.26802, 2025.
+
+**ZH** Zhang, Hongsheng Li, and Pheng-Ann Heng. Are video models ready as zero-shot reasoners? anempirical study with the mme-cof benchmark. arXiv preprint arXiv:2510.26802, 2025.
+
+**EN** Daichi Haraguchi, Naoto Inoue, Wataru Shimoda, Hayato Mitani, Seiichi Uchida, and Kota Yam-
+
+**ZH** Daichi Haraguchi, Naoto Inoue, Wataru Shimoda, Hayato Mitani, Seiichi Uchida, and Kota Yam-
+
+**EN** aguchi. Can gpts evaluate graphic design based on design principles? In SIGGRAPH Asia 2024Technical Communications, pp. 1–4, 2024.
+
+**ZH** aguchi. Can gpts evaluate graphic design based on design principles? In SIGGRAPH Asia 2024Technical Communications, pp. 1–4, 2024.
+
+**EN** Yipo Huang, Quan Yuan, Xiangfei Sheng, Zhichao Yang, Haoning Wu, Pengfei Chen, Yuzhe Yang,
+
+**ZH** Yipo Huang, Quan Yuan, Xiangfei Sheng, Zhichao Yang, Haoning Wu, Pengfei Chen, Yuzhe Yang,
+
+**EN** Leida Li, and Weisi Lin. Aesbench: An expert benchmark for multimodal large language modelson image aesthetics perception. arXiv preprint arXiv:2401.08276, 2024.
+
+**ZH** Leida Li, and Weisi Lin. Aesbench: An expert benchmark for multimodal large language modelson image aesthetics perception. arXiv preprint arXiv:2401.08276, 2024.
+
+**EN** Aaron Hurst, Adam Lerer, Adam P Goucher, Adam Perelman, Aditya Ramesh, Aidan Clark, AJ Os-
+
+**ZH** Aaron Hurst, Adam Lerer, Adam P Goucher, Adam Perelman, Aditya Ramesh, Aidan Clark, AJ Os-
+
+**EN** trow, Akila Welihinda, Alan Hayes, Alec Radford, et al. Gpt-4o system card. arXiv preprintarXiv:2410.21276, 2024.
+
+**ZH** trow, Akila Welihinda, Alan Hayes, Alec Radford, et al. Gpt-4o system card. arXiv preprintarXiv:2410.21276, 2024.
+
+**EN** Aaron Jaech, Adam Kalai, Adam Lerer, Adam Richardson, Ahmed El-Kishky, Aiden Low, Alec
+
+**ZH** Aaron Jaech, Adam Kalai, Adam Lerer, Adam Richardson, Ahmed El-Kishky, Aiden Low, Alec
+
+**EN** Helyar, Aleksander Madry, Alex Beutel, Alex Carney, et al.Openai o1 system card.arXivpreprint arXiv:2412.16720, 2024.
+
+**ZH** Helyar, Aleksander Madry, Alex Beutel, Alex Carney, et al.Openai o1 system card.arXivpreprint arXiv:2412.16720, 2024.
+
+**EN** Ruixiang Jiang and Changwen Chen. Multimodal llms can reason about aesthetics in zero-shot.
+
+**ZH** Ruixiang Jiang and Changwen Chen. Multimodal llms can reason about aesthetics in zero-shot.
+
+**EN** arXiv preprint arXiv:2501.09012, 2025.
+
+**ZH** arXiv preprint arXiv:2501.09012, 2025.
+
+**EN** Sam Jung, Agustin Garcinuno, and Spencer Mateega. Ui-bench: A benchmark for evaluating design
+
+**ZH** Sam Jung, Agustin Garcinuno, and Spencer Mateega. Ui-bench: A benchmark for evaluating design
+
+**EN** capabilities of ai text-to-app tools. arXiv preprint arXiv:2508.20410, 2025.
+
+**ZH** capabilities of ai text-to-app tools. arXiv preprint arXiv:2508.20410, 2025.
+
+**EN** 10
+
+**ZH** 10
+
+**EN** [Page 11]
+
+**ZH** [第 11 页]
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Hyolim Kang, Yunsu Park, Youngbeom Yoo, Yeeun Choi, and Seon Joo Kim. Open-ended hierarchi-
+
+**ZH** Hyolim Kang, Yunsu Park, Youngbeom Yoo, Yeeun Choi, and Seon Joo Kim. Open-ended hierarchi-
+
+**EN** cal streaming video understanding with vision language models. In Proceedings of the IEEE/CVFInternational Conference on Computer Vision, pp. 20715–20725, 2025.
+
+**ZH** cal streaming video understanding with vision language models. In Proceedings of the IEEE/CVFInternational Conference on Computer Vision, pp. 20715–20725, 2025.
+
+**EN** Bo Li, Yuanhan Zhang, Dong Guo, Renrui Zhang, Feng Li, Hao Zhang, Kaichen Zhang, Peiyuan
+
+**ZH** Bo Li, Yuanhan Zhang, Dong Guo, Renrui Zhang, Feng Li, Hao Zhang, Kaichen Zhang, Peiyuan
+
+**EN** Zhang, Yanwei Li, Ziwei Liu, et al. Llava-onevision: Easy visual task transfer. arXiv preprintarXiv:2408.03326, 2024a.
+
+**ZH** Zhang, Yanwei Li, Ziwei Liu, et al. Llava-onevision: Easy visual task transfer. arXiv preprintarXiv:2408.03326, 2024a.
+
+**EN** Chengzu Li, Wenshan Wu, Huanyu Zhang, Yan Xia, Shaoguang Mao, Li Dong, Ivan Vuli´c, and
+
+**ZH** Chengzu Li, Wenshan Wu, Huanyu Zhang, Yan Xia, Shaoguang Mao, Li Dong, Ivan Vuli´c, and
+
+**EN** Furu Wei. Imagine while reasoning in space: Multimodal visualization-of-thought. arXiv preprintarXiv:2501.07542, 2025a.
+
+**ZH** Furu Wei. Imagine while reasoning in space: Multimodal visualization-of-thought. arXiv preprintarXiv:2501.07542, 2025a.
+
+**EN** Congcong Li and Tsuhan Chen. Aesthetic visual quality assessment of paintings. IEEE Journal of
+
+**ZH** Congcong Li and Tsuhan Chen. Aesthetic visual quality assessment of paintings. IEEE Journal of
+
+**EN** selected topics in Signal Processing, 3(2):236–252, 2009.
+
+**ZH** selected topics in Signal Processing, 3(2):236–252, 2009.
+
+**EN** Jian Li, Weiheng Lu, Hao Fei, Meng Luo, Ming Dai, Min Xia, Yizhang Jin, Zhenye Gan, Ding Qi,
+
+**ZH** Jian Li, Weiheng Lu, Hao Fei, Meng Luo, Ming Dai, Min Xia, Yizhang Jin, Zhenye Gan, Ding Qi,
+
+**EN** Chaoyou Fu, et al. A survey on benchmarks of multimodal large language models. arXiv preprintarXiv:2408.08632, 2024b.
+
+**ZH** Chaoyou Fu, et al. A survey on benchmarks of multimodal large language models. arXiv preprintarXiv:2408.08632, 2024b.
+
+**EN** Junxian Li, Di Zhang, Xunzhi Wang, Zeying Hao, Jingdi Lei, Qian Tan, Cai Zhou, Wei Liu, Yaotian
+
+**ZH** Junxian Li, Di Zhang, Xunzhi Wang, Zeying Hao, Jingdi Lei, Qian Tan, Cai Zhou, Wei Liu, Yaotian
+
+**EN** Yang, Xinrui Xiong, et al. Chemvlm: Exploring the power of multimodal large language modelsin chemistry area. In Proceedings of the AAAI Conference on Artificial Intelligence, volume 39,pp. 415–423, 2025b.
+
+**ZH** Yang, Xinrui Xiong, et al. Chemvlm: Exploring the power of multimodal large language modelsin chemistry area. In Proceedings of the AAAI Conference on Artificial Intelligence, volume 39,pp. 415–423, 2025b.
+
+**EN** Jieru Lin, Danqing Huang, Tiejun Zhao, Dechen Zhan, and Chin-Yew Lin. Designprobe: A graphic
+
+**ZH** Jieru Lin, Danqing Huang, Tiejun Zhao, Dechen Zhan, and Chin-Yew Lin. Designprobe: A graphic
+
+**EN** design benchmark for multimodal large language models.arXiv preprint arXiv:2404.14801,2024a.
+
+**ZH** design benchmark for multimodal large language models.arXiv preprint arXiv:2404.14801,2024a.
+
+**EN** Kevin Lin, Zhengyuan Yang, Linjie Li, Jianfeng Wang, and Lijuan Wang. Designbench: Exploring
+
+**ZH** Kevin Lin, Zhengyuan Yang, Linjie Li, Jianfeng Wang, and Lijuan Wang. Designbench: Exploring
+
+**EN** and benchmarking dall-e 3 for imagining visual design. arXiv preprint arXiv:2310.15144, 2023.
+
+**ZH** and benchmarking dall-e 3 for imagining visual design. arXiv preprint arXiv:2310.15144, 2023.
+
+**EN** Weifeng Lin, Xinyu Wei, Ruichuan An, Peng Gao, Bocheng Zou, Yulin Luo, Siyuan Huang, Shang-
+
+**ZH** Weifeng Lin, Xinyu Wei, Ruichuan An, Peng Gao, Bocheng Zou, Yulin Luo, Siyuan Huang, Shang-
+
+**EN** hang Zhang, and Hongsheng Li. Draw-and-understand: Leveraging visual prompts to enablemllms to comprehend what you want. arXiv preprint arXiv:2403.20271, 2024b.
+
+**ZH** hang Zhang, and Hongsheng Li. Draw-and-understand: Leveraging visual prompts to enablemllms to comprehend what you want. arXiv preprint arXiv:2403.20271, 2024b.
+
+**EN** Weifeng Lin, Xinyu Wei, Ruichuan An, Tianhe Ren, Tingwei Chen, Renrui Zhang, Ziyu Guo, Wen-
+
+**ZH** Weifeng Lin, Xinyu Wei, Ruichuan An, Tianhe Ren, Tingwei Chen, Renrui Zhang, Ziyu Guo, Wen-
+
+**EN** tao Zhang, Lei Zhang, and Hongsheng Li. Perceive anything: Recognize, explain, caption, andsegment anything in images and videos. arXiv preprint arXiv:2506.05302, 2025.
+
+**ZH** tao Zhang, Lei Zhang, and Hongsheng Li. Perceive anything: Recognize, explain, caption, andsegment anything in images and videos. arXiv preprint arXiv:2506.05302, 2025.
+
+**EN** Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. Visual instruction tuning. Advances
+
+**ZH** Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. Visual instruction tuning. Advances
+
+**EN** in neural information processing systems, 36:34892–34916, 2023.
+
+**ZH** in neural information processing systems, 36:34892–34916, 2023.
+
+**EN** Yun Lou, Weiyue Gao, Pei Chen, Xuanhui Liu, Changyuan Yang, and Lingyun Sun. Designeva: A
+
+**ZH** Yun Lou, Weiyue Gao, Pei Chen, Xuanhui Liu, Changyuan Yang, and Lingyun Sun. Designeva: A
+
+**EN** design-supported tool with multi-faceted perceptual evaluation. In International Conference onHuman-Computer Interaction, pp. 508–519. Springer, 2022.
+
+**ZH** design-supported tool with multi-faceted perceptual evaluation. In International Conference onHuman-Computer Interaction, pp. 508–519. Springer, 2022.
+
+**EN** Yue Lu, Chao Guo, Yilun Lin, Fan Zhuo, and FY Wang.Computational aesthetics of fine artpaintings: The state of the art and outlook. Acta Automatica Sinica, 46(11):2239–2259, 2020.
+
+**ZH** Yue Lu, Chao Guo, Yilun Lin, Fan Zhuo, and FY Wang.Computational aesthetics of fine artpaintings: The state of the art and outlook. Acta Automatica Sinica, 46(11):2239–2259, 2020.
+
+**EN** Meng Luo, Hao Fei, Bobo Li, Shengqiong Wu, Qian Liu, Soujanya Poria, Erik Cambria, Mong-
+
+**ZH** Meng Luo, Hao Fei, Bobo Li, Shengqiong Wu, Qian Liu, Soujanya Poria, Erik Cambria, Mong-
+
+**EN** Li Lee, and Wynne Hsu. Panosent: A panoptic sextuple extraction benchmark for multimodalconversational aspect-based sentiment analysis. In Proceedings of the 32nd ACM InternationalConference on Multimedia, pp. 7667–7676, 2024.
+
+**ZH** Li Lee, and Wynne Hsu. Panosent: A panoptic sextuple extraction benchmark for multimodalconversational aspect-based sentiment analysis. In Proceedings of the 32nd ACM InternationalConference on Multimedia, pp. 7667–7676, 2024.
+
+**EN** Meng Luo, Shengqiong Wu, Liqiang Jing, Tianjie Ju, Li Zheng, Jinxiang Lai, Tianlong Wu, Xinya
+
+**ZH** Meng Luo, Shengqiong Wu, Liqiang Jing, Tianjie Ju, Li Zheng, Jinxiang Lai, Tianlong Wu, Xinya
+
+**EN** Du, Jian Li, Siyuan Yan, Jiebo Luo, William Yang Wang, Hao Fei, Mong-Li Lee, and Wynne Hsu.Dr.v: A hierarchical perception-temporal-cognition framework to diagnose video hallucination byfine-grained spatial-temporal grounding, 2025a. URL https://arxiv.org/abs/2509.11866.
+
+**ZH** Du, Jian Li, Siyuan Yan, Jiebo Luo, William Yang Wang, Hao Fei, Mong-Li Lee, and Wynne Hsu.Dr.v: A hierarchical perception-temporal-cognition framework to diagnose video hallucination byfine-grained spatial-temporal grounding, 2025a. URL https://arxiv.org/abs/2509.11866.
+
+**EN** Meng Luo, Shengqiong Wu, Liqiang Jing, Tianjie Ju, Li Zheng, Jinxiang Lai, Tianlong Wu, Xinya
+
+**ZH** Meng Luo, Shengqiong Wu, Liqiang Jing, Tianjie Ju, Li Zheng, Jinxiang Lai, Tianlong Wu, Xinya
+
+**EN** Du, Jian Li, Siyuan Yan, et al.Dr. v: A hierarchical perception-temporal-cognition frame-work to diagnose video hallucination by fine-grained spatial-temporal grounding. arXiv preprintarXiv:2509.11866, 2025b.
+
+**ZH** Du, Jian Li, Siyuan Yan, et al.Dr. v: A hierarchical perception-temporal-cognition frame-work to diagnose video hallucination by fine-grained spatial-temporal grounding. arXiv preprintarXiv:2509.11866, 2025b.
+
+**EN** 11
+
+**ZH** 11
+
+**EN** [Page 12]
+
+**ZH** [第 12 页]
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Jon McCormack and Andy Lomas. Understanding aesthetic evaluation using deep learning. In
+
+**ZH** Jon McCormack and Andy Lomas. Understanding aesthetic evaluation using deep learning. In
+
+**EN** International conference on computational intelligence in music, sound, art and design (part ofEvoStar), pp. 118–133. Springer, 2020.
+
+**ZH** International conference on computational intelligence in music, sound, art and design (part ofEvoStar), pp. 118–133. Springer, 2020.
+
+**EN** Joonhyung Park, Peng Tang, Sagnik Das, Srikar Appalaraju, Kunwar Yashraj Singh, R Manmatha,
+
+**ZH** Joonhyung Park, Peng Tang, Sagnik Das, Srikar Appalaraju, Kunwar Yashraj Singh, R Manmatha,
+
+**EN** and Shabnam Ghadar. R-vlm: Region-aware vision language model for precise gui grounding. InFindings of the Association for Computational Linguistics: ACL 2025, pp. 9669–9685, 2025.
+
+**ZH** and Shabnam Ghadar. R-vlm: Region-aware vision language model for precise gui grounding. InFindings of the Association for Computational Linguistics: ACL 2025, pp. 9669–9685, 2025.
+
+**EN** Gabriel Sarch, Snigdha Saha, Naitik Khandelwal, Ayush Jain, Michael J Tarr, Aviral Kumar, and
+
+**ZH** Gabriel Sarch, Snigdha Saha, Naitik Khandelwal, Ayush Jain, Michael J Tarr, Aviral Kumar, and
+
+**EN** Katerina Fragkiadaki. Grounded reinforcement learning for visual reasoning. arXiv preprintarXiv:2505.23678, 2025.
+
+**ZH** Katerina Fragkiadaki. Grounded reinforcement learning for visual reasoning. arXiv preprintarXiv:2505.23678, 2025.
+
+**EN** Hao Shao, Shengju Qian, Han Xiao, Guanglu Song, Zhuofan Zong, Letian Wang, Yu Liu, and Hong-
+
+**ZH** Hao Shao, Shengju Qian, Han Xiao, Guanglu Song, Zhuofan Zong, Letian Wang, Yu Liu, and Hong-
+
+**EN** sheng Li. Visual cot: Advancing multi-modal language models with a comprehensive dataset andbenchmark for chain-of-thought reasoning. Advances in Neural Information Processing Systems,37:8612–8642, 2024.
+
+**ZH** sheng Li. Visual cot: Advancing multi-modal language models with a comprehensive dataset andbenchmark for chain-of-thought reasoning. Advances in Neural Information Processing Systems,37:8612–8642, 2024.
+
+**EN** Kunal Singh, Shreyas Singh, and Mukund Khanna. Trishul: Towards region identification and screen
+
+**ZH** Kunal Singh, Shreyas Singh, and Mukund Khanna. Trishul: Towards region identification and screen
+
+**EN** hierarchy understanding for large vlm based gui agents. In Proceedings of the Computer Visionand Pattern Recognition Conference, pp. 170–179, 2025.
+
+**ZH** hierarchy understanding for large vlm based gui agents. In Proceedings of the Computer Visionand Pattern Recognition Conference, pp. 170–179, 2025.
+
+**EN** Guangyan Sun, Mingyu Jin, Zhenting Wang, Cheng-Long Wang, Siqi Ma, Qifan Wang, Tong Geng,
+
+**ZH** Guangyan Sun, Mingyu Jin, Zhenting Wang, Cheng-Long Wang, Siqi Ma, Qifan Wang, Tong Geng,
+
+**EN** Ying Nian Wu, Yongfeng Zhang, and Dongfang Liu. Visual agents as fast and slow thinkers.arXiv preprint arXiv:2408.08862, 2024.
+
+**ZH** Ying Nian Wu, Yongfeng Zhang, and Dongfang Liu. Visual agents as fast and slow thinkers.arXiv preprint arXiv:2408.08862, 2024.
+
+**EN** Peng Wang, Shuai Bai, Sinan Tan, Shijie Wang, Zhihao Fan, Jinze Bai, Keqin Chen, Xuejing Liu,
+
+**ZH** Peng Wang, Shuai Bai, Sinan Tan, Shijie Wang, Zhihao Fan, Jinze Bai, Keqin Chen, Xuejing Liu,
+
+**EN** Jialin Wang, Wenbin Ge, et al. Qwen2-vl: Enhancing vision-language model’s perception of theworld at any resolution. arXiv preprint arXiv:2409.12191, 2024.
+
+**ZH** Jialin Wang, Wenbin Ge, et al. Qwen2-vl: Enhancing vision-language model’s perception of theworld at any resolution. arXiv preprint arXiv:2409.12191, 2024.
+
+**EN** Chatchai Wangwiwattana and Areerat Meeyen. Design through ai eyes: Automating aesthetic as-
+
+**ZH** Chatchai Wangwiwattana and Areerat Meeyen. Design through ai eyes: Automating aesthetic as-
+
+**EN** sessments for learning graphic design concepts. In International Conference on Multi-disciplinaryTrends in Artificial Intelligence, pp. 336–347. Springer, 2024.
+
+**ZH** sessments for learning graphic design concepts. In International Conference on Multi-disciplinaryTrends in Artificial Intelligence, pp. 336–347. Springer, 2024.
+
+**EN** Qiong Wu, Xiangcong Yang, Yiyi Zhou, Chenxin Fang, Baiyang Song, Xiaoshuai Sun, and Ron-
+
+**ZH** Qiong Wu, Xiangcong Yang, Yiyi Zhou, Chenxin Fang, Baiyang Song, Xiaoshuai Sun, and Ron-
+
+**EN** grong Ji.Grounded chain-of-thought for multimodal large language models.arXiv preprintarXiv:2503.12799, 2025.
+
+**ZH** grong Ji.Grounded chain-of-thought for multimodal large language models.arXiv preprintarXiv:2503.12799, 2025.
+
+**EN** Kota Yamaguchi. Canvasvae: Learning to generate vector graphic documents. In Proceedings of the
+
+**ZH** Kota Yamaguchi. Canvasvae: Learning to generate vector graphic documents. In Proceedings of the
+
+**EN** IEEE/CVF International Conference on Computer Vision, pp. 5481–5489, 2021.
+
+**ZH** IEEE/CVF International Conference on Computer Vision, pp. 5481–5489, 2021.
+
+**EN** An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu,
+
+**ZH** An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu,
+
+**EN** Chang Gao, Chengen Huang, Chenxu Lv, et al.Qwen3 technical report.arXiv preprintarXiv:2505.09388, 2025.
+
+**ZH** Chang Gao, Chengen Huang, Chenxu Lv, et al.Qwen3 technical report.arXiv preprintarXiv:2505.09388, 2025.
+
+**EN** Di Zhang, Jingdi Lei, Junxian Li, Xunzhi Wang, Yujie Liu, Zonglin Yang, Jiatong Li, Weida Wang,
+
+**ZH** Di Zhang, Jingdi Lei, Junxian Li, Xunzhi Wang, Yujie Liu, Zonglin Yang, Jiatong Li, Weida Wang,
+
+**EN** Suorong Yang, Jianbo Wu, et al. Critic-v: Vlm critics help catch vlm errors in multimodal reason-ing. In Proceedings of the Computer Vision and Pattern Recognition Conference, pp. 9050–9061,2025a.
+
+**ZH** Suorong Yang, Jianbo Wu, et al. Critic-v: Vlm critics help catch vlm errors in multimodal reason-ing. In Proceedings of the Computer Vision and Pattern Recognition Conference, pp. 9050–9061,2025a.
+
+**EN** Huanyu Zhang, Chengzu Li, Wenshan Wu, Shaoguang Mao, Yifan Zhang, Haochen Tian, Ivan
+
+**ZH** Huanyu Zhang, Chengzu Li, Wenshan Wu, Shaoguang Mao, Yifan Zhang, Haochen Tian, Ivan
+
+**EN** Vuli´c, Zhang Zhang, Liang Wang, Tieniu Tan, et al. Scaling and beyond: Advancing spatialreasoning in mllms requires new recipes. arXiv preprint arXiv:2504.15037, 2025b.
+
+**ZH** Vuli´c, Zhang Zhang, Liang Wang, Tieniu Tan, et al. Scaling and beyond: Advancing spatialreasoning in mllms requires new recipes. arXiv preprint arXiv:2504.15037, 2025b.
+
+**EN** Huanyu Zhang, Wenshan Wu, Chengzu Li, Ning Shang, Yan Xia, Yangyu Huang, Yifan Zhang,
+
+**ZH** Huanyu Zhang, Wenshan Wu, Chengzu Li, Ning Shang, Yan Xia, Yangyu Huang, Yifan Zhang,
+
+**EN** Li Dong, Zhang Zhang, Liang Wang, et al. Latent sketchpad: Sketching visual thoughts to elicitmultimodal reasoning in mllms. arXiv preprint arXiv:2510.24514, 2025c.
+
+**ZH** Li Dong, Zhang Zhang, Liang Wang, et al. Latent sketchpad: Sketching visual thoughts to elicitmultimodal reasoning in mllms. arXiv preprint arXiv:2510.24514, 2025c.
+
+**EN** Qintong Zhang, Bin Wang, Victor Shea-Jay Huang, Junyuan Zhang, Zhengren Wang, Hao Liang,
+
+**ZH** Qintong Zhang, Bin Wang, Victor Shea-Jay Huang, Junyuan Zhang, Zhengren Wang, Hao Liang,
+
+**EN** Conghui He, and Wentao Zhang.Document parsing unveiled: Techniques, challenges, andprospects for structured information extraction. arXiv preprint arXiv:2410.21169, 2024.
+
+**ZH** Conghui He, and Wentao Zhang.Document parsing unveiled: Techniques, challenges, andprospects for structured information extraction. arXiv preprint arXiv:2410.21169, 2024.
+
+**EN** 12
+
+**ZH** 12
+
+**EN** [Page 13]
+
+**ZH** [第 13 页]
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** YiFan Zhang, Huanyu Zhang, Haochen Tian, Chaoyou Fu, Shuangqing Zhang, Junfei Wu, Feng Li,
+
+**ZH** YiFan Zhang, Huanyu Zhang, Haochen Tian, Chaoyou Fu, Shuangqing Zhang, Junfei Wu, Feng Li,
+
+**EN** Kun Wang, Qingsong Wen, Zhang Zhang, et al. Mme-realworld: Could your multimodal llmchallenge high-resolution real-world scenarios that are difficult for humans? In The ThirteenthInternational Conference on Learning Representations, 2025d.
+
+**ZH** Kun Wang, Qingsong Wen, Zhang Zhang, et al. Mme-realworld: Could your multimodal llmchallenge high-resolution real-world scenarios that are difficult for humans? In The ThirteenthInternational Conference on Learning Representations, 2025d.
+
+**EN** Ming Zhong, Yuanlei Wang, Liuzhou Zhang, Arctanx An, Renrui Zhang, Hao Liang, Ming Lu,
+
+**ZH** Ming Zhong, Yuanlei Wang, Liuzhou Zhang, Arctanx An, Renrui Zhang, Hao Liang, Ming Lu,
+
+**EN** Ying Shen, and Wentao Zhang. Vcu-bridge: Hierarchical visual connotation understanding viasemantic bridging. arXiv preprint arXiv:2511.18121, 2025.
+
+**ZH** Ying Shen, and Wentao Zhang. Vcu-bridge: Hierarchical visual connotation understanding viasemantic bridging. arXiv preprint arXiv:2511.18121, 2025.
+
+**EN** Zhaokun Zhou, Qiulin Wang, Bin Lin, Yiwei Su, Rui Chen, Xin Tao, Amin Zheng, Li Yuan, Pengfei
+
+**ZH** Zhaokun Zhou, Qiulin Wang, Bin Lin, Yiwei Su, Rui Chen, Xin Tao, Amin Zheng, Li Yuan, Pengfei
+
+**EN** Wan, and Di Zhang. Uniaa: A unified multi-modal image aesthetic assessment baseline andbenchmark. arXiv preprint arXiv:2404.09619, 2024.
+
+**ZH** Wan, and Di Zhang. Uniaa: A unified multi-modal image aesthetic assessment baseline andbenchmark. arXiv preprint arXiv:2404.09619, 2024.
+
+**EN** Jinguo Zhu, Weiyun Wang, Zhe Chen, Zhaoyang Liu, Shenglong Ye, Lixin Gu, Hao Tian, Yuchen
+
+**ZH** Jinguo Zhu, Weiyun Wang, Zhe Chen, Zhaoyang Liu, Shenglong Ye, Lixin Gu, Hao Tian, Yuchen
+
+**EN** Duan, Weijie Su, Jie Shao, et al. Internvl3: Exploring advanced training and test-time recipes foropen-source multimodal models. arXiv preprint arXiv:2504.10479, 2025.
+
+**ZH** Duan, Weijie Su, Jie Shao, et al. Internvl3: Exploring advanced training and test-time recipes foropen-source multimodal models. arXiv preprint arXiv:2504.10479, 2025.
+
+**EN** 13
+
+**ZH** 13
+
+**EN** [Page 14]
+
+**ZH** [第 14 页]
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Dimension-Indicators Prompts:
+
+**ZH** 维度—指标提示：
+
+**EN** Graphic-Quality: Resolution is a measure of image detail. Appropriate resolution ensuresthe best picture quality and readability. Does element have quality issue?Graphic-Relevance: Relevance refers to the direct connection between a graphic elementand the meaning it conveys. Does element have relevance issue?
+
+**ZH** 图形—质量：分辨率衡量图像的细节程度。恰当的分辨率可确保最佳的画面质量与可读性。该元素是否存在质量问题？图形—相关性：相关性指图形元素与其所传达含义之间的直接关联。该元素是否存在相关性问题？
+
+**EN** Color-Harmony: Color Harmony refers to the overall coordination, pleasure and beautyof the entire color when there are two or more colors in an image.Color-Contrast: Color contrast refers to the contrasts, oppositions, and differences existingamong various colors.Color-Appreal: Color appeal refers to the fact that the selection and combination of colorscan attract the attention of the audience.Color-Psychology: Color psychology refers to the idea that color can trigger subjectivepsychological experiences and influence emotions, feelings, and behaviors.
+
+**ZH** 色彩—和谐：色彩和谐指当图像中出现两种或更多颜色时，整体色彩在总体上的协调、愉悦与美感。色彩—对比：色彩对比指各种颜色之间存在的对比、对立与差异。色彩—吸引力：色彩吸引力指颜色的选择与搭配能够吸引受众注意。色彩—心理：色彩心理指颜色能够引发主观心理体验，并影响情绪、感受与行为。
+
+**EN** Layout-Balance: Balance is the distribution of visual weight in design. It can be sym-metrical (with equal weights on both sides) or asymmetrical (with unequal weights but stillachieving visual balance).Layout-Layering: Use size, color, contrast, and other visual cues to establish a hierarchicalstructure of design elements to guide the audience’s eyes.Layout-Whitespace: White space refers to the blank area around the elements in a design.Effective utilization of white space can create balance, visual hierarchy, and clarity.Layout-Alignment: Alignment refers to the arrangement of design elements relativeto each other or a specific axis or grid. Proper alignment creates a sense of order andorganization, making the design easier to understand and navigate.
+
+**ZH** 版式—平衡：平衡是设计中视觉重量的分布。它可以是对称的（两侧重量相等），也可以是不对称的（两侧重量不等但仍达成视觉平衡）。版式—层次：利用尺寸、色彩、对比等视觉线索建立设计元素的层级结构，以引导受众视线。版式—留白：留白指设计中元素周围的空白区域。有效利用留白可以营造平衡、视觉层级与清晰度。版式—对齐：对齐指设计元素相对于彼此或相对于特定轴线、网格的排布。恰当的对齐带来秩序感与条理感，使设计更易于理解与浏览。
+
+**EN** Font-Hierarchy: The presentation of the font has a hierarchical structure, so users can scanthe text to obtain key information.Font-Legibility: Legibility refers to the recognition of individual characters and the rela-tionships between them when they are arranged side by side.
+
+**ZH** 字体—层级：字体呈现具有层级结构，使用户能够扫读文本以获取关键信息。字体—易读性：易读性指当字符并排排列时，对单个字符及其相互关系的辨识程度。
+
+**EN** Table 7: Showcase of descriptions of each indicator.
+
+**ZH** 表 7：各项指标描述的展示。
+
+**EN** Task Reasoning Instructions:
+
+**ZH** 任务推理指令：
+
+**EN** Aesthetic Judgment : Given the preview image and the element image and elementbounding box bbox, please reason why the element is not aesthetic in the aspect of criteria.Your reason should only contain the analysis about criteria.Please think and reasoning.Once the element is mentioned, you should add its bounding box after the element(onlybounding box).
+
+**ZH** 审美判断：给定预览图、元素图像与元素边界框 bbox，请推理该元素在 criteria 方面为何不够美观。你的理由只应包含关于 criteria 的分析。请思考并推理。一旦提到某个元素，应在该元素之后附上其边界框（仅边界框）。
+
+**EN** Region Selection: Given a preview image, an image of an unsightly element and itsbounding box bbox[0], and an image of an attractive element and its bounding box bbox[1],analyze why the first element is unsightly in terms of criteria based on the relationshipbetween the elements. Your reasoning should only include an analysis of criteria. Pleasethink and reason. Once an element is mentioned, you should add its bounding box after theelement (bounding box only).
+
+**ZH** 区域选择：给定预览图、一张不佳元素的图像及其边界框 bbox[0]，以及一张有吸引力元素的图像及其边界框 bbox[1]，请根据元素之间的关系，分析第一个元素在 criteria 方面为何不佳。你的推理只应包含对 criteria 的分析。请思考并推理。一旦提到某个元素，应在该元素之后附上其边界框（仅边界框）。
+
+**EN** Precise Localization: Given a preview image, an element image, and the element’s bound-ing box bbox, analyze why the element is unsightly when viewed from the perspective ofcriteria, based on their relationship. Your reasoning should only include analysis of criteria.Think and reason. Once you mention the element, you should follow it with its boundingbox (only the bounding box).
+
+**ZH** 精确定位：给定预览图、一张元素图像以及该元素的边界框 bbox，请根据它们之间的关系，从 criteria 的视角分析该元素为何不佳。你的推理只应包含对 criteria 的分析。请思考并推理。一旦提到该元素，应在其后附上其边界框（仅边界框）。
+
+**EN** Table 8: Showcase of task reasoning instructions.
+
+**ZH** 表 8：任务推理指令的展示。
+
+**EN** 14
+
+**ZH** 14
+
+**EN** [Page 15]
+
+**ZH** [第 15 页]
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** ASTATEMENT OF LLM USAGE
+
+**ZH** A LLM 使用声明
+
+**EN** Large language models (LLMs) were consulted for technical guidance during implementation anddebugging; following the collaborative drafting of the manuscript, we further employed LLMs torefine the prose and enhance the overall exposition.
+
+**ZH** 在实现与调试过程中，我们就技术指导咨询了大语言模型（LLM）；在完成手稿的合作撰写之后，我们进一步使用 LLM 润色文字、提升整体表述。
+
+**EN** BPROMPTS AND INSTRUCTIONS
+
+**ZH** B 提示与指令
+
+**EN** First, Dimension-Indicator Prompts establish a clear set of evaluation criteria. These are organizedinto four core dimensions: Graphics, Color, Layout, and Font, each containing specific indicatorslike Font-Legibility. As shown in Table 7, every indicator is defined and paired with a guidingquestion to standardize the analysis.
+
+**ZH** 第一，维度—指标提示确立了一套清晰的评估标准。它们被组织为四个核心维度：图形、色彩、版式与字体，每个维度包含具体指标，如字体—易读性。如表 7 所示，每项指标都被定义，并配有一个引导性问题以规范分析。
+
+**EN** Second, Task Reasoning Instructions (Table 8) provide operational guidance for creating the rea-soning paths. They direct the analysis to focus on an element’s intrinsic flaws, its relationship withother elements, or its immediate context, while critically mandating the inclusion of the element’sbounding box (bbox) to ground the reasoning in precise spatial evidence.
+
+**ZH** 第二，任务推理指令（表 8）为生成推理路径提供了操作指引。它们把分析导向元素自身的缺陷、元素之间的关系或其直接语境，同时关键地要求包含元素的边界框（bbox），使推理锚定在精确的空间证据上。
+
+**EN** CADDITIONAL RELATED WORK
+
+**ZH** C 补充相关工作
+
+**EN** Evaluation for VLMs. Recent years have witnessed a surge in benchmarks (Li et al., 2024b) de-signed to evaluate Vision-Language Models (VLMs), ranging from general-purpose assessments ofperception (Luo et al., 2024) and reasoning (Guo et al., 2025; Zhang et al., 2025a), which encom-pass region-level (Lin et al., 2024b; 2025; Park et al., 2025) and hierarchical understanding (Kanget al., 2025; Singh et al., 2025; Zhong et al., 2025), to more specialized evaluations in domainslike chemistry (Li et al., 2025b) or image generation (An et al., 2026). While existing benchmarkseffectively evaluate general capability, they often overlook the nuanced, subjective dimensions ofvisual understanding. To address this, our work introduces a specialized benchmark focused on theaesthetic dimension, assessing how VLMs interpret artistic quality and visual appeal.
+
+**ZH** 面向 VLM 的评测。近年来涌现出大量用于评测视觉语言模型（VLM）的基准（Li 等，2024b），涵盖从对感知（Luo 等，2024）与推理（Guo 等，2025；Zhang 等，2025a）的通用评估——其中包含区域级（Lin 等，2024b；2025；Park 等，2025）与层次化理解（Kang 等，2025；Singh 等，2025；Zhong 等，2025）——到化学（Li 等，2025b）或图像生成（An 等，2026）等更专门领域的评测。已有基准虽能有效评估通用能力，却常常忽视视觉理解中细腻而主观的维度。为此，我们的工作引入了一个聚焦美学维度的专门基准，考察 VLM 如何解读艺术品质与视觉吸引力。
+
+**EN** DDATA SOURCE SHOWCASE
+
+**ZH** D 数据来源展示
+
+**EN** To address the concern regarding the diversity of the Crello dataset, we provide a visual samplingof its typical data in Fig.4. As illustrated, the dataset covers a comprehensive range of designcategories and aesthetics, including textual handwritten, photography-driven and diverse art stylesdesigns. This diversity ensures that our benchmark evaluates models on a realistic distribution ofgraphic design tasks, preventing bias toward any single visual style.
+
+**ZH** 针对对 Crello 数据集多样性的关切，我们在图 4 中给出其典型数据的可视化抽样。如图所示，该数据集覆盖了广泛的设计类别与美学风格，包括手写文字类、摄影驱动型以及多种艺术风格的设计。这种多样性确保我们的基准在真实的平面设计任务分布上评测模型，避免偏向任何单一视觉风格。
+
+**EN** EFLAW INJECTION PIPELINE
+
+**ZH** E 缺陷注入流程
+
+**EN** FREAL WORLD DESIGN DATA SHOWCASE
+
+**ZH** F 真实世界设计数据展示
+
+**EN** To validate our model’s generalization capabilities beyond the synthetic distributions of Crello, wecompiled a distinct Out-Of-Distribution (OOD) test set consisting of real-world flawed designs. Asshown in Fig. 5, these samples were sourced directly from intermediate design drafts and annotatedby professional designers, capturing the nuanced and often complex nature of authentic.
+
+**ZH** 为验证我们的模型在 Crello 合成分布之外的泛化能力，我们整理了一个独立的分布外（OOD）测试集，由真实世界中存在缺陷的设计组成。如图 5 所示，这些样本直接取自中间阶段的设计草稿，并由专业设计师标注，捕捉了真实设计缺陷细腻且往往复杂的特性。
+
+**EN** Mapping Real-World Flaws to Synthetic Perturbations. To further validate the design of our dataconstruction pipeline, we analyzed the collected real-world flawed designs (Figure 5) and mappedtheir defects to the operations in Algorithm 1. As observed in the ”Startup Job Fair” poster, thetext blends into the dark background, rendering it illegible. This specific error is simulated in our
+
+**ZH** 把真实世界缺陷映射到合成扰动。为进一步验证数据构建流程的设计，我们分析了收集到的真实世界缺陷设计（图 5），并把其中的缺陷映射到算法 1 中的操作。例如在“Startup Job Fair”海报中，文字与深色背景融为一体，导致难以辨认。这一具体错误在我们的
+
+**EN** 15
+
+**ZH** 15
+
+**EN** [Page 16]
+
+**ZH** [第 16 页]
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 16
+
+**ZH** 第 16 页的图
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Figure 4: Diverse design samples sourced from the Crello dataset. The collection demonstratesa wide spectrum of visual styles and structural layouts, including (a) minimalist typography-centricdesigns (e.g., ”Corporate Charity”), (b) photography-driven fashion editorials featuring real humansubjects, (c) vintage illustrations, (d) photorealistic tech mockups, (e) geometric abstract art, (f)textured artistic typography, and (g) cyberpunk-themed certificates. This visual evidence refutes theconcern of stylistic homogeneity, confirming the dataset’s robust coverage across design domains.
+
+**ZH** 图 4：取自 Crello 数据集的多样化设计样本。该集合展示了丰富的视觉风格与结构版式，包括 (a) 极简的以字体排版为中心的设计（如“Corporate Charity”）、(b) 含真实人物主体的摄影驱动型时尚版面、(c) 复古插画、(d) 照片级真实的技术样机、(e) 几何抽象艺术、(f) 带质感的艺术化字体排版，以及 (g) 赛博朋克主题的证书。这一视觉证据回应了对风格同质化的关切，确认了该数据集在设计领域上的稳健覆盖。
+
+**EN** pipeline by Color Perturbation module. Similarly, the ”End Violence” poster exhibits severe layer-ing issues where graphical elements obstruct critical text. This type of flaw is effectively reproducedby our Layout Perturbation module, which applies random coordinate shifts (Position Shift) to el-ements, creating unintended overlaps and layout collisions. This structural alignment confirms thatour synthetic pipeline generates meaningful negatives align with the real world flaw designs.
+
+**ZH** 流程中由色彩扰动模块模拟。类似地，“End Violence”海报存在严重的层次问题，图形元素遮挡了关键文字。这类缺陷可由我们的版式扰动模块有效复现——该模块对元素施加随机坐标偏移（位置偏移），造成意外的重叠与版式冲突。这种结构上的对应关系说明，我们的合成流程生成的负样本是有意义的，并与真实世界的缺陷设计相吻合。
+
+**EN** Note on Dataset Diversity and Benchmark Showcase. It is important to note that for the Bench-mark Showcase (Sec. I), we intentionally selected examples with isolated and obvious flaws. Thisselection strategy was adopted strictly for pedagogical purposes—to provide clear, unambiguous vi-sualizations of each specific aesthetic indicator (e.g., illustrating exactly what a ”Balance” violationlooks like in isolation). Readers should be aware that the full AesEval-Bench and AesEval-Traindatasets are significantly more diverse and challenging. They encompass a wide spectrum of diffi-culty, ranging from the clear, single-flaw examples shown in the showcase to complex, multi-flawdesigns (similar to the real-world examples in Fig. 5) where multiple indicators (e.g., Alignment,Legibility, and Color Harmony) may be compromised simultaneously.
+
+**ZH** 关于数据集多样性与基准展示的说明。需要指出的是，在基准展示（第 I 节）中，我们有意挑选了缺陷孤立且明显的样例。这种选择策略完全出于教学目的——为每一项具体美学指标提供清晰、无歧义的可视化（例如单独展示“平衡”违规究竟是什么样子）。读者应当注意，完整的 AesEval-Bench 与 AesEval-Train 数据集要更加多样、更具挑战性。它们涵盖从展示中所见的单一缺陷清晰样例，到多个指标（如对齐、易读性与色彩和谐）同时受损的复杂多缺陷设计（类似于图 5 中的真实案例）在内的广泛难度谱系。
+
+**EN** GTASK-SPECIFIC PROMPT SHOWCASES.
+
+**ZH** G 任务特定提示示例
+
+**EN** To ensure a rigorous evaluation of reasoning-augmented models (e.g., GPT-o1, GPT-o3), we alsoformulated a specific set of Optimized Prompts designed to elicit their chain-of-thought capabilities.As detailed in Tab 9, distinct from the direct queries used for standard VLMs (”Original Prompt”),these optimized prompts explicitly instruct the model to engage in a step-by-step analytical pro-cess. However, even task-specifically designed prompts could not improve the model’s aestheticunderstanding capability, revealing the limitations of general reasoning in this task.
+
+**ZH** 为确保对推理增强模型（如 GPT-o1、GPT-o3）评测的严谨性，我们还设计了一组特定的优化提示，用以激发它们的思维链能力。如表 9 所示，与用于标准 VLM 的直接查询（“原始提示”）不同，这些优化提示明确指示模型进行逐步分析。然而，即便是专门设计的任务提示，也未能提升模型的美学理解能力，揭示了通用推理在该任务上的局限。
+
+**EN** HSTATISTICS TESTS
+
+**ZH** H 统计检验
+
+**EN** We conducted rigorous hypothesis testing to ensure the reliability of our results reported in Table 6.
+
+**ZH** 我们进行了严格的假设检验，以确保表 6 中所报告结果的可靠性。
+
+**EN** 16
+
+**ZH** 16
+
+**EN** [Page 17]
+
+**ZH** [第 17 页]
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Algorithm 1 Data Construction Pipeline via Synthetic Perturbation
+
+**ZH** 算法 1 基于合成扰动的数据构建流程
+
+**EN** Require: Original Design D, Metadata M (in JSON format), Perturbation Library P, Number of
+
+**ZH** 输入：原始设计 D、元数据 M（JSON 格式）、扰动库 P、被扰动元素数量 n。
+
+**EN** perturbed elements n.Ensure: Perturbed Design D′, Updated Metadata M ′.
+
+**ZH** 输出：扰动后的设计 D′、更新后的元数据 M′。
+
+**EN** 1: Initialization: M ′ ←M2: Element Selection: Randomly select a subset of elements E = {e1, e2, . . . , en} from M ′.3: for all ei ∈E do4:Perturbation Selection: Randomly sample an operation op ∈P applicable to the type of ei.
+
+**ZH** 1: 初始化：M′ ← M 2: 元素选择：从 M′ 中随机选取元素子集 E = {e1, e2, . . . , en}。3: for all ei ∈E do 4: 扰动选择：随机采样一个适用于 ei 类型的操作 op ∈P。
+
+**EN** 5:Parameter Sampling: Sample perturbation intensity δ or target attributes.6:if op is Layout Perturbation then7:ei.pos ←ei.pos + U(−δpos, δpos) {Shift position}8:else if op is Font Perturbation then9:if op is Size Change then10:ei.size ←ei.size + U(−δsize, δsize)11:else if op is Font Swap then12:ei.font ←Sample(FontLibrary) \ {ei.font}13:end if14:else if op is Color Perturbation then15:if op is Low Contrast then16:ei.color ←SampleNear(M.background color, ϵ)17:else if op is High Contrast / Clashing then18:ei.color ←Invert(M.dominant color) + Noise19:end if20:else if op is Graphic/Image Perturbation then21:if op is Replacement then22:ei.src ←Sample(ImageLibrary)23:else if op is Resolution Reduction then24:ei.quality ←Downsample(ei.src, factor)25:else if op is Blur then26:ei.effect ←GaussianBlur(ei.src, σ)27:end if28:end if29:Update: Update element ei within metadata M ′.30: end for31: Rendering: D′ ←Render(M ′) {Re-render design using updated JSON}32: return D′, M ′
+
+**ZH** 5: 参数采样：采样扰动强度 δ 或目标属性。6: if op 为版式扰动 then 7: ei.pos ← ei.pos + U(−δpos, δpos) {位置偏移} 8: else if op 为字体扰动 then 9: if op 为尺寸变化 then 10: ei.size ← ei.size + U(−δsize, δsize) 11: else if op 为字体替换 then 12: ei.font ← Sample(FontLibrary) \ {ei.font} 13: end if 14: else if op 为色彩扰动 then 15: if op 为低对比 then 16: ei.color ← SampleNear(M.background color, ϵ) 17: else if op 为高对比／撞色 then 18: ei.color ← Invert(M.dominant color) + Noise 19: end if 20: else if op 为图形／图像扰动 then 21: if op 为替换 then 22: ei.src ← Sample(ImageLibrary) 23: else if op 为分辨率降低 then 24: ei.quality ← Downsample(ei.src, factor) 25: else if op 为模糊 then 26: ei.effect ← GaussianBlur(ei.src, σ) 27: end if 28: end if 29: 更新：在元数据 M′ 中更新元素 ei。30: end for 31: 渲染：D′ ← Render(M′) {使用更新后的 JSON 重新渲染设计} 32: return D′, M′
+
+**EN** • Aesthetic Judgment & Region Selection: Since these are classification tasks, we appliedMcNemar’s Test to analyze the discordance between models. The results show signifi-cant differences, with p-values of p = 0.004 and p < 0.001, respectively, confirming theeffectiveness of our fine-tuning pipeline.
+
+**ZH** • 审美判断与区域选择：由于这两者是分类任务，我们采用 McNemar 检验来分析模型之间的不一致。结果显示出显著差异，p 值分别为 p = 0.004 与 p < 0.001，证实了我们微调流程的有效性。
+
+**EN** • Precise Localization: For IoU scores, we performed a Paired T-Test. Our fine-tuned modelachieves a significant lead over the strongest baseline (GPT-5), with a t-statistic of t = 4.82and a p-value of p < 0.01.
+
+**ZH** • 精确定位：对于 IoU 分数，我们进行了配对 t 检验。我们的微调模型相对最强基线（GPT-5）取得显著领先，t 统计量为 t = 4.82，p 值 p < 0.01。
+
+**EN** IBENCHMARK SHOWCASE
+
+**ZH** I 基准展示
+
+**EN** In this section, we provide visual examples to better illustrate the evaluation criteria for the variousaesthetic dimensions within the AesEval-Benchmark. As shown in Table 10, Table 14, Table 17,Table 15, Table 13, Table 12 and Table 16, each showcase presents a side-by-side comparison ofdesigns that exemplify positive and negative attributes for a specific criterion. These examples serveto clarify the standards used for judging aspects such as layout alignment, color harmony, graphicquality, and font legibility, offering a tangible guide to our benchmark’s methodology.
+
+**ZH** 本节提供可视化示例，以更好地说明 AesEval-Benchmark 中各美学维度的评估标准。如表 10、表 14、表 17、表 15、表 13、表 12 与表 16 所示，每组展示并排对比了在具体标准上分别体现正面与负面属性的设计。这些示例用于澄清评判版式对齐、色彩和谐、图形质量与字体易读性等方面所用的标准，为本基准的方法提供了直观指引。
+
+**EN** 17
+
+**ZH** 17
+
+**EN** [Page 18]
+
+**ZH** [第 18 页]
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 18
+
+**ZH** 第 18 页的图
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Figure 5: Representative samples from real-world flawed cases collected by professional designers.Unlike the synthetically perturbed benchmark, these designs were curated by professional designersto represent authentic aesthetic defects encountered in real-world workflows. The samples exhibitflaws such as (a) visual clutter and inconsistent orientation (e.g., ”World AIDS Day”), (b) spatialimbalance and disconnected elements (e.g., ”Startup Job Fair”), (c) grid-based alignment errors (e.g.,”School Magazine”), and (d) typographic obstruction (e.g., ”End Violence”). This dataset serves as arigorous Out-Of-Distribution benchmark to evaluate model generalization beyond synthetic patterns.
+
+**ZH** 图 5：由专业设计师收集的真实世界缺陷案例的代表性样本。与经合成扰动的基准不同，这些设计由专业设计师整理，用以代表真实工作流程中遇到的真实美学缺陷。样本呈现了如下缺陷：(a) 视觉杂乱与朝向不一致（如“World AIDS Day”）、(b) 空间失衡与元素脱节（如“Startup Job Fair”）、(c) 基于网格的对齐错误（如“School Magazine”），以及 (d) 文字被遮挡（如“End Violence”）。该数据集构成了一个严格的分布外基准，用于评估模型在合成模式之外的泛化能力。
+
+**EN** TaskOriginal PromptOptimized Prompt
+
+**ZH** 任务 原始提示 优化提示
+
+**EN** AestheticJudgment
+
+**ZH** 审美判断
+
+**EN** $Indicators$ + Answer it with oneword ‘yes’ or ‘no’.
+
+**ZH** $Indicators$ + 用一个词“yes”或“no”作答。
+
+**EN** Analyze the design based on$Indicators$. Evaluate the visualelements step-by-step to determine ifthey meet the standard. Then answerwith one word ‘yes’ or ‘no’.
+
+**ZH** 基于 $Indicators$ 分析该设计。逐步评估各视觉元素是否达到标准，然后用一个词“yes”或“no”作答。
+
+**EN** RegionSelection
+
+**ZH** 区域选择
+
+**EN** $Indicators$ + Please only provide theindex of Not aesthetic element in givenbbox choices. A. [] B.[] C.[] D.[].
+
+**ZH** $Indicators$ + 请只给出给定 bbox 选项中不美观元素的索引。A. [] B.[] C.[] D.[]。
+
+**EN** Examine the candidate regions (A, B,C, D) regarding $Indicators$. Reasonthrough the visual details to identifywhich specific region exhibits the flaw.Then output the index of that element.
+
+**ZH** 就 $Indicators$ 考察候选区域（A、B、C、D）。通过视觉细节进行推理，找出哪个具体区域存在缺陷，然后输出该元素的索引。
+
+**EN** PreciseLocalization
+
+**ZH** 精确定位
+
+**EN** $Indicators$ + Please only providebounding box of the Not aestheticelement... If there is no any problems,please return ‘None’.
+
+**ZH** $Indicators$ + 请只给出不美观元素的边界框……若不存在任何问题，请返回“None”。
+
+**EN** Analyze the entire design to pinpointany element that violates $Indicators$.If a flaw is found, step-by-stepdetermine its exact spatial coordinates.Output the bounding box in ... format,or return ‘None’.
+
+**ZH** 分析整个设计，定位任何违反 $Indicators$ 的元素。若发现缺陷，逐步确定其精确的空间坐标。以……格式输出边界框，或返回“None”。
+
+**EN** Table 9: Comparison of Original Prompts vs. Optimized Prompts for Reasoning Models.
+
+**ZH** 表 9：推理模型的原始提示与优化提示对比。
+
+**EN** 18
+
+**ZH** 18
+
+**EN** [Page 19]
+
+**ZH** [第 19 页]
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 19
+
+**ZH** 第 19 页的图
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 19
+
+**ZH** 第 19 页的图
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 19
+
+**ZH** 第 19 页的图
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 19
+
+**ZH** 第 19 页的图
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 19
+
+**ZH** 第 19 页的图
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 19
+
+**ZH** 第 19 页的图
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Benchmark Showcase
+
+**ZH** 基准展示
+
+**EN** ▷Layout-Alignment, Graphic-Quality
+
+**ZH** ▷版式—对齐、图形—质量
+
+**EN** Explanation: Clear background, center-aligned text.The background is blurry and the words in the middleare not aligned.
+
+**ZH** 说明：背景清晰，文字居中对齐。背景模糊，且中间的文字没有对齐。
+
+**EN** Table 10: Examples of Layout-Alignment and Graphic-Quality in AesEval-Benchmark.
+
+**ZH** 表 10：AesEval-Benchmark 中版式—对齐与图形—质量的示例。
+
+**EN** Benchmark Showcase
+
+**ZH** 基准展示
+
+**EN** ▷Font-Legbility
+
+**ZH** ▷字体—易读性
+
+**EN** Explanation: The yellow font in the lower left corner
+
+**ZH** 说明：左下角的黄色字体
+
+**EN** is clearly visible.
+
+**ZH** 清晰可见。
+
+**EN** The yellow text in the lower left corner becomesblurred and invisible.
+
+**ZH** 左下角的黄色文字变得模糊而不可见。
+
+**EN** Table 11: Examples of Font-Legbility in AesEval-Benchmark.
+
+**ZH** 表 11：AesEval-Benchmark 中字体—易读性的示例。
+
+**EN** Benchmark Showcase
+
+**ZH** 基准展示
+
+**EN** ▷Graphic-Relevance
+
+**ZH** ▷图形—相关性
+
+**EN** Explanation: The background is a woman wearing a
+
+**ZH** 说明：背景是一名戴着
+
+**EN** mask, which is relevant.
+
+**ZH** 口罩的女性，具有相关性。
+
+**EN** The background is a beautiful landscape photo, whichdoes not fit the theme.
+
+**ZH** 背景是一张优美的风景照片，与主题不符。
+
+**EN** Table 12: Examples of Graphic-Relevance in AesEval-Benchmark.
+
+**ZH** 表 12：AesEval-Benchmark 中图形—相关性的示例。
+
+**EN** 19
+
+**ZH** 19
+
+**EN** [Page 20]
+
+**ZH** [第 20 页]
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 20
+
+**ZH** 第 20 页的图
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 20
+
+**ZH** 第 20 页的图
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 20
+
+**ZH** 第 20 页的图
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 20
+
+**ZH** 第 20 页的图
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 20
+
+**ZH** 第 20 页的图
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 20
+
+**ZH** 第 20 页的图
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Benchmark Showcase
+
+**ZH** 基准展示
+
+**EN** ▷Layout-Whitespace, Layout-Layering
+
+**ZH** ▷版式—留白、版式—层次
+
+**EN** Explanation: The text is in the blank space , with no
+
+**ZH** 说明：文字位于空白处，没有
+
+**EN** blank space or overlap.
+
+**ZH** 空白缺失或元素重叠。
+
+**EN** The text has been moved to the animal’s feet, resultingin white space below and stacked elements.
+
+**ZH** 文字被移动到动物的脚部，导致下方出现留白且元素堆叠。
+
+**EN** Table 13: Examples of Layout-Whitespace and Layout-Layering in AesEval-Benchmark.
+
+**ZH** 表 13：AesEval-Benchmark 中版式—留白与版式—层次的示例。
+
+**EN** Benchmark Showcase
+
+**ZH** 基准展示
+
+**EN** ▷Layout-Balance
+
+**ZH** ▷版式—平衡
+
+**EN** Explanation: The overall layout of the picture is bal-
+
+**ZH** 说明：画面整体版式
+
+**EN** anced and coordinated.
+
+**ZH** 平衡而协调。
+
+**EN** The background of the picture is moved upwards, andthe balance of the whole picture is broken.
+
+**ZH** 画面背景被上移，整个画面的平衡被打破。
+
+**EN** Table 14: Examples of Layout-Balance in AesEval-Benchmark.
+
+**ZH** 表 14：AesEval-Benchmark 中版式—平衡的示例。
+
+**EN** Benchmark Showcase
+
+**ZH** 基准展示
+
+**EN** ▷Layout-Hierarchy
+
+**ZH** ▷版式—层级
+
+**EN** Explanation: All the fonts in the picture are consis-
+
+**ZH** 说明：画面中所有字体保持
+
+**EN** tent, which gives a sense of hierarchy.
+
+**ZH** 一致，具有层级感。
+
+**EN** The font in the picture is disturbed and looks like it isnot on the same level as the previous font. There is nosense of hierarchy.
+
+**ZH** 画面中的字体被打乱，看起来与之前的字体不在同一层级，缺乏层级感。
+
+**EN** Table 15: Examples of Layout-Hierarchy in AesEval-Benchmark.
+
+**ZH** 表 15：AesEval-Benchmark 中版式—层级的示例。
+
+**EN** 20
+
+**ZH** 20
+
+**EN** [Page 21]
+
+**ZH** [第 21 页]
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 21
+
+**ZH** 第 21 页的图
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 21
+
+**ZH** 第 21 页的图
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 21
+
+**ZH** 第 21 页的图
+
+<!-- [原子块 · img]  -->
+
+**EN** Figure on page 21
+
+**ZH** 第 21 页的图
+
+**EN** Published as a conference paper at ICLR 2026
+
+**ZH** ICLR 2026 会议论文
+
+**EN** Benchmark Showcase
+
+**ZH** 基准展示
+
+**EN** ▷Graphic-Quality, Color-Contrast
+
+**ZH** ▷图形—质量、色彩—对比
+
+**EN** Explanation: Clear background, black and white col-
+
+**ZH** 说明：背景清晰，黑白
+
+**EN** ors have good contrast.
+
+**ZH** 配色具有良好的对比。
+
+**EN** The background is blurred and the color changes fromwhite to black, with no contrast to the background.
+
+**ZH** 背景被模糊化，颜色由白变黑，与背景之间没有对比。
+
+**EN** Table 16: Examples of Graphic-Quality and Color-Contrast in AesEval-Benchmark.
+
+**ZH** 表 16：AesEval-Benchmark 中图形—质量与色彩—对比的示例。
+
+**EN** Benchmark Showcase
+
+**ZH** 基准展示
+
+**EN** ▷Color-Harmony, Color-Appealing, Color-Psychology
+
+**ZH** ▷色彩—和谐、色彩—吸引力、色彩—心理
+
+**EN** Explanation: The whole picture has harmonious and
+
+**ZH** 说明：整幅画面色彩和谐
+
+**EN** beautiful colors.
+
+**ZH** 而优美。
+
+**EN** The middle element turns green, which makes thewhole picture look disharmonious and unappealing.Green is strange and cause bad psychological effects.
+
+**ZH** 中间的元素变成了绿色，使整幅画面显得不协调、缺乏吸引力。绿色显得怪异，并引发不良的心理效果。
+
+**EN** Table 17:Examples of Color-Harmony, Color-Appealing and Color-Psychology in AesEval-Benchmark.
+
+**ZH** 表 17：AesEval-Benchmark 中色彩—和谐、色彩—吸引力与色彩—心理的示例。
+
+**EN** 21
+
+**ZH** 21

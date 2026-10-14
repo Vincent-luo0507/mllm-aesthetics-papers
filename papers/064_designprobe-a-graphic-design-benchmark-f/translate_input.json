@@ -1,0 +1,892 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "A well-executed graphic design typically achieves harmony in two levels, from the fine-grained design elements (color, font and layout) to the overall design. This complexity makes the comprehension o"
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: The performance of 5 MLLMs at overall design level and design element level (color, font and layout) in DesignProbe."
+  },
+  {
+   "id": "b0005",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Overview of our benchmark. It comprises a total of eight tasks to evaluate the proficiency of MLLM in design. The assessment occurs on two distinct levels: the element level and the overall design level. At the element level, it focus on three fundamental design components: color, font and layout. For each, both visual and semantic aspects are included. Each task is presented with an example."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "Graphic design is essential for our daily experiences, appearing everywhere from movie posters to slides. A well-executed graphic design typically achieves dual-level harmony, weaving together fine-grained design elements such as color, font, and layout with the overall design among different types of elements Huang et al. (2023). The fine-grained elements should not only stand alone their own aesthetic principles but also contribute to the overall design harmony. Take the basic design element as examples, colors in design need to have contrast and cooperation between them, which offering clarity and charm, and also require to align with the overall mood and style as well color?."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "The complexity inherent in design poses challenges to understanding graphic design. One must first recognize the design elements and then comprehend the overall design. The recognition of design elements presents a challenge to existing vision models, for lacking of the design-related data in the pertaining of these models. The different and abstract appearance of these design elements compared with the real word object may add more difficulty in recognition. Comprehending is an equally daunting task as well. They may encounter design tasks for the first time without equipping with the design knowledge, such as the contract and harmony of colors, the different clarity and symbolism carried by different font, and the purposeful arrangement within layout. Furthermore, there is currently limited insight into the performance of AI systems in understanding design, leaving an area ripe for exploration and advancement."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "Recent advancements in the field of Multimodal Large Language Models (MLLMs) Li et al. (2023c); Dai et al. (2023), especially GPT-4 Vision OpenAI (2023b), have demonstrated extraordinary capabilities in a wide range of image-to-text tasks. These models perform inspiring not only in visual recognition tasks such as object detection Zhu et al. (2020) but also in semantic reasoning tasks, including commonsense reasoning Fu et al. (2023) and answering college exam questions Yue et al. (2023) under a zero-shot setting. Inspired by these advancements, we introduce DesignProbe, a benchmark designed to explore the performance of MLLMs in the field of design."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "In practice, a comprehensive design task commonly need to combine of both recognition and understanding. Building upon the framework delineated in the comprehensive design survey by Huang et al. (2023), we categorize the design tasks into two distinct levels: the design element level and the overall design level. The former level focus on the detailed dimension of design and different type of elements are considered separately. In this level, our focus is centered on three fundamental components: color, typography and layout. For each, we consider both the dimensions of aesthetic harmony and semantic conveyance. While in overall design level, we focus on the overall feel of the whole design, usually consider different elements together. To this end, we orchestrate a comprehensive set of eight tasks, the details of which are illustrated in Figure2. For evaluation, we apply GPT-4 to evaluate results automatically, which gains similar performance with human annotators but is more stable and cheaper than human."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "Besides the evaluation of existing baseline models, we delve into analytical studies to explore how prompt effect MLLMs performance. In order to investigate the variance in model performance with different system prompts and the prompt refinement capabilities of various LLMs, we design a experiment by employing multiple LLMs to rewrite the questions in benchmark. We find that the model with better performance in original task appears to be more robust under different prompts. Besides, refinements using the corresponding LLMs of MLLMs consistently lead to performance improvements."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "Moreover, design knowledge is essential as training of MLLMs lacks design task related data. To equip MLLMs with design knowledge in simple methods, we build up experiments to introduce additional information to prompt in two distinct types: textual and visual information. The experiment results indicate that both types of information are effective, and the direct addition of visual examples leads to substantially greater enhancements in performance compared to textual descriptions alone."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "Our main contributions are listed as follow:"
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "li",
+   "en": "• To the best of our knowledge, we are the first to conduct a detailed and comprehensive benchmark of design understanding for MLLMs. To facilitate this evaluation, we have curated and re-annotated multiple datasets, and introduce a new dataset for the recognition in layout to enrich the scope of assessment. We test 9 multimodal LLMs, including GPT-4 Vision, Gemini Pro Vision. For evaluation, we employ GPT-4 to measure the distance between ground truth and model outputs."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "li",
+   "en": "• We conduct multiple experiments to refine prompts within the benchmark along with two dimensions: Firstly, to explore the variance of different MLLMs and the prompt refining capability of different LLMs, we conduct a experiments by using LLMs to rewrite the questions. Experiment results show the robustness of better performance models under different prompts and the efficiency when refining prompt using MLLM’s own LLM. Secondly, we incorporate the supplementary knowledge about design tasks to the questions in both text and image types. Experiment results show that adding image type of information directly results in a higher performance gain compared to text."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Graphic Design"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "In recent years, a growing interest has emerged in graphic design. Pioneering researches conducted in this field include tasks such as layout generation Yang et al. (2021); Inoue et al. (2023), color scheme suggestion Bahng et al. (2018), and font extraction Zhao et al. (2018b). These tasks can be divided into two distinct levels as outlined by Huang et al. (2023): the element level and the overall design level. At the element level, the goal is to understand or generate a single category of elements separately, while at the overall design level, elements are considered comprehensively. For the element level, there are three basic design elements: color, font, and layout. Color theory has been widely studied, with tasks focusing on both understanding and generation Bahng et al. (2018); Qiu et al. (2022). These tasks may involve building a comprehension task for understanding the color palette or automatically suggesting color palettes for a given design. Fonts are yet another critical element, with research focusing on font extraction Zhao et al. (2018b), understanding Virkus (2022), and generation Zhao et al. (2018a) tasks. For layout elements, there are numerous studies on layout generation, which aim to generate layouts that are visually appealing and convey a clear mood."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "Despite the progress in these individual areas, the challenge of capturing and combining features of different design elements remains. Lin et al. (2023) is the first to build a design benchmark for text-to-image tasks and show comprehensive results of Dalle-3 OpenAI (2023a). The tasks (color, font, layout, and style) in their benchmark are considered and integrated into the task structure of our benchmark. Building upon this foundation, our work presents a more comprehensive image-to-text task structure by adding visual and semantic aspects."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Multimodal LLMs"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Multimodal large language models, particularly those that integrate vision and language, such as GPT-4 Vision OpenAI (2023b) and Gemini Team et al. (2023), have shown remarkable capabilities. These models excel not only in basic recognition tasks like object identification but also in more nuanced understanding, such as grasping the humor or sentiment behind memes."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "The landscape includes not only commercial models like GPT-4 Vision OpenAI (2023b) but also a burgeoning suite of open-source alternatives. The BLIP series Li et al. (2023c); Dai et al. (2023) and MiniGPT-4 Zhu et al. (2023), which merge language models with vision encoders, have delivered promising outcomes in tasks that require visual comprehension. LLaVA Liu et al. (2023b), on the other hand, has pioneered in generating data that guide models in following multimodal instructions, thereby enhancing their conversational abilities. Furthermore, models like CM3Leon Yu et al. (2023a), DreamLLM Dong et al. (2023), and Emu Sun et al. (2023) have integrated both image understanding and generation into a unified framework. The evolution of multimodal LLMs Li et al. (2023a); Zhang et al. (2023); Ye et al. (2023); Bai et al. (2023); Awadalla et al. (2023) continues with improvements driven by the incorporation of grounding data, architectural refinements, and other advancements."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "This paper examines a collection of these models, spanning both open-source and proprietary frameworks, with an aim to assess their proficiency in interpreting images within the specialized context of graphic design."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "The rapid development of multimodal large language models raise the important issue of how to accurately measure their comprehension abilities. Common benchmarks such as captioning Chen et al. (2015); Agrawal et al. (2019) and visual question answering Goyal et al. (2017); Gurari et al. (2018); Hudson and Manning (2019) have been used to gauge these models’ understanding, yet these metrics offer a somewhat limited perspective. To address this limitation, recent efforts Yu et al. (2023b); Fu et al. (2023); Li et al. (2023b); Liu et al. (2023c) have introduced a variety of open-ended evaluation benchmarks that challenge models from multiple dimensions, including cognition and reasoning. Despite these advancements, there remains a gap in evaluating the models’ proficiency in specific domains, such as graphic design."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "This paper aims to fill this void by proposing a new benchmark tailored to assess the ability of multimodal LLMs in understanding content within the nuanced field of graphic design, thereby providing a more detailed and domain-specific metric for evaluating the capabilities of these sophisticated models."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "h2",
+   "en": "3 DesignProbe"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "The proposed benchmark comprises a total of eight tasks that evaluate the performance of Multimodal Large Language Models (MLLMs) in design. Below is a detailed introduction to the tasks and the evaluation method."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Tasks"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "In order to comprehensively assess design capabilities, we prioritize two distinct levels of design: the element level and the overall design level. At the element level, tasks are categorized into two principal aspects: (1) attribute recognition for the visual component and (2) understanding for the semantic dimension. Within each aspect, we focus on three principal design elements: color, font, and layout. Additionally, at the overall design level, we focus on the tasks of style classification and visual metaphor. Figure 2 depicts the framework, which includes a total of eight tasks."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "In the element level, we conduct attribute recognition tasks as follows:"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "li",
+   "en": "• Task #1: Color Theme. The objective is to evaluate the models’ ability to identify the primary colors in a design, a critical skill for discerning color harmony and thematic color transitions. We established this task by randomly sampling 50 design instances from Crello Yamaguchi (2021), computing the most frequent colors in a design, and then manually reviewing these examples. For the query structure, we compiled a set of commonly used color palettes, and the models are required to choose their output colors from this predefined selection."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "li",
+   "en": "• Task #2: Font Extraction. The task recognizes the font face from a design image where the font is outlined in red. To construct this task, we prompt the model with a single-choice question based on instances randomly sampled from CTXFont Zhao et al. (2018b)."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "li",
+   "en": "• Task #3: Negative Space Detection. This task focuses on the detection of negative space, which provides a clear area where elements can be placed without disrupting the visual balance within a design. The model is tasked with analyzing a background image to determine a suitable location for the title. We obtained the background images from Midjourney. After professional designers manually annotated the optimal title locations, the instances were converted into single-choice questions."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Semantic understanding tasks are outlined as follows:"
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "li",
+   "en": "• Task #4: Color Meaning. Different combinations of colors can convey different meanings, and certain color palettes may symbolize specific themes or moods. For example, black is rarely found in the color palette associated with “weddings & celebrations”. We utilize the PAT dataset Bahng et al. (2018) to evaluate this ability. We randomly sampled and manually filtered out examples with ambiguous meanings. The remaining 50 distinct examples were converted into multiple-choice questions."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "li",
+   "en": "• Task #5: Font Style. In addition to recognizing font faces, we expect the model to understand the styles of the given fonts. This is crucial for ensuring that the fonts are consistent with the overall design’s mood or theme. We derived the annotations for the fonts and their styles from the Dafonts dataset Virkus (2022) and transformed them into a single-choice question format."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "li",
+   "en": "• Task #6: Visual Importance. Understanding the visual center is essential for layout comprehension and can provide significant feedback for design generation. This task presents the model with a design image and requires it to identify the visual center of the design. We obtained the input images from the Imp-1k dataset Fosco et al. (2020). Since producing a salience map is challenging for MLLMs and difficult to assess, we categorized the ground truth map into different position descriptions using a 3x3 grid. This task is also formulated as a single-choice question."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "For overall design level:"
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "li",
+   "en": "• Task #7: Overall Style. To test the overall design feel of MLLMs, this task asks models to identify the visual style of a given poster from the Poster dataset Zhao et al. (2018c). We sampled 50 different examples with a uniform distribution of styles, annotated them with the help of multiple professional designers, and transformed the instances into single-choice questions."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "li",
+   "en": "• Task #8: Visual Metaphor. This task delves deeper into understanding the semantic level of design. Visual metaphors often involve using common objects in creative and unfamiliar ways, which can make it challenging to provide the correct caption and the true metaphorical meaning. The designs and explanations were derived from the VisMet dataset Steen et al. (2010). After manual filtering, these instances were transformed into open-ended questions."
+  },
+  {
+   "id": "b0042",
+   "t": "keep",
+   "w": "table",
+   "en": "Evaluators Detailed Acc. Correct (22) Partially (7) Incorrect (20) Irrelevant (1) GPT-3.5-turbo 95.5 100.0 10.0 0.00 60.0 GPT-4 100.0 100.0 75.0 100.0 90.0"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: The results(%) of GPT-4 and GPT-3.5-turbo as evaluators. Detailed accuracy of each category are shown. The number of cases for each category in the test set is indicated in parentheses following the category. GPT-4 achieves an overall accuracy of 90%, demonstrating its performance to be quite comparable to that of a human evaluator, while significantly reducing labor costs."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 GPT-4 Evaluator"
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "Although our questions are single-choice, the model still tends to produce open-ended responses. This makes it impractical to compute the performance by simple rules. Therefore, we introduce an automatic evaluation method using GPT-4. Given the question, the golden answer and the MLLMs’ generated output, the GPT-4 evaluator is asked to assign a grade by comparing the output with the standard answer. We set the grading scale as [“Correct”, “Partially Correct”,“Incorrect”, “Irrelevant”]. Below is the detailed descriptions of each grade:"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "li",
+   "en": "• Correct The style identified in the model’s output matches the standard answer perfectly."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "li",
+   "en": "• Partially Correct This grade applies in two cases: (1) The style is correctly identified, but the model’s answer to the question is wrong. (2) The style is incorrectly identified, but the elements of the style are the same as those in the standard answer."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "li",
+   "en": "• Incorrect The model’s output incorrectly identifies the style of the overall design and the elements within."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "li",
+   "en": "• Irrelevant The model’s output does not address the question of style at all."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "To better estimate the performance of the GPT-4 evaluator compared with a human, we build up a test set of 50 questions manually annotated by multiple annotators. We also test the performance of GPT-3.5-turbo with the same prompt. As shown in Table 1, GPT-4 achieves an overall accuracy of 90%, which demonstrates that GPT-4 can perform quite similarly to the human evaluator and significantly reduce expensive labor costs."
+  },
+  {
+   "id": "b0051",
+   "t": "keep",
+   "w": "table",
+   "en": "Models Element Overall Design Average Recognition Understanding #7 Style #8 Metaphor #1 Color #2 Font #3 Layout #4 Color #5 Font #6 Layout random 20.0 25.0 25.0 25.0 25.0 25.0 25.0 0.0 21.3 InstructBL"
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: DesignProbe evaluation results (%) of different MLLMs. All the value in this table is normalized to 1, larger is better. The average values in last column is the average performance of the current MLLM. The table is sorted by average performance. For each column, the highest, the second, and the third highest figures are highlighted by purple, green and pink backgrounds."
+  },
+  {
+   "id": "b0053",
+   "t": "keep",
+   "w": "table",
+   "en": "Models based LLM Ori. LLaMA2 Re. Vicuna Re. GPT-4 Re. Gemini Re. std. Otter MPT 47.5 38.0 52.0 33.0 48.0 7.9 mPLUG-OWL2 LLaMA2 66.5 77.0 76.5 70.0 74.0 4.5 LLaVA Vicuna v1.5 82.0 79.5 83.5 80.0 81.5 1"
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: The evaluation results (%) of different MLLMs using different refined system prompts. Ori represents the original questions in DesignProbe. Re. is the abbreviation of “refined”. std. represent the standard deviation of each row. The corresponding MLLMs with its based LLM are highlighted by gray. The best performance of each MLLMs is in bold."
+  },
+  {
+   "id": "b0055",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: The examples of adding example into prompt."
+  },
+  {
+   "id": "b0057",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: The experiment results (%) of adding additional different types of information to the questions. Ori in green represents the performance under original questions in DesignProbe. + test in yellow represents adding text description to the questions. + concated image in pink represents combining multiple image examples into one image due to the unsupportment of multiple images input in LLaVA. + image means adding multiple image examples."
+  },
+  {
+   "id": "b0059",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Error cases of overall design level tasks. In case 1, the model fails to recognize the creative use of record. In case2, the model fails to recognize the abstract represent of theater seats in car."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Experiments"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we conduct extensive experiments on our design benchmark to evaluate a total of nine MLLMs, comprising both open-source and proprietary models."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "To mitigate any positional bias of the correct answer among the various options, we repeat each question four times with different positions of the correct answer, resulting in a total of 200 questions per task. The results presented in Table 2 are averaged by position. More detailed results will be provided in the Supplementary Material."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Evaluated Models"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate a total of nine MLLMs, selecting the version of each model that demonstrates the best possible performance."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "LLaVA v1.5 Liu et al. (2023a) integrates vision and language capabilities through a simple projection layer. We use LLaVA v1.5, which is based on the LLM Vicuna v1.5 13B Zheng et al. (2023)."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "Otter Li et al. (2023a) facilitates multimodal in-context instruction tuning, building upon the OpenFlamingo Awadalla et al. (2023) model. We evaluate the “Otter-image-MPT7B” version."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "LLaMA-Adapter-v2 Zhang et al. (2023) exclusively employs language data for instruction tuning and establishes a connection between vision and language in a parameter-efficient way. This model is based on LLaMA 7B Touvron et al. (2023a)."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "MiniGPT v2 Chen et al. (2023) directly projects visual features into LLM feature space using a linear layer and employs unique identifiers for different tasks during training. We use “MiniGPT v2” version, which is based on LLaMA2 7B Touvron et al. (2023b)."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "InstructBLIP Dai et al. (2023) builds upon BLIP-2Li et al. (2023c) and performs instruction tuning with 26 datasets. We test the model based on Vicuna v1.1 13B."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "mPLUG-OWL2 Ye et al. (2023) utilizes the language decoder as a universal interface to handle different modalities through shared functional modules. We evaluate the “mplug-owl2-llama2-7b” version."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "BLIP2 Li et al. (2023c) incorporates a Q-Former module to align image features with the LLM token space. This model is based on FLAN-T5-XXL Chung et al. (2022) with a parameter count of 12 billion."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "Gemini Pro Vision Team et al. (2023), GPT-4 Vision OpenAI (2023b) are evaluated through their respective APIs. Gemini Pro Vision is initially trained using a combination of image and text data. GPT-4 Vision, a large-scale MLLM, performs exceptionally well across various benchmarks Liu et al. (2023c); Yue et al. (2023)."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 MLLM Performance in DesignProbe"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "p",
+   "en": "Our benchmark evaluation results are listed in Table 2. From these, we summarize our observations into three interesting findings."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "p",
+   "en": "(1) Overall: Tasks are challenging. The highest overall average performance is achieved by GPT-4 Vision at 59.4%. Despite its significant lead over other baseline models, it is still not enough to meet the passing threshold of 60%, leaving considerable room for exploration."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "(2) Color vs. Font vs. Layout: Models may be more experienced in color than others. As the results shown in column #1 Color and #4 Color in Table 2, we observe an advantage in color-related tasks (with GPT-4 Vision scoring 72.0% and 43.5% in color and font). The challenging with font tasks for MLLMs may stem from lacking font-related data during training and instruction tuning. In terms of layout tasks, MLLMs appears to struggle with spatial relationships within design elements, which leads to the performance drop in these related tasks."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "Interestingly, there is a performance drop between BLIP-2 and InstructBLIP in column #1 Color and #4 Color in Table 2. Given that InstructBLIP is essentially BLIP-2 with added instructional tuning, this drop may reveals a trade off between aligning with human preferences and optimizing the model capability."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "(3) Metaphor: The low performance can be primarily attributed to the models’ inability to recognize design objects accurately. Task#8 Visual Metaphor is complex as it requires to recognize the abstract design elements and understanding the metaphor they represent. After error analysis, we find there are no instances of ’Correct caption, Wrong reasoning’ errors, but an 8% error rate occurred in cases of ’Correct reasoning, Wrong caption’. This suggests that the main obstacle in metaphor tasks is the models’ ability to correctly recognize design objects."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Exploration of Prompt Refining"
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "We conduct multiple experiments to refine prompts within DesignProbe along two distinct dimensions: firstly, we focus on rewriting the task description to enhance clarity and precision without introducing additional information; secondly, we enrich the prompts by providing more contextual and task-related data."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "h4",
+   "en": "4.3.1 Prompt Rewriting"
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "To investigate model response variance to prompts, we design an experiment involving multiple LLMs to refine the original prompt. We then verify the outcomes on Task#7 Style Classification. These LLMs are selected based on the underlying language models of different MLLMs. Evaluating these MLLMs with the refined prompts, we obtain the results shown in Table 3. We summarize three key findings as follows:"
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "li",
+   "en": "• The better an MLLM performs on a task, the more robust it is to different prompts. For instance, while Otter exhibits significant variance (7.9%) under different prompts, GPT-4 Vision demonstrates considerable robustness with only a 1.2% variance. Furthermore, the standard deviation can shed light on MLLM performance, as a small decrease in this variance is often caused by an unsuitable system prompt."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "li",
+   "en": "• There is always improvement when refining prompts using MLLMs’ corresponding base LLMs. For open-source models, employing their own base LLMs yields the best performance."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "li",
+   "en": "• Refinement in the language aspect alone generally leads to gains, while other types of refinement may not. To assess the true refinement capabilities of different LLMs, we instruct each LLM to refine questions in their preferred manner using the exact same prompt. Surprisingly, we find that Vicuna consistently performs the best, in contrast to GPT-4. Upon detailed examination of the refined questions, we notice that Vicuna simply rewrites the prompt without adding any text, whereas GPT-4 tends to include additional descriptions of steps for solving the questions. To confirm the impact of these additional texts, we remove them and discover that this action yields the best performance for LLaVA, with an 85% success rate."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "h4",
+   "en": "4.3.2 Incorporating Supplementary Information"
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "The original prompts in DesignProbe are relatively basic and lack detailed task descriptions, potentially leading to confusion for models. To mitigate this, we introduce supplementary information to prompts. Our experiment involves the addition of two types of information: textual descriptions and visual examples. We present the examples of the enhanced prompts for each format in Figure 3. To ensure a consistent level of information gain when adding task details, we initially utilize GPT-4 Vision to generate text descriptions for the provided image examples. We then perform minimal manual refinements where necessary. The results of the experiment for Task#5 Font Style are illustrated in Figure 4."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "Below are three interesting findings from this experiment:"
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "li",
+   "en": "• Incorporating textual descriptions consistently enhances performance. As demonstrated in Figure 4, there is an improvement of 3.0% for LLaVA v1.5 and 2.5% for GPT-4 Vision."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "li",
+   "en": "• Adding visual examples directly results in a significantly higher performance gain compared to textual information. For instance, GPT-4 Vision experiences a 10.5% increase when supplemented with image examples, as opposed to a 2.5% increase with text alone."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "li",
+   "en": "• Combining multiple image examples into a single composite image can be a potential workaround for models that only accept a single image input. While LLaVA does not support multiple images, we attempt to merge various image examples into one composite image, drawing inspiration from Bar et al. (2022). However, this approach appears to be counterproductive for LLaVA, as performance decreases from 43.0% to 38.5%. Conversely, when applying this method to GPT-4 Vision, the results suggest that such a technique may be beneficial, as it exhibits an opposite effect to LLaVA. This discrepancy leads us to hypothesize that LLaVA may struggle to distinguish between different image examples within a composite image, particularly in tasks requiring spatial recognition, as evidenced by its notably poor performance in layout tasks (#3, #6), which is documented in Table2."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "h3",
+   "en": "4.4 Error Case Analysis"
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "In addition to the quantitative results presented earlier, we conduct a thorough analysis of error cases to identify the current limitations of MLLMs in design tasks."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "p",
+   "en": "Significant Variance Based on the Position of the Correct Option. We observe that models, such as InstructBLIP and LLaMA-Adapter v2, exhibit considerable variability in performance depending on the position of the correct option among choices A, B, C, and D. We will provide more detailed results in the supplementary materials."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "Deficiency in Understanding Design Elements. The models may not be well-acquainted with the tasks or the concepts involved in the tasks, as most tasks within DesignProbe are not covered by the pretraining and fine-tuning datasets of MLLMs. Taking GPT-4 Vision as an example, it exhibits poor performance in Task# 5 Font Style as shown in Table 2. However, its performance improves significantly when we supplement it with additional knowledge pertinent to the task. The disparity in performance between tasks involving color and font styles further supports this observation, as evidenced in Table 2. Although there are straightforward methods to enhance performance, a more comprehensive investigation is necessary to equip MLLMs with a robust understanding of design principles."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "Challenges in Recognizing Creative Representations within Design Imagery Focusing on the general design tasks #7 and #8, models frequently struggle to generate precise captions for designs, leading to incorrect responses to subsequent questions. Design objects are often abstract and may diverge significantly from real-world imagery. For instance, as illustrated in Figure 5, in case (a), LLaVA fails to recognize the inventive representation of a record and consequently misclassifies the style; in case (b), GPT-4 Vision is unable to identify the theater seats within a car and incorrectly interprets the visual metaphor."
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Conclusion"
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we have pioneered the creation of a comprehensive benchmark to assess design capabilities of Multi-Modal Language Models (MLLMs), a first in the field. Our benchmark includes eight tasks across two levels of design complexity: the element level and the overall design level. At the element level, we build up tasks that evaluate both the recognition of visual components and the understanding of semantic content. In each type of tasks, we focus on three fundamental design elements: color, font, and layout. At the overall design level, our tasks include style classification and the interpretation of visual metaphors. To support these tasks, we have curated and reannotated datasets to align with our novel task framework and introduced a new dataset aimed at negative space detection to extend the benchmark’s breadth. Nine MLLMs were put to the test, with GPT-4 serving as the evaluator."
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "p",
+   "en": "In addition, we experimented with prompt refining across two dimensions. We first introduced a experiment for prompt rewriting using LLMs corresponding to each MLLMs, revealing the robustness of better performance models under different prompts and the efficiency when refining prompt using its LLMs. We also experimented with adding additional design knowledge to prompts in both textual and visual formats, revealing that adding image information can achieve the better performance than text. This benchmark sets a new standard for evaluating MLLMs and opens the door for future research to expand upon the intersection of design understanding."
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Agrawal et al. [2019] Harsh Agrawal, Karan Desai, Yufei Wang, Xinlei Chen, Rishabh Jain, Mark Johnson, Dhruv Batra, Devi Parikh, Stefan Lee, and Peter Anderson. nocaps: novel object captioning at scal"
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Awadalla et al. [2023] Anas Awadalla, Irena Gao, Josh Gardner, Jack Hessel, Yusuf Hanafy, Wanrong Zhu, Kalyani Marathe, Yonatan Bitton, Samir Gadre, Shiori Sagawa, Jenia Jitsev, Simon Kornblith, Pang "
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bahng et al. [2018] Hyojin Bahng, Seungjoo Yoo, Wonwoong Cho, David Keetae Park, Ziming Wu, Xiaojuan Ma, and Jaegul Choo. Coloring with words: Guiding image colorization through text-based palette gen"
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al. [2023] Jinze Bai, Shuai Bai, Shusheng Yang, Shijie Wang, Sinan Tan, Peng Wang, Junyang Lin, Chang Zhou, and Jingren Zhou. Qwen-vl: A versatile vision-language model for understanding, local"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bar et al. [2022] Amir Bar, Yossi Gandelsman, Trevor Darrell, Amir Globerson, and Alexei Efros. Visual prompting via image inpainting. Advances in Neural Information Processing Systems , 35:25005–2501"
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. [2015] Xinlei Chen, Hao Fang, Tsung-Yi Lin, Ramakrishna Vedantam, Saurabh Gupta, Piotr Dollár, and C Lawrence Zitnick. Microsoft coco captions: Data collection and evaluation server. arXiv"
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. [2023] Jun Chen, Deyao Zhu, Xiaoqian Shen, Xiang Li, Zechun Liu, Pengchuan Zhang, Raghuraman Krishnamoorthi, Vikas Chandra, Yunyang Xiong, and Mohamed Elhoseiny. Minigpt-v2: Large language"
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chung et al. [2022] Hyung Won Chung, Le Hou, Shayne Longpre, Barret Zoph, Yi Tay, William Fedus, Yunxuan Li, Xuezhi Wang, Mostafa Dehghani, Siddhartha Brahma, et al. Scaling instruction-finetuned lang"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dai et al. [2023] W Dai, J Li, D Li, AMH Tiong, J Zhao, W Wang, B Li, P Fung, and S Hoi. Instructblip: Towards general-purpose vision-language models with instruction tuning. arXiv preprint arXiv:2305"
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dong et al. [2023] Runpei Dong, Chunrui Han, Yuang Peng, Zekun Qi, Zheng Ge, Jinrong Yang, Liang Zhao, Jianjian Sun, Hongyu Zhou, Haoran Wei, et al. Dreamllm: Synergistic multimodal comprehension and "
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fosco et al. [2020] Camilo Fosco, Vincent Casser, Amish Kumar Bedi, Peter O’Donovan, Aaron Hertzmann, and Zoya Bylinskii. Predicting visual importance across graphic design types. In Proceedings of th"
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fu et al. [2023] Chaoyou Fu, Peixian Chen, Yunhang Shen, Yulei Qin, Mengdan Zhang, Xu Lin, Jinrui Yang, Xiawu Zheng, Ke Li, Xing Sun, Yunsheng Wu, and Rongrong Ji. Mme: A comprehensive evaluation benc"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Goyal et al. [2017] Yash Goyal, Tejas Khot, Douglas Summers-Stay, Dhruv Batra, and Devi Parikh. Making the v in vqa matter: Elevating the role of image understanding in visual question answering. In P"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gurari et al. [2018] Danna Gurari, Qing Li, Abigale J. Stangl, Anhong Guo, Chi Lin, Kristen Grauman, Jiebo Luo, and Jeffrey P. Bigham. Vizwiz grand challenge: Answering visual questions from blind peo"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. [2023] Danqing Huang, Jiaqi Guo, Shizhao Sun, Hanling Tian, Jieru Lin, Zheng Hu, Chin-Yew Lin, Jian-Guang Lou, and Dongmei Zhang. A survey for graphic design intelligence. arXiv preprint "
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hudson and Manning [2019] Drew A. Hudson and Christopher D. Manning. Gqa: A new dataset for real-world visual reasoning and compositional question answering. In Proceedings of the IEEE/CVF Conference "
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Inoue et al. [2023] Naoto Inoue, Kotaro Kikuchi, Edgar Simo-Serra, Mayu Otani, and Kota Yamaguchi. Layoutdm: Discrete diffusion model for controllable layout generation. In Proceedings of the IEEE/CVF"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. [2023a] Bo Li, Yuanhan Zhang, Liangyu Chen, Jinghao Wang, Jingkang Yang, and Ziwei Liu. Otter: A multi-modal model with in-context instruction tuning. arXiv preprint arXiv:2305.03726 , 2023."
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. [2023b] Bohao Li, Rui Wang, Guangzhi Wang, Yuying Ge, Yixiao Ge, and Ying Shan. Seed-bench: Benchmarking multimodal llms with generative comprehension. arXiv preprint arXiv:2307.16125 , 2023"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. [2023c] Junnan Li, Dongxu Li, Silvio Savarese, and Steven Hoi. Blip-2: Bootstrapping language-image pre-training with frozen image encoders and large language models. arXiv preprint arXiv:23"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lin et al. [2023] Kevin Lin, Zhengyuan Yang, Linjie Li, Jianfeng Wang, and Lijuan Wang. Designbench: Exploring and benchmarking dall-e 3 for imagining visual design. arXiv preprint arXiv:2310.15144 , "
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. [2023a] Haotian Liu, Chunyuan Li, Yuheng Li, and Yong Jae Lee. Improved baselines with visual instruction tuning, 2023."
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. [2023b] Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. Visual instruction tuning. arXiv preprint arXiv:2304.08485 , 2023."
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. [2023c] Yuan Liu, Haodong Duan, Yuanhan Zhang, Bo Li, Songyang Zhang, Wangbo Zhao, Yike Yuan, Jiaqi Wang, Conghui He, Ziwei Liu, Kai Chen, and Dahua Lin. Mmbench: Is your multi-modal model "
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI [2023a] OpenAI. Dall·e 3 system card, 2023."
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI [2023b] OpenAI. Gpt-4 technical report. arXiv preprint arXiv:2303.08774 , 2023."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qiu et al. [2022] Qianru Qiu, Xueting Wang, Mayu Otani, and Yuki Iwazaki. Color recommendation for vector graphic documents based on multi-palette representation. arXiv preprint , 2022."
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Steen et al. [2010] Gerard Steen, Aletta G Dorst, J Berenike Herrmann, Anna Kaal, Tina Krennmayr, Trijntje Pasma, et al. A method for linguistic metaphor identification. Amsterdam: Benjamins , 2010."
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sun et al. [2023] Quan Sun, Qiying Yu, Yufeng Cui, Fan Zhang, Xiaosong Zhang, Yueze Wang, Hongcheng Gao, Jingjing Liu, Tiejun Huang, and Xinlong Wang. Generative pretraining in multimodality. arXiv pr"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Team et al. [2023] Gemini Team, Rohan Anil, Sebastian Borgeaud, Yonghui Wu, Jean-Baptiste Alayrac, Jiahui Yu, Radu Soricut, Johan Schalkwyk, Andrew M Dai, Anja Hauth, et al. Gemini: a family of highly"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Touvron et al. [2023a] Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, Aurelien Rodrigue"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Touvron et al. [2023b] Hugo Touvron, Louis Martin, Kevin Stone, Peter Albert, Amjad Almahairi, Yasmine Babaei, Nikolay Bashlykov, Soumya Batra, Prajjwal Bhargava, Shruti Bhosale, et al. Llama 2: Open "
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Virkus [2022] D. Virkus. Dafonts free dataset, 2022."
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yamaguchi [2021] Kota Yamaguchi. Canvasvae: Learning to generate vector graphic documents. ICCV , 2021."
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. [2021] Cheng-Fu Yang, Wan-Cyuan Fan, Fu-En Yang, and Yu-Chiang Frank Wang. LayoutTransformer: Scene Layout Generation with Conceptual and Spatial Diversity. In 2021 IEEE/CVF Conference on "
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ye et al. [2023] Qinghao Ye, Haiyang Xu, Jiabo Ye, Ming Yan, Anwen Hu, Haowei Liu, Qi Qian, Ji Zhang, Fei Huang, and Jingren Zhou. mplug-owl2: Revolutionizing multi-modal large language model with mod"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yu et al. [2023a] Lili Yu, Bowen Shi, Ramakanth Pasunuru, Benjamin Muller, Olga Golovneva, Tianlu Wang, Arun Babu, Binh Tang, Brian Karrer, Shelly Sheynin, et al. Scaling autoregressive multi-modal mo"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yu et al. [2023b] Weihao Yu, Zhengyuan Yang, Linjie Li, Jianfeng Wang, Kevin Lin, Zicheng Liu, Xinchao Wang, and Lijuan Wang. Mm-vet: Evaluating large multimodal models for integrated capabilities. ar"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yue et al. [2023] Xiang Yue, Yuansheng Ni, Kai Zhang, Tianyu Zheng, Ruoqi Liu, Ge Zhang, Samuel Stevens, Dongfu Jiang, Weiming Ren, Yuxuan Sun, Cong Wei, Botao Yu, Ruibin Yuan, Renliang Sun, Ming Yin,"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. [2023] Renrui Zhang, Jiaming Han, Chris Liu, Peng Gao, Aojun Zhou, Xiangfei Hu, Shilin Yan, Pan Lu, Hongsheng Li, and Yu Qiao. Llama-adapter: Efficient fine-tuning of language models with"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhao et al. [2018a] Nanxuan Zhao, Ying Cao, and Rynson W. H. Lau. Modeling fonts in context: Font prediction on web designs. Computer Graphics Forum , 2018."
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhao et al. [2018b] Nanxuan Zhao, Ying Cao, and Rynson W.H. Lau. Modeling fonts in context: Font prediction on web designs. Computer Graphics Forum (Proc. Pacific Graphics 2018) , 37, 2018."
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhao et al. [2018c] Nanxuan Zhao, Ying Cao, and Rynson W.H. Lau. What characterizes personalities of graphic designs? ACM Transactions on Graphics (Proc. of SIGGRAPH 2018) , 37, 2018."
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zheng et al. [2023] Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric. P Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica. "
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. [2020] Xizhou Zhu, Weijie Su, Lewei Lu, Bin Li, Xiaogang Wang, and Jifeng Dai. Deformable detr: Deformable transformers for end-to-end object detection. arXiv preprint arXiv:2010.04159 , 20"
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. [2023] Deyao Zhu, Jun Chen, Xiaoqian Shen, Xiang Li, and Mohamed Elhoseiny. Minigpt-4: Enhancing vision-language understanding with advanced large language models. arXiv preprint arXiv:2304"
+  }
+ ]
+}

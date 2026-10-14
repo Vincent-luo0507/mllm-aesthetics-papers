@@ -1,0 +1,1786 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Understanding Aesthetics with Language: A Photo Critique Dataset for Aesthetic Assessment"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Computational inference of aesthetics is an ill-defined task due to its subjective nature. Many datasets have been proposed to tackle the problem by providing pairs of images and aesthetic scores base"
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "table",
+   "en": ""
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Automated Image Aesthetic Assessment (IAA) is a widely discussed topic in the computer vision community and is receiving an increasing attention due to the explosive growth of digital photography. The literature reports mainly on predicting aesthetic preference in close agreement with human judgement. In particular, most studies deal with IAA in terms of high vs. low aesthetic quality [25], regression of the aesthetic score [14], and prediction of the distribution of the aesthetic ratings [37]. Various datasets were collected to contribute developing and evaluating the previous studies. These datasets consist of images annotated with aesthetic scores. However, summarizing the aesthetic judgment in a single value limits the representation of visual aesthetics. First, aesthetic scores are highly dependent on the voting procedure (i.e., voting scale, number of stimuli, questions and adjectives in the voting scale). Second, it has been shown that they might provide a variable or even negative impact on the prediction of human behavior and thus on the success of social content [33]. Third, aesthetic scores do not provide any interpretability of why an image is aesthetically pleasing or not. Thus, it makes sense to annotate images with richer high-level aesthetic attributes [20] or aesthetic criticism captions. Many image-sharing sites, e.g., Flickr, Photo.net, and Instagram, support user comments on images, allowing rating explanations. User comments usually introduce rationale about how and why users evaluate the aesthetics of an image. Comments such as “good composition”, “vivid colors”, or “a fine pose” are more informative than ratings for expressing pleasing photographic aspects. Similarly, comments such as “too dark” and “blurry” explain why low ratings occur."
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "On the basis of previous considerations, our first contribution is the Reddit Photo Critique Dataset RPCD, a collection of high resolution images associated with photo critiques (i.e., 74K images and 220K comments). The dataset has been obtained from a Reddit community22 2 www.reddit.com of photography amateurs whose purpose is to provide feedback to help amateurs and professional photographers improve. Figure 1 shows some samples from our RPCD. The dataset presented in this work differs in many ways from existing photo critic datasets. First, the images are mostly FullHD as they were captured with recent photo sensors and imaging systems. Secondly, the proposed dataset is among the largest in terms of the number of images-comments. Third, the comments of our dataset are on average longer and more informative (basing on the score proposed in [10]) than those of the previous datasets."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "In the literature, IAA models are trained on datasets in which each image is associated with a rating. However, the problem of how to obtain a rating for IAA without requiring human intervention given a dataset with image-comment pairs is not addressed. The degree of emotion and valence of critique comments is an excellent indicator of the success of contents on social media [33]. Therefore, together with the dataset, we present a new solution to rank images by exploiting the polarity of criticism as an indicator of aesthetic judgments. To the best of our knowledge, this is the first attempt to leverage image critiques to define a score for IAA."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "Finally, we design a framework to evaluate different methods on the proposed dataset and other aesthetic critique datasets in the literature on the image aesthetic assessment and aesthetic image captioning tasks."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "We find that: (i) the aesthetic scores and the proposed sentiment scores are positively correlated on two photo critique datasets annotated with both comments and scores; (ii) Vision Transformer (ViT) surpasses state-of-the-art methods for image aesthetic assessment; (iii) learning aesthetics-aware features produces a significant increase in performance over using semantic features. This behavior also occurs for models with the same architecture but trained for different purposes."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "In this section we briefly analyze the main datasets and methods for the two tasks of image aesthetic assessment and aesthetic critique captioning. We refer the reader to [42] for a comprehensive review on computational image aesthetics."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "h4",
+   "en": "Image Aesthetic Assessment."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "For the design and evaluation of Image Aesthetic Assessment (IAA) methods, the construction of the aesthetic image evaluation benchmark dataset has become the fundamental prerequisite for the research. Many datasets were collected in which subjective aesthetic quality scores were acquired for each image. The acquisition of subjective scores can be realized through manually scoring experiments in the lab [25], online scoring on image sharing website [20, 28], and crowdsourcing evaluation [36]. Methods that exploit the previous datasets for aesthetic assessment can be divided into model-based [7, 27, 43] and data-driven [4, 14, 24, 37]. While model-based methods rely on hand-crafted features to model aspects such as the Rule of Thirds, depth of field, colour harmony, etc., the data-driven methods usually train CNNs on large-scale datasets to predict an overall aesthetic rating."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "h4",
+   "en": "Aesthetic Critique Captioning."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "The first work on Aesthetic Critique Captioning, also known as Aesthetic Image Captioning (AIC), presents the so called Photo Critique Captioning Dataset (PCCD) based on a professional photo critique website33 3 https://gurushots.com/ and a method for predicting aspect-centric captions [5]. The other AIC datasets in the literature are obtained by crawling images together with their comments from an on-line community of photography amateurs44 4 https://www.dpchallenge.com/. AVA-Comments [45] extends AVA to include all user comments for images, while AVA-Captions [10] filters original AVA photo comments to keep only the most useful. Finally, DPC-Captions [17] contains 154,384 images and 2,427,483 comments. Each comment is automatically annotated with one of the 5 aesthetic attributes of the PCCD through aesthetic knowledge transfer. Few AIC methods are present in the literature for predicting aesthetic comments [10, 41], aspect-centric aesthetic captions [5], or simultaneously the aesthetic rate and an aesthetic caption [38]."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Background and Theory"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "In this section we provide a formal definition for the classical image aesthetic assessment problem and describe our novel formulation of the problem."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h4",
+   "en": "Notations."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "We represent sets and matrices with special Latin characters (e.g., ⟦SLOT_0⟧) or bold Latin characters (e.g., ⟦SLOT_1⟧). Lower or uppercase normal fonts, e.g., ⟦SLOT_2⟧ denote scalars. Lowercase bold Latin letters represent vectors as in ⟦SLOT_3⟧. We use lowercase Latin letters to represent indices (e.g., ⟦SLOT_4⟧)."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Image Aesthetic Assessment"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "Image Aesthetic Assessment (IAA) methods aim at computationally judging the aesthetic value of images based on human ratings and photographic principles. These methods map an input image ⟦SLOT_5⟧ to an aesthetic score ⟦SLOT_6⟧ and can be divided into binary classification methods which predict a single binary score ⟦SLOT_7⟧, and regression methods which predict a single real score ⟦SLOT_8⟧ or a probability distribution of scores ⟦SLOT_9⟧. Classification methods are used to distinguish “good” from “bad” images whereas regression methods are preferred to rank collections of images. These methods typically rely on public datasets [20, 25, 28] that contain ⟦SLOT_10⟧ pairs of images and aesthetic scores such that ⟦SLOT_11⟧, where the ground truth score per image is computed as the average rating given by ⟦SLOT_12⟧ human raters:"
+  },
+  {
+   "id": "b0022",
+   "t": "keep",
+   "w": "table",
+   "en": "s i = 1 K ​ ∑ k = 0 K s k , s_{i}=\\frac{1}{K}\\sum_{k=0}^{K}s_{k}, (1)"
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "The scores are further thresholded by the mid-point of the rating scale for the classification task. However, asking people to evaluate the aesthetic value of an image with a single global score is very challenging and can be extremely biased by the content of the images. Additionally, these scores alone do not provide any explicit information about the reasons behind the voting."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Aesthetic Critiques"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "Recent datasets [5, 10, 17] extend the IAA problem including captions related to photo aesthetics and/or photography skills. These datasets contain ⟦SLOT_13⟧ images each described by ⟦SLOT_14⟧ aesthetic critiques ⟦SLOT_15⟧ such that ⟦SLOT_16⟧. Common critiqued aesthetic aspects are composition, subject of photo, use of camera or color. In this context, novel algorithms have been developed to generate aesthetic-oriented critiques for images. Therefore, these methods map an input image ⟦SLOT_17⟧ to an aesthetic critique ⟦SLOT_18⟧. While photo critiques give explicit feedback about why images are aesthetically pleasing or not, it has not been explored yet how to exploit such critiques for classification or image ranking, which is the ultimate goal of IAA. Furthermore, critique generative models present an additional challenge with respect to conventional captioning models due to the subjective nature of problem at hand. For this reason, many generated critiques tend to express critic’s preference (e.g., “I like the colors” and “nice photo”) rather than providing a detailed opinion or critique of the image aesthetics."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Leveraging Aesthetic Critiques for Image Aesthetic Assessment"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "Ranking images from aesthetic critiques comes as a natural extension of the problem. In this paper, we are interested in leveraging the interpretability given by image captions to automatically discover the aesthetic score that truly defines the images beauty. Given an input image ⟦SLOT_19⟧ and ⟦SLOT_20⟧ aesthetic critiques associated to the image, we propose to use sentiment polarity analysis on each critique ⟦SLOT_21⟧ to define the aesthetic score ⟦SLOT_22⟧ of the image. Sentiment polarity for a comment defines the orientation of the expressed sentiment, i.e., it determines if the text expresses the negative, neutral or positive sentiment of the user about the entity in consideration. A sentiment polarity model maps a given critique ⟦SLOT_23⟧ to a vector ⟦SLOT_24⟧ which can be interpreted as the probabilities of the given critique to express a negative, neutral or positive feeling with respect to the aesthetic value of the image. We define the sentiment score ⟦SLOT_25⟧ of a critique as follows:"
+  },
+  {
+   "id": "b0028",
+   "t": "keep",
+   "w": "table",
+   "en": "s k = ∑ l = 0 2 p l ​ l 2 , s_{k}=\\frac{\\sum_{l=0}^{2}p_{l}l}{2}, (2)"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "Where ⟦SLOT_26⟧ is the label for negative, neutral or positive sentiment respectively and ⟦SLOT_27⟧ the probability associated to the label. The sentiment scores for all the critiques of an image are then averaged to obtain an overall sentiment score ⟦SLOT_28⟧ as in Eq. 1. The proposed dataset can then be defined such that ⟦SLOT_29⟧."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "To the best of our knowledge, this is the first attempt to estimate the aesthetic quality of visuals directly from critiques rather than from human ratings. Our proposal is significant for several reasons. Critiques are an important indicator of human judgment, generally more valuable than simple ratings as they provide an explanation of why a visual is aesthetically pleasing or not [33]. However, critiques are unstructured data that do not directly indicate the level of aesthetic appreciation. Therefore, our proposed score is a way to obtain a compact and quantifiable representation of the level of appreciation of an image inferred from the critiques. Second, thanks to our proposal, two related aesthetic tasks are linked. Indeed, the datasets created for Aesthetic Image Captioning (AIC) can be applied to the design of models for both AIC and Image Aesthetic Assessment (IAA). The integration of the two tasks is useful because the critiques guarantee the explainability of a score; on the other hand, the ratings might allow the prediction of valence-sensitive critiques. Finally, our proposal consists of a weakly-supervised labeling approach which has the advantage of requiring human intervention solely to provide comments on the image. Existing datasets such as PCCD and AVA demanded intensive human effort to provide ratings and comments."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "h2",
+   "en": "4 RPCD: Reddit Photo Critique Dataset"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "The Reddit Photo Critique Dataset (RPCD) is a collection of high-resolution images associated with photo critiques obtained by the Reddit communities. We first give a description of the dataset collection and statistics in Section 4.1. Section 4.2 details how we automatically rank the images following the criticism-based approach described in Section 3.3. Finally, in Section 4.3, we thoroughly analyze the images and comments present in our dataset."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Dataset Collection and Statistics"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "h4",
+   "en": "Collection Modality."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "For the collection of the RPCD dataset, we identified Reddit communities used by amateur and professional photographers to upload their images or to discuss about photography. In particular, the following six communities (known as subreddits) were identified: /r/AskPhotography, /r/photocritique, /r/photographs, /r/portraits, /r/postprocessing, /r/shittyHDR. After a careful review of the different subreddits, we selected the /r/photocritique subreddit with a total of 168,222 posts and 731,772 comments. The decision was made based on the rules of the community55 5 https://www.reddit.com/r/photocritique/ which makes its content specially suitable for the task at hand. Namely, it mostly contains posts with amateur and professional images that get feedback from other photographers and hobbyists. We downloaded all the posts and comments from the selected subreddit between May 2009 and February 2022 using the Python Reddit API Wrapper (PRAW66 6 https://github.com/praw-dev/praw (Accessed on 06/05/2022).) and the Pushshift platform [2]. Nevertheless, we still note that the other subreddits may hold relevant information that can also be exploited in further works. See Appendix A.1 for more details regarding the number of posts/comments per year in the aforementioned subreddits."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h4",
+   "en": "Automatic Filtering."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "The selected posts are then filtered by using an automated pipeline designed to be reused over time or for other communities. It consists of the following steps. First, each post consists of an image along with a description provided by the photographer usually explaining the aesthetic intent of the photograph and the technical details of the camera used. Additionally, each post has comments from other users structured as layered conversations. As required by the subreddit rules, the first level comments must be a critique to the image in the post. Therefore, we keep the top level comments since they are actual critiques and they are not a follow up comment or part of the body of a conversation. The description and the comments under the first level are discarded, thus reducing the number of comments from 731,772 to 284,426. Secondly, we remove the posts with no comments or whose image is no longer available. As a result, the number of posts is reduced to 103,190. Finally, filtering posts with corrupted or placeholder images leads to the final dataset consisting of 73,965 posts, each of them consisting of an image and an average of 3 critiques to that image."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "h4",
+   "en": "Statistics."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "Our RPCD dataset consists of 73,965 images with a resolution of ⟦SLOT_30⟧ pixels on average. A total of 219,790 photo critique comments is available, with an average of 49.1 words per comment, a standard deviation of 55.5 and a maximum of 1286 words. Each image has an average of 2.9 comments associated with it, with a standard deviation of 3.7. The general information of our dataset and a comparison with related datasets is presented in Table 1. Several considerations can be made. First, our RPCD dataset is the first large-scale photo critique dataset, with a ⟦SLOT_31⟧ times and ⟦SLOT_32⟧ times increase in the number of images and comments, respectively, compared to the previously available photo critique dataset, PCCD [17]. Secondly, it has a slightly higher average length of comments with respect to PCCD and about 3 times that of AVA-Comments [45] (hereafter simply referred to as AVA). This increase in the amount of information opens the door to the use of large language models to exploit the unstructured information available in form of text. Third, our RPCD dataset consists of images with a much higher resolution than previous datasets (especially those obtained from DPChallenge.com). See Appendix A.2 for a detailed comparison. This may be due to the difference in the time periods of collection for the different datasets. For example, AVA dataset has images posted only until 2011, when the technical performance and availability of cameras were inferior to nowadays. Consequently, the aesthetic quality is very likely to depend on the perceived technical quality [18]."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Comparison of the properties in different benchmark datasets on image aesthetic captioning."
+  },
+  {
+   "id": "b0041",
+   "t": "keep",
+   "w": "table",
+   "en": "Dataset AVA-Comments [ 45 ] DPC-Captions ∗∗ [ 17 ] PCCD [ 5 ] RPCD (Our) Images 253,961 117,132 4,235 73,965 Avg image resolution 607 × \\times 537 606 × \\times 534 1414 × \\times 1202 2993 × \\times 271"
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "∗The aspect is obtained through machined-based annotation. See Appendix A.4."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "∗∗The figures reported on this table are produced using the code made available by the authors of the dataset and differ from those stated in the original paper."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Sentiment polarity prediction"
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "We propose to use sentiment polarity analysis on the aesthetic critiques to define the aesthetic scores, a.k.a sentiment scores, of the images as detailed in Section 3.3. Sentiment analysis methods can be categorized into lexicon-based methods [16, 35], machine learning methods [11, 44], and hybrid methods [29]. Recently, deep learning methods have enabled the design of sentiment analysis models that have achieved impressive performance over the previous methods [3, 23, 31, 34]."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we use TwitterRoBERTa [1], a deep learning based method inspired by RoBERTa [23], to extract the sentiment polarity on aesthetic critiques. TwitterRoBERTa achieved the best trade-off between performance and model complexity among all the models that participated in the Sentiment Analysis in the Twitter challenge [34]. Although the model is trained in a different domain (Twitter), we assume that the domain is similar enough (social media) to use this model. Future work could explore the use of models tailored for the Reddit sub-domain. Additionally, Transformer models fine-tuned for sentiment analysis are known to have their own set of bias 77 7 https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english#risks-limitations-and-biases. Hence, a deeper analysis of the bias introduced by the selected model, which was not present in the original work [1], would be beneficial. We exploit the implementation of TwitterRoBERTa finetuned for the sentiment prediction task vailable in the HuggingFace transformers library [39]. Figure 1 reports some samples of our dataset annotated with sentiment scores. Individual scores per critique are also included. It can be seen that most of the comments are focused on compositional and stylistic aspects of the photo."
+  },
+  {
+   "id": "b0047",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: RPCD samples annotated with the proposed sentiment score. Sentiment scores are also reported for each comment."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "We estimate the sentiment score of the comments of AVA and PCCD for comparison. Figure 2 shows the distribution of sentiment scores for the samples of AVA, PCCD and our RPCD. We observe that the vast majority of the AVA and PCCD dataset samples are characterized by high sentiment scores, which produce left-skewed score distributions. On the other hand, the samples of the proposed RPCD cover almost the entire range of values with two peaks close to the values 1 and 0.5. This difference between ours and the other datasets indicates that RPCD have a richer representation of the whole aesthetic taste spectrum, providing information about why an image have a specific score for high and low sentiment scores. This dissimilarity can be explained by the nature of the different sources of each dataset. While DPChallenge is a community where users score each image, they are not encouraged to critique them as in the r/photocritique subreddit. Consequently, we hypothesize, this produces that only those users with a praise would leave a comment. The fact that there are many more users giving a score than commenting supports this possible explanation. The case of the PCCD dataset is more difficult to analyze since the source website88 8 https://gurushots.com/ does not provide the critiques feature anymore, but the fact that the dataset is heavily imbalanced may explain why the sentiment score is also imbalanced."
+  },
+  {
+   "id": "b0050",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Sentiment score distribution on AVA, PCCD and our RPCD dataset."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "We also estimate how the sentiment score correlates with the annotated human aesthetic judgment for the AVA and PCCD images. In particular, we measure Spearman’s Rank Correlation Coefficient (SRCC) and Pearson’s Linear Correlation Coefficient (PLCC). On the AVA dataset, the SRCC is equal to 0.6418 while PLCC corresponds to 0.6424. For PCCD, SRCC is 0.6066 and PLCC 0.6499. The positive correlation on both datasets indicates the effectiveness of the proposed score and, therefore, that it represents a trustworthy approximation of the aesthetic score. Figure 3 shows the scatter plots relating the aesthetic score and sentiment score for the two considered datasets. It can be seen that most of the AVA aesthetic scores were originally annotated around the average value of the rating scale, i.e. 5. In fact, it is worth noting that AVA sentiment scores span the whole rating scale for aesthetic scores equal to or close to 5. We deepen the latter case in Appendix A.1. PCCD original scores, on the other hand, are very positive with a high concentration of samples for values between 7 and 9. Generally, our sentiment scores take on less biased values than previous aesthetic scores."
+  },
+  {
+   "id": "b0053",
+   "t": "keep",
+   "w": "table",
+   "en": "(a) AVA (b) PCCD"
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Annotated aesthetic score vs. Sentiment polarity score for (a) AVA and (b) PCCD samples."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Content Analysis"
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we present an in-depth analysis of the images and comments in our dataset. This analysis is conducted by training different models to annotate aspects related to the semantics and composition of images and to estimate the usefulness and topics of the comments."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "h4",
+   "en": "Image Analysis."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "For semantic content analysis, we group images into six categories, i.e., Animal, Architecture, Human, Landscape, Plant, and Static/Others. The semantic categories above are the same as CUHK-PQ, excluding the Night category. The latter is misleading as it represents the time of the shot and not a semantic category. Figure 4 shows the distribution of images per semantic category. As it is possible to see, most RPCD images contain landscapes. The second largest content category (approximately 15K images) includes human beings. The semantic class with the lowest number of instances is Plant. We also report results for shot scale classification, which determines the portion occupied by the main subject with respect to the frame. We distinguish five shot scale types defined in the training dataset MovieNet [15]: Extreme close-up, Close-up, Medium, Full, Long. Figure 4 shows that about 30K images have been labeled as Long shot scale. This result is in line with the fact that most images are of the semantic Landscape type. Very few images have been classified as Close-up or Medium range content, meaning photographers have preferred to capture subjects from very close or far away. Finally, we inspect images from the point of view of photographic composition. Specifically, images are categorized with respect to the main composition rule among the following eight: Rule-of-Thirds, Vertical, Horizontal, Diagonal, Curved, Triangle, Center, Symmetric, Pattern. The above composition rules are defined in the KU-PCP dataset [21]. Figure 4 presents the distribution of the images with respect to the composition rules. The images in our dataset are very bias on the Center category, indicating that in most images there is the main subject occupying the central region of the image. In Appendix A.4 we detail how we build the models for running the previous analysis and present some sample images for each of the analyzed aspects."
+  },
+  {
+   "id": "b0059",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: RPCD analysis. Left: Shot scale. Center: Image Composition, Right: Image Content."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "h4",
+   "en": "Comment Analysis."
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "We analyze the topics of the corpus of comments in our dataset using BERTopic [12], a topic modeling technique. The most common topics in the analyzed datasets regards semantic aspects such as face, tree, bird, flower, and stars. There are also topics related to technical aspects of photography, namely ISO, aperture, dynamic range, and HDR. We refer to Appendix A.6 for a deeper analysis. Additionally, we use the definition of informativeness score of a previous work [10] to estimate whether the comments of our dataset are meaningful and how do they compare to other datasets. In the Appendix A.7 we compare the results on our dataset with those of state-of-the-art datasets, finding that, on average, the proposed RPCD contains the most informative comments, with an informativeness score slightly higher than PCCD and more than double than AVA."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Evaluation"
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "To illustrate the possible uses of the newly introduced dataset, we run several experiments around the image aesthetic assessment task, where our goal is to predict an aesthetic score given an image, as well as in the image captioning task, where our goal is to predict an aesthetic critique given an image. To this aim, we split the whole dataset into 70% training samples, 10% validation samples, and the remaining 20% for testing."
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 Image Aesthetic Assessment"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "The main motivation to create this dataset is to perform Image Aesthetic Assessment with the interpretability of the aesthetic critiques. We use the scores computed using sentiment analysis and propose a method to predict such scores. We also run SOTA models on our dataset for comparison."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "In Table 2 we report SRCC, LCC and Accuracy on our RPCD, PCCD [5] and AVA [28] datasets using the sentiment score, comparing the results of NIMA [37] and other experiments we carried out. We additionally perform an extensive evaluation of the family of ViT models in Appendix B to assess the suitability of such models for the aesthetic assessment task, evaluating its performance on AVA dataset. We highlight that ViT Large (we called AestheticViT) outperforms previous SOTA model [14] by a 4% in the correlation metrics on AVA dataset using the original scores. In the ViT + Linear probe experiments, we also study to what extent the results obtained to predict the aesthetic and sentiment scores are due to the knowledge already present in the pretrained model. The accuracy is computed defining as high quality images those with an score above 5, and poor quality otherwise. The results in Table 2 show that, although ViT + Linear probe and AestheticViT outperform a previous aesthetic model used as a baseline, it does not achieve a good enough performance in any of the benchmarks to predict the proposed sentiment score. Moreover, the training of the model on AVA deteriorate its performance. This results proofs how challenging the task is and may indicate that the main previous benchmark, AVA, may be biased towards the content of the images, reducing the importance of the actual aesthetics of the photo. We would like to support the reasoning of Hosu et al. [14] regarding the suitability of correlation metrics rather than accuracy to evaluate this task. While correlation metrics are representative of the entire range of scores, image labels (’good’ or ’bad’) are defined arbitrarily, which becomes an issue when the label distribution is imbalanced as in the case of AVA and PCCD datasets for both the original and sentiment scores."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Sentiment score baseline on the three considered datasets."
+  },
+  {
+   "id": "b0069",
+   "t": "keep",
+   "w": "table",
+   "en": "Method AVA PCCD RPCD SRCC LCC Acc. (%) SRCC LCC Acc. (%) SRCC LCC Acc. (%) NIMA [ 37 ] 0.253 0.259 90.20 0.066 0.070 93.87 0.120 0.116 63.25 ViT + Linear probe ∗ 0.570 0.570 76.43 0.156 0.165 93.04 0."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "∗Best performing models. See Appendix B"
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2 Aesthetic Critiques"
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "We also evaluate our dataset on the task of Aesthetic Image Captioning (AIC), using a SOTA model [22]. To evaluate the results, we follow the procedure of [5] as our dataset also contains more than one reference caption that corresponds to a single image. Table 3 compares the obtained results with the previous work [5] we use as reference. We observe that the achievable performance is far lower than that obtained for the description of the image content (See COCO captions benchmark 99 9 https://paperswithcode.com/sota/image-captioning-on-coco-captions), and further work is necessary to produce meaningful aesthetic captions. More details on the aesthetic critique procedure can be found in Appendix B.2."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Aesthetic image captioning using BLIP [22] on PCCD and our RPCD."
+  },
+  {
+   "id": "b0074",
+   "t": "keep",
+   "w": "table",
+   "en": "Bleu1 Bleu2 Bleu3 Bleu4 METEOR ROUGE CIDEr SPICE PCCD 0.165 0.065 0.028 0.011 0.063 0.137 0.049 0.048 RPCD 0.211 0.088 0.038 0.017 0.077 0.157 0.048 0.040"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Discussion and Future Work"
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "p",
+   "en": "We presented the Reddit Photo Critique Dataset (RPCD) consisting of image and photo critiques tuples. This dataset is collected by crawling posts from a community where people are encouraged to criticize positive and negative image aesthetic aspects. Our dataset has approximately 18⟦SLOT_33⟧ the images and 7⟦SLOT_34⟧ the comments compared to the PCCD dataset. Compared to AVA, the best-known aesthetic assessment dataset, our RPCD has longer and more meaningful comments and higher resolution images. Together with the dataset, we have for the first time in the literature defined an approach to obtain the aesthetic ranking of images directly from the analysis of comments. The proposed approach is based on the sentiment analysis of the comments. The proposed score was shown to have a positive correlation with the aesthetic judgments of humans. Therefore, RPCD can be used both to predict aesthetic captions and to estimate an aesthetic score. We conducted several experiments for the image aesthetic assessment task in which we compared the results obtained from different methods on our dataset, AVA and PCCD. These experiments show that a ViT is able to obtain good performance on AVA while both PCCD and RPCD are more challenging. The use of content-aware (ViT + Linear Probe), instead of aesthetic-aware (Aesthetic ViT), features results in a significant drop in performance for those datasets that may be less content-biased. Experiments on aesthetic image captioning carried out on PCCD and RPCD datasets highlight that the achievable performance is far lower than that obtained for the description of the image content, and further work is necessary to produce meaningful aesthetic captions."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "However, several limitations remain. First, the limited number of comments per image (i.e., 3 in average), although the comments are long and very informative, could make the evaluation biased by the few users and not sufficiently objective. Second, we encourage the Machine Learning community to work on alternative or complementary solutions to the proposed sentiment analysis as a proxy for aesthetics. Among other things, the fact that the sentiment score is automatically estimated could cause noisy annotations and the change in the data domain should be further studied. This noisy annotations could be influenced by the potential bias present in the selected model. Third, the aesthetic captioning task remains an open challenge. Finally, the concept of aesthetics expressed in our dataset must be understood limitedly to the Western cultural and geographical context on the basis of the demographic statistics of the Reddit users (see Appendix A.1). Additionally, other ethical considerations are discussed in Appendix D."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "Despite the above limitations, we believe RPCD is an important contribution for the design of multi-modal and explainable aesthetic assessment models. As a future work, we would like to deepen the ranking method based on the analysis of comments in order to make it more reliable and diversified for the different aspects that characterize the aesthetics: style, color, composition, etc. In addition we will be able to interpret which are the aspects that are evaluated more positively or negatively by users. Finally, exploiting new sources of available data may provide further benefits while training larger models."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgments"
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "p",
+   "en": "This project is supported by Ringier, TX Group, NZZ, SRG, VSM, Viscom, and the ETH Zurich Foundation."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0082",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] Francesco Barbieri, Jose Camacho-Collados, Luis Espinosa Anke, and Leonardo Neves. TweetEval: Unified benchmark and comparative evaluation for tweet classification. In Findings of the Association "
+  },
+  {
+   "id": "b0083",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] Jason Baumgartner, Savvas Zannettou, Brian Keegan, Megan Squire, and Jeremy Blackburn. The pushshift reddit dataset. In International AAAI Conference on Web and Social Media , volume 14, pages 830"
+  },
+  {
+   "id": "b0084",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] Zhang Bingyu and Nikolay Arefyev. The document vectors using cosine similarity revisited. In Workshop on Insights from Negative Results in NLP , pages 129–133, 2022."
+  },
+  {
+   "id": "b0085",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] Luigi Celona, Marco Leonardi, Paolo Napoletano, and Alessandro Rozza. Composition and style attributes guided image aesthetic assessment. IEEE Transactions on Image Processing , 31:5009–5024, 2022"
+  },
+  {
+   "id": "b0086",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] Kuang-Yu Chang, Kung-Hung Lu, and Chu-Song Chen. Aesthetic critiques generation for photos. In International Conference on Computer Vision , pages 3514–3523. IEEE, 2017."
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] Qiuyu Chen, Wei Zhang, Ning Zhou, Peng Lei, Yi Xu, Yu Zheng, and Jianping Fan. Adaptive fractional dilated convolution network for image aesthetics assessment. In Computer Vision and Pattern Recog"
+  },
+  {
+   "id": "b0088",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] Ritendra Datta, Dhiraj Joshi, Jia Li, and James Z Wang. Studying aesthetics in photographic images using a computational approach. In European Conference on Computer Vision , pages 288–301. Spring"
+  },
+  {
+   "id": "b0089",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] Alexey Dosovitskiy, Lucas Beyer, Alexander Kolesnikov, Dirk Weissenborn, Xiaohua Zhai, Thomas Unterthiner, Mostafa Dehghani, Matthias Minderer, Georg Heigold, Sylvain Gelly, Jakob Uszkoreit, and N"
+  },
+  {
+   "id": "b0090",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] Timnit Gebru, Jamie Morgenstern, Briana Vecchione, Jennifer Wortman Vaughan, Hanna Wallach, Hal Daumé Iii, and Kate Crawford. Datasheets for datasets. Communications of the ACM , 64(12):86–92, 202"
+  },
+  {
+   "id": "b0091",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] Koustav Ghosal, Aakanksha Rana, and Aljosa Smolic. Aesthetic image captioning from weakly-labelled photographs. In International Conference on Computer Vision Workshops , pages 0–0. IEEE/CVF, 201"
+  },
+  {
+   "id": "b0092",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] SR Gowda, BR Archana, Praajna Shettigar, and Kislay Kumar Satyarthi. Sentiment analysis of twitter data using naïve bayes classifier. In ICDSMLA 2020 , pages 1227–1234. Springer, 2022."
+  },
+  {
+   "id": "b0093",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] Maarten Grootendorst. Bertopic: Neural topic modeling with a class-based tf-idf procedure. arXiv preprint arXiv:2203.05794 , 2022."
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] Chaoyi Hong, Shuaiyuan Du, Ke Xian, Hao Lu, Zhiguo Cao, and Weicai Zhong. Composing photos like a photographer. In Conference on Computer Vision and Pattern Recognition , pages 7057–7066. IEEE/CV"
+  },
+  {
+   "id": "b0095",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] Vlad Hosu, Bastian Goldlucke, and Dietmar Saupe. Effective aesthetics prediction with multi-level spatially pooled features. In Conference on Computer Vision and Pattern Recognition , pages 9375–"
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] Qingqiu Huang, Yu Xiong, Anyi Rao, Jiaze Wang, and Dahua Lin. Movienet: A holistic dataset for movie understanding. In European Conference on Computer Vision , pages 709–727. Springer, 2020."
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] Mohammad Rezwanul Huq, Ali Ahmad, and Anika Rahman. Sentiment analysis on twitter data using knn and svm. International Journal of Advanced Computer Science and Applications , 8(6), 2017."
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] Xin Jin, Le Wu, Geng Zhao, Xiaodong Li, Xiaokun Zhang, Shiming Ge, Dongqing Zou, Bin Zhou, and Xinghui Zhou. Aesthetic attributes assessment of images. In International Conference on Multimedia ,"
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] Chen Kang, Giuseppe Valenzise, and Frédéric Dufaux. Eva: An explainable visual aesthetics dataset. In Joint Workshop on Aesthetic and Technical Quality Assessment of Multimedia and Media Analytic"
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] Junjie Ke, Qifei Wang, Yilin Wang, Peyman Milanfar, and Feng Yang. Musiq: Multi-scale image quality transformer. In International Conference on Computer Vision , pages 5148–5157. IEEE/CVF, 2021."
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] Shu Kong, Xiaohui Shen, Zhe Lin, Radomir Mech, and Charless Fowlkes. Photo aesthetics ranking network with attributes and content adaptation. In European Conference on Computer Vision , pages 662"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] Jun-Tae Lee, Han-Ul Kim, Chul Lee, and Chang-Su Kim. Photographic composition classification and dominant geometric element detection for outdoor scenes. Journal of Visual Communication and Image"
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] Junnan Li, Dongxu Li, Caiming Xiong, and Steven Hoi. Blip: Bootstrapping language-image pre-training for unified vision-language understanding and generation. In International Conference on Machi"
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] Yinhan Liu, Myle Ott, Naman Goyal, Jingfei Du, Mandar Joshi, Danqi Chen, Omer Levy, Mike Lewis, Luke Zettlemoyer, and Veselin Stoyanov. Roberta: A robustly optimized BERT pretraining approach. Co"
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] Xin Lu, Zhe Lin, Hailin Jin, Jianchao Yang, and James Z Wang. Rapid: Rating pictorial aesthetics using deep learning. In International Conference on Multimedia , pages 457–466. ACM, 2014."
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] Wei Luo, Xiaogang Wang, and Xiaoou Tang. Content-based photo quality assessment. In International Conference on Computer Vision , volume 15, pages 2206–2213, 11 2011."
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] Shuang Ma, Jing Liu, and Chang Wen Chen. A-lamp: Adaptive layout-aware multi-patch deep convolutional neural network for photo aesthetic assessment. In Conference on Computer Vision and Pattern R"
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] Luca Marchesotti, Florent Perronnin, Diane Larlus, and Gabriela Csurka. Assessing the aesthetic quality of photographs using generic image descriptors. In International Conference on Computer Vis"
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] Naila Murray, Luca Marchesotti, and Florent Perronnin. Ava: A large-scale database for aesthetic visual analysis. In Conference on Computer Vision and Pattern Recognition , pages 2408–2415. IEEE,"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] Avinash Chandra Pandey, Dharmveer Singh Rajpoot, and Mukesh Saraswat. Twitter sentiment analysis using hybrid cuckoo search method. Information Processing & Management , 53(4):764–779, 2017."
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] F. Pedregosa, G. Varoquaux, A. Gramfort, V. Michel, B. Thirion, O. Grisel, M. Blondel, P. Prettenhofer, R. Weiss, V. Dubourg, J. Vanderplas, A. Passos, D. Cournapeau, M. Brucher, M. Perrot, and E"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] NS Punith and Krishna Raketla. Sentiment analysis of drug reviews using transfer learning. In 2021 Third International Conference on Inventive Research in Computing Applications (ICIRCA) , pages "
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] Anyi Rao, Jiaze Wang, Linning Xu, Xuekun Jiang, Qingqiu Huang, Bolei Zhou, and Dahua Lin. A unified framework for shot type classification based on subject centric lens. In European Conference on"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] Matthew D Rocklage, Derek D Rucker, and Loran F Nordgren. Mass-scale emotionality reveals human behaviour and marketplace success. Nature human behaviour , 5(10):1323–1329, 2021."
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] Sara Rosenthal, Noura Farra, and Preslav Nakov. SemEval-2017 task 4: Sentiment analysis in Twitter. In International Workshop on Semantic Evaluation (SemEval-2017) , pages 502–518, Vancouver, Can"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] María del Pilar Salas-Zárate, Jose Medina-Moreira, Katty Lagos-Ortiz, Harry Luna-Aveiga, Miguel Angel Rodriguez-Garcia, and Rafael Valencia-Garcia. Sentiment analysis on tweets about diabetes: an"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] Rossano Schifanella, Miriam Redi, and Luca Maria Aiello. An image is worth more than a thousand favorites: Surfacing the hidden beauty of flickr pictures. In International AAAI Conference on Web "
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] Hossein Talebi and Peyman Milanfar. Nima: Neural image assessment. IEEE Transactions on Image Processing , 27(8):3998–4011, 2018."
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] Wenshan Wang, Su Yang, Weishan Zhang, and Jiulong Zhang. Neural aesthetic image reviewer. IET Comput. Vis. , 13(8):749–758, 2019."
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, Clement Delangue, Anthony Moi, Pierric Cistac, Tim Rault, Remi Louf, Morgan Funtowicz, Joe Davison, Sam Shleifer, Patrick von Platen, Cl"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] Yifei Xu, Nuo Zhang, Pingping Wei, Genan Sang, Li Li, and Feng Yuan. Deep neural framework with visual attention and global context for predicting image aesthetics. IEEE Access , 2020."
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] Yong-Yaw Yeo, John See, Lai-Kuan Wong, and Hui-Ngo Goh. Generating aesthetic based critique for photographs. In International Conference on Image Processing , pages 2523–2527. IEEE, 2021."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[42] Jiajing Zhang, Yongwei Miao, and Jinhui Yu. A comprehensive survey on computational aesthetic evaluation of visual art images: Metrics and challenges. IEEE Access , 2021."
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[43] Luming Zhang, Yue Gao, Roger Zimmermann, Qi Tian, and Xuelong Li. Fusion of multichannel local and global structural cues for photo aesthetics evaluation. IEEE Transactions on Image Processing , "
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[44] Xueying Zhang and Xianghan Zheng. Comparison of text sentiment analysis based on machine learning. In International Symposium on Parallel and Distributed Computing (ISPDC) , pages 230–233. IEEE, "
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[45] Ye Zhou, Xin Lu, Junping Zhang, and James Z Wang. Joint image and text representation for aesthetics analysis. In International Conference on Multimedia , pages 262–266. ACM, 2016."
+  },
+  {
+   "id": "b0127",
+   "t": "text",
+   "w": "h2",
+   "en": "Checklist"
+  },
+  {
+   "id": "b0128",
+   "t": "text",
+   "w": "li",
+   "en": "1. For all authors… (a) Do the main claims made in the abstract and introduction accurately reflect the paper’s contributions and scope? [Yes] The main claims are listed at the end of Section 1. (b) Did you describe the limitations of your work? [Yes] The limitations are described in Section 6. (c) Did you discuss any potential negative societal impacts of your work? [Yes] The potential negative societal impacts are described in Section 6. (d) Have you read the ethics review guidelines and ensured that your paper conforms to them? [Yes] We additionally comment on different ethics consideration on Appendix D."
+  },
+  {
+   "id": "b0129",
+   "t": "text",
+   "w": "li",
+   "en": "2. If you are including theoretical results… (a) Did you state the full set of assumptions of all theoretical results? [N/A] (b) Did you include complete proofs of all theoretical results? [N/A]"
+  },
+  {
+   "id": "b0130",
+   "t": "text",
+   "w": "li",
+   "en": "3. If you ran experiments (e.g. for benchmarks)… (a) Did you include the code, data, and instructions needed to reproduce the main experimental results (either in the supplemental material or as a URL)? [Yes] All necessary code is available on this repository https://github.com/mediatechnologycenter/aestheval. (b) Did you specify all the training details (e.g., data splits, hyperparameters, how they were chosen)? [Yes] See Appendix B. (c) Did you report error bars (e.g., with respect to the random seed after running experiments multiple times)? [No] Training are very compute intensive. We can only run the training once per experiment using a random seed (arbitrarily selected). (d) Did you include the total amount of compute and the type of resources used (e.g., type of GPUs, internal cluster, or cloud provider)? [Yes] See Appendix C"
+  },
+  {
+   "id": "b0131",
+   "t": "text",
+   "w": "li",
+   "en": "4. If you are using existing assets (e.g., code, data, models) or curating/releasing new assets… (a) If your work uses existing assets, did you cite the creators? [Yes] (b) Did you mention the license of the assets? [Yes] We describe the license of used source of data in Appendix E (c) Did you include any new assets either in the supplemental material or as a URL? [Yes] (d) Did you discuss whether and how consent was obtained from people whose data you’re using/curating? [Yes] See Appendix D (e) Did you discuss whether the data you are using/curating contains personally identifiable information or offensive content? [Yes] See Appendix D"
+  },
+  {
+   "id": "b0132",
+   "t": "text",
+   "w": "li",
+   "en": "5. If you used crowdsourcing or conducted research with human subjects… (a) Did you include the full text of instructions given to participants and screenshots, if applicable? [N/A] (b) Did you describe any potential participant risks, with links to Institutional Review Board (IRB) approvals, if applicable? [N/A] (c) Did you include the estimated hourly wage paid to participants and the total amount spent on participant compensation? [N/A]"
+  },
+  {
+   "id": "b0133",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Dataset Analysis"
+  },
+  {
+   "id": "b0134",
+   "t": "text",
+   "w": "h3",
+   "en": "A.1 Subreddits Analysis"
+  },
+  {
+   "id": "b0135",
+   "t": "text",
+   "w": "p",
+   "en": "There are 1.5M members in the /r/photocritique subreddit. Since it is not possible to collect demographic information about subreddit members, we report the statistic related to a recent analysis about Reddit 1010 10 https://www.statista.com/topics/5672/reddit/#topicHeader (Accessed on 22/08/2022). Slight majority of Reddit users are male (61%). 48% of Reddit users are in the US, followed by the UK, Canada, Australia and Germany. People between the age of 18 and 29 make up Reddit’s largest user base (64%). The second biggest age group is 30 to 49 (29%). Teenagers below 15 are not very active on Reddit. Only 7% of Reddit users are over 50."
+  },
+  {
+   "id": "b0136",
+   "t": "text",
+   "w": "p",
+   "en": "In light of the previous statistics, it is necessary to underline that the data treated in our dataset, therefore the inferred concept of aesthetics, presents a bias due to the limited cultural and geographical integration of the people who produced the information."
+  },
+  {
+   "id": "b0137",
+   "t": "text",
+   "w": "p",
+   "en": "Here, it follows a deeper analysis of /r/photocritique subreddit. Figure 5 shows the number of posts and comments per year downloaded from the seven subreddits we have selected. We observe that the number of posts and comments increase over the course of time. Data from 2013 could not be retrieved due to problems with Pushshift 1111 11 https://www.reddit.com/r/pushshift/comments/sb982i/very_recent_data_missing/. Since 2015 there have been a number of posts over 20K and a number of comments that exceeds 100K until reaching the peak of 250K in 2021. Furthermore, although the posts are substantially fewer than the comments, the posts have reached a constant level of over 50,000 per year."
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0139",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: The number of posts and comments between May 2009 and February 2022 for the 6 considered subreddits."
+  },
+  {
+   "id": "b0140",
+   "t": "text",
+   "w": "h3",
+   "en": "A.2 Image Resolution"
+  },
+  {
+   "id": "b0141",
+   "t": "text",
+   "w": "p",
+   "en": "We investigate the resolution of the images of three datasets, namely AVA, PCCD, and our RPCD. We categorize images into 4 common image resolutions in still camera photography, namely Standard Definition – SD (⟦SLOT_35⟧ pixels), High Definition – HD (⟦SLOT_36⟧ pixels), FullHD (⟦SLOT_37⟧ pixels), and UltraHD (⟦SLOT_38⟧ pixels). In Figure 6 the distributions of the images for the three datasets are plotted with respect to the four considered resolutions. As it is possible to see, our dataset it the only one that has UltraHD images. Most of the images are UltraHD resolution (51.20%), but there are also images for the other three resolutions. On the other hand, all AVA images have a resolution of ⟦SLOT_39⟧ pixels, while most PCCD images (i.e. 89.07%) have FullHD resolution."
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0143",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Image distribution of AVA, PCCD and our dataset, RPCD, for various standard image resolutions."
+  },
+  {
+   "id": "b0144",
+   "t": "text",
+   "w": "h3",
+   "en": "A.3 Sentiment Polarity Classification"
+  },
+  {
+   "id": "b0145",
+   "t": "text",
+   "w": "p",
+   "en": "We delve into the analysis of the sentiment score distributions of our dataset and those of AVA and PCCD. Figure 7 shows the spreads of the sentiment scores for the three datasets. AVA and PCCD have very similar median and standard deviation, namely 0.77 and about 0.15. Our RPCD on the other hand has a median of 0.60 and a larger standard deviation (i.e., 0.25). This difference between ours and the other datasets indicates that RPCD have a richer representation of the whole aesthetic taste spectrum, providing information about why an image have a specific score for high and low sentiment scores."
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0147",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Boxplots of sentiment score distributions for the three considered datasets, namely AVA, PCCD and our RPCD."
+  },
+  {
+   "id": "b0148",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 8 reports some samples of the AVA dataset whose aesthetic score given by the human raters is equal to 5 (i.e., average score of the distribution), while our sentiment score span almost the entire range. It can be seen that the comments concern different aspects of photography. For example, for the central image a user has concerns about the pose of the subject “I think this would have been much more effective if the flower was facing the camera.”, while another user would have preferred a different optical technique, i.e., “I would like more depth-of-field, so that the furthest petals are in focus also”. Sometimes there can be very conflicting opinions in the comments (see the first image on the left). In general, comments reveal many facets of judgment shaped by the polarity of sentiment. This therefore justifies the difference between the annotated aesthetic score and the estimated sentiment score."
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0150",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8: AVA samples annotated with an aesthetic score of 5, whose sentiment score we propose varies between 0.39 and 0.98. For each image we report the overall sentiment score (top of the image) and comments with the corresponding predicted sentiment score in bold."
+  },
+  {
+   "id": "b0151",
+   "t": "text",
+   "w": "h3",
+   "en": "A.4 Content Analysis"
+  },
+  {
+   "id": "b0152",
+   "t": "text",
+   "w": "p",
+   "en": "We automatically analyze image content by using image classifiers for both semantic and composition aspects. In this section we detail the classifiers design and training and some qualitative results on our RPCD dataset."
+  },
+  {
+   "id": "b0153",
+   "t": "text",
+   "w": "h4",
+   "en": "Semantic Content and Composition Rule."
+  },
+  {
+   "id": "b0154",
+   "t": "text",
+   "w": "p",
+   "en": "To categorize the semantic content and composition of RPCD images, we use two classifiers based on the same backbone, namely the Vision Transformer (ViT) presented in [8]. In particular, we use the ViT parameters learned on ImageNet (keeping them freezed on the new tasks). The last linear classification layer is peculiar to each task and its parameters are trained. We use the same hyperparameters for the two classifiers, that is SGD with momentum equal to 0.9 and weight decay of 1⟦SLOT_40⟧-4. We train using batches of 32 images for 90 epochs with an initial learning rate of 0.01, that is then dropped every 30 epochs by a factor of 0.1."
+  },
+  {
+   "id": "b0155",
+   "t": "text",
+   "w": "p",
+   "en": "The semantic content classifier is trained to discriminate six different semantic content, namely Animal, Architecture, Human, Landscape, Plant, and Static. For this purpose, we use 15,981 images of the dataset CUHK-PQ [25] (i.e. all the images of the dataset apart from those of the Night category). We split the whole dataset int 80% training images and 20% test images. The resulting classifier achieved an accuracy of 87.08% on the test set. Figure 9 reports two images from RPCD for each semantic category."
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "table",
+   "en": "Animal Architecture Human Landscape Plant Static"
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9: Images from our RCPD dataset categorized with respect to the semantic content."
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "p",
+   "en": "Our composition classifier is trained on the KU-PCP dataset [21], which consists of 4244 outdoor photographs. We exploit the data splits provided by the authors which comprise of a training set of 3169 images and 1075 validation images. Each image has been annotated by 18 human subject to categorize it into nine composition classes: Center, Curved, Diagonal, Horizontal, Pattern, Rule of Thirds (RoT), Symmetric, Triangle, and Vertical. Since an image may follow multiple composition rules, each sample is given with one or more (at most 3) composition labels. Following [13], images with more than one rule are trained multiple times for each ground-truth class. This training strategy is shown more effective than multi-label loss. The estimated accuracy on the test set is equal to 33.36%. Figure 10 shows some images from the RPCD categorized for each composition rule."
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "table",
+   "en": "Center Curved Diagonal Horizontal Pattern"
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "table",
+   "en": "RoT Symmetric Triangle Vertical"
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 10: Images from our RCPD dataset categorized with respect to the main composition rule."
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "h4",
+   "en": "Shot Scale."
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "p",
+   "en": "We implement a Subject Guidance Network (SGNet) inspired by [32] to perform shot scale classification on images. The key idea is to use a subject map to determine the portion occupied by the subject with respect to the frame. We distinguish among five shot scale types, namely extreme close-up (ECS), close-up (CS), medium (MS), full (FS) and long (LS). The model is trained on the public MovieNet dataset [15] and optimized with stochastic gradient descent using cross-entropy loss. We use a learning rate of 1⟦SLOT_41⟧-3, batch size of 16 and we train for 60 epochs. We achieved 99.72⟦SLOT_42⟧ accuracy on the test set of the MovieNet dataset and observed a good generalization to the proposed RPCD dataset. The shot scale reveals information of how the photographer used the camera in order to emphasize either a location (long), an event (medium/full) or the identity of a subject (extreme close-up/close-up). Figure 11 reports some images annotated for each shot scale category."
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "table",
+   "en": "ECS CS MS LS FS"
+  },
+  {
+   "id": "b0165",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 11: Images from our RCPD dataset categorized with respect to the shot scale."
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "h4",
+   "en": "Aesthetic Aspect Prediction."
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "p",
+   "en": "The aesthetic aspect of each comment is predicted using a transformer model, DistilBERT, implemented using HugginFace’s transformers library [39]. This approach differs with previous attempts of automatically labeling the aesthetic attributes of comments, which were based on keywords [17]. Instead, we fine-tune the language model for the text classification task of predicting the aesthetic attribute of a text using the PCCD [5] dataset, where 7 different classes are available: general_impression, subject_of_photo, composition, use_of_camera, depth_of_field, color_lighting, and focus. We use a learning rate of 2⟦SLOT_43⟧-5, batch size of 16, weight decay of 0.01 and we train for 5 epochs. The rest of the parameters are left to the default ones in the HugginFace Trainer API. We randomly split the whole dataset in two folds: 90% for training, and the remaining 10% for validation and testing. Additionally, we clean URLs and escaped characters from the dataset. The fine-tuning converges at epoch 2, where the weighted metrics over the 7 different classes are: Precision, 0.8771; Recall, 0.8751; F1-score, 0.8755; and Accuracy, 0.8751."
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 12 shows the correlation matrix of the classifier performance on the test set. The classifier is available on HuggingFace’s model hub 1212 12 https://huggingface.co/daveni/aesthetic_attribute_classifier."
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 12: Correlation matrix of the aesthetic aspect classifier."
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "h3",
+   "en": "A.5 Explicit or offensive content"
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "p",
+   "en": "We use Detoxify 1313 13 https://github.com/unitaryai/detoxify, a library to predict toxic comments, to carry out a preliminary analysis of the presence of offensive content in the dataset. We use the unbiased model, a model that recognizes toxicity and minimizes this type of unintended bias with respect to mentions of identities (for example, minimize the bias towards the toxic class when a mention to a minority, which are often the target of offensive comments, is mentioned and the comment is not actually offensive)."
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "p",
+   "en": "In Table 4 we show the results of this preliminary analysis of the presence of offensive content in the dataset using Detoxify to predict the \"offensive probability\" of the 216K comments in the dataset. We have considered a comment to be offensive if the predictions probability for any of the labels is higher than 0.5. In total, there are 8K comments with a predicted probability of being offensive greater that 0.5, which represent less than the 4% of the total of comments in the dataset."
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Offensive content analysis of our RPCD using Detoxify."
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "table",
+   "en": "Offensive label Predicted Probability Mean Total toxicity 2.889% 4369 severe_toxicity 0.019% 0 obscene 1.125% 2385 identity_attack 0.374% 336 insult 0.672% 742 threat 0.418% 287 sexual_explicit 0.259%"
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "h3",
+   "en": "A.6 Topic Modeling"
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "p",
+   "en": "We use BERTopic [12] to clusterize the comments in all three datasets to compare the main topics being discussed. This method leverages on the document embeddings created using a text encoder to produce clusters after reducing the dimensionality of such embeddings. Then, TD-IDF is applied to the documents of the cluster to get the importance score of each word, obtaining the relevant topics in the cluster."
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "p",
+   "en": "To generate the topics, we used the automatic topic reduction feature available in the library to reduce the number of topics, starting from the least frequent topic, as long as it exceeds a minimum similarity of 0.915. We additionally sample 100K comments from AVA and Reddit datasets to avoid memory constraints. We describe the datasets topics in the Table 5. It shows the top 30 topics together with the count of documents belonging to each of them and the most important words per topic. Topics related to aesthetic attributes are in bold. We observe that in all of them we can find topics regarding aesthetic aspects such as composition, exposure, focus or color; but also topics related to the subject of the image such as sky, bird or flower."
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Top 30 detected Topics on AVA, PCCD, and our RPCD."
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "table",
+   "en": "AVA PCCD RPCD Count Name Count Name Count Name 35798 focus_and_challenge_this 12585 the_and_of_to 43491 and_the_to_is 1417 her_she_face_shes 1256 hi_you_work_image 3441 her_she_face_hair 1170 flower_f"
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "h3",
+   "en": "A.7 Informativeness Analysis"
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "p",
+   "en": "We use the definition of informativeness score of a previous work [10] as a proxy of how meaningful are the comments in our dataset and how do they compare to other datasets. This definitions leverages on the relative frequency of unigrams and bigrams respect to the total vocabulary of the corpus. Then, a comment is represented as the union of its unigrams and bigrams and it is assigned an informativeness score ⟦SLOT_44⟧ as the average of the negative log probabilities of its unigrams (⟦SLOT_45⟧) and bigrams (⟦SLOT_46⟧):"
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "table",
+   "en": "ρ = − 1 2 ​ [ l ​ o ​ g ​ ∏ i N P ⁡ ( u i ) + l ​ o ​ g ​ ∏ j M P ⁡ ( b j ) ] \\rho=-\\frac{1}{2}[log\\prod_{i}^{N}P(u_{i})+log\\prod_{j}^{M}P(b_{j})] (3)"
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "p",
+   "en": "The more frequent a word is, the less informative it will be. We observe that the proposed RPCD dataset have a slightly higher informativeness score than PCCD dataset, while both of them have a score twice as high as AVA dataset. The box plot shown in Figure 13 describes the informativeness score distribution among the different datasets, where the dataset with the highest average informativeness score is RPCD (78.61), followed by PCCD (72.96) and finally, with less than half the score, AVA (32.43)."
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 13: Informativeness score for each of the considered datasets."
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Experiments and Implementation Details"
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "h3",
+   "en": "B.1 Image Aesthetic Assessment"
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "h4",
+   "en": "AestheticViT."
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "p",
+   "en": "For ranking the images with respect to aesthetic or sentiment scores, we experiment with different models based on Vision Transformer (ViT) [8] as a baseline as this architecture has proved its effectiveness for several tasks. We run experiments with various versions of ViT in terms of model size (i.e., Tiny, Small, Base, and Large), input patch size, and pre-training dataset. In what follows we use brief notation to indicate the model size and the input patch size: for instance, ViT-L/16 means the “Large” variant with ⟦SLOT_47⟧ input patch size. We also consider the Data-efficient image Transformer (DeiT), a post-ViT model that improves the training process and performance."
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "p",
+   "en": "On top of the pre-trained transformer, we add a fully-connected layer which is randomly initialized. The whole model is then trained to predict the final score using the mean square error as the loss function. We resize the input images to have the maximum input size of 700 pixels and adjust the other size to preserve the original aspect ratio. To handle images with varying resolutions, we scale input positional embedding accordingly with the image resolution by performing bilinear interpolation. During training we adopt a batch size of 1 because the images can have different resolutions. We finetune the models until convergence, for a maximum of 5 epochs (although convergence usually occurs on epoch 2 or 3). The learning rate is empirically set to 1⟦SLOT_48⟧-6 and we use Adam optimizer. We exploit the available model implementations and pre-trained weights of the PyTorch Image Models library1414 14 https://github.com/rwightman/pytorch-image-models."
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "p",
+   "en": "We first perform experiments for estimating the aesthetic score of AVA [28] and PCCD [17] (i.e., the only two datasets with both comments and aesthetic scores). Table 6 reports performance on the test sets in terms of SRCC, and LCC for aesthetic score regression and accuracy for low-/high- aesthetic categorization. The accuracy is computed defining as high quality images those with an score above 5, and poor quality otherwise. The best results are achieved by the ViT-L/16 pre-trained on ImageNet-21k and other considerations can be made. First, the use of larger patches, that is ⟦SLOT_49⟧ pixels instead of ⟦SLOT_50⟧ pixels, causes a significant drop in performance for the same model size. In fact, we have that ViT-B/32 achieves 0.446 of SRCC, while ViT-B/16 obtains 0.759 of SRCC on AVA. Second, the performance increases as the model size grows. On AVA, the SRCC is equal to 0.725 for ViT-T/16 and 0.793 for ViT-L/16. Third, the DeiT models are slightly less performing than the basic ViT versions and pre-training on ImageNet-21k instead of ImageNet results in a minimal increase in results, i.e., about 0.02."
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Comparison of various transformers for image aesthetic assessment on AVA and PCCD. In each column, the best and second-best results are marked in boldface and underlined, respectively."
+  },
+  {
+   "id": "b0194",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Pretrain dataset AVA PCCD SRCC LCC Acc. (%) SRCC LCC Acc. (%) DeiT-T/16 ImageNet 0.725 0.731 80.33 0.227 0.262 98.34 DeiT-S/16 ImageNet 0.746 0.750 80.90 0.289 0.296 98.34 DeiT-B/16 ImageNet 0.7"
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "p",
+   "en": "Table 7 reports the comparison with state-of-the-art methods on the AVA dataset (for PCCD, there is no benchmark for aesthetic score assessment). Our ViT-L/16 pre-trained on ImageNet-21k (in the table named as ViT-L/16 - 21k) obtains better performance than Hosu et al. [14] for aesthetic score regression with an increment of 0.04 on both SRCC and LCC. On the other hand, we are in second place for the aesthetic classification with an accuracy of 0.35% lower than Chen et al. [6]. Correlation metrics are more adequate than accuracy [14], and exact score estimation is more challenging and representative of the full range of scores. Therefore, we can claim that we have achieved an excellent result."
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Comparison of our baseline with state-of-the-art methods on the AVA dataset for image aesthetic assessment. In each column, the best and second-best results are marked in boldface and underlined, respectively. The “–” means that the result is not available."
+  },
+  {
+   "id": "b0197",
+   "t": "keep",
+   "w": "table",
+   "en": "Model SRCC LCC Accuracy (%) Murray et al . [ 28 ] – – 66.70 Lu et al . [ 24 ] – – 74.46 Ma et al . [ 26 ] – – 81.70 Kong et al . [ 20 ] 0.558 – 77.33 Talebi et al . [ 37 ] 0.612 0.636 81.51 Chen et al"
+  },
+  {
+   "id": "b0198",
+   "t": "text",
+   "w": "p",
+   "en": "We perform experiments considering the previous backbones, apart from ViT-B/32 which produced the worst results, for the sentiment score estimation. Results on AVA, PCCD and our RPCD are reported in Table 8. We observe the same behavior as the aesthetic assessment, that the larger models outweigh the smaller ones. We also point out that ViT-L/16 - 21k achieves slightly higher performance than ViT-L/16 on AVA, vice versa on RPCD. Finally, on PCCD we get the worst results in terms of correlation and the best results for classification compared to the other two datasets."
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8: Results obtained using ViT for estimating the sentiment score on AVA, PCCD, and RPCD. In each column, the best and second-best results are marked in boldface and underlined, respectively."
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "table",
+   "en": "Model AVA PCCD RPCD SRCC LCC Acc. (%) SRCC LCC Acc. (%) SRCC LCC Acc. (%) DeiT-T/16 0.492 0.507 90.46 0.187 0.220 93.87 0.188 0.189 64.68 DeiT-S/16 0.500 0.513 90.48 0.170 0.182 93.87 0.190 0.189 64.6"
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "h4",
+   "en": "ViT + Linear probe."
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "p",
+   "en": "The goal of this experiments is to assess to what extent the results obtained to predict the aesthetic and sentiment scores are due to the knowledge already present in the pre-trained model. We use the pre-trained ViT models as feature extractors and then we fit a linear regressor on those extracted features to predict the aesthetic score. This linear regressor was implemented as a Stochastic Gradient Descent Regressor with Scikit-Learn [30]. In Table 9 are reported the results for image aesthetic assessment on AVA and PCCD."
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 9: Results obtained by using ViT as a feature extractor followed by a linear regressor (we called ViT + Linear probe) for estimating the aesthetic score on AVA and PCCD. In each column, the best and second-best results are marked in boldface and underlined, respectively."
+  },
+  {
+   "id": "b0204",
+   "t": "keep",
+   "w": "table",
+   "en": "Model AVA PCCD SRCC LCC Acc. (%) SRCC LCC Acc. (%) DeiT-T/16 0.345 0.355 71.66 0.185 0.191 98.34 DeiT-S/16 0.454 0.459 74.27 0.212 0.203 98.34 DeiT-B/16 0.506 0.510 74.89 0.203 0.205 98.22 ViT-S/16 0."
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "p",
+   "en": "Table 10 presents the results of the same experiment but using the sentiment score instead. Table 11 and Table 12 show the difference in performance between the trained models and the linear probe experiments. We can observe how for every case and every metric (except for the accuracy of Vit-S and ViT-L-21k on PCCD dataset to predict the aesthetic score), training the models outperform the pre-trained models (linear probes). The increase in performance is higher on AVA dataset, while PCCD and RPCD datasets do not benefit that much of further training. This may suggest that there is room for better training procedures on this datasets."
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 10: Results obtained by using ViT as a feature extractor followed by a linear regressor (we called ViT + Linear probe) for estimating the sentiment score on the three considered datasets. In each column, the best and second-best results are marked in boldface and underlined, respectively."
+  },
+  {
+   "id": "b0207",
+   "t": "keep",
+   "w": "table",
+   "en": "Model AVA PCCD RPCD SRCC LCC Acc. (%) SRCC LCC Acc. (%) SRCC LCC Acc. (%) DeiT-T/16 0.238 0.235 90.26 0.153 0.151 93.87 0.107 0.108 62.56 DeiT-S/16 0.300 0.303 90.27 0.139 0.135 93.40 0.128 0.128 63.0"
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 11: Performance difference between ViT + Linear Probe and Aesthetic ViT (Table 6 - Table 9) for aesthetic score."
+  },
+  {
+   "id": "b0209",
+   "t": "keep",
+   "w": "table",
+   "en": "Model AVA PCCD SRCC LCC Acc. (%) SRCC LCC Acc. (%) DeiT-T/16 +0.380 +0.376 +8.670 +0.042 +0.071 +0.000 DeiT-S/16 +0.292 +0.291 +6.630 +0.077 +0.093 +0.000 DeiT-B/16 +0.259 +0.258 +7.060 +0.000 +0.000 "
+  },
+  {
+   "id": "b0210",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 12: Performance difference between ViT + Linear Probe and Aesthetic ViT (Table 8 - Table 10) for sentiment score."
+  },
+  {
+   "id": "b0211",
+   "t": "keep",
+   "w": "table",
+   "en": "Model AVA PCCD RPCD SRCC LCC Acc. (%) SRCC LCC Acc. (%) SRCC LCC Acc. (%) DeiT-T/16 +0.254 +0.272 +0.200 +0.034 +0.069 +0.000 +0.081 +0.081 +2.120 DeiT-S/16 +0.200 +0.210 +0.210 +0.031 +0.047 +0.470 +"
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "h4",
+   "en": "NIMA."
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "p",
+   "en": "We compare the previous ViT models with a model from the literature, i.e., NIMA [37], for sentiment score prediction. NIMA is trained by us using the code released by its authors. We use an ImageNet-trained VGG-16 as the backbone. Input images are resized to a fixed spatial resolution of ⟦SLOT_51⟧ pixels. As in [37], for model optimization we exploit the Earth Mover’s Distance (EMD):"
+  },
+  {
+   "id": "b0214",
+   "t": "keep",
+   "w": "table",
+   "en": "E ​ M ​ D ​ ( 𝗊 ^ , 𝗊 ) = ( 1 N ​ ∑ k = 1 N | C ​ D ​ F 𝗊 ^ ​ ( k ) − C ​ D ​ F 𝗊 ​ ( k ) | r ) 1 r , EMD(\\mathsf{\\hat{q}},\\mathsf{q})=\\left(\\frac{1}{N}\\sum_{k=1}^{N}{|CDF_{\\mathsf{\\hat{q}}}(k)-CDF_{\\"
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_52⟧ and ⟦SLOT_53⟧ are the ground-truth and the predicted score distributions, respectively. Finally, ⟦SLOT_54⟧ is the cumulative distribution function, ⟦SLOT_55⟧ equal to 2 is used to penalize the Euclidean distance between the CDFs. We use the probability distribution on the three sentiment polarity classes ⟦SLOT_56⟧ as ground-truth. We optimize the model by using Stochastic Gradient Descent (SGD) with learning rate of 5⟦SLOT_57⟧-3 and batch size equal to 64 for 100 epochs. We use an early stopping policy based on validation loss with a patience term of 10 epochs."
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "h4",
+   "en": "Summary."
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "p",
+   "en": "Experiments with ViT + Linear probe have shown that pre-trained ViTs for image recognition do not work well for predicting aesthetic and sentiment scores. It is therefore necessary to train the model to learn the characteristics that best encode the various aspects of aesthetics. Table 11 and Table 12 report the difference in performance between ViT + Linear prob and AestheticViT models for aesthetic score estimation and sentiment score estimation, respectively. This way we highlight the gain obtained thanks to the training of the backbones."
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "p",
+   "en": "Among the various tested models, ViT-L/16 - 21k achieved the best results on both AVA and PCCD for aesthetic assessment. It also outperforms state-of-the-art aesthetic assessment methods on the AVA dataset. On the other hand, for the prediction of the sentiment score the ViT-L/16 model obtained the best performance regardless of the dataset used for pre-training."
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "h3",
+   "en": "B.2 Image Aesthetic Critique Generation"
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "p",
+   "en": "We verify the use of the proposed dataset for the generation of aesthetic image critique by using Bootstrapping Language Image Pre-training (BLIP) [22]. It is a method for the unified understanding and generation of the visual language. A pre-trained ViT-B/16 on the COCO dataset is finetuned for aesthetic captioning by exploiting the AdamW optimizer with initial learning rate equal to 1⟦SLOT_58⟧-5, weight decay of 0.05, and a cosine learning rate schedule. We train for 5 epochs using a batch size of 16 samples. During inference, we use beam search with a beam size of 3, and set the minimum and maximum generation lengths as 20 and 50, respectively."
+  },
+  {
+   "id": "b0221",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Resources Used"
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "p",
+   "en": "In this section we briefly list the resources used to carry out this work:"
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "li",
+   "en": "• Host machines: The machines used by the authors, each of them with access to a GPU NVIDIA GeForce RTX 2080 Ti."
+  },
+  {
+   "id": "b0224",
+   "t": "text",
+   "w": "li",
+   "en": "• Access to internal cluster1515 15 https://scicomp.ethz.ch/wiki/Euler with access to various instances with the following GPUs: NVIDIA GeForce RTX 2080 Ti and NVIDIA TITAN RTX."
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "li",
+   "en": "• A part of the experiments, but not all, were logged to Weights & Biases1616 16 https://wandb.ai/, which registered the time used for those experiments, summing up a total of 2500 hours."
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D Ethical considerations"
+  },
+  {
+   "id": "b0227",
+   "t": "text",
+   "w": "p",
+   "en": "This section comments on the Ethics Guidelines 1717 17 https://nips.cc/public/EthicsGuidelines of NeuroIPS. In particular, we comment on various of the points brought on this guidelines:"
+  },
+  {
+   "id": "b0228",
+   "t": "text",
+   "w": "li",
+   "en": "• Personally identifiable information and data collection. The samples in our dataset are attached to the user ID. While this provides a first level of anonymity to the users, it is fairly straight forward to access the public user profile, which may contain identifiable information the user had previously agreed to share and may be identifiable. Every user consents the collection of this information and accepts the Reddit’s Privacy Policy 1818 18 https://www.reddit.com/policies/privacy-policy, where it is stated that \"[…] Reddit also allows third parties to access public Reddit content via the Reddit API and other similar technologies. […]\". Thus, not every user has been directly asked for consent to include data produced by them in this dataset, but this consent is comprised under the Privacy Policy and the Reddit API terms of Use. We expand on this in the Section F. However, we point out that, a priori, disclosing that a person has any activity or belongs to the r/photocritique subreddit does not involve degrading or embarrassing such person."
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "li",
+   "en": "• Data consent. As pointed out above, every user consents accepts the Reddit’s Privacy Policy, where it is stated that \"[…] Reddit also allows third parties to access public Reddit content via the Reddit API and other similar technologies. […]\". The use of Reddit as a source of data for a large variety of scientific research has had an important impact in several fields as described in The Pushshift Dataset work [2]. We acknowledge that there is not explicit consent of the users to use their data for scientific purposes. However, we considered this to be covered by Reddit’s Privacy Policy. Hence, instead of collecting and storing the metadata and data produced by users, we provide the identifiers necessary to access the data and the tools to construct the dataset."
+  },
+  {
+   "id": "b0230",
+   "t": "text",
+   "w": "li",
+   "en": "• Explicit content. Images may contain explicit content of people. The first of the community rules state 1. Post only photos you took. Do not post a photo unless you took it! […] Thus, it is assumed this rule implies that the user posting a new image is the owner of the photography and hence has the right to distribute it. The sensitive content is labeled as \"NSFW\" in the dataset."
+  },
+  {
+   "id": "b0231",
+   "t": "text",
+   "w": "li",
+   "en": "• Bias against people of a certain gender, race, sexuality, or who have other protected characteristics. This is a multi-factor issue that must be addressed from different perspectives and is beyond the scope of the first analyses presented in this paper to show the usability of this new data source. For instance, questions such as the impact of gender, race or sexuality on the perceived aesthetics of an image or how these images are critiqued are completely out of the scope of this work. However, we must note and acknowledge the work of the team of moderators of the r/photocritique community. Not only they approve each of the posts published in the community, but it is clearly stated that inappropriate or disrespectful posts are banned. As stated in the rules of the community: Lewd comments or those deemed by the moderation team to be grossly inappropriate will result in a permanent ban. You have been warned.. And as stated in the critiques guidelines: We do not allow […] inappropriate/sexist/racist comments.."
+  },
+  {
+   "id": "b0232",
+   "t": "text",
+   "w": "li",
+   "en": "• Filtering of offensive content. Due to the scale of the dataset, it has not been feasible to double check every post complies with the community rules. However, we have included a preliminary analysis of the presence of offensive content in the dataset (See Appendix A.5), in which we found that the predicted offensive content in the comments of the dataset is under 4%."
+  },
+  {
+   "id": "b0233",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix E License"
+  },
+  {
+   "id": "b0234",
+   "t": "text",
+   "w": "p",
+   "en": "We comply with Reddit User Agreement1919 19 https://www.redditinc.com/policies/user-agreement/, Reddit API terms of use 2020 20 https://docs.google.com/a/reddit.com/forms/d/e/1FAIpQLSezNdDNK1-P8mspSbmtC2r86Ee9ZRbC66u929cG2GX0T9UMyw/viewform and PushShift database Creative Commons License 2121 21 https://zenodo.org/record/3608135#.Yp3XEXZBw2w. In particular, we refer to the Section 2.d of Reddit API Terms of Use, which states: \"User Content. Reddit user photos, text and videos (\"User Content\") are owned by the users and not by Reddit. Subject to the terms and conditions of these Terms, Reddit grants You a non-exclusive, non-transferable, non-sublicensable, and revocable license to copy and display the User Content using the Reddit API through your application, website, or service to end users. You may not modify the User Content except to format it for such display. You will comply with any requirements or restrictions imposed on usage of User Content by their respective owners, which may include \"all rights reserved\" notices, Creative Commons licenses or other terms and conditions that may be agreed upon between you and the owners.\" We do not provide access to any data directly, but a list of IDs associated with a post on Reddit. This information is then used to retrieve the images, comments and metadata using the provided tools after obtaining a license key for the official Reddit API. Moreover, we do not modify the original content by no means, while we provide the necessary tools to process the data and run the same experiments we carried out."
+  },
+  {
+   "id": "b0235",
+   "t": "text",
+   "w": "p",
+   "en": "We release the dataset under the Creative Commons Attribution 4.0 International license."
+  },
+  {
+   "id": "b0236",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix F Datasheet for RPCD"
+  },
+  {
+   "id": "b0237",
+   "t": "text",
+   "w": "p",
+   "en": "In this section we detail the datasheet presented in [9] for documenting the proposed dataset. Note that, while we do not provide any data other that the IDs associated to Reddit posts, we answer the questionnaire considering the constructed dataset resulted from using our code."
+  },
+  {
+   "id": "b0238",
+   "t": "text",
+   "w": "h3",
+   "en": "F.1 Motivation"
+  },
+  {
+   "id": "b0239",
+   "t": "text",
+   "w": "li",
+   "en": "• For what purpose was the dataset created? RPCD was created to drive the research progress in both image aesthetic assessment and aesthetic image captioning. The proposed dataset addresses the need for images acquired with modern acquisition devices and photo critiques that give a better understanding of how the aesthetic evaluation is carried out."
+  },
+  {
+   "id": "b0240",
+   "t": "text",
+   "w": "li",
+   "en": "• Who created this dataset (e.g., which team, research group) and on behalf of which entity (e.g., company, institution, organization)? This dataset was created by the authors on behalf of their respective institutions, ETH Media Technology Center and University of Milano-Biococca."
+  },
+  {
+   "id": "b0241",
+   "t": "text",
+   "w": "li",
+   "en": "• Who funded the creation of the dataset? The creation of this dataset was carried out as part of the Aesthetic Assessment of Image and Video Content project2222 22 https://mtc.ethz.ch/research/image-video-processing/aesthetics-assessment.html. The project is supported by Ringier, TX Group, NZZ, SRG, VSM, viscom, and the ETH Zurich Foundation on the ETH MTC side."
+  },
+  {
+   "id": "b0242",
+   "t": "text",
+   "w": "h3",
+   "en": "F.2 Composition"
+  },
+  {
+   "id": "b0243",
+   "t": "text",
+   "w": "li",
+   "en": "• What do the instances that comprise the dataset represent (e.g., documents, photos, people, countries)? Each instance is represented as a tuple containing one image and several photo critiques, where the images are JPEG files and the photo critiques are in textual form."
+  },
+  {
+   "id": "b0244",
+   "t": "text",
+   "w": "li",
+   "en": "• How many instances are there in total (of each type, if appropriate)? RPCD consists of 73,965 data instances. Specifically, there are 73,965 images and 219,790 photo critiques."
+  },
+  {
+   "id": "b0245",
+   "t": "text",
+   "w": "li",
+   "en": "• Does the dataset contain all possible instances or is it a sample (not necessarily random) of instances from a larger set? The dataset contains all samples (posts) available at the moment of collection, from the origin of the forum until the moment of collection. Additionally, included posts had to meet the following criteria: – The post has at least an image which could be retrieved. – The post has at least one comment critiquing the image – The post is not a discussion thread, a type of post to encourage general discussion in the forum."
+  },
+  {
+   "id": "b0246",
+   "t": "text",
+   "w": "li",
+   "en": "• What data does each instance consist of? Each data instance consists of an image and one or more textual photo critiques."
+  },
+  {
+   "id": "b0247",
+   "t": "text",
+   "w": "li",
+   "en": "• Is there a label or target associated with each instance? If so, please provide a description. There is no label associated with each sample. However, in this work we propose a method to compute said label, which is calculated using the processing scripts."
+  },
+  {
+   "id": "b0248",
+   "t": "text",
+   "w": "li",
+   "en": "• Is any information missing from individual instances? Some of the samples in the dataset might be missing at the moment of future retrievals due to the users removing the data from Reddit."
+  },
+  {
+   "id": "b0249",
+   "t": "text",
+   "w": "li",
+   "en": "• Are relationships between individual instances made explicit (e.g., users’ movie ratings, social network links)? Every image and comment in the dataset is associated with the user who created the post. Moreover, we build the tree of comments of the different users criticizing an image. However, the data is downloaded by using only the post IDs."
+  },
+  {
+   "id": "b0250",
+   "t": "text",
+   "w": "li",
+   "en": "• Are there recommended data splits (e.g., training, development/validation, testing)? We provide the data splits we used in our experiments in the repository and they are used to retrieve the posts we used, although we encourage the use of other splits. The splits were randomly generated to divide the dataset in 70% train, 10% validation and 20% test splits."
+  },
+  {
+   "id": "b0251",
+   "t": "text",
+   "w": "li",
+   "en": "• Are there any errors, sources of noise, or redundancies in the dataset? The source of data itself could be considered a source of noise. Additionally, we have not evaluated the case in which an image is posted by an user several times in different posts, although we consider this event to be non-existent or insignificant."
+  },
+  {
+   "id": "b0252",
+   "t": "text",
+   "w": "li",
+   "en": "• Is the dataset self-contained, or does it link to or otherwise rely on external resources (e.g., websites, tweets, other datasets)? The dataset links to resources available on Reddit and Pushshift. In particular, posts and their metadata (including the URLs to images) are retrieved from Pushshift, while the comments are retrieved directly from Reddit. There is no guarantee that the dataset will remain constant, as this depends on the users exercising their rights to remove their content from the dataset sources. For this same reason, there are not any archival versions of the complete dataset available online. In order to retrieve the dataset in the future, Reddit API credentials are needed. Please, refer to the instructions about how to obtain the credentials2323 23 https://www.reddit.com/wiki/api/."
+  },
+  {
+   "id": "b0253",
+   "t": "text",
+   "w": "li",
+   "en": "• Does the dataset contain data that might be considered confidential (e.g., data that is protected by legal privilege or by doctor-patient confidentiality, data that includes the content of individuals’ non-public communications)? The dataset does not contain any confidential data as both images and comments are publicly available in Reddit."
+  },
+  {
+   "id": "b0254",
+   "t": "text",
+   "w": "li",
+   "en": "• Does the dataset contain data that, if viewed directly, might be offensive, insulting, threatening, or might otherwise cause anxiety? There are data samples depicting explicit nudity with aesthetics purposes, and we acknowledge that this may be problematic for some people. According to the subreddit rules, this content must be marked: \"Not Suitable for Work (NSFW) must be marked. […] Please keep NSFW posts respectful. Nothing that would be considered pornography.\" For this reason, the dataset processing script creates a NSFW column in the dataframe to easily filter this content."
+  },
+  {
+   "id": "b0255",
+   "t": "text",
+   "w": "li",
+   "en": "• Does the dataset relate to people? Yes, some of the images contain people or the main subject is a person."
+  },
+  {
+   "id": "b0256",
+   "t": "text",
+   "w": "li",
+   "en": "• Does the dataset identify any subpopulations (e.g., by age, gender)? No."
+  },
+  {
+   "id": "b0257",
+   "t": "text",
+   "w": "li",
+   "en": "• Is it possible to identify individuals (i.e., one or more natural persons), either directly or indirectly (i.e., in combination with other data) from the dataset? All posts and comments are linked to users, which may be identifiable depending on the data made available by the user. Additionally, posts and comments may contain information linking to other social media which could serve to identify a certain user."
+  },
+  {
+   "id": "b0258",
+   "t": "text",
+   "w": "li",
+   "en": "• Does the dataset contain data that might be considered sensitive in any way (e.g., data that reveals racial or ethnic origins, sexual orientations, religious beliefs, political opinions or union memberships, or locations; financial or health data; biometric or genetic data; forms of government identification, such as social security numbers; criminal history)? The retrieved data might contain sensitive data publicly disclosed by the users. However, we do not expect this to be common at all, and we would be surprised that some kinds of sensitive information are present in the community (financial, health, biometric, genetic or governmental data)."
+  },
+  {
+   "id": "b0259",
+   "t": "text",
+   "w": "h3",
+   "en": "F.3 Collection process"
+  },
+  {
+   "id": "b0260",
+   "t": "text",
+   "w": "li",
+   "en": "• How was the data associated with each instance acquired? The data was directly observable (posts in Reddit stored in Pushshift’s and Reddit’s servers)."
+  },
+  {
+   "id": "b0261",
+   "t": "text",
+   "w": "li",
+   "en": "• What mechanisms or procedures were used to collect the data (e.g., hardware apparatus or sensor, manual human curation, software program, software API)? Software API to access both Reddit and Pushshift."
+  },
+  {
+   "id": "b0262",
+   "t": "text",
+   "w": "li",
+   "en": "• If the dataset is a sample from a larger set, what was the sampling strategy (e.g., deterministic, probabilistic with specific sampling probabilities)? NA."
+  },
+  {
+   "id": "b0263",
+   "t": "text",
+   "w": "li",
+   "en": "• Who was involved in the data collection process (e.g., students, crowdworkers, contractors) and how were they compensated (e.g., how much were crowdworkers paid)? Nobody was involved in the data collection process since all data was already available and observable."
+  },
+  {
+   "id": "b0264",
+   "t": "text",
+   "w": "li",
+   "en": "• Over what timeframe was the data collected? Tha data was collected in February 2022, and comprises posts and comments in the span from May 2009 (first posts in the subreddit) to February 2022 (collection date)."
+  },
+  {
+   "id": "b0265",
+   "t": "text",
+   "w": "li",
+   "en": "• Were any ethical review processes conducted (e.g., by an institutional review board)? No ethical review process was conducted previous to the ethical review of this conference."
+  },
+  {
+   "id": "b0266",
+   "t": "text",
+   "w": "li",
+   "en": "• Does the dataset relate to people? Yes, but not exclusively."
+  },
+  {
+   "id": "b0267",
+   "t": "text",
+   "w": "li",
+   "en": "• Did you collect the data from the individuals in question directly, or obtain it via third parties or other sources (e.g., websites)? Third party sources (Reddit and Pushshift)."
+  },
+  {
+   "id": "b0268",
+   "t": "text",
+   "w": "li",
+   "en": "• Were the individuals in question notified about the data collection? No."
+  },
+  {
+   "id": "b0269",
+   "t": "text",
+   "w": "li",
+   "en": "• Did the individuals in question consent to the collection and use of their data? According to Reddit’s Privacy Policy2424 24 https://www.reddit.com/policies/privacy-policy, which is accepted by every user upon registration, \"Reddit also allows third parties to access public Reddit content via the Reddit API and other similar technologies.\" . Moreover, we note that no data from the users is made directly available in the dataset. It only contains the IDs of the posts and the tools to retrieve them from Reddit and Pushshift."
+  },
+  {
+   "id": "b0270",
+   "t": "text",
+   "w": "li",
+   "en": "• If consent was obtained, were the consenting individuals provided with a mechanism to revoke their consent in the future or for certain uses? Users may remove their data from Reddit and Pushshift using their respective privacy enforcing mechanisms. Thus, they would be removing their data from the dataset."
+  },
+  {
+   "id": "b0271",
+   "t": "text",
+   "w": "li",
+   "en": "• Has an analysis of the potential impact of the dataset and its use on data subjects (e.g., a data protection impact analysis) been conducted? As we note above, no data from the users is made directly available in the dataset. The dataset only contains the IDs of the posts and the tools to retrieve them from Reddit and Pushshift."
+  },
+  {
+   "id": "b0272",
+   "t": "text",
+   "w": "h3",
+   "en": "F.4 Processing/cleaning/labeling"
+  },
+  {
+   "id": "b0273",
+   "t": "text",
+   "w": "li",
+   "en": "• Was any preprocessing/cleaning/labeling of the data done (e.g., discretization or bucketing, tokenization, part-of-speech tagging, SIFT feature extraction, removal of instances, processing of missing values)? We provide scrips to automatically process the downloaded raw posts. Only first level comments are kept, posts with no comments or whose image is no longer available are filtered."
+  },
+  {
+   "id": "b0274",
+   "t": "text",
+   "w": "li",
+   "en": "• Was the \"raw\" data saved in addition to the preprocessed/cleaned/labeled data (e.g., to support unanticipated future uses)? The raw posts need to be downloaded for further processing."
+  },
+  {
+   "id": "b0275",
+   "t": "text",
+   "w": "li",
+   "en": "• Is the software used to preprocess/clean/label the instances available? Yes. The software for downloading and preparing the dataset is available on our GitHub repository 2525 25 https://github.com/mediatechnologycenter/aestheval."
+  },
+  {
+   "id": "b0276",
+   "t": "text",
+   "w": "h3",
+   "en": "F.5 Uses"
+  },
+  {
+   "id": "b0277",
+   "t": "text",
+   "w": "li",
+   "en": "• Has the dataset been used for any tasks already? RPCD is introduced and used in the paper Understanding Aesthetics with Language: A Photo Critique Dataset for Aesthetic Assessment."
+  },
+  {
+   "id": "b0278",
+   "t": "text",
+   "w": "li",
+   "en": "• Is there a repository that links to any or all papers or systems that use the dataset? Papers using RPCD will be listed on the PapersWithCode web page2626 26 https://paperswithcode.com/dataset/rpcd."
+  },
+  {
+   "id": "b0279",
+   "t": "text",
+   "w": "li",
+   "en": "• What (other) tasks could the dataset be used for? RPCD can be used for modelling works in the areas of knowledge retrieval and multimodal reasoning."
+  },
+  {
+   "id": "b0280",
+   "t": "text",
+   "w": "li",
+   "en": "• Is there anything about the composition of the dataset or the way it was collected and preprocessed/cleaned/labeled that might impact future uses? No, there are no known risks to the best of our knowledge."
+  },
+  {
+   "id": "b0281",
+   "t": "text",
+   "w": "li",
+   "en": "• Are there tasks for which the dataset should not be used? RPCD should not be used for automatically judging a photographer’s skills based on the photo critiques. The latter, in fact, are to be understood as highly subjective judgments that depend on the emotions and background of the commentators and could go beyond the mere technical evaluation of the shot."
+  },
+  {
+   "id": "b0282",
+   "t": "text",
+   "w": "h3",
+   "en": "F.6 Distribution"
+  },
+  {
+   "id": "b0283",
+   "t": "text",
+   "w": "li",
+   "en": "• Will the dataset be distributed to third parties outside of the entity (e.g., company, institution, organization) on behalf of which the dataset was created? Yes, the dataset is made publicly accessible."
+  },
+  {
+   "id": "b0284",
+   "t": "text",
+   "w": "li",
+   "en": "• How will the dataset will be distributed (e.g., tarball on website, API, GitHub)? See our GitHub repository 25 for downloading instructions. RPCD has the following DOI: 10.5281/zenodo.6985507."
+  },
+  {
+   "id": "b0285",
+   "t": "text",
+   "w": "li",
+   "en": "• When will the dataset be distributed? RPCD will be released to the public in August 2022."
+  },
+  {
+   "id": "b0286",
+   "t": "text",
+   "w": "li",
+   "en": "• Will the dataset be distributed under a copyright or other intellectual property (IP) license, and/or under applicable terms of use (ToU)? We release the dataset under the Creative Commons Attribution 4.0 International license2727 27 https://creativecommons.org/licenses/by/4.0/."
+  },
+  {
+   "id": "b0287",
+   "t": "text",
+   "w": "li",
+   "en": "• Have any third parties imposed IP-based or other restrictions on the data associated with the instances? No."
+  },
+  {
+   "id": "b0288",
+   "t": "text",
+   "w": "li",
+   "en": "• Do any export controls or other regulatory restrictions apply to the dataset or to individual instances? No."
+  },
+  {
+   "id": "b0289",
+   "t": "text",
+   "w": "h3",
+   "en": "F.7 Maintenance"
+  },
+  {
+   "id": "b0290",
+   "t": "text",
+   "w": "li",
+   "en": "• Who is supporting/hosting/maintaining the dataset? RPCD is supported and maintained by ETH MTC and University of Milano-Bicocca. The post IDs are available on Zenodo, the posts are on Reddit and Pushshift, and the code for automatically retrieving the posts is on GitHub."
+  },
+  {
+   "id": "b0291",
+   "t": "text",
+   "w": "li",
+   "en": "• How can the owner/curator/manager of the dataset be contacted (e.g., email address)? By emailing to {daniel.veranieto,clabrador}@inf.ethz.ch or luigi.celona@unimib.it. By opening an issue on our GitHub repository 25."
+  },
+  {
+   "id": "b0292",
+   "t": "text",
+   "w": "li",
+   "en": "• Is there an erratum? All changes to the dataset will be announced on our Zenodo repository 2828 28 https://doi.org/10.5281/zenodo.6985507."
+  },
+  {
+   "id": "b0293",
+   "t": "text",
+   "w": "li",
+   "en": "• Will the dataset be updated (e.g., to correct labeling errors, add new instances, delete instances’)? All updates (if necessary) will be posted on our Zenodo repository 28."
+  },
+  {
+   "id": "b0294",
+   "t": "text",
+   "w": "li",
+   "en": "• If the dataset relates to people, are there applicable limits on the retention of the data associated with the instances (e.g., were individuals in question told that their data would be retained for a fixed period of time and then deleted)? The data related to users is stored on Reddit and Pushshift servers, and their data retention policies apply."
+  },
+  {
+   "id": "b0295",
+   "t": "text",
+   "w": "li",
+   "en": "• Will older versions of the dataset continue to be supported/hosted/maintained? All changes to the dataset will be announced on our Zenodo repository 28. Outdated versions will be kept around for consistency."
+  },
+  {
+   "id": "b0296",
+   "t": "text",
+   "w": "li",
+   "en": "• If others want to extend/augment/build on/contribute to the dataset, is there a mechanism for them to do so? Any extension/augmentation by an external party is allowed under the release license. The dataset could be easily extended with other communities and other time periods using the available scripts. In order to add the extended version to the existing repositories, please contact the authors."
+  }
+ ]
+}

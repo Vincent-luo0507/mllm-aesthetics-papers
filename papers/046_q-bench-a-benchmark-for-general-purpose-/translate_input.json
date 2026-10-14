@@ -1,0 +1,1786 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Q-Bench: A Benchmark for General-Purpose Foundation Models on Low-level Vision"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "The rapid evolution of Multi-modality Large Language Models (MLLMs) has catalyzed a shift in computer vision from specialized models to general-purpose foundation models. Nevertheless, there is still "
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "table",
+   "en": ""
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "The emergent large language models (LLMs) such as ChatGPT and Bard, as well as their excellent open-source counterparts (e.g., LLaMA (Touvron et al., 2023), MPT (Team, 2023)), have served as powerful general-purpose assistants, which opens a new era for artificial intelligence (AI) from targeting specific tasks towards general intelligence. Following the advancements of LLMs, multi-modality large language models (MLLMs), as represented by LLaVA (Liu et al., 2023b), MiniGPT-4 (Zhu et al., 2023), InstructBLIP (Dai et al., 2023), and Otter (Li et al., 2023a), have brought exciting progresses on the vision field as well. They are capable of providing robust general-level abilities on visual perception/understanding and can even seamlessly dialog and interact with humans through natural language. While such abilities of MLLMs have been explored and validated on several vision-language tasks such as image captioning (Chen et al., 2015), visual question answering (Antol et al., 2015), cross-modality grounding (Peng et al., 2023), and traditional vision tasks such as image classification or segmentation (Lai et al., 2023), most attention is paid to the high-level perception and understanding of visual contents. Meanwhile, the ability of MLLMs remains not clear on low-level visual perception and understanding, which play significant roles in image quality assessment (IQA) (Hosu et al., 2020; Fang et al., 2020) and its associated tasks on perceiving visual distortions (noises, blurs) (Su et al., 2021; Wu et al., 2023d) and other low-level attributes (color, lighting, composition, style, etc) (Kong et al., 2016) that may relate to aesthetics and emotions of natural photos (Murray et al., 2012) and human preferences on emerging computer-graphics generated (Zhang et al., 2023b) or AI-generated images (Li et al., 2023c; Xu et al., 2023). These low-level visual abilities are strongly associated with a wide range of applications, such as recommendation (Wu et al., 2023c), guidance on camera systems (Zhang et al., 2022), or visual quality enhancement (Zhang et al., 2018). Henceforth, it is crucial to evaluate the current abilities of these general-purpose foundation models in low-level visual perception and understanding, to ideally relieve extensive human resources to give feedback on every specific low-level task."
+  },
+  {
+   "id": "b0006",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: In the proposed Q-Bench, we build the first benchmark on emerging abilities of MLLMs on low-level vision, including perception of low-level attributes (by correctly answering diverse queries) and description of low-level quality-related information via natural language. Furthermore, the Q-bench also evaluates the quantitative assessment ability of MLLMs on traditional IQA tasks."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "In our work, we propose the first systematic benchmark to measure the low-level visual perception and understanding abilities of MLLMs. Our benchmark is constructed around a key question:"
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "How do MLLMs emulate human ability related to low-level visual perception and understanding?"
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "A simple answer is language, which is the fundamental property of MLLMs. Specifically, we define two emerging language abilities of MLLMs on low-level vision as follows:"
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "li",
+   "en": "• Ability 1 (A1): Perception of Low-level Attributes. As shown in Fig. 1(a), like a human, an MLLM should be able to respond accurately to simple questions related to low-level attributes, e.g answering ‘No’ for a blurry image when queried with ‘Is this image clear?’"
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "li",
+   "en": "• Ability 2 (A2): Description via Natural Language. As shown in Fig. 1(b), like a human, an MLLM should be able to describe the quality and other low-level information for an image with natural language. The descriptions should be both complete and accurate."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "To systematically evaluate the low-level perception ability (A1) on various low-level attributes under diverse circumstances, we construct the LLVisionQA dataset, including 2,990 images from 10 diverse sources. Aligned with existing practices (Liu et al., 2023c; Lu et al., 2023), each image in LLVisionQA is equipped with a question, alongside a correct answer and false candidate answers. In LLVisionQA, we design three diverse types of questions: Yes-or-No questions, What questions, and How questions. Moreover, we divide low-level concerns into four quadrants, via two axes: (1) distortions (blur, noises, etc) vs other low-level attributes (color, lighting, composition, etc) (Guha et al., 2020). (2) global perception (e.g., sharpness of the whole picture) vs local content-related in-context perception (e.g., whether the red flower is in focus) (Li et al., 2019). With three types of questions and four quadrants of concerns, the proposed LLVisionQA dataset provides a holistic, diverse, and balanced benchmark for the perception ability on low-level visual attributes of MLLMs."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "For the description ability (A2), given that the output description is expected to be complex (without fixed formats), we propose the LLDescribe dataset by inviting experts to write long golden low-level descriptions (average 58 words per description) for 499 images, which serve as the reference texts for the single-modal GPT to evaluate MLLM output descriptions. The quality of MLLM descriptions is evaluated through three dimensions: completeness (punish missing information), preciseness (punish outputs controversial with reference), as well as relevance (punish outputs irrelevant to low-level attributes). With golden descriptions and the multi-dimensional evaluation process participated by GPT, we comprehensively evaluate the low-level description ability of MLLMs."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "Besides the two emerging language abilities, we also evaluate MLLMs on the traditional IQA task, a more abstract task that requires understanding on human opinions of low-level attributes, as follows:"
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "li",
+   "en": "• Ability 3 (A3): Precise Assessment Aligned with Human Opinions. As depicted in Fig. 1(c), an MLLM should be able to predict quantifiable quality scores for images, which can be aligned with the human-rated mean opinion scores (MOS) on low-level visual appearances."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "For the assessment ability (A3), we utilize plenty of existing IQA databases (Hosu et al., 2020; Lin et al., 2019; Li et al., 2023c) that focus on various low-level appearances of images, to benchmark MLLMs within conventional IQA settings. Specifically, we notice that MLLMs encounter difficulties in providing sufficiently quantifiable outputs, whether instructed to directly rate with texts or provide numerical outputs. To solve this challenge, we propose to extract the softmax pooling result on the logits of the two most frequent tokens (good and poor) under the response template of MLLMs (Fig 1(c)) as their quality predictions. Our studies prove that the proposed softmax-based strategy is generally better correlated with human perception than direct token outputs of MLLMs (via argmax), which bridges between these emergent MLLMs and the traditional IQA task settings. Under this strategy, we evaluate all MLLMs on their precise assessment ability by measuring the correlations between their predictions and human opinion scores in various IQA databases."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "In summary, we systematically explore the potential of MLLMs on three low-level visual abilities: perception, description, and assessment. The three realms compose into the proposed Q-Bench, a MLLM benchmark on low-level visual tasks. Our contributions can be summarized as three-fold:"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "li",
+   "en": "• We build a benchmark for MLLMs on low-level perception ability. To achieve this, we construct a first-of-its-kind balanced and comprehensive LLVisionQA dataset with 2,990 images with one low-level-related question-answer pair for each image. The LLVisionQA includes three question types and four quadrants of low-level concerns to ensure diversity."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "li",
+   "en": "• We define a benchmark process to evaluate the low-level description ability of MLLMs, including an LLDescription dataset of 499 images with expert-labelled long golden quality descriptions, and a GPT-assisted evaluation to rate MLLM-descriptions in terms of completeness, preciseness, and relevance compared with golden descriptions."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "li",
+   "en": "• To evaluate precise quality assessment ability, we propose a unified softmax-based quality prediction strategy for all MLLMs based on their probability outputs. With its effectiveness validated in our experiments, the proposed strategy sets up a bridge between general-purpose MLLMs and traditional IQA tasks that requires quantifiable scores as outputs."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Overview of the 10 diverse image source datasets in the Q-Bench, and the respective benchmark dataset size for each low-level ability among perception, descrption and assessment. The Corrupted COCO denotes COCO-Captions images corrupted by Michaelis et al. (2019)."
+  },
+  {
+   "id": "b0023",
+   "t": "keep",
+   "w": "table",
+   "en": "Type Image Source Dataset Sampled Size Sampled Size Full Dataset Size in LLVisionQA in LLDescribe for Assessment Task In-the-wild KONiQ-10K ( Hosu et al., 2020 ) 600 100 10,073 SPAQ ( Fang et al., 202"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Constructing the Q-Bench"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 General Principles"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h5",
+   "en": "Focusing on Low-level Visual Abilities of MLLMs."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "Unlike existing MLLM benchmarks (Li et al., 2023b; Liu et al., 2023c; Lu et al., 2023) that aim at all-round abilities, the tasks in Q-Bench are constrained with two basic principles: (1) Requiring perception and/or understanding on low-level attributes of images; (2) Not requiring reasoning (i.e. why) or outside knowledge (Marino et al., 2019). We adhere to the principles in designing the perception, description, and assessment tasks, making the proposed Q-bench a focused reflection on the low-level visual abilities of MLLMs."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "h5",
+   "en": "Covering Diverse Low-level Appearances."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "To cover diverse low-level appearances, we collect multi-sourced images for each task, as depicted in Tab. 1. Among all images in the perception and description tasks, two-thirds are in-the-wild images directly collected from social media posts, smartphones or professional photography. The rest one-third images are collected after various artificial distortions, or via generative processes (CGI, AIGC). Furthermore, we employ k-means clustering for the low-level attribute indicators to certify that the sub-sampled images retain high diversity. In the assessment task, full images of 7 IQA datasets within all three source types are evaluated through traditional IQA metrics. The diverse and multiple sources of images morph the Q-bench into a holistic and balanced benchmark to fairly evaluate low-level-related abilities."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Benchmark on Low-level Perception Ability"
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "In the first task of Q-Bench, we evaluate the low-level perception ability of MLLMs to examine whether they can answer simple natural queries related to low-level attributes. For this purpose, we first collect 2,990 images (I) from multiple sources (see Table 1) with diverse low-level concerns. Then, we collect one low-level-related question (Q), one correct answer to the question (C), and 1-3 candidate false answers (F) for each image. The 2,990 (I,Q,C,F) tuples compose into the LLVisionQA dataset (as illustrated in Fig. 2), the first visual question answering (VQA) dataset in the low-level computer vision field. Specifically, the questions in LLVisionQA cover four quadrants of distinct low-level concerns (in Sec. 2.2.1) and three question types (in Sec. 2.2.2). After constructing the dataset, the (I,Q,C,F) are together fed into MLLMs for evaluation, while their outputs are further examined by GPT to judge correctness (in Sec. 2.2.3). The details are elaborated as follows."
+  },
+  {
+   "id": "b0032",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: A dataset card of LLVisionQA that evaluates the low-level perception ability of MLLMs. 2,990 (I,Q,C,F) tuples are collected to cover three question types and four quadrants of low-level visual concerns, providing an all-around evaluation of low-level visual perception for MLLMs."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "h4",
+   "en": "2.2.1 Quadrants for Low-level Visual Concerns"
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Axis 1: Distortions vs Other Low-level Attributes. The primary axis differentiates two categories of low-level perceptual attributes: 1) technical distortions (Su et al., 2021), seen as the low-level characteristics that directly degrade the quality of images (Ying et al., 2020), and 2) aesthetic-related other low-level attributes (Kong et al., 2016; Hou et al., 2023) which are discernible to human perception and evoke varied emotions. Several studies (Talebi & Milanfar, 2018; Ying et al., 2020; Guha et al., 2020) follow this paradigm and categorize them through a relative golden standard, that whether the attributes directly improve or degrade picture quality (Yes⟦SLOT_0⟧Distortions; No⟦SLOT_1⟧Others). Despite this standard, we also enumerate common types of distortions vs other low-level attributes as extra guidance for constructing the LLVisionQA dataset, as listed in Sec. A.1.2."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "Axis 2: Global Perception vs Local In-context Perception. In recent research on low-level vision, it is observed that human perceptions of low-level visuals often intertwine with higher-level contextual comprehension (Li et al., 2019; Wang et al., 2021; Wu et al., 2023a). For instance, a clear sky might lack complex textures yet display exceptional clarity. Furthermore, localized low-level appearances can deviate from their overall counterparts, as observed by Wu et al. (2022); Ying et al. (2021). Acknowledging these differences, we curate local in-context perception (Fig. 2 right) questions, that require MLLMs to grasp the content or other context to answer correctly, while other questions are categorized as global perception (Fig. 2 left). (More analysis in Sec. A.1.2.)"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "h4",
+   "en": "2.2.2 Question Types"
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "In the LLVisionQA dataset, we curate three question types, Yes-or-No, What, and How to simulate multiple query forms from humans. The details of the three question types are defined as follows."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "Type 1: Yes-or-No Questions. The fundamental type of questions is Yes-or-No, i.e., judgments. Specifically, we notice that some MLLMs especially prefer to respond with yes rather than no. To reduce such biases in our benchmark, though designing questions with answers as yes is easier, we ensure that around 40% of all judgments are with correct answers as no, via querying on contrastive low-level attributes or non-existing low-level attributes. We further measure the bias levels of different MLLMs and present a further de-biased evaluation among them, as discussed in Sec. A.3.2."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "Type 2: What Questions. Despite Yes-or-No judgments, the what questions are also a common type of queries in recent MLLM benchmarks such as Lu et al. (2023). In Q-bench, they classify low-level attributes in pictures (e.g., What distortion occurs in the image?), or associated context given specific low-level appearances (for in-context perception questions, e.g., Which object in the image is under-exposed?). Unlike Yes-or-No questions, the What questions examine more comprehensive low-level attribute understanding of MLLMs, by requiring correct perception on multiple attributes."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "Type 3: How Questions. Despite the two common types, we also include a special type, the How questions, to cover non-extreme appearances (Wu et al., 2023d) of low-level attribute dimensions into our benchmark, as an extension to Yes-or-No questions. As shown in Fig. 2, we can query How is the clarity of the image? for the image with both clear and blurry areas, and answer with Medium. With this special question type, we broaden the Q-bench into finer-grained low-level perception."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "h4",
+   "en": "2.2.3 GPT-assisted Evaluation Process"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "After constructing the LLVisionQA dataset, we feed it to multiple MLLMs to evaluate their abilities on low-level visual perception. The input format to query MLLMs is exemplified as follows:"
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "#User: How is the clarity of the image? (Question) [IMAGE_TOKEN] (Image) Choose between one of the following options: A. High (Correct) B. Medium(Wrong) C. Low(Wrong)"
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "The correct and wrong answers are shuffled during the actual evaluation. Moreover, while traditional visual question answering (Antol et al., 2015; Marino et al., 2019) tasks typically employ traditional language metrics (BLEU-4, CIDEr) to compare performance, as observed by recent studies (Ye et al., 2023) and validated by us, most MLLMs cannot consistently provide outputs on instructed formats. Given the question above, different MLLMs may reply “A.”, “High”, “The clarity of the image is high.”, “The image is of high clarity.” (all correct), which are difficult to be exhaustively-included under traditional metrics. To solve this problem, we design, validate, and employ a 5-round GPT-assisted evaluation process inspired by Liu et al. (2023c). Under this process, the question, correct answers, and MLLM replies are fed into GPT for evaluation (See Sec. A.2.1 for its details)."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "h3",
+   "en": "2.3 Benchmark on Low-level Description Ability"
+  },
+  {
+   "id": "b0047",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: A dataset card of LLDescribe that evaluates the low-level description ability of MLLMs. 499 images from 10 diverse sources are labeled with golden descriptions, to serve as text references for single-modal GPT to evaluate the completeness, preciseness, and relevance of MLLM outputs."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "In the second task of Q-Bench, we evaluate the language description ability of MLLMs on low-level information. This task is a sibling task of image captioning (Chen et al., 2015; Young et al., 2014; Agrawal et al., 2019) that describes image content with natural language, with a specific concern on the low-level appearance of images. To evaluate this ability automatically, we first derive a golden low-level description dataset, denoted as LLDescribe (Sec. 2.3.1), including one long (average 40 words) golden description provided by experts for each of 499 images. With these golden text descriptions, we are able to measure the quality of output low-level descriptions from MLLMs with a single-modal GPT, under the three dimensions: completeness, preciseness, as well as relevance (Sec 2.3.2). The discussions of the golden descriptions and the evaluation process are as follows."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "h4",
+   "en": "2.3.1 Defining Golden Low-level Descriptions for Images"
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "For the description ability, MLLMs should accurately and completely describe low-level visual information of images. Thus, the ground truths for these MLLMs are also built within a basic principle to cover as many low-level concerns as possible, so long as they are enumerated in Sec. 2.2.1 and occur in images. The resulting golden descriptions in LLDescribe have an average duration of 58 words, notably longer than common high-level image caption datasets (11 for Agrawal et al. (2019), 10 for Chen et al. (2015)). Similar to the LLVisionQA dataset for the perception task, the 499 images in LLDescribe dataset also include all 10 sources (as in Tab. 1) to cover images with diverse low-level appearances. The golden descriptions on different sources of images are depicted in Fig. 3."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "h4",
+   "en": "2.3.2 Evaluation with Single-modal GPT"
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "Recent studies (Zheng et al., 2023) have proved single-modal GPT (OpenAI, 2023) to be a reliable evaluation tool for pure language tasks. Via the LLDescribe dataset, we convert the multi-modality problem into a text-only setting, by matching the MLLM outputs with the golden descriptions with single-modal GPT under three dimensions: (1) Completeness. More matched information with the golden description is encouraged. (2) Preciseness. The controversial information with the golden description is punished. (3) Relevance. More proportions of MLLM outputs should be related to low-level information, instead of others. Each dimension is scored among [0,1,2]. Similar as Sec. 2.2.3, we repeat 5 rounds for each single evaluation and collect the weighted average as the final score. The detailed settings for GPT to evaluate the three dimensions are in Sec. A.2.2."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "h3",
+   "en": "2.4 Benchmark on Precise Quality Assessment Ability"
+  },
+  {
+   "id": "b0055",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: The proposed softmax-based quality assessment strategy for MLLMs. Instead of directly decoding tokens from the [SCORE_TOKEN] position, the strategy extracts log probabilities (logits) of good and poor, and predicts quantifiable score via a softmax pooling between the two logits."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "In the third task, we benchmark the ability of MLLMs to provide quantitative assessment on the overall low-level appearance of images. Unlike the two tasks above, we utilize existing IQA datasets that are collected across a variety of low-level appearances to evaluate how MLLMs can predict quantitative quality scores aligned with human opinions. All the three types of IQA datasets (in-the-wild, generated, artificially-distorted) as mentioned in Sec. 2.1 are evaluated, to provide a broad range measurement of the assessment ability of MLLMs. Nevertheless, how to collect quantifiable quality scores from MLLMs remains challenging as their outputs only have weak measurability (Sec. 2.4.1). Noticing that MLLMs can provide probabilities of tokens, we employ softmax pooling on the logits of good and poor under a simple and direct prompt template, deriving into quantifiable quality score predicted by MLLMs (Sec. 2.4.2), as illustrated in Fig. 4. Details are as follows."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "h4",
+   "en": "2.4.1 Weak Measurability of MLLM Outputs"
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "In Q-Bench, we aim to fairly compare the assessment ability between different MLLMs on diverse low-level appearances. Henceforth, our principle is to define a unified, simplest instruction that is applicable for all MLLMs on all IQA datasets. Under this principle, we conduct toy experiments on LLVisionQA on Shikra and LLaVA-v1, with two simple instruction strategies: (A) Direct Instruction, in which the prompt is designed as simple as “Rate the quality of the image”. The top-frequency answers are good (78%), and poor (20%), with other outputs almost negligible. (B) Numerical Instruction, in which we specifically instruct numerical ratings, with the prompt: “Score the quality of the image from 1 to 5, with 1 as lowest and 5 as highest.”. Under the numerical strategy, the top-frequency answers are 5 (84%), 1 (9%), and 3 (5%); though within the score range, the frequencies of scores 2 and 4 are both less than 1%. The toy experiments imply the weak measurability of MLLM outputs, given that the answers are statistically 1) biased towards positive, 2) biased towards extreme, and 3) with only two effective scales. Therefore, it is necessary to explore extended strategies for MLLMs to provide truly quantifiable outputs for low-level assessment."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "h4",
+   "en": "2.4.2 A Softmax-based Evaluation Strategy"
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "p",
+   "en": "Given the above observations, we design the softmax-based evaluation strategy (Fig. 4) to reduce the negative impacts of the biases and lack of scales. To start with, we design our strategy within the Direct Instruction, which is more general and less biased than the Numerical Instruction. The strategy is based on the observation that two top-frequency outputs, good and poor, can be considered as anchors for better and worse human perception, and the Direct Strategy can be approximated into a binary classification problem on the [SCORE_TOKEN] position, or technically, an argmax between the logits of good (⟦SLOT_2⟧) and poor (⟦SLOT_3⟧) on this position. In our revised strategy, we modify the argmax into softmax to collect better quantifiable scores:"
+  },
+  {
+   "id": "b0062",
+   "t": "keep",
+   "w": "table",
+   "en": "q pred = e x SCORE_TOKEN good e x SCORE_TOKEN good + e x SCORE_TOKEN poor q_{\\mathrm{pred}}=\\frac{e^{x^{\\text{{good}}}_{\\textit{SCORE\\_TOKEN}}}}{e^{x^{\\text{{good}}}_{\\textit{SCORE\\_TOKEN}}}+e^{x^{\\te"
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "This simple and generally-applicable strategy enables us to collect quantifiable outputs (⟦SLOT_4⟧) from MLLMs with higher correlation to human ratings, as verified in our experimental analysis (Tab. 9)."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Results on Q-Bench"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "In Q-Bench, we evaluate 15 variants on 13 up-to-date popular and competitive open-source MLLMs, together with GPT-4V, under zero-shot settings. More results and analyses are appended in Sec. A.3."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Results on the test subset for the low-level Perception ability of MLLMs. MLLMs with top-3 performance in each sub-category and the overall LLVisionQA is emphasized with boldface."
+  },
+  {
+   "id": "b0067",
+   "t": "keep",
+   "w": "table",
+   "en": "Sub-categories Question Types Quadrants of Low-level Concerns Overall ↑ \\uparrow Model (variant) Yes-or-No ↑ \\uparrow What ↑ \\uparrow How ↑ \\uparrow Distortion ↑ \\uparrow Other ↑ \\uparrow In-context I"
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Results and Observations on Perception"
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "Open-Source MLLMs. For a holistic examination on the perception ability of MLLMs, we evaluate the multi-choice correctness of MLLMs on different sub-categories of the LLVision dataset, which is equally divided as dev (Tab. 7, will be released) and test (Tab. 2, will keep private) subsets. We are glad that the majority of MLLMs can significantly outperform random guess on all sub-categories. Considering that all participating MLLMs are without any explicit training on low-level visual attributes, these results show strong potentials for these general-purpose models when further fine-tuned with respective low-level datasets. Among all MLLMs, the recently-released InternLM-XComposer-VL reaches the best accuracy on this question-answering task, followed by LLaVA-v1.5, QWen-VL and InstructBLIP (Flan-T5), which show rather close results. By achieving more than 60% accuracy on both subsets, these models show exciting potentials as robust low-level visual assistants in the future. Another key observation is that almost all methods perceive worse on distortions than other low-level attributes. One exception is LLaMA-Adapter-V2, which is the only MLLM that adopts multi-scale features as visual inputs. We also notice that all MLLMs prefer yes than no among Yes-or-No questions, as analyzed in Tab. 8; qualitative comparisons are illustrated in Fig. 10. For Kosmos-2, we specially adopt close-set inference for it, as discussed in Sec. A.2.1."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "GPT-4V vs Human. To evaluate the low-level perception abilities of the commercial MLLM, GPT-4V, we gauge its accuracy against human using the test subset of LLVision dataset. GPT-4V exhibits competitive performance and outperforms open-source MLLMs by a large margin (+9%), and on par accuracy with the Junior-level Human. Despite its prowess, there is still a way to go for GPT-4V before it can match the overall proficiency of the Senior-level Human (with experiences on low-level visual tasks, 8% better than GPT-4V). Furthermore, across all categories, the results show that GPT-4V, much like its open-source counterparts, faces challenges in recognizing distortions."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Results and Observations on Description"
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "For the description ability, InternLM-XComposer-VL reaches best proficiency again, especially in terms of the relevance dimension. Nevertheless, in the perspective of the completeness and precision of the descriptions, even the best of all MLLMs cannot obtain an excellent score; on the contrary, almost all MLLMs reach an acceptable standard (0.8/2.0). In general, all MLLMs at present are only with relatively limited and primary ability to provide low-level visual descriptions. We also conduct a qualitative comparison for MLLM descriptions in Sec. A.3.3."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Results on the low-level Description ability of MLLMs. ⟦SLOT_5⟧ denotes frequency for score ⟦SLOT_6⟧."
+  },
+  {
+   "id": "b0074",
+   "t": "keep",
+   "w": "table",
+   "en": "Dimensions Completeness Precision Relevance Sum. ↑ \\uparrow Model ( variant ) P 0 P_{0} P 1 P_{1} P 2 P_{2} score ↑ \\uparrow P 0 P_{0} P 1 P_{1} P 2 P_{2} score ↑ \\uparrow P 0 P_{0} P 1 P_{1} P 2 P_{2"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Main evaluation results on the zero-shot Assessment ability of MLLMs, in comparison with NIQE and CLIP-ViT-Large-14, the visual backbone of most MLLMs. Metrics are SRCC/PLCC."
+  },
+  {
+   "id": "b0076",
+   "t": "keep",
+   "w": "table",
+   "en": "Dataset Type In-the-wild Generated Artificial Average Model / Dataset KONiQ-10k SPAQ LIVE-FB LIVE-itw CGIQA-6K AGIQA-3K KADID-10K NIQE ( Mittal et al., 2013 ) 0.316/0.377 0.693 / 0.669 0.211/0.288 0.4"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Results and Observations on Assessment"
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "To measure the assessment ability, we evaluate the performance of 15 MLLMs on 7 IQA datasets that are with at least 1,000 images and 15 human ratings per image (itu, 2000). Primarily, we notice that the majority of MLLMs are notably better than NIQE on non-natural circumstances (CGI, AIGC, artificial distortions), showing their potential towards general-purpose evaluators on a broader range of low-level appearances. We also notice that without explicit alignment with human opinions during training, the most excellent MLLM, which is again InternLM-XComposer-VL, can already outperform CLIP-ViT-Large-14 by a large margin (20%), marking the dawn of MLLMs as robust quality evaluators. Furthermore, we also design a synonym ensemble (see Sec. A.2.3) strategy which can further generally improve IQA accuracy of MLLMs, whose results are analyzed in Sec. A.3.5. Despite their proficiency, current MLLMs are still less accurate in finer-grained situations (LIVE-FB, CGIQA-6K) for the assessment task, which could be enhanced in the future."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Conclusion"
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "p",
+   "en": "In this study, we construct the Q-Bench, a benchmark to examine the progresses of MLLMs on low-level visual abilities. Anticipating these large foundation models to be general-purpose intelligence that can ultimately relieve human efforts, we propose that MLLMs should achieve three important and distinct abilities: accurate perception on low-level visual attributes, precise and complete language description on low-level visual information, as well as quantitative assessment on image quality. To evaluate the abilities, we collect two multi-modality benchmark datasets for low-level vision, and propose a unified softmax-based quantitative IQA strategy on MLLMs. Our evaluation proves that even without any low-level-specific training, several extraordinary MLLMs still have decent low-level abilities. Nevertheless, there is still a long way to go for MLLMs to be truly-reliable general low-level visual assistants. We sincerely hope that the observations found in the Q-Bench can inspire future MLLMs to enhance the low-level perception and understanding abilities."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "h4",
+   "en": "Author Contributions"
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "We will reveal the contributions of authors in the final edition."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "h4",
+   "en": "Acknowledgments"
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "p",
+   "en": "100% of the annotated labels in the LLVisionQA and LLDescribe datasets (question-answers and long golden descriptions) are conducted by human experts. We sincerely thank their efforts."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "p",
+   "en": "We thank the anonymous reviewers on ICLR2024 Conference on providing valuable and constructive suggestions for us to improve this paper."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "itu (2000) Recommendation 500-10: Methodology for the subjective assessment of the quality of television pictures. ITU-R Rec. BT.500, 2000."
+  },
+  {
+   "id": "b0088",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Agrawal et al. (2019) Harsh Agrawal, Karan Desai, Yufei Wang, Xinlei Chen, Rishabh Jain, Mark Johnson, Dhruv Batra, Devi Parikh, Stefan Lee, and Peter Anderson. nocaps: novel object captioning at scal"
+  },
+  {
+   "id": "b0089",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Antol et al. (2015) Stanislaw Antol, Aishwarya Agrawal, Jiasen Lu, Margaret Mitchell, Dhruv Batra, C. Lawrence Zitnick, and Devi Parikh. VQA: Visual Question Answering. In ICCV , 2015."
+  },
+  {
+   "id": "b0090",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al. (2023) Jinze Bai, Shuai Bai, Shusheng Yang, Shijie Wang, Sinan Tan, Peng Wang, Junyang Lin, Chang Zhou, and Jingren Zhou. Qwen-vl: A versatile vision-language model for understanding, local"
+  },
+  {
+   "id": "b0091",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2023) Keqin Chen, Zhao Zhang, Weili Zeng, Richong Zhang, Feng Zhu, and Rui Zhao. Shikra: Unleashing multimodal llm’s referential dialogue magic. arXiv preprint arXiv:2306.15195 , 2023."
+  },
+  {
+   "id": "b0092",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2015) Xinlei Chen, Hao Fang, Tsung-Yi Lin, Ramakrishna Vedantam, Saurabh Gupta, Piotr Dollar, and C. Lawrence Zitnick. Microsoft coco captions: Data collection and evaluation server, 2015"
+  },
+  {
+   "id": "b0093",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dai et al. (2023) Wenliang Dai, Junnan Li, Dongxu Li, Anthony Meng Huat Tiong, Junqi Zhao, Weisheng Wang, Boyang Li, Pascale Fung, and Steven Hoi. Instructblip: Towards general-purpose vision-language"
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Du et al. (2022) Zhengxiao Du, Yujie Qian, Xiao Liu, Ming Ding, Jiezhong Qiu, Zhilin Yang, and Jie Tang. Glm: General language model pretraining with autoregressive blank infilling. In Proceedings of "
+  },
+  {
+   "id": "b0095",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fang et al. (2020) Yuming Fang, Hanwei Zhu, Yan Zeng, Kede Ma, and Zhou Wang. Perceptual quality assessment of smartphone photography. In CVPR , 2020."
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gao et al. (2023) Peng Gao, Jiaming Han, Renrui Zhang, Ziyi Lin, Shijie Geng, Aojun Zhou, Wei Zhang, Pan Lu, Conghui He, Xiangyu Yue, Hongsheng Li, and Yu Qiao. Llama-adapter v2: Parameter-efficient v"
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ghadiyaram & Bovik (2016) Deepti Ghadiyaram and Alan C. Bovik. Massive online crowdsourced study of subjective and objective picture quality. IEEE , 25(1):372–387, 2016."
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Guha et al. (2020) Tanaya Guha, Vlad Hosu, Dietmar Saupe, Bastian Goldlücke, Naveen Kumar, Weisi Lin, Victor Martinez, Krishna Somandepalli, Shrikanth Narayanan, Wen-Huang Cheng, Kree McLaughlin, Hart"
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hosu et al. (2020) Vlad Hosu, Hanhe Lin, Tamas Sziranyi, and Dietmar Saupe. Koniq-10k: An ecologically valid database for deep learning of blind image quality assessment. IEEE TIP , 29:4041–4056, 2020"
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hou et al. (2023) Jingwen Hou, Weisi Lin, Yuming Fang, Haoning Wu, Chaofeng Chen, Liang Liao, and Weide Liu. Towards transparent deep image aesthetics assessment with tag-based content descriptors. IE"
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huggingface (2023) Huggingface. Introducing idefics: An open reproduction of state-of-the-art visual language model, 2023. URL https://huggingface.co/blog/idefics ."
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jayaraman et al. (2012) Dinesh Jayaraman, Anish Mittal, Anush K. Moorthy, and Alan C. Bovik. Objective quality assessment of multiply distorted images. In ASILOMAR , pp. 1693–1697, 2012."
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kong et al. (2016) Shu Kong, Xiaohui Shen, Zhe Lin, Radomir Mech, and Charless Fowlkes. Photo aesthetics ranking network with attributes and content adaptation. In ECCV , 2016."
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lai et al. (2023) Xin Lai, Zhuotao Tian, Yukang Chen, Yanwei Li, Yuhui Yuan, Shu Liu, and Jiaya Jia. Lisa: Reasoning segmentation via large language model. arXiv preprint arXiv:2308.00692 , 2023."
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023a) Bo Li, Yuanhan Zhang, Liangyu Chen, Jinghao Wang, Jingkang Yang, and Ziwei Liu. Otter: A multi-modal model with in-context instruction tuning. arXiv preprint arXiv:2305.03726 , 2023a"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023b) Bohao Li, Rui Wang, Guangzhi Wang, Yuying Ge, Yixiao Ge, and Ying Shan. Seed-bench: Benchmarking multimodal llms with generative comprehension, 2023b."
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023c) Chunyi Li, Zicheng Zhang, Haoning Wu, Wei Sun, Xiongkuo Min, Xiaohong Liu, Guangtao Zhai, and Weisi Lin. Agiqa-3k: An open database for ai-generated image quality assessment, 2023c."
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2019) Dingquan Li, Tingting Jiang, Weisi Lin, and Ming Jiang. Which has better visual quality: The clear blue sky or a blurry animal? IEEE TMM , 21(5):1221–1234, 2019."
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lin et al. (2019) Hanhe Lin, Vlad Hosu, and Dietmar Saupe. Kadid-10k: A large-scale artificially distorted iqa database. In QoMEX , pp. 1–3, 2019."
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023a) Haotian Liu, Chunyuan Li, Yuheng Li, and Yong Jae Lee. Improved baselines with visual instruction tuning, 2023a."
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023b) Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. Visual instruction tuning, 2023b."
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023c) Yuan Liu, Haodong Duan, Yuanhan Zhang, Bo Li, Songyang Zhang, Wangbo Zhao, Yike Yuan, Jiaqi Wang, Conghui He, Ziwei Liu, Kai Chen, and Dahua Lin. Mmbench: Is your multi-modal model "
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lu et al. (2023) Jiaying Lu, Jinmeng Rao, Kezhen Chen, Xiaoyuan Guo, Yawen Zhang, Baochen Sun, Carl Yang, and Jie Yang. Evaluation and mitigation of agnosia in multimodal large language models, 2023."
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Marino et al. (2019) Kenneth Marino, Mohammad Rastegari, Ali Farhadi, and Roozbeh Mottaghi. Ok-vqa: A visual question answering benchmark requiring external knowledge. In Conference on Computer Vision"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Michaelis et al. (2019) Claudio Michaelis, Benjamin Mitzkus, Robert Geirhos, Evgenia Rusak, Oliver Bringmann, Alexander S. Ecker, Matthias Bethge, and Wieland Brendel. Benchmarking robustness in objec"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mittal et al. (2013) Anish Mittal, Rajiv Soundararajan, and Alan C. Bovik. Making a “completely blind” image quality analyzer. IEEE Signal Processing Letters , 20(3):209–212, 2013."
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Murray et al. (2012) Naila Murray, Luca Marchesotti, and Florent Perronnin. Ava: A large-scale database for aesthetic visual analysis. In CVPR , pp. 2408–2415, 2012."
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2023) OpenAI. Gpt-4 technical report, 2023."
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Peng et al. (2023) Zhiliang Peng, Wenhui Wang, Li Dong, Yaru Hao, Shaohan Huang, Shuming Ma, and Furu Wei. Kosmos-2: Grounding multimodal large language models to the world. ArXiv , abs/2306, 2023."
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Radford et al. (2021) Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, Gretchen Krueger, and Ilya Sut"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Su et al. (2021) Shaolin Su, Vlad Hosu, Hanhe Lin, Yanning Zhang, and Dietmar Saupe. Koniq++ : Boosting no-reference image quality assessment in the wild by jointly predicting image quality and defect"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Talebi & Milanfar (2018) Hossein Talebi and Peyman Milanfar. Nima: Neural image assessment. IEEE TIP , 2018."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Team (2023) MosaicML NLP Team. Introducing mpt-7b: A new standard for open-source, commercially usable llms, 2023. URL www.mosaicml.com/blog/mpt-7b . Accessed: 2023-05-05."
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Touvron et al. (2023) Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, Aurelien Rodriguez"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2022) Jianyi Wang, Kelvin C. K. Chan, and Chen Change Loy. Exploring clip for assessing the look and feel of images, 2022."
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2021) Yilin Wang, Junjie Ke, Hossein Talebi, Joong Gon Yim, Neil Birkbeck, Balu Adsumilli, Peyman Milanfar, and Feng Yang. Rich features for perceptual quality assessment of ugc videos. I"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2022) Haoning Wu, Chaofeng Chen, Jingwen Hou, Liang Liao, Annan Wang, Wenxiu Sun, Qiong Yan, and Weisi Lin. Fast-vqa: Efficient end-to-end video quality assessment with fragment sampling. I"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2023a) Haoning Wu, Chaofeng Chen, Liang Liao, Jingwen Hou, Wenxiu Sun, Qiong Yan, Jinwei Gu, and Weisi Lin. Neighbourhood representative sampling for efficient end-to-end video quality asse"
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2023b) Haoning Wu, Liang Liao, Chaofeng Chen, Jingwen Hou Hou, Erli Zhang, Annan Wang, Wenxiu Sun, Qiong Yan, and Weisi Lin. Exploring opinion-unaware video quality assessment with semantic"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2023c) Haoning Wu, Erli Zhang, Liang Liao, Chaofeng Chen, Jingwen Hou, Annan Wang, Wenxiu Sun, Qiong Yan, and Weisi Lin. Exploring video quality assessment on user generated contents from a"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2023d) Haoning Wu, Erli Zhang, Liang Liao, Chaofeng Chen, Jingwen Hou, Annan Wang, Wenxiu Sun, Qiong Yan, and Weisi Lin. Towards explainable video quality assessment: A database and a langu"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xu et al. (2023) Jiazheng Xu, Xiao Liu, Yuchen Wu, Yuxuan Tong, Qinkai Li, Ming Ding, Jie Tang, and Yuxiao Dong. Imagereward: Learning and evaluating human preferences for text-to-image generation, 20"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ye et al. (2023) Qinghao Ye, Haiyang Xu, Guohai Xu, Jiabo Ye, Ming Yan, Yiyang Zhou, Junyang Wang, Anwen Hu, Pengcheng Shi, Yaya Shi, Chaoya Jiang, Chenliang Li, Yuanhong Xu, Hehong Chen, Junfeng Tian"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ying et al. (2020) Zhenqiang Ying, Haoran Niu, Praful Gupta, Dhruv Mahajan, Deepti Ghadiyaram, and Alan Bovik. From patches to pictures (paq-2-piq): Mapping the perceptual space of picture quality. In"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ying et al. (2021) Zhenqiang Ying, Maniratnam Mandal, Deepti Ghadiyaram, and Alan Bovik. Patch-vq: ’patching up’ the video quality problem. In CVPR , 2021."
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Young et al. (2014) Peter Young, Alice Lai, Micah Hodosh, and Julia Hockenmaier. From image descriptions to visual denotations: New similarity metrics for semantic inference over event descriptions. T"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2022) Cheng Zhang, Shaolin Su, Yu Zhu, Qingsen Yan, Jinqiu Sun, and Yanning Zhang. Exploring and evaluating image restoration potential in dynamic scenes. In CVPR , pp. 2057–2066, 2022."
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2023a) Pan Zhang, Xiaoyi Dong, Bin Wang, Yuhang Cao, Chao Xu, Linke Ouyang, Zhiyuan Zhao, Shuangrui Ding, Songyang Zhang, Haodong Duan, Wenwei Zhang, Hang Yan, Xinyue Zhang, Wei Li, Jing"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2018) Richard Zhang, Phillip Isola, Alexei A. Efros, Eli Shechtman, and Oliver Wang. The unreasonable effectiveness of deep features as a perceptual metric. In CVPR , pp. 586–595, 2018."
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2023b) Zicheng Zhang, Wei Sun, Tao Wang, Wei Lu, Quan Zhou, Qiyuan Wang, Xiongkuo Min, Guangtao Zhai, et al. Subjective and objective quality assessment for in-the-wild computer graphics"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2023c) Zicheng Zhang, Wei Sun, Yingjie Zhou, Haoning Wu, Chunyi Li, Xiongkuo Min, and Xiaohong Liu. Advancing zero-shot digital human quality assessment through text-prompted evaluation,"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zheng et al. (2023) Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric. P Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica. "
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2023) Deyao Zhu, Jun Chen, Xiaoqian Shen, Xiang Li, and Mohamed Elhoseiny. Minigpt-4: Enhancing vision-language understanding with advanced large language models. arXiv preprint arXiv:2304"
+  },
+  {
+   "id": "b0144",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Appendix"
+  },
+  {
+   "id": "b0145",
+   "t": "text",
+   "w": "h3",
+   "en": "A.1 More Information on Benchmark Datasets"
+  },
+  {
+   "id": "b0146",
+   "t": "text",
+   "w": "h4",
+   "en": "A.1.1 Subjective Experiment"
+  },
+  {
+   "id": "b0147",
+   "t": "text",
+   "w": "p",
+   "en": "A total of eleven experts, each with professional skills and extensive experience in photography, are invited to participate in the subjective labeling experiment of Q-Bench. The subjective experiment takes place in a laboratory environment with standard indoor lighting. A Dell-4K monitor, which supports a resolution of ⟦SLOT_7⟧, is used for displaying the interfaces. The screenshots of interfaces can be referred to in Fig. 5. Each expert annotates up to 30 images a day to avoid fatigue, and every annotation is carefully reviewed by at least three other experts before acceptance. In this way, we ensure the accuracy and rigor of the Q-Bench labels to the greatest extent possible. This, in turn, makes the performance testing capability of Q-Bench more precise and meaningful."
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0149",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a) Interface for the LLVisionQA dataset (Perception)"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0151",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(b) Interface for the LLDescribe dataset (Description)"
+  },
+  {
+   "id": "b0152",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: The illustration of the annotation interfaces for the LLVisionQA dataset (questions, answers) on Peception ability, and the LLDescribe dataset (text description) on Description ability."
+  },
+  {
+   "id": "b0153",
+   "t": "text",
+   "w": "h4",
+   "en": "A.1.2 More Details on LLVisionQA"
+  },
+  {
+   "id": "b0154",
+   "t": "text",
+   "w": "p",
+   "en": "The Enumeration on Distortions and Other Low-level Attributes:"
+  },
+  {
+   "id": "b0155",
+   "t": "text",
+   "w": "p",
+   "en": "Distortions: Blurs [lens blur (out-of-focus), motion blur, zoom blur, gaussian blur, glass blur], Noises [gaussian noise, speckle noise, pepper noise], Artifacts [compression artifact, transmission error], Exposure Issues [under-exposure, over-exposure], Miscellaneous Artificial Distortions [pixelate, color-diffusion, jitter, etc] Other low-level attributes: Color [color style, color vividity], Lighting [bright, dim], Composition [Symmetrical, Rule-of-Thirds], Visual Styles [animation, realism, computer-generated, AI-generated], Photographic Methods [background bokeh (shallow DOF), high contrast, motion blur (on fast-moving objects), etc]"
+  },
+  {
+   "id": "b0156",
+   "t": "text",
+   "w": "p",
+   "en": "Relationship between In-context Questions and Global Questions:"
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "p",
+   "en": "Distortions: Is this image blurred? ⟦SLOT_8⟧ In-context Distortions: Is the tree in the image blurred? Distortions: How is the clarity of the image? ⟦SLOT_9⟧ In-context Distortions: How is the clarity of the man’s face?"
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "p",
+   "en": "Other low-level: Is this image colorful? ⟦SLOT_10⟧ In-context Other: Is the house colorful? Other low-level: How is brightness of the image? ⟦SLOT_11⟧ In-context Other: Which is the darkest object?"
+  },
+  {
+   "id": "b0159",
+   "t": "text",
+   "w": "h3",
+   "en": "A.2 Details on Benchmark Evaluation Settings"
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "h4",
+   "en": "A.2.1 Evaluation Details for Perception Ability"
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "p",
+   "en": "[Special Note] Multi-choice Question vs Close-Set Inference for Kosmos-2:"
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "p",
+   "en": "While Kosmos-2 performs generally well on the description and assessment tasks, we notice that it is hardly capable of answering a multi-choice question with the general prompt form applicable for other methods, as follows:"
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "p",
+   "en": "How is the clarity of the image? (Question) [IMAGE_TOKEN] (Image) Choose between one of the following options: A. High (Correct) B. Medium(Wrong) C. Low(Wrong)"
+  },
+  {
+   "id": "b0164",
+   "t": "text",
+   "w": "p",
+   "en": "For most situations (86%) in our primary sample test with the prompts above, Kosmos-2 will directly append a new candidate (e.g., D. Excellent or D. Very Low) answer instead of choosing one option among them, denoted as prompt failure. This might be because the language model of Kosmos-2 has smaller capacity (1B) than other MLLMs that are based on LLaMA/MPT (7B/13B)."
+  },
+  {
+   "id": "b0165",
+   "t": "text",
+   "w": "p",
+   "en": "Considering that the prompt failure is actually not directly related with low-level perception, we try different prompt engineering techniques to reduce the prompt failure rate, and finalize with a simple modification which can limit the prompt failure to less than 10% in our sample set, as follows:"
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "p",
+   "en": "How is the clarity of the image? (Question) [IMAGE_TOKEN] (Image) Choose between one of the following options: A. High (Correct) B. Medium(Wrong) C. Low(Wrong) #Answer:"
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "p",
+   "en": "Nevertheless, we are still not able to eliminate the prompt failures for Kosmos-2. Henceforth, to systematically remove the negative effect of prompt failures on multi-choice questions for Kosmos-2, we conduct a choice-free special setting for it, i.e. close-set inference, via ranking the perplexity of different answers and choose the answer with minimum generative loss:"
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "p",
+   "en": "How is the clarity of the image? [IMAGE_TOKEN] #Answer: High ⟦SLOT_12⟧ loss:7.43 ⟦SLOT_13⟧ ✓ Choose this. How is the clarity of the image? [IMAGE_TOKEN] #Answer: Medium ⟦SLOT_14⟧ loss:7.56 ⟦SLOT_15⟧ ✗ How is the clarity of the image? [IMAGE_TOKEN] #Answer: Low ⟦SLOT_16⟧ loss:7.92 ⟦SLOT_17⟧ ✗"
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Tab. 5, perplexity-based close-set inference can notably improve results of Kosmos-2. Considering that it is still the MLLM with fewest parameters among the ten models, its results are decent at its model size. More importantly, they validate that our observation on the prompt failure is reasonable, and we will further delve deeper into this problem of MLLMs in our extended works."
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Perplexity-based close-set evaluation compared with normal evaluation on LLVisionQA; after eliminating the prompt failures, the results of Kosmos-2 significantly improved."
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "table",
+   "en": "Sub-categories Question Types Quadrants of Low-level Concerns Overall ↑ \\uparrow # ↓ \\downarrow Model (variant) Yes-or-No ↑ \\uparrow What ↑ \\uparrow How ↑ \\uparrow Distortion ↑ \\uparrow Other ↑ \\uparr"
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "p",
+   "en": "Settings for GPT Evaluation:"
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "p",
+   "en": "Given GPT’s inherent variability, identical prompts can yield non-definitive responses. To address the impact of such situations on our evaluation, we’ve implemented a 5-round voting strategy. Under this approach, we pose the same prompt as defined in the following templates five times, taking the popular votes of GPT’s answers to determine the final outcome. Our human analysis on a sample set confirms that the 5-round voting strategy improves GPT evaluation accuracy from 93.2% to 98.4%, reducing errors to only 1/4 compared with the single-round evaluation."
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "p",
+   "en": "Prompt Templates for GPT Evaluation:"
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "p",
+   "en": "#System: You are a helpful assistant that grades answers related to image quality and aesthetics. There are a lot of special terms or keywords related to image processing and photography. You will pay attention to the context of ’quality evaluation’ when grading."
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "p",
+   "en": "#User: Assuming you are a grader, you will now be provided with a question [question] and a set of options [options] with option [options[0]] being the correct answer. Additionally, there will be an answer [answer] provided by a respondent. Please determine whether the respondentś answer is correct considering the context of the question. Even if the word choice is not completely the same, you can decide based on the given options and see whether the one in the answer is close enough to the given correct answer, The result is 1 if the answer is correct and else the result is 0. Please only provide the result in the following format: Result:"
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "p",
+   "en": "Examples for GPT Evaluation:"
+  },
+  {
+   "id": "b0178",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Image of example (1)."
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Image of example (2)."
+  },
+  {
+   "id": "b0182",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8: Image of example (3)."
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "p",
+   "en": "(1) “Rephrased” Answers. (Fig. 8)"
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "p",
+   "en": "Question: Which is the brightest part in this image?"
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "p",
+   "en": "Choices: [‘Capital letters E and S’, ‘ST’, ‘18’, ‘56’]"
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "p",
+   "en": "MLLM Answer:"
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "p",
+   "en": "The brightest part in this image is the neon sign with the letters “E” and “S” in capital letters."
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "p",
+   "en": "5-Round GPT Answers: [“Score: 1”,“Score: 1”,“Score: 1”,“Score: 1”,“Score: 1”] ⟦SLOT_18⟧ Final Correctness after Voting: ✓"
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "p",
+   "en": "(2) “Distracted” Answers. (Fig. 8)"
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "p",
+   "en": "Question: How’s the level of blur in the image?"
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "p",
+   "en": "Choices: [‘Some blur’, ‘Not blurry at all’, ‘Very blurry’]"
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "p",
+   "en": "MLLM Answer:"
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "p",
+   "en": "The image has some blur, but it is not very blurry."
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "p",
+   "en": "5-Round GPT Answers: [“Score: 1”,“Score: 1”,“Score: 1”,“Score: 1”,“Score: 1”] ⟦SLOT_19⟧ Final Correctness after Voting: ✓"
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "p",
+   "en": "(3) “Both” Answers. (Fig. 8)"
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "p",
+   "en": "Question: Is the little boy emphasized in the center of the composition of the image?"
+  },
+  {
+   "id": "b0198",
+   "t": "text",
+   "w": "p",
+   "en": "Choices: [‘No’, ‘Yes’]"
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "p",
+   "en": "MLLM Answer:"
+  },
+  {
+   "id": "b0200",
+   "t": "text",
+   "w": "p",
+   "en": "A. No, the little boy is not emphasized in the center of the composition of the image. B. Yes,"
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "p",
+   "en": "5-Round GPT Answers: [“Score: 1”,“Score: 0”,“Score: 0”,“Score: 1”,“Score: 0”] ⟦SLOT_20⟧ Final Correctness after Voting: ✗"
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "h4",
+   "en": "A.2.2 Evaluation Details for Description Ability"
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "p",
+   "en": "General Description Prompt for MLLMs:"
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "p",
+   "en": "#User: Describe the quality, aesthetics and other low-level appearance of the image in details."
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "p",
+   "en": "Settings for GPT Evaluation:"
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "p",
+   "en": "Given GPT’s inherent variability, identical prompts can yield non-definitive responses. To address the impact of such situations on our evaluation, we’ve implemented a 5-round average pooling strategy. Under this approach, we pose the same prompt as defined in the following templates five times, taking the mean result of GPT’s answers to determine the final outcome. This method effectively mitigates the unpredictability associated with GPT, ensuring a more accurate score."
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "p",
+   "en": "Prompt Templates for GPT Evaluation:"
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "p",
+   "en": "#System: You are a helpful assistant."
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "Completeness. #User: Evaluate whether the description [MLLM_DESC] completely includes the low-level visual information in the reference description [GOLDEN_DESC]. Please rate score 2 for completely or almost completely including reference information, 0 for not including at all, 1 for including part of the information or similar description. Please only provide the result in the following format: Score: Preciseness. #The precision metric punishes controversial low-level descriptions that output description contrasts with the referencce, e.g., blur for clear, high quality for low quality, colorful for monotonous, noisy for clean, bright for dark. Evaluate whether output [b] precisely reflects reference [a]. Please rate score 2 for totally no controversial low-level description, 1 for less controversial low-level description than matched descrpition, and 0 for more controversial low-level description than matched description. Please only provide the result in the following format: Score: Relevance. #User: Evaluate whether the description [MLLM_DESC] is relevant to the low-level visual information, which may include blur, noise, exposure, artifact, color, lighting, focus, composition, etc. Please rate score 2 for completely relevant, 1 for partly relevant, and 0 for totally irrelevant. Please only provide the result in the following format: Score:"
+  },
+  {
+   "id": "b0210",
+   "t": "text",
+   "w": "p",
+   "en": "In the prompt template, the [MLLM_DESC] denotes the output description from MLLMs, and [GOLDEN_DESC] denotes the golden description in the LLDescribe dataset."
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "p",
+   "en": "Examples for GPT Evaluation:"
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "p",
+   "en": "(A) Completeness."
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "p",
+   "en": "User Input: #User: Evaluate whether the description [ The image is a large, clear, and detailed picture of a white airplane flying in the sky. The airplane appears to be a JAL (Japan Airlines) passenger jet, and it is flying at a relatively low altitude. The plane’s white color and its distinctive red logo are clearly visible, making it easily discernable as a JAL aircraft. Overall, the image captures a clear, beautiful scene of the airplane in flight, with a blue sky as the backdrop.] completely includes the low-level visual information in the reference description [This image has poor lighting. The blue sky has vivid colors, but the overall tone is dark. The focus is on the main subject, the aircraft. Apart from the backlighting on the wings, the details of the aircraft are clear. The composition is slightly incomplete, and the clarity of the background sky is average. Overall, the image quality is good.]. Please rate score 2 for completely or almost completely including reference information, 0 for not including at all, 1 for including part of the information or similar description. Please only provide the result in the following format: Score:"
+  },
+  {
+   "id": "b0214",
+   "t": "text",
+   "w": "p",
+   "en": "5-Round GPT Answers: [“Score: 1”,“Score: 1”,“Score: 1”,“Score: 1”,“Score: 1”] ⟦SLOT_21⟧ Final Score: 1.0"
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "p",
+   "en": "(B) Preciseness."
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "p",
+   "en": "User Input: #User: The precision metric punishes controversial low-level descriptions that output description outputs contrast with the referencce, e.g., blur for clear, high quality for low quality, colorful for monotonous, noisy for clean, bright for dark. Evaluate whether output [The image quality is good, with a clear and well-exposed scene. The lighting appears to be natural, as the sun is shining on the scene, which adds a warm and inviting atmosphere to the image. The composition is well-balanced, with the focus on the trees and the pathway, which creates a sense of depth and perspective. The aesthetics of the image are pleasing, with the use of natural light and the greenery of the trees contributing to a visually appealing scene. The overall feeling of the image is peaceful and serene, as the viewer is invited to walk down the pathway surrounded by the trees and the cityscape in the background.] precisely reflect reference [The overall clarity of this image is very low, with serious focusing issues and significant noise. The lighting is adequate, but the colors are monotone. The main subjects are trees and distant buildings, which are extremely blurry and lack any texture details. The composition is unbalanced, and the background is very blurry. Therefore, the quality of this image is very poor.], Please rate score 2 for no controversial low-level description, 1 for less controversial low-level description than matched descrpition, and 0 for more controversial low-level description than matched description. Please only provide the result in the following format: Score:"
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "p",
+   "en": "5-Round GPT Answers: [“Score: 0”,“Score: 0”,“Score: 0”,“Score: 0”,“Score: 0”] ⟦SLOT_22⟧ Final Score: 0.0"
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "p",
+   "en": "(C) Relevance."
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "p",
+   "en": "User Input: #User: Evaluate whether the description [ The image is a low-level shot of a white dog walking through a dark forest. The dog appears to be somewhat blurry, suggesting a level of motion in the picture. The photo is not very detailed, and the colors in the image might be somewhat muted due to the darkness of the forest. Overall, the picture has a somewhat mysterious and moody atmosphere.] is relevant to the low-level visual information, which may include blur, noise, exposure, artifact, color, lighting, focus, composition, etc. Please rate score 2 for completely relevant, 1 for partly relevant, and 0 for totally irrelevant. Please only provide the result in the following format: Score:"
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "p",
+   "en": "5-Round GPT Answers: [“Score: 2”,“Score: 1”,“Score: 1”,“Score: 2”,“Score: 1”] ⟦SLOT_23⟧ Final Score: 1.4"
+  },
+  {
+   "id": "b0221",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Algorithm 1 Pytorch-style Pseudo Code for Softmax-based Strategy for IQA with MLLMs"
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "h4",
+   "en": "A.2.3 Evaluation Details for Assessment Ability"
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "p",
+   "en": "Example Pseudo Code for MLLMs on IQA:"
+  },
+  {
+   "id": "b0224",
+   "t": "text",
+   "w": "p",
+   "en": "In Algo. 1, we provide an example on how to evaluate image quality with MLLMs. The algorithm is simple with only 9 lines, and could be easily integrated with any new MLLMs (based on causal LLMs), so as to allow these models to quantitatively predict the quality of images."
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "p",
+   "en": "IQA Evaluation Strategy for CLIP-ViT-Large-14:"
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "p",
+   "en": "In Tab. 4, we compare the IQA performance of MLLMs with CLIP-ViT-Large-14, the visual backbone of the majority of MLLMs. Attempting to understand whether the new language part (LLM) can do better than the original language part of CLIP, we try to compare between CLIP and MLLMs in a relatively aligned setting. Firstly, noticing that most MLLMs will resize images into ⟦SLOT_24⟧ as their input sizes, we align this setting on CLIP, and ignore the strategies as proposed by (Wang et al., 2022). Secondly, same as the strategy on MLLMs, we also apply softmax pooling between good and poor, as in the CLIP’s zero-shot classification format: a photo of good quality and a photo of poor quality. Besides the two alignments, similar as existing practices (Wang et al., 2022; Wu et al., 2023b; Zhang et al., 2023c), the quality scores of CLIP-ViT-Large-14 are obtained as follows:"
+  },
+  {
+   "id": "b0227",
+   "t": "keep",
+   "w": "table",
+   "en": "q pred , CLIP = e CosineSimilarity ⁡ ( f [ IMAGE ] , f a photo of good quality ) e CosineSimilarity ⁡ ( f [ IMAGE ] , f a photo of good quality ) + e CosineSimilarity ⁡ ( f [ IMAGE ] , f a photo of po"
+  },
+  {
+   "id": "b0228",
+   "t": "text",
+   "w": "p",
+   "en": "Special IQA Settings for Flan-T5-based InstructBLIP:"
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "p",
+   "en": "For InstructBLIP (Dai et al., 2023) (Flan-T5-XL), different from the majority of LLaMA-based (or MPT-based Otter-v1) MLLMs, the two top-frequency tokens are high (89%) and low (8%) instead of the common good⟦SLOT_25⟧poor. Henceforth, based on our motivation to only modify the argmax into softmax and follow the default top-frequency output tokens of MLLMs, we replace the probabilities of good⟦SLOT_26⟧poor into those of high⟦SLOT_27⟧low in Eq. 1 for T5, defined as follows:"
+  },
+  {
+   "id": "b0230",
+   "t": "keep",
+   "w": "table",
+   "en": "q pred , T5 = e x SCORE_TOKEN high e x SCORE_TOKEN high + e x SCORE_TOKEN low q_{\\mathrm{pred,T5}}=\\frac{e^{x^{\\text{{high}}}_{\\textit{SCORE\\_TOKEN}}}}{e^{x^{\\text{{high}}}_{\\textit{SCORE\\_TOKEN}}}+e^"
+  },
+  {
+   "id": "b0231",
+   "t": "text",
+   "w": "p",
+   "en": "As validated in our experiments (Tab. 10, the high⟦SLOT_28⟧low pair generally predicts better than good⟦SLOT_29⟧poor on majority of databases. The better performance on MLLM-specific top-frequency tokens by side validates the effectiveness of our methodology for MLLMs on IQA."
+  },
+  {
+   "id": "b0232",
+   "t": "text",
+   "w": "p",
+   "en": "Further Improving IQA Abilities of MLLMs with Synonym Ensemble:"
+  },
+  {
+   "id": "b0233",
+   "t": "text",
+   "w": "p",
+   "en": "The quality assessment scores for the synonym ensemble strategy can be derived as:"
+  },
+  {
+   "id": "b0234",
+   "t": "keep",
+   "w": "table",
+   "en": "q pred = e ∑ t t ∈ 𝒫 x SCORE_TOKEN t e ∑ t t ∈ 𝒫 x SCORE_TOKEN t + e ∑ t t ∈ 𝒩 x SCORE_TOKEN t q_{\\mathrm{pred}}=\\frac{e^{\\sum_{t}^{t\\in\\mathcal{P}}x^{t}_{\\textit{SCORE\\_TOKEN}}}}{e^{\\sum_{t}^{t\\in\\ma"
+  },
+  {
+   "id": "b0235",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_30⟧ indicates the positive token set (from good, fine, high, etc.), while ⟦SLOT_31⟧ represents the negative token set (from poor, bad, low, etc.). The results of different ⟦SLOT_32⟧ and ⟦SLOT_33⟧ are listed in Tab. 11."
+  },
+  {
+   "id": "b0236",
+   "t": "text",
+   "w": "p",
+   "en": "Special Validation Protocol for CGIQA-6K:"
+  },
+  {
+   "id": "b0237",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0238",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9: Radar chart for the Perception ability, where the performance of all MLLMs is presented by subtracting the accuracy of random guess. See Tab. 7 for the respective numerical results."
+  },
+  {
+   "id": "b0239",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: A brief view of 15 open-source MLLMs evaluated in the Q-Bench in chronological order."
+  },
+  {
+   "id": "b0240",
+   "t": "keep",
+   "w": "table",
+   "en": "Month of Release {}^{\\textit{Month of Release}} Model Names Vision Architectures (V) V → \\to L Language Architectures (L) Backbone #Size Alignment Backbone Type Oct. {}^{\\textit{Oct.}} LLaVA-v1.5 ( Vi"
+  },
+  {
+   "id": "b0241",
+   "t": "text",
+   "w": "p",
+   "en": "The CGIQA-6K (Zhang et al., 2023b) dataset contains two separate sub-sets which consist of 3,000 game images and 3,000 movie images respectively, with different instructions for human annotators during its subjective experiments. Therefore, we validate the MLLMs’ assessment performance on the two sub-sets individually and average the results for the final exhibition. The results of NIQE and CLIP-ViT-Large-14 are also obtained under the same protocol for a fair comparison."
+  },
+  {
+   "id": "b0242",
+   "t": "text",
+   "w": "h3",
+   "en": "A.3 Extended Experimental Results"
+  },
+  {
+   "id": "b0243",
+   "t": "text",
+   "w": "h4",
+   "en": "A.3.1 Architectures of Different MLLMs"
+  },
+  {
+   "id": "b0244",
+   "t": "text",
+   "w": "p",
+   "en": "As compared in Tab. 6, the 15 variants of MLLMs as evaluated in the Q-Bench are with varying vision and language architectures, as well as the alignment strategies between the two modalities. It can be noticed that all MLLMs are combined with a version of CLIP Radford et al. (2021) and a large language model, which are generally connected under one among three strategies: direct project layers (MLP or linear layer), Q-Former (a transformer to abstract visual features into LLM tokens), or cross-attention (use visual features as conditions for text generation)."
+  },
+  {
+   "id": "b0245",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Results on the dev subset for the low-level Perception ability of MLLMs. MLLMs with top-3 performance in each sub-category and the overall LLVisionQA is emphasized with boldface."
+  },
+  {
+   "id": "b0246",
+   "t": "keep",
+   "w": "table",
+   "en": "Sub-categories Question Types Quadrants of Low-level Concerns Overall ↑ \\uparrow Model (variant) Yes-or-No ↑ \\uparrow What ↑ \\uparrow How ↑ \\uparrow Distortion ↑ \\uparrow Other ↑ \\uparrow In-context I"
+  },
+  {
+   "id": "b0247",
+   "t": "text",
+   "w": "h4",
+   "en": "A.3.2 Extended Results for Perception"
+  },
+  {
+   "id": "b0248",
+   "t": "text",
+   "w": "p",
+   "en": "Results on the dev subset:"
+  },
+  {
+   "id": "b0249",
+   "t": "text",
+   "w": "p",
+   "en": "In Tab. 7, we list the results on the dev subset of the LLVisionQA benchmark set for the low-level perception task. This subset is planned to be opened to public in the future. Therefore, the performance in it will only be taken as a reference. At present, all MLLMs as evaluated have not yet seen this subset, so it can be taken as a cross-validation with the test subset. From Tab. 7 and Tab. 2, we validate that MLLMs perform pretty similar between the two subsets, suggesting that LLVisionQA is a reliable and stable benchmark set for question answering on low-level vision."
+  },
+  {
+   "id": "b0250",
+   "t": "text",
+   "w": "p",
+   "en": "Radar Chart for Different MLLMs:"
+  },
+  {
+   "id": "b0251",
+   "t": "text",
+   "w": "p",
+   "en": "In Fig. 9, we show the radar chart to compare the low-level perception abiliies among different MLLMs. Despite the observations as revealed in Sec. 3.1, we also notice two extra fun facts: 1) Adding the content context does not degrade the performance of MLLMs. On the contrary, MLLMs can answer better on in-context questions. This result validates the aforementioned conjectures that appropriate higher-level contexts as prompts may help improve the preciseness of low-level visual perception; 2) MLLMs have strong capabilities of answering what questions, suggesting potential reasoning abilities. In the future, we will excavate more interesting characteristics of MLLMs and try to improve their perception accuracy through better guidance based on these characteristics."
+  },
+  {
+   "id": "b0252",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8: Judgment accuracies of MLLMs on questions with correct answers as Yes or No."
+  },
+  {
+   "id": "b0253",
+   "t": "keep",
+   "w": "table",
+   "en": "Model (variant) all correct answer: Yes correct answer: No mean de-biased # ↓ \\downarrow random guess 50.00% 50.00% 50.00% 50.00% - Shikra ( Vicuna-7B ) 66.91% 71.79% 60.00% 65.90% 3 LLaVA-v1 ( Vicuna"
+  },
+  {
+   "id": "b0254",
+   "t": "text",
+   "w": "p",
+   "en": "“Yes or No?”: How Biased are MLLMs?"
+  },
+  {
+   "id": "b0255",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we take a deeper analysis on the Yes-or-No judgment ability of MLLMs, that whether these models can get similar accuracy on questions that should be answered with Yes, as those should be replied as No. Sadly, we notice that all MLLMs have higher prediction accuracy on Yes-questions than No-questions, while some MLLMs are more very severe biased (e.g., IDEFICS-Instruct). Considering that our LLVisionQA dataset contains more (62%) Yes-questions than No-questions (38%) and may introduce biases while comparing different MLLMs, we further compute a de-biased accuracy for all these methods, as the mean value of the accuracies on two types of questions, and present the respective de-biased rank for all participating MLLMs, as listed in Tab 8. We hope this study on the biases and the de-biased results can provide a fairer comparison among them, as well as bring insights on the future improvements of MLLMs for low-level perception."
+  },
+  {
+   "id": "b0256",
+   "t": "text",
+   "w": "p",
+   "en": "Qualitative examples of MLLM responses:"
+  },
+  {
+   "id": "b0257",
+   "t": "text",
+   "w": "p",
+   "en": "In Fig. 10, we show qualitative examples of MLLM responses on questions in the LLVisionQA dataset, that MLLMs are still unstable on basic low-level attributes such as blurs (Fig. 10(a)), and may fail on in-context questions that are easy to human (Fig. 10(b)). These unsatisfactory results suggest that we still need to improve the basic low-level perception ability of these models."
+  },
+  {
+   "id": "b0258",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0259",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 10: Qualitative comparison for MLLM perception responses."
+  },
+  {
+   "id": "b0260",
+   "t": "text",
+   "w": "h4",
+   "en": "A.3.3 Extended Results for Description"
+  },
+  {
+   "id": "b0261",
+   "t": "text",
+   "w": "p",
+   "en": "Bar Chart for Different MLLMs:"
+  },
+  {
+   "id": "b0262",
+   "t": "text",
+   "w": "p",
+   "en": "In Fig. 11, we show the bar chart to visualize MLLM capabilities on the three dimensions of low-level visual description. From the figure, we notice that current MLLMs still struggle on describing complete and accurate low-level information. As the relevance scores are generally higher (showing that most MLLMs can follow this abstract instruction well), the results suggest that the main bottleneck of MLLMs on enhancing their description ability is still the perception on low-level attributes."
+  },
+  {
+   "id": "b0263",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0264",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 11: Bar chart for the Description ability, with scores in all dimensions normalized into ⟦SLOT_34⟧."
+  },
+  {
+   "id": "b0265",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0266",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 12: A qualitative comparison for MLLM descriptions on an AI-generated image."
+  },
+  {
+   "id": "b0267",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0268",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 13: A qualitative comparison for MLLM descriptions on an in-the-wild photograph."
+  },
+  {
+   "id": "b0269",
+   "t": "text",
+   "w": "p",
+   "en": "A Qualitative Comparison on the Descriptions:"
+  },
+  {
+   "id": "b0270",
+   "t": "text",
+   "w": "p",
+   "en": "In Fig. 12 and Fig 12 we qualitatively compare among different MLLM low-level descriptions on an AI-generated image and a natural photograph. While most MLLMs can precisely describe their contents (which are actually not instructed in our user prompt), different MLLMs may have several divergences on their quality and related low-level attributes, especially on the AI-generated image. Some MLLMs describe it as clear, colorful, or aesthetically pleasing, which are typically incorrect; on the contrary, some correct descriptions are also seen, such as colors are subdued, not as clear as it could be, or not very detailed. This qualitative study validates our quantitative conclusion that current MLLMs general cannot provide noise-free low-level visual descriptions of images in a stable manner. Moreover, we notice that even given the same prompt, different MLLMs tend to describe the image with diverse output styles and lengths, while the longer descriptions usually come with a larger percentage of descriptions on irrelevant information."
+  },
+  {
+   "id": "b0271",
+   "t": "text",
+   "w": "h4",
+   "en": "A.3.4 Extended Results for Assessment"
+  },
+  {
+   "id": "b0272",
+   "t": "text",
+   "w": "p",
+   "en": "Radar Chart for Different MLLMs:"
+  },
+  {
+   "id": "b0273",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 9: Effectiveness of the proposed softmax probability-based strategy against the baseline argmax strategy, on multiple MLLMs and different IQA datasets. Metrics are SRCC/PLCC."
+  },
+  {
+   "id": "b0274",
+   "t": "keep",
+   "w": "table",
+   "en": "Dataset Type In-the-wild Generated Artificial Model / Dataset Strategy KONiQ-10k SPAQ LIVE-FB LIVE-itw AGIQA-3K KADID-10K Shikra ( Vicuna-7B ) argmax 0.178/0.201 0.277/0.281 0.152/0.169 0.248/0.267 0."
+  },
+  {
+   "id": "b0275",
+   "t": "text",
+   "w": "p",
+   "en": "In Fig. 14, we visualize the IQA performance of different MLLMs on seven IQA datasets. The visualization proves that MLLMs can notably positively correlate with human ratings, and could very highly align with human perception on relatively coarse situations (AGIQA-3K, SPAQ). As such results are obtained via no direct alignment with human perception and from the simplest prompts (“Rate the quality of the image.”), they suggest the exciting underlying abilities of general intelligence to naturally understand “quality” via their vast training data. However, the performance are still yet to be accurate on finer-grained situations, such as LIVE-FB, which is constructed by more than 95% high-quality images (i.e. quality score ⟦SLOT_35⟧ 50/100), or CGIQA-6K, made up entirely by relatively high-quality images collected from video games or movies. This suggests that MLLMs still need to improve the measurability on their predictions through well-designed fine-tuning."
+  },
+  {
+   "id": "b0276",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0277",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 14: Radar chart for the Assessment ability, where the performance of all MLLMs is presented by an average of SRCC/PLCC metrics. See Tab. 4 for the respective numerical results."
+  },
+  {
+   "id": "b0278",
+   "t": "text",
+   "w": "p",
+   "en": "A Deep Dive Into the Probabilities:"
+  },
+  {
+   "id": "b0279",
+   "t": "text",
+   "w": "p",
+   "en": "(A) Softmax vs Argmax:"
+  },
+  {
+   "id": "b0280",
+   "t": "text",
+   "w": "p",
+   "en": "In the first part of the deep dive, we quantitatively evaluate the correlation with human perception on a simple argmax strategy between good⟦SLOT_36⟧bad and our proposed softmax strategy. In Tab. 9, we confirm that for all MLLMs on all IQA datasets, the more measurable softmax strategy predicts better than the argmax strategy, which degenerates into only two scores, 0 and 1. Though the result is generally expected, the experiments validate that MLLMs have quantitative assessment ability hidden behind their word outputs, and prove the effectiveness of our softmax-based IQA strategy."
+  },
+  {
+   "id": "b0281",
+   "t": "text",
+   "w": "p",
+   "en": "(B) [For T5-based InstructBLIP] high⟦SLOT_37⟧low vs good⟦SLOT_38⟧poor:"
+  },
+  {
+   "id": "b0282",
+   "t": "text",
+   "w": "p",
+   "en": "We further conduct a special study for InstructBLIP (Flan-T5-XL). With a different LLM as language backbone, even pre-trained with the same settings, the T5-version of InstructBLIP tends to predict more high⟦SLOT_39⟧low than good⟦SLOT_40⟧poor, different from its Vicuna-7B-based counterpart. The experimental results in Tab 10 validate that the more probable high⟦SLOT_41⟧low tokens are more competitive in IQA than good⟦SLOT_42⟧bad tokens, suggesting that top-frequency tokens are more quality-distinctive."
+  },
+  {
+   "id": "b0283",
+   "t": "text",
+   "w": "h4",
+   "en": "A.3.5 Synonym Ensemble: Further Improving IQA ability (A3) for MLLMs"
+  },
+  {
+   "id": "b0284",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 10: Comparison between high⟦SLOT_43⟧low and good⟦SLOT_44⟧poor on InstructBLIP (Flan-T5-XL)."
+  },
+  {
+   "id": "b0285",
+   "t": "keep",
+   "w": "table",
+   "en": "Dataset Type In-the-wild Generated Artificial Model / Dataset tokens KONiQ-10k SPAQ LIVE-FB LIVE-itw AGIQA-3K KADID-10K InstructBLIP (Flan-T5-XL) good ↔ \\leftrightarrow poor 0.288/0.289 0.581/ 0.618 0"
+  },
+  {
+   "id": "b0286",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Table 11, the synonym ensemble strategy (as proposed in Eq. 4) on top-5 methods (i.e. InternLM-XComposer-VL, QWen-VL, LLaVA-v1.5 (13B), mPLUG-Owl, and LLaVA-v1.5 (7B)) can in average lead to up to 2% accuracy improvement (in average 1.3%). We believe it is a useful boost to improve the performance of MLLMs on IQA task."
+  },
+  {
+   "id": "b0287",
+   "t": "text",
+   "w": "p",
+   "en": "Nevertheless, we also notice that different MLLMs perform best with different specific prompt combos. For example, the good+fine⟦SLOT_45⟧poor+bad performs best on InternLM-XComposer-VL, but comes with reduced accuracy on QWen-VL compared with only good⟦SLOT_46⟧poor. While good⟦SLOT_47⟧poor is proved overall best single word pair for the evaluation and shows stable results across MLLMs, we decide to keep the current strategy in Q-Bench to evaluate MLLMs."
+  },
+  {
+   "id": "b0288",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 11: Evaluation results on the synonym ensemble strategy for the (A3) Assessment ability on MLLMs with top-5 results in the default A3 leaderboard of the Q-Bench. After ensemble, the rankings among them are not changed. Metrics are SRCC/PLCC."
+  },
+  {
+   "id": "b0289",
+   "t": "keep",
+   "w": "table",
+   "en": "Dataset Type In-the-wild Generated Artificial Average Prompt / Dataset KONiQ-10k SPAQ LIVE-FB LIVE-itw CGIQA-6K AGIQA-3K KADID-10K LLaVA-v1.5 ( Vicuna-v1.5-13B ) good ↔ \\leftrightarrow poor 0.448/0.46"
+  },
+  {
+   "id": "b0290",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Statement on Data Contamination"
+  },
+  {
+   "id": "b0291",
+   "t": "text",
+   "w": "p",
+   "en": "The Q-bench contains three tasks, where the first two tasks, (A1) perception and (A2) description, are evaluated with our own datasets proposed with the paper. For these two tasks, the questions, answers, or low-level descriptions in the two datasets are not seen by any existing MLLMs. Half of LLVisionQA (i.e. the test subset) and full of LLDescribe labels are kept private, to avoid being added to the training sets of any MLLMs. We hope that this measure will allow Q-Bench to have long-term significance as an indicator of low-level visual abilities."
+  },
+  {
+   "id": "b0292",
+   "t": "text",
+   "w": "p",
+   "en": "For the third task, (A3) assessment, the situation is a bit more complicated. For open-source models as tested, almost all of them have provided their technical reports, and as far as we know, no image quality assessment (IQA) dataset has participated in the multi-modality training stages of them. While text knowledge about image quality assessment should have been injected to them (e.g. a blurry image is a low quality image) during their pure-language training stages, we think this should not be regarded as data contamination for IQA, because the images cannot be seen by a language model. Instead, they are important knowledge for MLLMs to better link particular visual attributes (blur) to human opinions (quality), which motivates us to explore MLLMs for these tasks."
+  },
+  {
+   "id": "b0293",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Limitations and Discussions"
+  },
+  {
+   "id": "b0294",
+   "t": "text",
+   "w": "p",
+   "en": "In Section A.3.2, we observed that MLLMs frequently respond with ‘yes’ to Yes-or-No questions. It’s worth noting that the current LLVisionQA dataset is skewed, with 62% of its questions being Yes-questions and only 38% being No-questions. This imbalance could introduce biases when comparing various MLLMs. To fully address this, we aim to balance the dataset by preparing a reversed version for each question in our subsequent work, ensuring a less biased evaluation."
+  },
+  {
+   "id": "b0295",
+   "t": "text",
+   "w": "p",
+   "en": "For the description task, we acknowledge that judging whether a description matches the gold description is a subjective process, which may not have an absolute standard. Even when evaluated by humans, the scores rated for the MLLM descriptions are subject to individual differences. Though we have employed the 5-round GPT-assisted evaluation protocol, which could be the most reliable and reproducible way at present, it may still unavoidably contain hallucinations (from GPT). We will continue to explore how to design a more reliable evaluation protocol for the low-level visual description task in our follow-up works."
+  },
+  {
+   "id": "b0296",
+   "t": "text",
+   "w": "p",
+   "en": "While the proposed Q-Bench has offered a comprehensive evaluation on the low-level visual capabilities of MLLMs, it does not provide direct guidance on enhancing these capabilities. As our next steps, we intend to progressively scale up the LLDescribe and LLVisionQA datasets to eventually allow a reliable low-level visual instruction tuning process that can further improve the low-level abilities for MLLMs."
+  }
+ ]
+}

@@ -1,0 +1,1108 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "UI-Bench: A Benchmark for Evaluating Design Capabilities of AI Text-to-App Tools"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "AI text-to-app tools promise high quality applications and websites in minutes, yet no public benchmark rigorously verifies those claims. We introduce UI-Bench , the first large-scale benchmark that e"
+  },
+  {
+   "id": "b0003",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h3",
+   "en": "1.1 Rapid Emergence of of AI App and Website Tools"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Low-code and no-code development platforms have emerged as powerful prototyping tools, allowing organizations to rapidly create applications with minimal coding effort. This wave has accelerated the market for AI text-to-app tools. TechRadar’s 2025 survey alone “tested, rated, and ranked” the nine best AI tools out of more than eighty tools reviewed [Williams, 2025]. While marketing copy promises “professional quality in one click,” most discourse remains anecdotal, consisting mostly of feature lists and speed claims. They offer little systematic evidence about the visual quality these tools actually produce."
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "h3",
+   "en": "1.2 Design Quality Matters"
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "Visual excellence directly impacts business outcomes. The seminal Stanford Web Credibility study found that 46% user comments cited a site’s look and feel when judging credibility [Fogg et al., 2001], and other studies support this fact as well [Robins and Holmes, 2008]. Empirical UX studies show that both high visual intensity (e.g., animation, flashing, cluttered interfaces) and excessive content volume impair user engagement; visual overload triggers strong negative reactions before conversions climb, and simpler, content-light landing pages consistently convert better than dense, information-heavy versions [Jankowski et al., 2019; Dvir and Gafni, 2018]. For AI tools to succeed in market adoption, their output must excel on these perception-critical dimensions."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "h3",
+   "en": "1.3 The Evaluation Challenge"
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Aesthetic quality lacks a single objective ground truth, and is fundamentally perception-driven [Lavie and Tractinsky, 2004; Moshagen and Thielsch, 2010; Ngo et al., 2003]. Previous HCI work reports only moderate agreement across raters and substantial unexplained variance in aesthetic evaluations [von Wangenheim et al., 2018; Reinecke et al., 2013]. Public, non-blind crowd voting also suffers from social-influence herding: a single early up-vote can raise a post’s final score by about 25% [Muchnik et al., 2013]."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "For this study, we use blinded pairwise judgements from expert designers as the primary endpoint. We omit automated image proxies as primary metrics because their alignment with human aesthetic preference is weak in our setting. For instance, though FID and CLIP are widely used automated proxies for image quality and alignment [Heusel et al., 2017; Radford et al., 2021], recent work shows such proxies can mis-rank or even contradict human preferences—especially for aesthetics and design-heavy images [Jayasumana et al., 2024; Kirstain et al., 2023; Xu et al., 2023; Lee et al., 2023]; see §2.3 for a survey and scope caveats. Procedural details for our pairwise protocol and ranking appear in §3."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "h3",
+   "en": "1.4 Contributions"
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "li",
+   "en": "1. UI-Bench: a fully reproducible protocol for assessing visual design quality of AI text-to-app tools across realistic prompt categories."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "li",
+   "en": "2. Statistical Framework: an adapted TrueSkill model that delivers stable rankings with 95% confidence intervals from sparse pairwise votes."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "li",
+   "en": "3. Public Resources: a public leaderboard."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "UI-Bench closes the gap between feature-checklist reviews and academic usability tests by supplying the first benchmark that directly measures professional-grade visual design quality in AI text-to-app tools."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 From Ground-Truth to Preference Benchmarks"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "LLM Benchmarks. Static, ground-truth benchmarks such as MMLU [Hendrycks et al., 2021], HellaSwag [Zellers et al., 2019], GSM-8K [Cobbe et al., 2021], FinanceQA [Mateega et al., 2025], AGIEval [Zhong et al., 2023], BIG-Bench [Srivastava et al., 2023], and HumanEval [Chen et al., 2021] dominate language-model evaluation. Alongside static benchmarks, recent work has relied on human or LLM-judge based pairwise evaluations: MT-Bench [Zheng et al., 2023] and AlpacaEval [Dubois et al., 2024] use LLMs as judges on curated prompts, while Chatbot Arena [Chiang et al., 2024] aggregates crowd pairwise votes with an Bradley-Terry-style rating for leaderboards."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Existing Web Development Benchmarks"
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "Most recent work targets design⟦SLOT_0⟧code or webpage⟦SLOT_1⟧code generation and leans on automatic checks rather than blinded expert preference on finished designs. Web2Code releases a large webpage⟦SLOT_2⟧code dataset and evaluation suite with rendered-image comparison and GPT-4V scoring [Yun et al., 2024]. WebCode2M provides 2.56M real design–code pairs and establishes a benchmark for training and evaluating models in automated webpage code generation, prioritizing scalability over aesthetic quality [Gui et al., 2025]. DesignBench frames front-end generation/edit/repair across React/Vue/Angular with programmatic evaluation [Xiao et al., 2025]. FrontendBench automates sandboxed tests and reports 90.45% agreement with experts on specific UI behaviors, not holistic taste [Zhu et al., 2025]. WebGen-Bench is the closest task analogue: it generates full sites from instructions, verifies functionality via a navigation agent, and grades appearance with GPT-4o (1–5); it does not use blinded expert pairwise judgments [Lu et al., 2025]. In terms of human validation, Design2Code is closest. It curates 484 webpages and validates visual-similarity metrics against human ratings, but it benchmarks multimodal language model (MLLM) capabilities by reproducing webpages from original screenshots rather than by comparing preferences between competing tools [Si et al., 2025]. Though existing benchmarks emphasize functionality, fidelity, and code similarity; none adopt blinded expert pairwise preference to evaluate visual design quality, and none evaluate AI text-to-app tools."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h3",
+   "en": "2.3 Automated Aesthetic Metrics and GUI Heuristics"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Generative-image quality is typically scored by Inception Score (IS) [Salimans et al., 2016], Fréchet Inception Distance (FID) [Heusel et al., 2017], or CLIP-based similarity [Hessel et al., 2021]. Classical GUI–layout heuristics compute rule-based scores for symmetry, balance, and rhythm [Ngo et al., 2003]; later work trains neural predictors on curated photography and poster datasets [Lu et al., 2014; O’Donovan et al., 2011]."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "For multi-section webpages (rather than single-image quality), automated aesthetic scorers exhibit limited cross-dataset generalization. Domain-tailored predictors for webpage aesthetics can achieve promising in-domain correlations (e.g., Webthetics reports ⟦SLOT_3⟧) [Dou et al., 2019]; however, correlation on a single dataset does not guarantee faithful pairwise rankings or robustness across datasets. Similarly, generic proxies such as FID and CLIP-based scores—while widely used [Heusel et al., 2017; Radford et al., 2021; Hessel et al., 2021]—have been shown to misalign with, and sometimes contradict, human preferences for aesthetics and design-heavy images [Jayasumana et al., 2024; Kirstain et al., 2023; Xu et al., 2023; Lee et al., 2023]. We therefore treat automated scores as ancillary diagnostics, and select blinded expert pairwise judgement as our primary endpoint (see §1.3)."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h3",
+   "en": "2.4 Gap"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "None of the above benchmarks evaluate the holistic UI and UX quality of AI tools, leaving researchers and practitioners without a standard ranking metric."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Methodology"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Theoretical Framework"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "h4",
+   "en": "3.1.1 Why Pairwise Comparison"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "We chose pairwise comparison because absolute ratings are noisy: scale interpretation and anchoring make designers disagree. Thurstone’s comparative-judgment theory offers a clean alternative to scaled methods, with previous deployments of adaptive comparative judgment reporting very high rank-order reliability (⟦SLOT_4⟧0.95–0.97) [Pollitt, 2012; Whitehouse and Pollitt, 2012]. Early psychometrics formalised preference as comparative judgment [Thurstone, 1927]; the Bradley–Terry model (BT) [Bradley and Terry, 1952] and Bayesian extensions such as TrueSkill [Herbrich et al., 2006] remain standard for converting pairwise outcomes into system skill estimates. This method also scales: Chatbot Arena logged 240k+ human comparisons and produced a stable BT leaderboard for 50+ LLMs [Chiang et al., 2024], with formal convergence analysis reported in that work. UI-Bench therefore collects only binary designer preferences and fits a TrueSkill model; implementation details are provided in §3.2."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "h4",
+   "en": "Defining Design Quality"
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "We define design quality as the probability that a professional designer prefers layout A over layout B on the client-delivery question:"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "blockquote",
+   "en": "“Which project would you be more likely to deliver to a client?”"
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "This single forced choice captures holistic judgement across UI and UX completeness without a rigid rubric. Because professional designers are trained evaluators, aggregating their independent judgements via expert panels is a validated approach for ranking creative work [Amabile, 1982; Amabile, 1996]. We use expert comparative judgement: designers make binary pairwise choices on the client-delivery question. This method is established in educational assessment with high reliability [Pollitt, 2012], and the same pairwise-preference framing also underlies RLHF work [Christiano et al., 2017]."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "h5",
+   "en": "Evaluation Framing."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "A generic “Which one do you like more?” question risks collapsing professional standards into personal taste. To ensure judgments are tied to design practice, UI-Bench frames comparisons as a client-delivery question. This anchors evaluations on holistic UI and UX quality within a professional context."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h5",
+   "en": "Design of the Evaluation Protocol."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "Our protocol incorporates several design decisions that address known shortcomings:"
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "li",
+   "en": "• Full-view requirement. Raters must view the entire webpage in fullscreen mode before voting, ensuring assessments reflect the complete composition rather than a cropped hero or single section."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "li",
+   "en": "• Prompt standardization. UI-Bench uses synthetically generated prompts across a range of situations and tasks so that outcomes reflect tool capability, not rater creativity in crafting prompts. See §4.1 for prompt generation protocol."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "li",
+   "en": "• Blinding and quality controls. Randomized left–right placement, hidden tool identities, and split voting sessions further reduce bias and noise relative to open crowd arenas."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "These design decisions incrementally add rigor beyond prior arena-style studies and establish UI-Bench as a reproducible standard for evaluating the visual design quality of AI text-to-app tools."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Tournament Structure"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "h5",
+   "en": "Randomised Pairwise Arena."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "We run a continuous arena where each vote compares two tools on one prompt for a single expert. Prompt selection has two phases: a base-coverage phase that shows each expert all 30 prompts exactly once (by round 30), followed by an adaptive phase that samples from the 30 prompts based on a score calculated by recency, uncertainty, and the score gap between tools. We draw uniformly from this top-5. Pair selection is not uniform: we score every candidate pair by a weighted blend of exposure balance, opponent novelty, uncertainty ⟦SLOT_5⟧, and TrueSkill match quality, then apply penalties for pairs already seen by the expert, recent cooldown, repeat-cap exceedance, and hot-tool over-exposure. We pick the highest-scoring pair with deterministic tie-breakers (lower pair count, then lower max exposure). Tools are rated per prompt; the headline score for each tool is the mean TrueSkill ⟦SLOT_6⟧ across the 30 prompts."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "h5",
+   "en": "TrueSkill Rating System."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "For each prompt, every tool starts at ⟦SLOT_7⟧ and ⟦SLOT_8⟧. After each 1-v-1 outcome, we update the two prompt-specific ratings within a TrueSkill environment (no drift, no draws) [Herbrich et al., 2006]. The global tool score is the mean of prompt-level ⟦SLOT_9⟧ across the 30 prompts."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Expert Evaluators"
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "h5",
+   "en": "Inclusion Criteria."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "We hand selected and invited the experts in this study on the basis of having professional UI and UX experience as a designer, web developer, researcher, or other relevant profession."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "h5",
+   "en": "Demographics (N=194)."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "Our panel spans multiple roles (multi-select; totals exceed 100%): Designers (65.5%, 127), Web Developers (57.2%, 111), Researchers (60.3%, 117), Other (7.2%, 14). When asked whether they had previously used AI tools for creating applications or websites, 10.8% (21) answered yes and 89.2% (173) answered no."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Experimental Setup"
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Prompt Design and Generation"
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "h5",
+   "en": "Taxonomy and Counts."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "We generated 30 prompts across five categories (6 per category): Marketing/Landing, Editorial/Blog, Portfolio/Case Study, E-commerce, and Local/Service. Within each category we include 4 websites and 2 webapps. Websites are read-mostly marketing or informational pages; simple forms are permitted, but no authentication or persistent data storage is included. Webapps are stateful experiences with saved data and at least two screens (e.g., list/table plus create/edit form), incorporating basic validation and empty/loading/error states. Authentication flows were excluded to avoid confounding design evaluation with account-management UX."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "h5",
+   "en": "Authoring Model."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "Prompts were synthetically generated with GPT-5 (Thinking) using ChatGPT on August 20, 2025. We report the model, interface, and date to document the generation conditions."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "h5",
+   "en": "Prompt Specification (summary)."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "We instructed the model to: (i) write realistic client briefs of 150–180 words; (ii) specify a primary goal/CTA (lead, purchase, booking, subscribe, donate, apply, RSVP, informational); (iii) include a one-sentence brand vibe (1–2 adjectives); (iv) optionally add non-visual constraints (e.g., “include pricing tiers” or “include a contact form”); (v) avoid layout directives and authentication/login requirements. The exact authoring prompt is provided in Appendix A."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "h5",
+   "en": "Validation and Filtering."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "p",
+   "en": "We applied light editorial review, requiring each prompt to be at least 150 words, maintain diverse category coverage with correct counts, and include a coherent CTA. Prompts that failed these checks were regenerated."
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "h5",
+   "en": "Release."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "We release the final prompts (title, type, sector, goal, scenario, vibe, constraints) in Appendix B. Future versions of this benchmark will include a scripted generation pipeline."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Tools Evaluated"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluated ten anonymized AI text-to-app tools, representing a mix of leading commercial platforms: v0 by Vercel, Bolt, Orchids, Lovable, Replit, Figma Make, Base44 by Wix, Magic Patterns, Same.new, and Create Anything. For consistency, all generations were produced between August 20th–22, 2025. Each tool was run with its default configuration settings, without manual intervention or prompt engineering."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 UI Generation Protocol"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "h4",
+   "en": "4.3.1 Controlled Generation"
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "The authors generated all designs with a 60-minute time limit per prompt per tool. Each tool received up to two independent one-shot attempts per prompt. For each fresh attempt, we permitted up to two repair passes to fix blocking errors that prevented rendering. We stopped at the first usable output (the full page displaying). This lenient protocol ensured every tool produced at least one functional UI. Some tools (e.g., Same.new) intermittently stalled during generation, typically on file-read steps, consistent with brittle agent orchestration or system prompts."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "h4",
+   "en": "4.3.2 Output standardization"
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "Websites are displayed in iFrames, with sanitized URLs to prevent tool identification."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "h3",
+   "en": "4.4 Evaluation Interface"
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "h4",
+   "en": "4.4.1 Onboarding"
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "Experts received a special code to log in to the study, ensuring only vetted participants could participate. We collected the following from experts before allowing them to vote: first name, last name, profession (Designer, Web Developer, Researcher, or Other), and whether they have previously used an AI website generating tool before."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "h4",
+   "en": "4.4.2 Comparison Presentation"
+  },
+  {
+   "id": "b0075",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Example comparison interface used in UI-Bench. Raters view two webpages in a blinded layout with randomized placement and a full-view requirement."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "Each comparison is presented in a controlled, blinded UI. As shown in Figure 1, we required (i) a full-view requirement, (ii) incorporate split voting sessions, (iii) hide tool identities, (iv) standardize prompts, and (v) randomize left-right placement."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "h3",
+   "en": "4.5 The Question"
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "For each pair of designs generated for a prompt, raters answer a single forced-choice question as described in §3.1. The following instructions are shown to experts before they started each voting session:"
+  },
+  {
+   "id": "b0080",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "Responses were binary: \"Vote for this Project\" was presented under both left and right options. No tie option was provided."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "h4",
+   "en": "4.5.1 Quality Controls"
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "Each expert was instructed to vote on 60 matches, administered in two sessions of 30 votes each, with an optional third bonus session for up to 90 total votes. Breaks were permitted between sessions, and a one-day interval between sessions was recommended to maintain attention. As participation was voluntary, the 60-vote target served as guidance rather than a strict requirement."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Results"
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 Leaderboard Rankings"
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "Table 1 reports the overall leaderboard aggregated across ⟦SLOT_10⟧ blinded pairwise matches, and ⟦SLOT_11⟧ unique tool comparisons. Ratings are reported as posterior means (⟦SLOT_12⟧) under the TrueSkill model, alongside posterior uncertainty (⟦SLOT_13⟧), 95% credible intervals, and empirical win rates."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Overall Leaderboard Results (⟦SLOT_14⟧ unique matches)"
+  },
+  {
+   "id": "b0088",
+   "t": "keep",
+   "w": "table",
+   "en": "Rank Tool Rating ( μ \\mu ) Uncertainty + 95 % CI Win Rate 1 Orchids 30.12 σ = 1.77 \\sigma=1.77 [26.61, 33.55] 67.5 % 2 Figma Make 27.46 σ = 1.71 \\sigma=1.71 [24.11, 30.81] 57.1 % 3 Lovable 27.14 σ = 1"
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "Orchids leads with a mean rating of 30.12 and a 67.5% win rate, substantially ahead of the second-ranked system (Figma Make, ⟦SLOT_15⟧=27.46, 57.1%). Lovable rounds out the top three with ⟦SLOT_16⟧=27.14 and a 54.8% win rate. Mid-tier tools cluster closely: Anything, Bolt, and Magic Patterns all exhibit overlapping credible intervals around ⟦SLOT_17⟧, suggesting no statistically significant separation among them. Lower-ranked systems (Base 44 by Wix, Same.new, v0, and Replit) fall below a rating of 24, indicating consistent underperformance against the stronger tools."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "These results establish a clear separation between the leading systems and the trailing cluster."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Analysis"
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "h3",
+   "en": "6.1 Quality-Gap Analysis"
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "h4",
+   "en": "6.1.1 Why are scores so different if tools share the same models under the hood?"
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "Several tools likely share foundation models, yet outputs diverge. Lower performers converged on generic templates, with several tools using call-to-action buttons colored in a generic blue repeated across several websites (for instance, see prompt #7 for v0, and prompt #17 for Anything in Appendix D), repetitive card grids, minimal interaction, weak responsiveness. Top tools showed deliberate layout planning and asset curation: distinctive typography systems, coherent color programs, higher-quality imagery, and multi-section narratives with clear flow. They also produced working controls, navigation, and subtle animations with fewer broken states. The gap points to differences in prompt handling, template libraries, agent-orchestration techniques, post-processing, and asset pipelines rather than model choice alone."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "h4",
+   "en": "6.1.2 Common AI Failure Modes"
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "We make no claims on AI failure modes related to losses clustering around: typography, spacing, poor hierarchy, technically correct but sterile pages without brand voice, uneven padding, mixed iconography, or naive palette and contrast choices that reduce readability or appeal. Future studies will account for expert labels when judging designs."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "h2",
+   "en": "7 Discussion"
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "h3",
+   "en": "7.1 Limitations"
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "h5",
+   "en": "This study is a static shot."
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "p",
+   "en": "Experts evaluated websites and webapps generated by AI tools between a set period of dates. This benchmark covers a set of leading commercially available AI tools at the time of testing; future releases with new capabilities remain unassessed."
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "h5",
+   "en": "Figma Make received shorter prompts."
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "p",
+   "en": "We note that the prompts used for Figma make were not the exact same prompts as those used for all other tools. Figma’s tool has a 500 character maximum input limit, while our prompts were generally over 150+ words. We condensed all prompts via ChatGPT by asking it to \"Summarize each of these prompts to 500 characters.\" We release all sumarized prompts given to Figma make in Appendix B. We included Figma’s tool despite this limitation because of its relevance among professional designers and AI developers."
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "h5",
+   "en": "Scope."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "p",
+   "en": "UI-Bench isolates visual craft, which includes layout, typography, colour, hierarchy, and intentionally ignores UX metrics such as load time, accessibility, or code quality. We do not include a human-designed baseline in this release; therefore, we make no claims about parity with professional designers. Results should be interpreted as relative rankings among AI tools, not absolute judgments of human-level quality. Additionally, because the evaluator pool is dominated by English-speaking professionals, the results may reflect culturally specific aesthetics. Prompts and interfaces are English-only, potentially under-representing designs optimised for other languages or reading directions."
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "h3",
+   "en": "7.2 Future Work"
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "p",
+   "en": "Our findings reflect AI tools available in 2025 and desktop layouts, so they may not generalize to future tool releases, mobile layouts, or print media. Judgements from seasoned professionals reflect industry standards of polish, but expert taste correlates only moderately with lay-user appeal [Ngo et al., 2003]. Consumer perceptions can be influenced more by brand familiarity or novelty than by subtle typographic refinements. Next steps include testing AI generated designs against human-made designs to measure effect sizes versus AI, and a failure-mode dataset with a public codebook (typography, balance, color/contrast, detail work, responsiveness, brief adherence, resonance), and expert gold labels."
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "h2",
+   "en": "8 Conclusion"
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we introduce UI-Bench, a blinded, expert pairwise benchmark anchored to a client-delivery question for AI text-to-app tools. The protocol uses standardized prompts, a full-view requirement, and TrueSkill-based ranking with uncertainty. Across 4,000+ matches, we observe clear separation among tools and identify orchestration choices and potential failure modes that could explain preference gaps. We release prompts and host a public leaderboard to enable further work. Generated sites rated by participants will be released soon."
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "h2",
+   "en": "9 Acknowledgement"
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "p",
+   "en": "We thank the expert panel for generously contributing their time and judgment; their participation made large-scale, blinded data collection feasible. We also appreciate the early readers & researchers whose feedback improved the study and materials."
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Amabile [1982] Teresa M. Amabile. Social psychology of creativity: A consensual assessment technique. Journal of Personality and Social Psychology , 43(5):997–1013, 1982. doi: 10.1037/0022-3514.43.5.9"
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Amabile [1996] Teresa M. Amabile. Creativity in Context: Update to the Social Psychology of Creativity . Westview Press, Boulder, CO, 1996."
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bradley and Terry [1952] Ralph A. Bradley and Milton E. Terry. Rank analysis of incomplete block designs. Biometrika , 39(3-4):324–345, 1952. doi: 10.1093/biomet/39.3-4.324 ."
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. [2021] Mark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan, Henrique Ponde de Oliveira Pinto, Jared Kaplan, Harri Edwards, Yuri Burda, Nicholas Joseph, Greg Brockman, et al. Evaluating large "
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chiang et al. [2024] W.-L. Chiang, L. Zheng, Y. Sheng, A. N. Angelopoulos, T. Li, D. Li, H. Zhang, B. Zhu, M. I. Jordan, J. E. Gonzalez, and I. Stoica. Chatbot arena: An open platform for evaluating L"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Christiano et al. [2017] Paul F. Christiano, Jan Leike, Tom B. Brown, Miljan Martic, Shane Legg, and Dario Amodei. Deep reinforcement learning from human preferences. In Advances in Neural Information"
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cobbe et al. [2021] Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John S"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dou et al. [2019] Qi Dou, Xiansong Zheng, Tao Sun, and Pheng-Ann Heng. Webthetics: Quantifying webpage aesthetics with deep learning. International Journal of Human-Computer Studies , 124:56–66, 2019."
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dubois et al. [2024] Yann Dubois, Balázs Galambosi, Percy Liang, and Tatsunori B. Hashimoto. Length-controlled AlpacaEval: A simple way to debias automatic evaluators, 2024. URL https://arxiv.org/abs/"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dvir and Gafni [2018] Nim Dvir and Ruti Gafni. How content volume on landing pages influences consumer behavior: Empirical evidence. In Proceedings of InSITE 2018 , pages 35–53, 2018. doi: 10.28945/40"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fogg et al. [2001] B. J. Fogg, Jonathan Marshall, Othman Laraki, Alex Osipovich, Chris Varma, Nicholas Fang, Jyoti Paul, Amy Rangnekar, John Shon, Peter Swani, and Marissa Treinen. What makes web site"
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gui et al. [2025] Yi Gui, Zhen Li, Yao Wan, Yemin Shi, Hongyu Zhang, Yi Su, Bohua Chen, Dongping Chen, Siyuan Wu, Xing Zhou, Wenbin Jiang, Hai Jin, and Xiangliang Zhang. WebCode2M: A real-world datase"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hendrycks et al. [2021] Dan Hendrycks, Collin Burns, Steven Basart, Andy Zou, Mantas Mazeika, Dawn Song, and Jacob Steinhardt. Measuring massive multitask language understanding. In International Conf"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Herbrich et al. [2006] Ralf Herbrich, Tom Minka, and Thore Graepel. TrueSkill: A Bayesian skill rating system. In Advances in Neural Information Processing Systems (NIPS) , volume 19, pages 569–576, 2"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hessel et al. [2021] Jack Hessel, Ari Holtzman, Maxwell Forbes, Ronan Le Bras, and Yejin Choi. CLIPScore: A reference-free evaluation metric for image captioning. In Proceedings of the 2021 Conference"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Heusel et al. [2017] Martin Heusel, Hubert Ramsauer, Thomas Unterthiner, Bernhard Nessler, and Sepp Hochreiter. GANs trained by a two time-scale update rule converge to a local Nash equilibrium. In Ad"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jankowski et al. [2019] J. Jankowski, J. Hamari, and J. Wątróbski. A gradual approach for maximising user conversion without compromising experience with high visual intensity website elements. Intern"
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jayasumana et al. [2024] S. Jayasumana, X. Liu, X. E. Wang, L. Ma, S. Savarese, and L. El Ghaoui. Rethinking FID: Towards a better evaluation metric for image generation, 2024."
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kirstain et al. [2023] Y. Kirstain, A. Polyak, U. Singer, S. Matiana, J. Penna, and O. Levy. Pick-a-pic: An open dataset of user preferences for text-to-image generation. In Advances in Neural Informa"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lavie and Tractinsky [2004] Talia Lavie and Noam Tractinsky. Assessing dimensions of perceived visual aesthetics of web sites. International Journal of Human-Computer Studies , 60(3):269–298, 2004. do"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lee et al. [2023] T. Lee, M. Yasunaga, C. Meng, Y. Mai, J. S. Park, A. Gupta, Y. Zhang, D. Narayanan, H. B. Teufel, M. Bellagente, M. Kang, T. Park, J. Leskovec, J.-Y. Zhu, F.-F. Li, J. Wu, S. Ermon, "
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lu et al. [2014] Xiaoran L. Lu, Zhe Lin, Hailin Jin, Jianchao Yang, and James Z. Wang. RAPID: Rating pictorial aesthetics using deep learning. In Proceedings of ACM Multimedia , pages 457–466, 2014. d"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lu et al. [2025] Zimu Lu, Yunqiao Yang, Houxing Ren, Han Xiao, Ke Wang, Weikang Shi, Aojun Zhou, Mingjie Zhan, and Hongsheng Li. WebGen-Bench: Evaluating LLMs on generating interactive and functional "
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mateega et al. [2025] Spencer Mateega, Carlos Georgescu, and Danny Tang. FinanceQA: A benchmark for evaluating financial analysis capabilities of large language models, 2025."
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Moshagen and Thielsch [2010] M. Moshagen and M. T. Thielsch. Facets of visual aesthetics. International Journal of Human-Computer Studies , 68(10):689–709, 2010. doi: 10.1016/j.ijhcs.2010.05.006 ."
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Muchnik et al. [2013] Lev Muchnik, Sinan Aral, and Sean J. Taylor. Social influence bias: A randomized experiment. Science , 341(6146):647–651, 2013. doi: 10.1126/science.1240466 ."
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ngo et al. [2003] D. C. L. Ngo, L. S. Teo, and J. G. Byrne. Modelling interface aesthetics. Information Sciences , 152:25–46, 2003. doi: 10.1016/S0020-0255(02)00404-8 ."
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "O’Donovan et al. [2011] Patrick O’Donovan, Aseem Agarwala, and Aaron Hertzmann. Color compatibility from large datasets. ACM Transactions on Graphics , 30(4):63:1–63:12, 2011. doi: 10.1145/2010324.196"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Pollitt [2012] Alastair Pollitt. Comparative judgement for assessment. International Journal of Technology and Design Education , 22(2):157–170, 2012. doi: 10.1007/s10798-011-9189-x ."
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Radford et al. [2021] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, et al. Learning transferable visual models from natural language supervision. In International Conference on Machine Le"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Reinecke et al. [2013] Krzysztof Reinecke, Tom Yeh, Luke Miratrix, Rahmat Mardiko, Yao Zhao, Jenny Liu, and Krzysztof Z. Gajos. Predicting users’ first impressions of website aesthetics with a quantif"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Robins and Holmes [2008] D. Robins and J. Holmes. Aesthetics and credibility in web site design. Information Processing & Management , 44(1):386–399, 2008. doi: 10.1016/j.ipm.2007.02.003 ."
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Salimans et al. [2016] Tim Salimans, Ian Goodfellow, Wojciech Zaremba, Vicki Cheung, Alec Radford, and Xi Chen. Improved techniques for training GANs. In Advances in Neural Information Processing Syst"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Si et al. [2025] Chenglei Si, Yanzhe Zhang, Ryan Li, Zhengyuan Yang, Ruibo Liu, and Diyi Yang. Design2code: Benchmarking multimodal code generation for automated front-end engineering. In Proceedings "
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Srivastava et al. [2023] Aarohi Srivastava et al. Beyond the imitation game: Quantifying and extrapolating the capabilities of language models (BIG-bench). Transactions on Machine Learning Research , "
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Thurstone [1927] L. L. Thurstone. A law of comparative judgment. Psychological Review , 34(4):273–286, 1927. doi: 10.1037/h0070288 ."
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "von Wangenheim et al. [2018] C. G. von Wangenheim, J. V. A. Porto, J. C. R. Hauck, and A. F. Borgatto. Do we agree on user interface aesthetics of Android apps?, 2018."
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Whitehouse and Pollitt [2012] C. Whitehouse and A. Pollitt. Using adaptive comparative judgement to obtain a highly reliable rank order in summative assessment. Technical report, AQA Centre for Educat"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Williams [2025] Owain Williams. The best AI website builders in 2025. https://www.techradar.com/pro/best-ai-website-builder , 2025. Accessed 2025-08-10."
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xiao et al. [2025] Jingyu Xiao, Ming Wang, Man Ho Lam, Yuxuan Wan, Junliang Liu, Yintong Huo, and Michael R. Lyu. Designbench: A comprehensive benchmark for MLLM-based front-end code generation, 2025."
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xu et al. [2023] J. Xu, Z. Shi, Y. Wang, Y. Zhang, D. Lin, D. Zhang, and W. Zhu. Imagereward: Learning and evaluating human preferences for text-to-image generation. In Advances in Neural Information "
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yun et al. [2024] Sukmin Yun, Haokun Lin, Rusiru Thushara, Mohammad Qazim Bhat, Yongxin Wang, Zutao Jiang, Mingkai Deng, Jinhong Wang, Tianhua Tao, Junbo Li, Haonan Li, Preslav Nakov, Timothy Baldwin,"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zellers et al. [2019] Rowan Zellers, Ari Holtzman, Yonatan Bisk, Ali Farhadi, and Yejin Choi. HellaSwag: Can a machine really finish your sentence? In Proceedings of the 57th Annual Meeting of the Ass"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zheng et al. [2023] Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric P. Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica. "
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhong et al. [2023] Wanjun Zhong, Ruixiang Cui, Yiduo Guo, Yaobo Liang, Shuai Lu, Yanlin Wang, Amin Saied, Weizhu Chen, and Nan Duan. AGIEval: A human-centric benchmark for evaluating foundation model"
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. [2025] Hongda Zhu, Yiwen Zhang, Bing Zhao, Jingzhe Ding, Siyao Liu, Tong Liu, Dandan Wang, Yanan Liu, and Zhaojian Li. Frontendbench: A benchmark for evaluating LLMs on front-end developmen"
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Authoring Prompt"
+  },
+  {
+   "id": "b0159",
+   "t": "text",
+   "w": "p",
+   "en": "The following is the exact prompt used to generate the synthetic client briefs in §4.1. We release this verbatim for reproducibility."
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Tool Prompts"
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "p",
+   "en": "The complete set of 30 prompts is released at: https://huggingface.co/datasets/AfterQuery/ui-bench"
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "p",
+   "en": "Below we include three illustrative examples."
+  },
+  {
+   "id": "b0164",
+   "t": "text",
+   "w": "h3",
+   "en": "Example 1: Marketing/Landing"
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "h3",
+   "en": "Example 2: Editorial/Blog"
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "h3",
+   "en": "Example 3: Portfolio/Case Study"
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Generated Sites"
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "p",
+   "en": "The generated sites viewed by raters will be released soon."
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "p",
+   "en": "Below we include three illustrative examples of sites viewed by raters."
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "h3",
+   "en": "Example 1: Marketing/Landing"
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "h3",
+   "en": "Example 2: Editorial/Blog"
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "h3",
+   "en": "Example 3: Portfolio/Case Study"
+  },
+  {
+   "id": "b0178",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D Generic Buttons"
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "h3",
+   "en": "Create Anything, Prompt #17"
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "h3",
+   "en": "v0, Prompt #7"
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  }
+ ]
+}

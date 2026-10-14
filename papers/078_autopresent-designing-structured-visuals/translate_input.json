@@ -1,0 +1,1444 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "AutoPresent : Designing Structured Visuals from Scratch"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Designing structured visuals such as presentation slides is essential for communicative needs, necessitating both content creation and visual planning skills. In this work, we tackle the challenge of "
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Designing structured visuals such as presentation slides from scratch is an essential skill for effective communication and conveying complex ideas [30]. Among various forms of visual communication, creating a compelling set of slides is a challenging problem, requiring content creation (text, pictures, diagrams, and more) and visual planning skills, to ensure the slides are well designed [25] and convey insights with clarity [3, 36]. Even human experts may need to spend hours iterating and polishing their slide decks [10] to produce high-quality designs with clear insights. While digital agents have demonstrated impressive capabilities in tasks such as software engineering [49], web navigation [54, 46], and free-form image design generation [8, 32], their creative capabilities in generating semi-structured communicative media like slide decks has not been extensively tested. Therefore, we ask: Can we employ powerful AI agents to create high-quality presentation slides that are well-structured and insight-revealing?"
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we formulate the natural language (NL) to slide generation task. At a high level, the user provides the system with a natural language instruction about the desired slide, and the system then generates an editable presentation, as shown in . We consider three types of user instructions: (1) detailed instruction with images. (2) detailed instructions only. (3) high-level instructions, reflecting varying levels of design freedom."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "Since there are no existing tools for quantifying agent performance in slide generation tasks, we propose the SlidesBench benchmark (§2) as a training source and test bed for method comparisons. SlidesBench contains 7⟦SLOT_0⟧ training examples and 585 testing examples of varied instruction difficulties, constructed from 310 publicly available slide decks from 10 different domains, including art, business, and technology. To evaluate generated slides, we introduce two sets of evaluation metrics: reference-based metrics to examine position, content, and color match against the reference slide; and reference-free metrics inspired by slide design principles [9, 34, 5, 44, 39] to measure the design quality of agent-created slides alone, given that many good designs for the same instructions may vary from the reference slide."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "To enable controlled and structured slide generation, we propose to create slides using program generation, where a model first generates a program from the natural language instruction, and then the program is executed to get the slide. We apply this approach to large language models (LLMs; LlaMa [11], DeepseekCoder [16], CodeLlama [33], GPT-4o [2]) and vision-language models (VLMs; LlaVa [51]). As illustrated in , given a natural language instruction, the model first generates a Python program and then executes it to obtain a PPTX slide. We find that small models such as LlaMa (8B) and LlaVa (7B) are often unable to produce executable code. While GPT-4o can produce reasonable slides, it still exhibits a substantial gap in design quality compared to human-generated slides (§5). By further conducting iterative refinement, we find that models can self-refine and further improve slide quality. We also find that code generation approaches substantially outperform end-to-end image generation methods (Stable Diffusion [32], Dall-E [8])."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "To further enhance the current model’s ability to generate high-quality slides, we present our open-sourced AutoPresent (8B) model (§4.2) which is fine-tuned from LlaMa 8B on the SlidesBench training set. AutoPresent achieves state-of-the-art performance among small open-sourced models and approaches the performance of the closed-sourced model GPT-4o. Since directly generating a long program is difficult for current models [14], we further create the SlidesLib library to simplify the program generation process. SlidesLib contains high-level functions that are basic such as add_title, and image-related such as search_image and generate_image. We show that LLMs and VLMs generally perform better when given access to SlidesLib."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "Our main contributions can be summarized as follows:"
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "li",
+   "en": "• We formulate the NL-to-slide generation task and build SlidesBench, the first benchmark for slide generation, which contains 7⟦SLOT_1⟧ training and 585 test examples and supports automatic evaluations."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "li",
+   "en": "• We leverage NL-to-program generation methods with refinement to produce high-quality slides, and benchmark diffusion models, VLMs, and LLMs."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "li",
+   "en": "• We train an 8B parameter open-source LLM, AutoPresent, that approaches the performance of GPT-4o, and design a programmatic tool library SlidesLib that facilitates slide program generation across models."
+  },
+  {
+   "id": "b0014",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Illustration of SlidesBench. Each example of SlidesBench consists of three instructions: Detailed Instructions with Images, Detailed Instructions Only, and High-Level Instructions. The model is tasked to generate a slide based on the instruction, and the generated slide is evaluated on the metrics suite, which contains both the reference-free metrics and the reference-based metrics."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "h2",
+   "en": "2 SlidesBench"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we describe the creation of the SlidesBench benchmark. Each instance consists of a natural language instruction to create a slide, and the slide itself (in PPTX format) as a reference. SlidesBench includes three scenarios of varying difficulty levels designed to evaluate models with different user input. We describe the slide data collection (§2.1), three task setups (§2.2), and the annotation process (§2.3)."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Slides Data Collection"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "We search the web and collect presentation slide decks from 10 domains, including art, marketing, environment, technology, etc. To select the highest-quality slide decks from each domain, we manually go through the relevant slide decks and conduct initial processing, by checking if all its slides (i) have visually structured layouts, and (ii) extractable media such as images (if any). For the slide decks with all slides satisfying (i) and (ii) in each domain, we incorporate one slide deck into the test set, and others into the training set. This results in a total of 10 and 300 slide decks (in PPTX format) for testing and training, each containing 20 slides on average. To respect the rights of the slide creators, we do not redistribute the slides. Instead, we provide a list of URLs for the slides that we used so that others can download the slides directly from the original website. We also provide an opt-out mechanism for any creator who does not want their slides in the dataset. We provide implementation details in §A."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Three Task Setups"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "We formulate the task as an NL-to-slide generation process. Given the reference slide, we curate three versions of natural language instructions, as shown in Figure 2, to represent slide generation tasks under varied difficulty levels. We introduce each setup below."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Detailed Instructions with Images The first and easiest setting is to provide the models with all the necessary information and assets to produce the reference slide, including text and image content, formatting and layout specifications. This setting evaluates models’ visual planning abilities, such as arranging spatial layouts, maintaining formatting consistency, balancing content proportions, and emphasizing key elements."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "Detailed Instructions Only Since a user may not specify, or know exactly what images to put on a slide, we propose a detailed instruction only setting, where we provide the same natural language instruction provided in the detailed instruction with images setting, but replace the provided images with their natural language descriptions (e.g., “two people shaking hands”) generated by gpt-4o-mini. We then instruct the models to obtain the images using image searching or image generation tools. This setting further challenges models to interpret complex or compositional descriptions of images and obtain visuals that align with the slide context."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "High-Level Instructions In contrast to users who have a concrete target slide in mind and can spell out all detailed instructions, some users may only be able to express their needs on a high level. We thus devise a high-level instruction setting, where the natural language instructions are rather high-level and only provide a general topical idea of the slide, such as “create a title slide for Airbnb,” instead of detailing what logos and text to add and where, as exemplified in Figure 2. Models in this case need to both acquire or create content, and arrange the elements properly."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "h3",
+   "en": "2.3 Example Annotation"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "To annotate the dataset, we collect natural language instructions paired with each slide. For each slide, we create three versions corresponding to the three setups in §2.2."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "Detailed Instructions with Images To produce detailed instruction with images, we use a scalable approach combining human-written examples and model-generated annotations. For each slide deck, we first write instructions for three example slides manually — including all necessary information (content, layout, formatting) to reproduce the slide, and providing paths to the images used in the slide (e.g., media/image_0.png), as shown in Figure 2 (top). We then use these (human-written instruction, reference slide) pairs as few-shot examples to prompt LLM (specifically, gpt-4o-mini) to generate natural language instructions for each slide in the current slide deck.** * Including the three slides with human-written instructions, to ensure instructions for all slides are consistent in style and specificity. Further, for the test set, we manually examined and refined the instructions by correcting incorrect specifications, adding missing content, and removing unnecessary or untrue content."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "Detailed Instructions Only To produce detailed instruction only, we replace the image paths (e.g., media/image_0.png) with the natural language descriptions of the images(‘‘an artistic, colorful background’’). These descriptions are generated by gpt-4o-mini. For the test set, we manually refine the instructions to ensure that they do not refer to unavailable image paths (e.g., removing phrases like “use the provided images”), as shown in Figure 2 (middle)."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "High-Level Instructions To create high-level instructions, we start with a similar approach by manually annotating three examples and then prompting the model to generate for all slides. Human-written instructions only provide a topical description of the slide and intentionally leave out specific content or layout details. This process ensures that the generated instructions remain concise and general, as shown in Figure 2 (bottom)."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "Overall, the instructions have an average of 115.6, 118.3, and 26.6 words under detailed instruction with images, detailed instruction only, and high-level instructions settings respectively, accompanied by an average of 1.1, 0.0, and 0.0 provided images."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Evaluation Metrics"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we describe the evaluation metrics that we designed for SlidesBench. We propose two sets of evaluation metrics: reference-based metrics for measuring models’ instruction-following abilities (§3.1), and reference-free metrics to examine the design quality of model-generated content (§3.2). We also use executability to examine the success rate of each model (§3.3)."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Reference-Based Metrics"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "Inspired by Design2Code [38] metrics, we implement four dimensions to examine the similarity between the model-produced slides and the reference slide."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Element matching For the slide layout, we measure the total sizes of matched elements (in generated and reference slides) divided by the total sizes of all element, where each textbox, image, or shape constitutes an element. More concretely, we accurately parse out each element in the generated and reference slides, and compute their maximum matching using the match library."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "Content similarity For each pair of matched elements, we compute their content similarity. If the reference element is text, we calculate the textual similarity using the cosine similarity of the embeddings produced with sentence-transformer with the default all-MiniLM-L6-v2 model [29]. If the reference element is an image, we calculate the CLIP score [19] of the image in two elements. We report the average content similarity across all matched element pairs, if either element contains a non-empty text string or an image component."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "Color similarity We also measure the coloring similarity using the CIEDE2000 color difference formula [26], to quantify the perceptual difference between the colors. For every matched element pair, we measure the text font color similarity and element background color (if any). We additionally measure the color similarity between the background color of generated and reference slides."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "Position similarity In addition to content and formatting, we also calculate the positional similarity between each pair of matched elements. More concretely, we follow Si et al. [38] to normalize the element coordinates to ⟦SLOT_2⟧ by the slide page length and width. We compute the Manhattan distance between the elements and formulate positional similarity as ⟦SLOT_3⟧."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "Note that a low text, color, or position similarity score could come from differences in text, color, and positions, or derivative errors caused by the inaccurate element-matching process (e.g., it may match the title box in the generated slide to a content textbox in the reference slide, which has different content or coloring requirements)."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Reference-Free Metrics"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "A well-designed slide generated by models may look very different from the reference slide. Therefore, we also propose four reference-free evaluation metrics, to independently assess the design quality of model-generated slides. To establish the metrics, we surveyed a wide range of literature on slide design principles [9, 34, 5, 44, 39], and summarized four major points as below and detailed in Table 1:"
+  },
+  {
+   "id": "b0042",
+   "t": "keep",
+   "w": "table",
+   "en": "Metric Criteria Text The title should be simple and clear to indicate the main point. For main content, avoid too many texts and keep words concise. Use a consistent and readable font size, style, and"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Reference-free metrics, all evaluated in 0-5 scale."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "Text Using concise texts is important for slides to engage with the audience. An ideal slide should have a clear title, concise main content, and readable formatting."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "Image Using appropriate visuals can engage audiences. We hence measure if models can find high-quality images and properly use them to enhance the slide quality."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "Layout Slide layout is crucial to create visual balance. We examine whether all elements are within the slide, have no overlap, and align properly with the relevant elements."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "Color Vivid and consistent color use in slides can help deliver insights. We check if the slide uses high-contrast colors to facilitate visibility, and avoid high-glaring colors to discourage user engagement."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "h4",
+   "en": "Validation of Reference-Free Evaluation"
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "For all the metrics, we provide the image version of the slide and ask the gpt-4o model to produce a score between 0–5. To examine the reliability of this model-based evaluation, we conduct a human study and compare the intraclass correlation coefficient (ICC) between two human annotators and model evaluation, on all ground-truth slides. Our examination gives high ICC scores across all four metrics: ⟦SLOT_4⟧–⟦SLOT_5⟧, which are well within the range of what is typically considered ‘‘high agreement’’. In experiments in later sections, we scale these 0-5 scale scores to the 0--100 range to enable comparisons on this more standard scale. †† † We still evaluate with 0-5 scale to maintain a robust, human-aligned evaluation process."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Executability"
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "Particularly for methods based on code generation (§4.1), we additionally measure the execution success rate to account for invalid programs. Concretely, we count the percentage of successfully executing programs generated by models among all examples. We report reference-based and free scores for executable slides only, to fairly compare their design quality. But we report ‘Overall’ scores for all slides by assigning zeros to non-executing slides, to account for execution failures. We report all metrics for successfully executing and all slides in §E."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Method"
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "We introduce our main method — slide generation via code generation, optionally using our SlidesLib toolkit (§4.1). Then, we present AutoPresent, trained on 7⟦SLOT_6⟧ slides, that achieves performance on par with strong GPT model (§4.2)."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Slides via NL-to-Code Generation"
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "h4",
+   "en": "Generating Python Programs"
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "Given natural language instructions in §2, models are tasked with generating Python programs using publicly available libraries such as python-pptx. The model receives two (natural language instruction, Python program) pairs as in-context examples, followed by the test instruction, and generates a Python program which is then executed and will ideally yield a PPTX file containing the requested slide."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "h4",
+   "en": "Generating Programs with SlidesLib"
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "Nonetheless, the programs above could be very long and complex (170 lines on average), which could be challenging for models to generate entirely correctly, as shown in previous work [14]. To address this, we design SlidesLib, a library that provides easier-to-use interfaces for several common actions such as setting a title or setting background color. Using SlidesLib, the average program length is reduced to 13 lines, significantly easing the generation task. As shown in Table 2, SlidesLib includes 4 functions for basic operations and 3 functions for image search and generation, these functions allow models to produce more concise and modular programs. To enable the model to generate programs using SlidesLib, we follow the visual programming method [43] by providing a prompt that includes the documentation of the functions and two in-context examples. See more SlidesLib details in §B."
+  },
+  {
+   "id": "b0059",
+   "t": "keep",
+   "w": "table",
+   "en": "Function Description add_title Insert a title in the slide. add_text Insert text at a specific location. add_bullet_points Insert a textbox with bullet points. add_image Insert image at a specific loc"
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Basic (top) and image-specific (bottom) functions provided by SlidesLib."
+  },
+  {
+   "id": "b0061",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Execution% Reference-Based Reference-Free Overall element content color position text image layout color Reference 100.0 – 59.7 81.5 73.5 65.7 – End-to-end Image Generation Stable-Diffusion* 10"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Results with detailed instructions with images. We found that small models like LlaVa (7B) and LlaMa (8B) can barely generate any slides, while AutoPresent (8B) generates slides on par with GPT-4o. All the models still underperform humans."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 AutoPresent"
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "Using the slides in the training set of SlidesBench, we construct (natural language instruction, program) pairs to form training data to train an open-sourced 8B model, AutoPresent. This model is based on the LlaMa-3.1-8B-Instruct and trained using LoRA [21] with a rank of 128."
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "h4",
+   "en": "Training Data Construction"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "To create (natural language instruction, program) training pairs, we generate two versions of canonical program solutions for each slide:"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "(i) Basic Python Programs We derive canonical programs (that is, programs that can be executed to reproduce the slide) without SlidesLib. To do this, we manually design an extraction script that (i) extracts each element (e.g., text and image) on the given slide, and (ii) produces a rule-based program that adds each element to the slide. After extracting and adding each element to the slide, the resulting program accurately reproduces the original slide."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "(ii) SlidesLib Python Programs We also generate canonical programs using SlidesLib, by transforming snippets from the programs above into SlidesLib function calls. To reproduce images in detailed instruction only and high-level instructions settings, we generate a short caption for each image and provide it to GPT-4o to generate the program for producing that image using search_image or generate_image functions. More details of this automatic program generation process are in §B.2."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "h4",
+   "en": "Training Set Composition"
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "After obtaining three instructions and two program versions for each example, we construct four versions of the training data, each with 7⟦SLOT_7⟧ examples:"
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "li",
+   "en": "1. (detailed instruction with images, python program)"
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "li",
+   "en": "2. (detailed instruction with images, SlidesLib program)"
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "li",
+   "en": "3. (detailed instruction only, SlidesLib program)"
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "li",
+   "en": "4. (high-level instructions, SlidesLib program)"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "p",
+   "en": "These training sets allowed us to train four specialized models that address different challenges, which we report in Table 3 (1,2) and Table 4 (3,4)."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Iterative Refinement"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "Slide generation is by nature an iterative process and often requires visual-based refinements after the first draft. To enable models to refine slides as humans do, we explore an iterative refinement procedure, where the model is tasked to self-refine the slide it generated. Specifically, in the setting using SlidesLib, we provide GPT-4o (capable of consuming slide images) with the original language instruction, the program it generated in the first pass, and a snapshot of the rendered slide; the model is then asked to generate a new program based on these information to refine the slide quality by tweaking colors, spacing, and other aspects of the slide. See the prompts of this process in §D."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Experiments and Results"
+  },
+  {
+   "id": "b0079",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Examples of slides generated by different methods in three scenarios. End-to-end image generation methods fail to generate structured and clear slides. Small open-sourced models like LlaMa and LlaVa can barely generate any usable slides, while AutoPresent produces quality slides. Adding SlidesLib improves GPT-4o’s performance on detailed instruction only and high-level instruction tasks."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "We first introduce the experimental setup (§5.1), then present the results under various scenarios (§5.2)."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 Experimental Setup"
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "h4",
+   "en": "Code Generation Approaches"
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "p",
+   "en": "For code generation approaches, we sample ⟦SLOT_8⟧ responses and iteratively go through them, using the first successfully executing program as the final output of the model. If none of the ⟦SLOT_9⟧ responses execute successfully, we count it as an execution failure. In addition to AutoPresent (§4.2), we benchmark several LMs out-of-the-box, including open-weights Llama 3.1 (8B, Instruct), the code generation models DeepseekCoder-7B-v1.5 and CodeLlaMa-7B-Instruct, the vision-language LlaVa v1.5 model (with a Vicuna-7B-v1.5 LM backbone); and the proprietary GPT-4o model (the gpt-4o-2024-08-06 checkpoint)."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "h4",
+   "en": "End-to-End Image Generation"
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "We compare code generation with end-to-end neural image generation methods, which are a common way to produce visuals. These methods are good at creating scenic or artistic images, but may be imprecise in content (esp. text) and do not support easy further modification by users. We benchmark Stable-Diffusion 2 [32] and DALL-E 3 [8] by asking them to output slides given the natural language instructions. We adjust our reference-based evaluation procedure by first segmenting slide images into elements using Tesseract OCR[40] and further parse out the texts of the elements, then applying the default calculation process as in §3. For the detailed instruction with images setting, we also report the results of the end-to-end image generation methods, marked with a “*” to indicate that they do not actually use the image inputs."
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Detailed Instructions Only High-Level Instructions exec ref-based ref-free overall exec ref-based ref-free overall End-to-End Image Generation SD2 100.0 48.0 35.5 48.0 100.0 47.7 31.5 47.7 DALL"
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Results under detailed instruction only and high-level instructions settings. We assign 100% execution success rates for all end-to-end image generation methods because they do not generate programs and would not suffer from execution errors."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2 Quantitative Results and Analysis"
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "Table 3 shows the result of detailed instruction with images scenario and Table 4 shows the result of detailed instruction only and high-level instructions scenarios."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "p",
+   "en": "In the top row of Table 3, we first measure the scores of the reference slides, which shows that the quality of the human-created slides is among the highest."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "Compared to the scores achieved by GPT-4o, smaller open-source models such as Llama 3.1 and LlaVa barely produce any working slides out of the box. Although the significant gaps of ⟦SLOT_10⟧–⟦SLOT_11⟧ points exist in the detailed instruction with images setting, this gap shrinks to ⟦SLOT_12⟧–⟦SLOT_13⟧ when no visuals are provided a priori, in detailed instruction only and high-level instructions scenarios (Table 4). This demonstrates significant challenges in obtaining images in slides. In contrast to the low performance of open-weight models out-of-the-box, AutoPresent’s performance approaches that of GPT-4o."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "End-to-End Image Generation When no visuals are provided, end-to-end image-generation methods perform worse than the best code-generation approaches in both the reference-based and reference-free metrics, especially in generating accurate content. These methods also often produce creative figures without aligning with the design principles of slides, indicating its poorer controllability."
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "Effect of SlidesLib SlidesLib brings observable gains in LlaMa and LlaVa in all three scenarios by at most ⟦SLOT_14⟧ points; and similarly increases the strong GPT-4o performance across scenarios, especially when no images are provided. This suggests the benefits of generating more modular and concise programs for structured visual design."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "p",
+   "en": "VLM vs. LLM When no helper functions are presented, the one VLM that we tested (LlaVa) outperforms its LLM counterpart LlaMa in all scenarios by ⟦SLOT_15⟧–⟦SLOT_16⟧ points. However, LlaVa shows limited ability in using functions presented in context, as demonstrated by the large margin the library-augmented LlaMa has over LlaVa (⟦SLOT_17⟧–⟦SLOT_18⟧). All LLMs (LlaMa, GPT-4o) perform worse when the instructions become less specified (detailed instruction with images ⟦SLOT_19⟧ detailed instruction only ⟦SLOT_20⟧ high-level instructions). Nonetheless, SlidesLib can greatly mitigate this degradation due to the loss of input specificity, and help models produce better outcomes across all three scenarios."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "h3",
+   "en": "5.3 Qualitative Case Study"
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "We illustrate several models-produced slides in Figure 3. For end-to-end image generation methods, the design is more creative and often more attractive, but the text does not constitute meaningful words, or even the characters themselves are not valid."
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "On the other hand, code generation methods, especially weaker LlaMa and LlaVa models, suffer more from visual layout — elements often overlap with each other or exceed the canvas, making it challenging for the audience to obtain all information clearly."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "p",
+   "en": "In contrast, AutoPresent generates slides with appropriate layouts without undesirable element overlaps. In addition, they better follow the user instructions and are not overly creative like the image generation methods."
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "h3",
+   "en": "5.4 Perceptual Evaluation"
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Pairs Detailed+Images Detailed Only t-stat p-val t-stat p-val (GPT-4o, LlaMa ) 13.206 0.000 8.630 0.000 ( AutoPresent , LlaMa ) 13.180 0.000 2.955 0.004 (GPT-4o, AutoPresent ) -0.445 0.657 8.203"
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Paired t-test results comparing model performance across detailed instruction only setting and detailed instruction with images setting. AutoPresent and GPT-4o outperforms LlaMa with a statistically significant difference in both settings."
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "p",
+   "en": "We performed a qualitative evaluation on 10 randomly selected slides from each domain generated by GPT-4o, Llama-8B, and AutoPresent under the detailed instruction with images and detailed instruction only settings. We also add the ground-truth reference slide to evaluate the performance gap between current models and human slide creators. We shuffle these slides and ask the annotators to rank each slide from 1-5 based on how likely they would be to use the slide. For the detailed instruction with images setting, we collect 25 responses in total, and for detailed instruction only, we collect 16 responses in total. We provide more details of the evaluation process in §F."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "p",
+   "en": "The result is shown in Figure 4. By performing the paired ⟦SLOT_21⟧-test, we found differences between the models pairs in terms of user preferences, as shown in Table 5: (1) In both settings, AutoPresent and GPT-4o perform statistically significantly better than LlaMa. (2) In detailed instruction with images setting, GPT-4o and AutoPresent has no significant differences (3) In the detailed instruction only setting, AutoPresent is slightly worse than gpt-4o, aligning with our quantitative evaluations in Table 4. All three models still have an overall performance gap compared with human-designed slides, indicating room for improvement on the slide generation task."
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Perceptual evaluation results on detailed instruction (1) with images and (2) only settings. We ask the users to score the quality of each slide from 1-5 and report the average score of each model. The user reported preference on GPT-4o and AutoPresent compared with LlaMa, while still having a gap with human-designed slides."
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "h3",
+   "en": "5.5 Result after Iterative Refinement"
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "table",
+   "en": "Iteration Detailed + Images Detailed Only High-Level 0 58.0 56.3 58.5 1 59.5 59.5 59.8 2 59.3 60.1 61.3 3 60.1 59.4 61.4"
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Overall scores after applying multi-rounds of refinement in the three scenarios, demonstrating that refinement boosts performance in all three scenarios."
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "p",
+   "en": "Finally, as shown by Table 6, we find that refinement improves model performance on all three challenges. By doing an ablation on the round of iterations, we find that while continued refinement often increases the scores, the first iteration usually gives the biggest performance improvement. We present representative cases after doing one round of refinement in Figure 5, which indicates that refinement can improve content layout and detailed controls on coloring and sizing."
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0112",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Auto-refinement results with GPT-4o, where the model further addresses some previously neglected instructions (marked in green), such as shape, background color, and text."
+  },
+  {
+   "id": "b0113",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Related Work"
+  },
+  {
+   "id": "b0114",
+   "t": "text",
+   "w": "p",
+   "en": "Language and Vision Model-Based Agents Agents based on large language models (LLMs) [2, 11] and vision-language models (VLMs) [4, 51] have been widely adopted in various tasks such as web navigation [52, 54, 24], software engineering [49, 50], and web development [27, 38]. Creation of presentation materials is another common task [10] that has both similarities and differences from these more widely examined tasks."
+  },
+  {
+   "id": "b0115",
+   "t": "text",
+   "w": "p",
+   "en": "Generating Programs for Vision Tasks End-to-end image generation models such as diffusion [20, 32, 48] and GAN [15, 35] are widely used at producing scenic images, yet falling short on more structured visuals such as websites and slides [38]. Generating programs (i.e., image-editing actions) is a useful means to get structured visuals [18, 43, 41, 45, 14], including Tikz figures [6, 7], SVG [31, 37], posters [51], and user interfaces [38, 28]. However, they often require detailed inputs and are limited to specific, simple figure types, so they are still far from creating complex, editable presentation slides from scratch. Our work extends this line of research by formulating and benchmarking the natural-language-to-slide generation task."
+  },
+  {
+   "id": "b0116",
+   "t": "text",
+   "w": "p",
+   "en": "Automatic Slide Generation Previous works on slide creation mostly focus on basic extraction from provided documents [23, 22, 36, 42, 12] or having models generate content given a topic [3, 47, 1] without addressing how to organize content visually. More recently, some benchmarks [17, 53] and methods [13] have emerged that follow detailed instructions for slide editing (e.g., adjust the font size of the title from 20 to 24) of an existing slide. In contrast, we synthesize more complex and structured programs that can generate slides from scratch, including content creation, visual arrangement, and fine-grained editing, instead of refining an existing slide."
+  },
+  {
+   "id": "b0117",
+   "t": "text",
+   "w": "h2",
+   "en": "7 Conclusion and Limitations"
+  },
+  {
+   "id": "b0118",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we address the challenge of creating structured visuals from scratch. Specifically, we introduced SlidesBench, the first benchmark for automatic slide generation with evaluation metrics based on and free of reference slides. We benchmark multiple end-to-end image and program generation approaches, and demonstrate that AutoPresent with SlidesLib achieves comparable performance with the top GPT-4o model. Our further exploration in iterative refinement also reveals certain effectiveness in self-refinement. This work is an initial step towards automated generation of structured visuals. Specifically, it focuses on single-slide generation and produces full slide code in a single pass, without leveraging iterative design workflows. Future research could address these limitations by expanding to full slide decks, adopting gradual and interactive slide generation, and incorporating slide-specific features like animations. Further, integrating more design principles, such as optimizing for attention capture and information clarity, would be crucial for making generated slides more impactful and effective."
+  },
+  {
+   "id": "b0119",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgment"
+  },
+  {
+   "id": "b0120",
+   "t": "text",
+   "w": "p",
+   "en": "We would like to thank Yutong Bai for helping us draft and providing feedback on the paper, David Chan for providing detailed suggestions on the introduction, and Frank Xu and Sean Welleck for discussions at the initial stage of this project. Junyi Zhang and Haven Feng for feedback on the project."
+  },
+  {
+   "id": "b0121",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] Gamma - ai-powered document creation and storytelling platform. Accessed: 2024-11-14."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia Leoni Aleman, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shyamal Anadkat, et al. Gpt-4 technical report. arXiv p"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] Shaikh Mostafa Al Masum, Mitsuru Ishizuka, and Md Tawhidul Islam. ’auto-presentation’: a multi-agent system for building automatic multi-modal presentation of a topic from world wide web informati"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] Jean-Baptiste Alayrac, Jeff Donahue, Pauline Luc, Antoine Miech, Iain Barr, Yana Hasson, Karel Lenc, Arthur Mensch, Katherine Millican, Malcolm Reynolds, et al. Flamingo: a visual language model f"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] Angie Arriesgado. 45 tips to speed up your powerpoint design workflow, 2019."
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] Jonas Belouadi, Anne Lauscher, and Steffen Eger. Automatikz: Text-guided synthesis of scientific vector graphics with tikz. ArXiv , abs/2310.00367, 2023."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] Jonas Belouadi, Simone Paolo Ponzetto, and Steffen Eger. Detikzify: Synthesizing graphics programs for scientific figures and sketches with tikz. arXiv preprint arXiv:2405.15306 , 2024."
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] James Betker, Gabriel Goh, Li Jing, Tim Brooks, Jianfeng Wang, Linjie Li, Long Ouyang, Juntang Zhuang, Joyce Lee, Yufei Guo, et al. Improving image generation with better captions. Computer Scienc"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] The LinkedIn community. How do you use design principles and best practices to evaluate and improve your slide layout and formatting?, 2024."
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] decktopus. Top presentation statistics for 2021, 2021."
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Amy Yang, Angela Fan, et al. The llama 3 herd of models. arXiv prepri"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] Tsu-Jui Fu, William Yang Wang, Daniel McDuff, and Yale Song. Doc2ppt: Automatic presentation slides generation from scientific documents. In Proceedings of the AAAI Conference on Artificial Intel"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] Apurva Gandhi, Thong Q Nguyen, Huitian Jiao, Robert Steen, and Ameya Bhatawdekar. Natural language commanding via program synthesis. arXiv preprint arXiv:2306.03460 , 2023."
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] Jiaxin Ge, Sanjay Subramanian, Baifeng Shi, Roei Herzig, and Trevor Darrell. Recursive visual programming. In European Conference on Computer Vision , pages 1–18. Springer, 2025."
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] Ian Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, and Yoshua Bengio. Generative adversarial nets. Advances in neural information proces"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] Daya Guo, Qihao Zhu, Dejian Yang, Zhenda Xie, Kai Dong, Wentao Zhang, Guanting Chen, Xiao Bi, Yu Wu, YK Li, et al. Deepseek-coder: When the large language model meets programming–the rise of code"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] Yiduo Guo, Zekai Zhang, Yaobo Liang, Dongyan Zhao, and Nan Duan. Pptc benchmark: Evaluating large language models for powerpoint task completion. arXiv preprint arXiv:2311.01767 , 2023."
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] Tanmay Gupta and Aniruddha Kembhavi. Visual programming: Compositional visual reasoning without training. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pa"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] Jack Hessel, Ari Holtzman, Maxwell Forbes, Ronan Le Bras, and Yejin Choi. CLIPScore: A reference-free evaluation metric for image captioning. In Proceedings of the 2021 Conference on Empirical Me"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising diffusion probabilistic models. Advances in neural information processing systems , 33:6840–6851, 2020."
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] Edward J Hu, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen, et al. Lora: Low-rank adaptation of large language models. In International Conference on Learning Rep"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] Yue Hu and Xiaojun Wan. Ppsgen: Learning-based presentation slides generation for academic papers. IEEE transactions on knowledge and data engineering , 27(4):1085–1097, 2014."
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] Min-Yen Kan. Slideseer: A digital library of aligned document and presentation pairs. In Proceedings of the 7th ACM/IEEE-CS joint conference on Digital libraries , pages 81–90, 2007."
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] Jing Yu Koh, Robert Lo, Lawrence Jang, Vikram Duvvur, Ming Lim, Po-Yu Huang, Graham Neubig, Shuyan Zhou, Russ Salakhutdinov, and Daniel Fried. VisualWebArena: Evaluating multimodal agents on real"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] Wenyuan Kong, Zhaoyun Jiang, Shizhao Sun, Zhuoning Guo, Weiwei Cui, Ting Liu, Jianguang Lou, and Dongmei Zhang. Aesthetics++: Refining graphic designs by exploring design principles and human pre"
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] M Ronnier Luo, Guihua Cui, and Bryan Rigg. The development of the cie 2000 colour-difference formula: Ciede2000. Color Research & Application: Endorsed by Inter-Society Color Council, The Colour "
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] Reiichiro Nakano, Jacob Hilton, Suchir Balaji, Jeff Wu, Long Ouyang, Christina Kim, Christopher Hesse, Shantanu Jain, Vineet Kosaraju, William Saunders, et al. Webgpt: Browser-assisted question-a"
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] Yi-Hao Peng, Faria Huq, Yue Jiang, Jason Wu, Xin Yue Li, Jeffrey P Bigham, and Amy Pavel. Dreamstruct: Understanding slides and user interfaces via synthetic data generation. In European Conferen"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] Nils Reimers and Iryna Gurevych. Sentence-bert: Sentence embeddings using siamese bert-networks. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing . Associ"
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] Garr Reynolds. Presentation Zen: Simple ideas on presentation design and delivery . New Riders, 2011."
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] Juan A Rodriguez, Shubham Agarwal, Issam H Laradji, Pau Rodriguez, David Vazquez, Christopher Pal, and Marco Pedersoli. Starvector: Generating scalable vector graphics code from images. arXiv pre"
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn Ommer. High-resolution image synthesis with latent diffusion models. In Proceedings of the IEEE/CVF conference on comput"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] Baptiste Roziere, Jonas Gehring, Fabian Gloeckle, Sten Sootla, Itai Gat, Xiaoqing Ellen Tan, Yossi Adi, Jingyu Liu, Romain Sauvestre, Tal Remez, et al. Code llama: Open foundation models for code"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] Hitesh Sahni. Presentation design: A step-by-step guide, 2024."
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] Axel Sauer, Tero Karras, Samuli Laine, Andreas Geiger, and Timo Aila. Stylegan-t: Unlocking the power of gans for fast large-scale text-to-image synthesis. In International conference on machine "
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] Athar Sefid and Jian Wu. Automatic slide generation for scientific papers. In Third International Workshop on Capturing Scientific Knowledge co-located with the 10th International Conference on K"
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] Pratyusha Sharma, Tamar Rott Shaham, Manel Baradad, Stephanie Fu, Adrian Rodriguez-Munoz, Shivam Duggal, Phillip Isola, and Antonio Torralba. A vision check-up for language models. In Proceedings"
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] Chenglei Si, Yanzhe Zhang, Zhengyuan Yang, Ruibo Liu, and Diyi Yang. Design2code: How far are we from automating front-end engineering? arXiv preprint arXiv:2403.03163 , 2024."
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] Think Outside The Slide. Latest annoying powerpoint survey results, 2019."
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] Ray Smith. An overview of the tesseract ocr engine. In Ninth international conference on document analysis and recognition (ICDAR 2007) , pages 629–633. IEEE, 2007."
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] Sanjay Subramanian, Medhini Narasimhan, Kushal Khangaonkar, Kevin Yang, Arsha Nagrani, Cordelia Schmid, Andy Zeng, Trevor Darrell, and Dan Klein. Modular visual question answering via code genera"
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[42] Edward Sun, Yufang Hou, Dakuo Wang, Yunfeng Zhang, and Nancy XR Wang. D2s: Document-to-slide generation via query-based text summarization. arXiv preprint arXiv:2105.03664 , 2021."
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[43] Dídac Surís, Sachit Menon, and Carl Vondrick. Vipergpt: Visual inference via python execution for reasoning. In Proceedings of the IEEE/CVF International Conference on Computer Vision , pages 118"
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[44] Utrecht University. Four principles for making a good powerpoint presentation, 2024."
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[45] Zhiruo Wang, Graham Neubig, and Daniel Fried. TroVE: Inducing verifiable and efficient toolboxes for solving programmatic tasks. In Forty-first International Conference on Machine Learning , 2024"
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[46] Zora Zhiruo Wang, Jiayuan Mao, Daniel Fried, and Graham Neubig. Agent workflow memory. arXiv preprint arXiv:2409.07429 , 2024b."
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[47] Thomas Winters and Kory W Mathewson. Automatically generating engaging presentation slide decks. In International Conference on Computational Intelligence in Music, Sound, Art and Design (Part of"
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[48] Ximing Xing, Haitao Zhou, Chuang Wang, Jing Zhang, Dong Xu, and Qian Yu. Svgdreamer: Text guided svg generation with diffusion model. In Proceedings of the IEEE/CVF Conference on Computer Vision "
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[49] John Yang, Carlos E Jimenez, Alexander Wettig, Kilian Lieret, Shunyu Yao, Karthik Narasimhan, and Ofir Press. Swe-agent: Agent-computer interfaces enable automated software engineering. arXiv pre"
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[50] John Yang, Carlos E Jimenez, Alex L Zhang, Kilian Lieret, Joyce Yang, Xindi Wu, Ori Press, Niklas Muennighoff, Gabriel Synnaeve, Karthik R Narasimhan, et al. Swe-bench multimodal: Do ai systems g"
+  },
+  {
+   "id": "b0172",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[51] Tao Yang, Yingmin Luo, Zhongang Qi, Yang Wu, Ying Shan, and Chang Wen Chen. Posterllava: Constructing a unified multi-modal layout generator with llm. arXiv preprint arXiv:2406.02884 , 2024c."
+  },
+  {
+   "id": "b0173",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[52] Shunyu Yao, Howard Chen, John Yang, and Karthik Narasimhan. Webshop: Towards scalable real-world web interaction with grounded language agents. In Advances in Neural Information Processing System"
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[53] Zekai Zhang, Yiduo Guo, Yaobo Liang, Dongyan Zhao, and Nan Duan. Pptc-r benchmark: Towards evaluating the robustness of large language models for powerpoint task completion. arXiv preprint arXiv:"
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[54] Shuyan Zhou, Frank F. Xu, Hao Zhu, Xuhui Zhou, Robert Lo, Abishek Sridhar, Xianyi Cheng, Tianyue Ou, Yonatan Bisk, Daniel Fried, Uri Alon, and Graham Neubig. Webarena: A realistic web environment"
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A SlidesBench Details"
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "h3",
+   "en": "A.1 Slide Deck Domains"
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "p",
+   "en": "The 10 domains we cover in SlidesBench include:"
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "li",
+   "en": "1. Art Photos"
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "li",
+   "en": "2. Business"
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "li",
+   "en": "3. Career"
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "li",
+   "en": "4. Design"
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "li",
+   "en": "5. Entrepreneur"
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "li",
+   "en": "6. Environment"
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "li",
+   "en": "7. Food"
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "li",
+   "en": "8. Marketing"
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "li",
+   "en": "9. Social Media"
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "li",
+   "en": "10. Technology"
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "h3",
+   "en": "A.2 Slide Deck Source"
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "p",
+   "en": "There existis large amount of slide decks on the internet including Google Search, Bing Search etc. For convenience, we collect a list of slides from the slideshare.com website."
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "h3",
+   "en": "A.3 Slide Deck Statistics Per Domain"
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "p",
+   "en": "The average images per domain and average text blocks per domain are shown in Figure 6."
+  },
+  {
+   "id": "b0193",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: SlidesBench statistics on different domains."
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B SlidesLib Details"
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we provide the detailed documentation and examples for all functions in our SlidesLib."
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "h3",
+   "en": "B.1 SlidesLib Implementation"
+  },
+  {
+   "id": "b0198",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 7 shows the basic functions and Figure 8 shows the image-oriented functions."
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Documentation for the basic functions in our SlidesLib."
+  },
+  {
+   "id": "b0200",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8: Documentation for the image-oriented functions in our SlidesLib."
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "h3",
+   "en": "B.2 SlidesLib Usage Example"
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 9shows two example programs using multiple SlidesLib functions to produce slides."
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9: Example programs to produce slides using SlidesLib."
+  },
+  {
+   "id": "b0204",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 10: The percentage of each action taken by different models."
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "h3",
+   "en": "B.3 SlidesLib Usage Percentage"
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "p",
+   "en": "The percentage of each action taken by GPT-4o, AutoPresent, and Llama-3.1 in all 3 scenarios are reported in Figure 10. On average, the most common actions are add_text (36.3%), add_image (20.3%), and add_title (13.5%)."
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Training Details for AutoPresent"
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "The training parameters for AutoPresent are summarized in Table 7."
+  },
+  {
+   "id": "b0210",
+   "t": "keep",
+   "w": "table",
+   "en": "Parameter Value LoRA Parameters LoRA rank 128 LoRA alpha 32 LoRA dropout 0 Random state 3407 RS-LoRA Disabled LoFT-Q config None Trainer Parameters Batch size (per device) 1 Gradient accumulation step"
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Training details for AutoPresent. LoRA and Trainer parameters are described in detail."
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D Refinement Details"
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "p",
+   "en": "We provide the prompts that we used for auto-refinement in Figure 11. We input the instruction and the in-context examples, the previous code generated by the model, and the snapshot of the slide generated by executing this code to the model and let it correct the code."
+  },
+  {
+   "id": "b0214",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 11: Prompt we used for Auto-Refinement. The model receives the APIs and instruction, the previous generated slide and code, and is tasked to re-write the code to do slide refinement."
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix E Detailed Results"
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "p",
+   "en": "We report two sets of evaluation metrics (reference-based and reference-free) in both their average value on all slides (i.e., un-weighted by execution success) and on successfully rendered slides (i.e., weighted by execution success)."
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "h3",
+   "en": "E.1 Detailed Instructions with Images"
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "p",
+   "en": "Table 8shows all metrics down-weighted by the execution success rate; Table 9 shows reference-based and reference-free metrics without down-weighting by execution success."
+  },
+  {
+   "id": "b0219",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Execution% Reference-Based Reference-Free Average block text color position text image layout color Human 100.0 - 59.7 81.5 73.5 65.7 - Code Generation w/o Library LLaVA (7B) 11.3 7.0 11.0 0.7 "
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8: Slide generation results (weighted by execution success) under the detailed instructions with images scenario."
+  },
+  {
+   "id": "b0221",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Execution% Reference-Based Reference-Free Avg block text color pos text img layout color Human 100.0 - 59.7 81.5 73.5 65.7 - Code Generation w/o Library LLaVA (7B) 11.3 61.9 97.3 6.2 70.8 41.6 "
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 9: Slide generation results (un-weighted by execution success) under the detailed instructions with images scenario."
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "h3",
+   "en": "E.2 Detailed Instructions Only"
+  },
+  {
+   "id": "b0224",
+   "t": "text",
+   "w": "p",
+   "en": "Table 10 shows all metrics down-weighted by the execution success rate; Table 11 shows reference-based and reference-free metrics without down-weighting by execution success."
+  },
+  {
+   "id": "b0225",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Execution% Reference-Based Reference-Free Average block text color position text image layout color End-to-End Image Generation Stable-Diffusion 100.0 74.5 33.4 9.0 75.0 19.6 45.1 36.9 40.5 48."
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 10: Results (weighted by execution success) under detailed instructions only scenario."
+  },
+  {
+   "id": "b0227",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Execution% Reference-Based Reference-Free Overall block text color position text image layout color End-to-End Image Generation Stable-Diffusion 100.0 74.5 33.4 9.0 75.0 19.6 45.1 36.9 40.5 48."
+  },
+  {
+   "id": "b0228",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 11: Results (un-weighted by execution success) under detailed instructions only scenario."
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "h3",
+   "en": "E.3 High-Level Instructions Challenge"
+  },
+  {
+   "id": "b0230",
+   "t": "text",
+   "w": "p",
+   "en": "Table 12 shows all metrics down-weighted by the execution success rate; Table 13 shows reference-based and reference-free metrics without down-weighting by execution success."
+  },
+  {
+   "id": "b0231",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Execution% Reference-Based Reference-Free Average block text color position text image layout color End-to-End Image Generation Stable-Diffusion 100.0 72.0 33.2 8.3 77.2 3.3 49.3 35.6 37.8 47.7"
+  },
+  {
+   "id": "b0232",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 12: Results (weighted by execution success) under high-level instructions scenario."
+  },
+  {
+   "id": "b0233",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Execution% Reference-Based Reference-Free Average block text color position text image layout color End-to-End Image Generation Stable-Diffusion 100.0 72.0 33.2 8.3 77.2 3.3 49.3 35.6 37.8 47.7"
+  },
+  {
+   "id": "b0234",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 13: Results (un-weighted by execution success) under high-level instructions scenario."
+  },
+  {
+   "id": "b0235",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix F Perceptual Analysis"
+  },
+  {
+   "id": "b0236",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we provide perceptual analysis details. We build a google doc and ask the user to score each slide from 1-5 (1 is the worst and 5 is the best), as shown in Figure 12."
+  },
+  {
+   "id": "b0237",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 12: Instruction we used for the perceptual evaluation."
+  },
+  {
+   "id": "b0238",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0239",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 13: An example of the perceptual analysis question. We ask the human to score the quality of the slide from 1-5."
+  },
+  {
+   "id": "b0240",
+   "t": "text",
+   "w": "p",
+   "en": "An example of the question is shown in Figure 13."
+  }
+ ]
+}

@@ -1,0 +1,4906 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 1]"
+  },
+  {
+   "id": "b0001",
+   "t": "text",
+   "w": "h3",
+   "en": "The Geometry of LLM-as-Judge: Why Inter-LLM Consensus Is Not"
+  },
+  {
+   "id": "b0002",
+   "t": "text",
+   "w": "h3",
+   "en": "Human Alignment"
+  },
+  {
+   "id": "b0003",
+   "t": "text",
+   "w": "p",
+   "en": "Sourabrata MukherjeeHamna HamnaKalika BaliSunayana SitaramMicrosoft Researcht-somukherje@microsoft.com"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "p",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "LLM judges now score most open-ended NLPoutput, and their mutual agreement is routinelyread as evidence that the scores can be trusted.That reading is unsafe: judges may agree be-cause they capture quality, or because theyshare the same blind spots, and agreementstatistics alone cannot tell these apart. We de-velop a geometric test that can. Treating eachjudge’s scores as a vector, we measure spread,eﬀective rank, the angle to human scores, andthe judge–judge, judge–human, and human–human agreement triple for 42 judges on twocommunity-built Indic benchmarks coveringfour domains and eight languages. Every com-parison is reference-matched: a judge and aheld-out rater are scored against the same two-rater mean, since an averaged reference other-wise ﬂatters judges by several degrees. On sub-jective rubrics, judges agree with one anotheras much as humans do yet reach only 58–66%of human agreement: consensus on an axis hu-mans do not weight. On the one rubric with averiﬁable answer, most of that gap closes. En-sembles converge on the judges’ shared axisrather than the human one, and training widensscores without rotating them. Inter-judge agree-ment is evidence of human alignment only afterthis check passes.1"
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "1Introduction"
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "LLMs are now the default raters for open-ended text(Zheng et al., 2023; Chiang and Lee, 2023; Duboiset al., 2023). They track people closely when arubric has a checkable answer, and far less closelyon the subjective, multilingual, culturally situatedjudgements that dominate real deployments (Wanget al., 2024; Liu et al., 2023; Hada et al., 2024;Watts et al., 2024). Across meta-evaluations, one"
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "lopsided pattern recurs: judges agree strongly withone another while agreeing only weakly with peo-ple (Hada et al., 2024; Watts et al., 2024). How"
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "1Code and resources are publicly available."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "that pattern is read decides evaluation practice. Ifjudges agree because they capture quality, ensem-bling them is sound and human annotation can bescaled back; if they agree because they share a blindspot, ensembling ampliﬁes the error exactly wherehuman judgement is scarcest. Agreement statis-tics cannot separate the two readings, because bothproduce the same numbers (Calderon et al., 2025)."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "h3",
+   "en": "We separate them by measuring the shape of thedisagreement rather than its size. Suppose humanjudgement varies along many independent aspectsof quality, while each judge’s scores move along afew, largely shared directions (Schütze, 1992; Aroraet al., 2018; Raghu et al., 2017). Judges built onoverlapping pre-training corpora and similar post-training objectives (Ouyang et al., 2022; Bai et al.,2022) are exactly where this should occur, and ityields a prediction that agreement scores cannottest: judge and human scores should sit at a wideangle in score space, and averaging more judgesshould not close it. Throughout, “subspace,” “axis,”and “projection” name patterns in the scores weobserve, never computation inside a model."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "h3",
+   "en": "We test this prediction on two community-builtIndic benchmarks: real-world cultural QA(Watts et al., 2024), with eight Indic languages,three domains, and three independent raters peritem, and community-health (Hamna et al., 2026;Bhat et al., 2025), judged by 14 base LLMs and27 trained variants of three open families (Brownet al., 2020; Rafailov et al., 2023). One measure-ment choice carries much of the weight. A judgecompared against the average of several raters hasan easier target than a rater compared against asingle colleague, and the diﬀerence is worth sev-eral degrees; wherever we compare a judge with aperson, we therefore hold out one rater and scoreboth against the remaining two. Under this matchedcomparison the prediction holds. On every subjec-tive rubric, judges agree with each other about asmuch as people do while reaching only 58–66% of"
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 2]"
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "h3",
+   "en": "CONSENSUS̸ = ALIGNMENT"
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "h3",
+   "en": "judges agree with one an-other as much as people do(rll ≈rhh) yet reach only58–66% of human agreement"
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "VERIFIABILITY CLOSES IT"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h3",
+   "en": "with a checkable answer thecohort lands 4.3◦from its ﬂoor"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h3",
+   "en": "and the best judge sits inside it"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "h3",
+   "en": "90◦90◦angles open from the human axis"
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "community-"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "health"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "real-worldcultural qa"
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "human axis"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "FAIR COMPARISON"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "every angle is reference-matched:judge and held-out rater are scoredagainst the same two-rater mean"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h3",
+   "en": "OBJECTIVE · TASK QUALITY"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "h3",
+   "en": "cohort 60.7◦vs. ﬂoor 56.4◦"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "h3",
+   "en": "gap 4.3◦· best judge 55.3◦: inside"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "h3",
+   "en": "SUBJECTIVE · LA, HAL"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "h3",
+   "en": "judges 73.1–75.4◦· gap 9–11◦"
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "h3",
+   "en": "ﬂoor 63.8–64.4◦"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "h3",
+   "en": "chance (null) 88.7◦"
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "HOW TO READ"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "h3",
+   "en": "solid arrows = the judges · dashedray = matched human ﬂoor · shadedwedge = the gap · grey dashes =chance"
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "h3",
+   "en": "COMMUNITY-HEALTH · 4RUBRICS"
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h3",
+   "en": "judges 83.5–85.5◦from the mergedrater pool (no ﬂoor exists)only 2–4◦better than chance"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "h3",
+   "en": "chance (null) 87.7◦"
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "THE DATA"
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "h3",
+   "en": "42 LLM judges (15 base + 27 trained)· 2 Indic benchmarks · 4 domains · 8languages · 170,890 judge calls, 87,618human labels"
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "THE BOUNDARY"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "h3",
+   "en": "a dimensionality dR read from thehuman raters alone predicts the regimebefore any LLM runs; rank alone doesnot (r 0.12)"
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "WHAT TRAINING MOVES"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "h3",
+   "en": "18%residual 79%rotate 2.8%"
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "h3",
+   "en": "spread recovers 0.32 →1.08, yet θ isstuck at 87–88◦: almost nothing turnstoward the human axis"
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "THE RULE"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "trust inter-LLM consensus only after thegeometric check passes – ensemblingstalls at the judges’ shared axis (App. B)"
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "h3",
+   "en": "Figure 1: Angles open from the vertical human axis: solid arrows mark where LLM judges sit, dashed rays theirmatched human ﬂoor, and the shaded wedge between them, bracketed at the rim, is the gap this paper measures. Onthe one rubric with a checkable answer (teal) the cohort lands 4.3◦from its ﬂoor and the best judge inside it; onthe subjective rubrics (terracotta) the wedge opens to 9–11◦even though judges agree with one another as much aspeople do. On community-health (left half) a single merged rater pool leaves no ﬂoor to draw, and the judges landonly 2–4◦from chance. The plates below the baseline carry the data, the boundary result, what training moves, andthe rule. All quantities are observed score covariance, never model internals."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "h3",
+   "en": "that agreement with people, sitting 9–11◦outsidethe human ﬂoor and using well under the humanscore range. The one rubric with a veriﬁable answercloses most of the gap. Training widens a judge’sscores but barely rotates them (Fig. 1)."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "Contributions.This paper contributes: (1) a re-porting frame that separates judge–judge, judge–human, and human–human agreement on a matchedreference, with the geometric account scoped as adiagnostic over observed scores (Sec. 3); (2) fourscore-space diagnostics, validated by permutation,FDR, ordinal, human-reference, self-preference,and split-half controls that the collapse pattern sur-vives (Sec. 5.4); (3) a falsiﬁable boundary: a dimen-sionality computed from human raters alone, beforeany LLM is run, predicts which regime a rubricfalls in, with rank necessary and orientation deci-sive; (4) an anatomy of repair, showing that trainingrestores spread rather than orientation and that en-sembling converges on the judges’ shared axis; and(5) a complete release that reproduces every num-ber in this paper with one command (App. O). Agap to human judgement survives every trainingstage we tried, so multi-perspective human ratingremains necessary."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "2Related Work"
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "h3",
+   "en": "LLM-as-judge was adopted because it tracks hu-mans on open-ended generation (Chiang and Lee,2023; Zheng et al., 2023; Kocmi and Federmann,2023; Dubois et al., 2023), and the reliability litera-ture documented where it does not: ﬂuency and ver-bosity bias, self-preference, and degradation on non-English and culturally situated content (Wang et al.,2024; Zheng et al., 2023; Hada et al., 2024; Wattset al., 2024; Hershcovich et al., 2022). Calderonet al. (2025) argue that agreement statistics alonecannot separate a reliable judge from a plausibleone. Our alternative is diagnostic: rather than askhow large the LLM–human gap is, we ask whatshape it has, and show the shape predicts whenconsensus may be trusted."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "Consensus is where this matters most. Ensembleand panel protocols treat inter-judge agreement asreliability (Zheng et al., 2023), assuming averagingcancels idiosyncratic bias. That fails if judges sharethe bias: models trained on overlapping corporawith similar post-training objectives (Ouyang et al.,2022; Bai et al., 2022) can covary strongly whilejointly missing a human-weighted direction. Wemake that failure measurable, and show ensembling"
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 3]"
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "converges on the cohort’s own axis (Sec. 5.6)."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "h3",
+   "en": "Our instruments come from representationalanalysis: principal angles and canonical correlation(Björck and Golub, 1973; Knyazev and Argentati,2002; Raghu et al., 2017), applied to scores ratherthan activations, which keeps the analysis model-agnostic and usable on closed APIs at the cost of adiagnostic rather than mechanistic lens (Sec. 3)."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "The setting is Indic NLP, a testbed for cross-lingual judge reliability (Watts et al., 2024; Hadaet al., 2024). Our benchmarks supply complemen-tary halves of what the diagnostics need: real-world cultural QA (Watts et al., 2024) givesthree independent raters per item, which makes ahuman ﬂoor measurable at all, while community-health (Hamna et al., 2026; Bhat et al., 2025) givesjudge breadth. We evaluate four standard repairs(Brown et al., 2020; Ouyang et al., 2022; Rafailovet al., 2023; Hu et al., 2022; Platt, 1999; Guo et al.,2017); new here is the decomposition (Sec. 5.8)separating ampliﬁcation of a judge’s ranking fromrotation toward humans."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "3A Geometric Lens on Judge ScoreMatrices"
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "h3",
+   "en": "This section deﬁnes what the paper measures. Itis a diagnostic lens over observed scores: “projec-tion,” “subspace,” and “axis” refer to structure inobserved score covariance, never to internal LLMcomputation. Every analysis operates on per-judgescore matrices SJ ∈Rn×m (n items, m rubrics;columns mean-centered). Two constructions re-cur: per-rubric, where a judge column s meetsa reference column h and the angle reduces ex-actly to θ = arccos |r(s, h)| for Pearson r; andstacked, the largest principal angle (Björck andGolub, 1973; Knyazev and Argentati, 2002) be-tween the 95%-energy singular bases of the fullmatrices. App. D expands this section with the ide-alised picture, the worked identity, and the bound-ary case analysis; App. L gives procedures, pre-processing/cutoﬀgrids, and the permutation-nullbaseline; App. N reconciles the constructions nu-merically."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "h3",
+   "en": "We track four diagnostics.(i) Spread ratio σJ /σH:judge over human-reference score SD, per rubric.(ii) Effective rank"
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "h3",
+   "en": "rJ"
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "p",
+   "en": "95 = min"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "h3",
+   "en": "k : P"
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "h3",
+   "en": "i≤k λi"
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "P"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "h3",
+   "en": "i λi ≥0.95"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "(Jolliﬀe and Cadima, 2016): how many inde-"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "h3",
+   "en": "pendent directions the judge’s scores use.(iii) Principal angle θ(SJ , SH), always read against"
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "h3",
+   "en": "a reference-matched inter-human ﬂoor (wheremultiple raters exist; Sec. 5) and a permuta-tion null: near-orthogonality is generic in highdimension, so an angle is informative only rel-ative to that null.(iv) The agreement triple rll, rlh, rhh, reported to-"
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "gether, never as one aggregate."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "h3",
+   "en": "Boundary: rank necessary, orientation decisive.Let dR measure the dimensionality of human raterdisagreement under rubric R, computed from hu-man raters alone as the participation ratio of thecentered items×raters matrix,"
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "h3",
+   "en": "dR ="
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "P"
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "h3",
+   "en": "i λi"
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "2. P"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "h3",
+   "en": "i λ2"
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h3",
+   "en": "i ,(1)"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "h3",
+   "en": "with λi the squared singular values. Note dR ≤Rfor R raters, so with three raters it is capped at 3 andreports disagreement dimensionality at that panelsize, not the intrinsic dimensionality of human qual-ity. A cohort with kJ < dR cannot represent thehuman variation, so kJ ≥dR is necessary, butnot suﬃcient, since a judge may spend its rank ondirections humans ignore. The decisive quantityis orientation. For a single direction the relation-ship is an identity rather than an analogy: sincecos θ = |r|,"
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "h3",
+   "en": "1 −cos2 θ(s, h) = 1 −r2,(2)"
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "h3",
+   "en": "which is exactly the fraction of human score vari-ance that direction leaves unexplained; App. Dworks the numbers through and connects them tothe ridge estimates. A stronger, rank-only gate isfalsiﬁed by our own measurements (r95 does notpredict alignment, r = 0.12; Sec. 5.4). A judgeis rank-matched on a rubric when its angle beatsthe permutation null and reaches the matched inter-human ﬂoor with rlh ≈rhh."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "h3",
+   "en": "Falsifiable predictions.Tested in Sec. 5: P1judges compress spread on subjective rubrics; P2judge eﬀective rank sits at or below the human ref-erence’s; P3 on the three-rater benchmark, judge–human angles exceed the matched inter-human ﬂooron subjective rubrics and approach it on the objec-tive one, signiﬁcantly below the permutation nullin both regimes; P4 rll >rlh on subjective rubricsvia a dominant shared score axis, measurable by co-hort PCA; P5 dR from humans alone separates theregimes; P6 rank alone does not predict alignment;"
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 4]"
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "h3",
+   "en": "orientation does. The lens predicts which rubricsfail and the shape of failure, not which interventionrepairs it (Sec. 5.7)."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "4Experimental Setup"
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "h3",
+   "en": "Thestudyspans170,890LLM-judgecalls(≈474,310 rubric-level scores and preferencelabels) over two community-built Indic benchmarkscovering four domains, eight Indic languages, and42 distinct LLM judges (15 base models plus 27ﬁne-tuned, preference-optimised, few-shot, orcalibrated variants), evaluated against four humanreference pools (≈87,618 human labels; App. E).Every roster, per-cell count, and event total isregenerated from the released data by one script(App. O)."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "h3",
+   "en": "Datasets and languages.community-health(Samiksha (Hamna et al., 2026; Bhat et al., 2025);CH) is a medical-advisory benchmark in Hindi,Kannada, and Malayalam: 810 questions (270/lan-guage), each answered by three generator LLMs (=2,430 scored QA pairs) with paired standalone andcomparative human labels; all geometric/traininganalyses use its 405-item core (45×3×3, the subsetwith complete topic metadata), comparative agree-ment the full pair set. real-world cultural QA(Pariksha (Watts et al., 2024); DLQ, daily-life QA)contributes health & wellness, finance, and every-day life with three independent raters per item; weretain the 1,182 items all three raters completed(300 Hindi down to 60 Odia; Table 8), from 27answer generators. The eight analysed languages(Bengali, Hindi, Kannada, Malayalam, Marathi,Odia, Tamil, Telugu) span Indo-Aryan and Dravid-ian families; DLQ’s comparative split (which addsGujarati and Punjabi) is excluded from analysis (asingle LLM judge with a label-orientation artefact;App. M) and counted only in event totals."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "Judges.15 base LLMs cover closed-API fron-tier, open multilingual, and Indic-focused families(open weights 12B–671B): 14 judge CH, 5 judgeDLQ (deepseek-r1, gpt-4, grok-4, mistral-large-3,llama-3.3-70b), four anchoring both. Three Indic-capable open families (sarvam-m-24b, gemma-3-27b, aya-expanse-32b) are exercised on CHunder six techniques:few-shot (Brown et al.,2020), LoRA SFT (Hu et al., 2022; Ouyang et al.,2022), DPO (Rafailov et al., 2023), SFT+DPO,demonstration-augmented SFT (demos baked intotraining prompts), and demonstration-anchored cal-"
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "h3",
+   "en": "ibration (a frozen trained checkpoint scored withk human-rated demos in context); SFT/DPO trainon held-out CH-source labels with zero questionoverlap with the evaluation set. Rosters, recipes,hyper-parameters: Tables 10–15; API versions andcall dates: App. O."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "h3",
+   "en": "Every QA pair is scored under two paradigms.Standalone: per-rubric ordinal scores over foursubjective CH rubrics (clarity, helpfulness, accu-racy, completeness) plus three DLQ rubrics: taskquality (the single objective rubric: veriﬁable taskconstraints), linguistic acceptability, and hallucina-tions (Chiang and Lee, 2023; Watts et al., 2024).Comparative: judges pick the better of two an-swers. The paradigms separate calibration fromrank-ordering failures (Zheng et al., 2023; Liuet al., 2023); deﬁnitions and verbatim prompts inApp. G, I."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "h3",
+   "en": "Measurement and inference.Per (judge, rubric,language, domain, eval type) slice we compute theSec. 3 diagnostics: the agreement triple (quadratic-weighted κ in App. M); Cohen’s κ (Cohen, 1960) oncomparative panels; σJ /σH; r95; and θ against thematched human ﬂoor and permutation null (App. L).The training analysis uses a paired item bootstrap(Efron, 1979), B = 1000 over the 405 core itemswith rows reused across (family, stage); with n=3trainable families the smallest one-sided Wilcoxon(Wilcoxon, 1945) p is 0.125, so Wilcoxon is only adirectional summary."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "5Empirical Analysis"
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "p",
+   "en": "Four analyses plus controls test the geometric ac-count: agreement, boundary, geometry, controls(testing P1–P6; Sec. 5.4), and training."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "h3",
+   "en": "One construction per comparison.Two conven-tions govern every number below, since mixingthem is the easiest way to manufacture a result. (i)All three legs of an agreement triple are pairwise(rater vs. rater): correlating a judge with the mean ofthree raters gives it a less noisy target than the othertwo legs face, which on task quality alone movesrlh from 0.418 to 0.519 and would lift judges abovethe human ﬂoor. (ii) Every angle compared witha human ﬂoor is reference-matched: one rater isheld out and the mean of the other two is the singlereference that this rater and each judge are scoredagainst. App. N reconciles the constructions."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 5]"
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "h3",
+   "en": "0.00.10.20.30.40.50.6Pearson r"
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "p",
+   "en": "CH·clarity"
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "CH·accuracy"
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "CH·helpful"
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "CH·complete"
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "p",
+   "en": "DLQ·task quality"
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "p",
+   "en": "DLQ·ling. accept."
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "p",
+   "en": "DLQ·halluc."
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "p",
+   "en": "LLM–humanLLM–LLMhuman–human"
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "h3",
+   "en": "Figure 2: Segment length = the LL−LH gap, all legspairwise. Extended caption in Table 6."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "p",
+   "en": "5.1Inter-LLM consensus versusLLM–human agreement"
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "h3",
+   "en": "On real-world cultural QA’s subjective rubricsthe three legs separate cleanly: judges agree witheach other about as much as humans agree with eachother (rll 0.356 vs. rhh 0.357 on linguistic accept-ability; 0.349 vs. 0.364 on hallucinations) whileagreeing with humans far less (0.207, 0.239, i.e.58% and 66% of the inter-human level). Match-ing inter-human consensus without matching inter-human agreement is the paper’s central observation:consensus is reached on a diﬀerent axis. The col-lapse is strongest on community-health (41–64%of inter-LLM across four rubrics), and its compar-ative split sharpens it in preference space: LLM–LLM κ = 0.445 vs. LLM–human κ = 0.128, a3.5× gap (base judges, 2, 430 pairs, three-class κ).Table 1A gives the full triple and the matched an-gles; Fig. 2 maps every cell’s gap."
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "p",
+   "en": "5.2The boundary is rubric-conditional"
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "h3",
+   "en": "The strongest reading of consensual blindness, thatLLM judges are generically unreliable, is falsiﬁedby real-world cultural QA: with the same items,the same ﬁve judges (deepseek-r1, gpt-4, grok-4,mistral-large-3, llama-3.3-70b), and the same threehumans, task quality lifts LLM–human agreementto 0.418, or 88% of the inter-human level (0.474),against 58% and 66% on the two subjective rubrics.The angle tells the same story with the referencematched: judges sit 60.7◦from the two-rater ref-erence where a held-out human sits 56.4◦, a gapof 4.3◦, against 11.0◦and 9.3◦on the subjectiverubrics. The best single judge (55.3◦) is inside thehuman ﬂoor on task quality; on both subjectiverubrics the best judge (67.3◦, 70.8◦) remains welloutside it. Figure 3 shows this item by item: thesubjective clouds stay ﬂat against the identity line,task quality tracks it."
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "h3",
+   "en": "cohortn σJ/σH θ◦θ◦"
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "h3",
+   "en": "hhrrrefrhh∆"
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "h3",
+   "en": "(A) Rubric×dataset matched θ; pairwise r; rref: inter-LLMCH subj. mean 140.4484.4–0.093 0.180–+0.087DLQ LA50.73475.4 64.4 0.207 0.356 0.357 +0.149DLQ HAL50.78473.1 63.8 0.239 0.349 0.364 +0.110DLQ TQ (obj.) 50.68760.7 56.4 0.418 0.530 0.474 +0.112"
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "h3",
+   "en": "(B) Base-judge strata on CHstacked; rref: pool meanFE40.63587.5–0.131 0.093–+0.039OXL40.36888.5–0.070 0.093–−0.023OM40.22288.3–0.082 0.093–−0.011IF20.64189.6–0.083 0.093–−0.010"
+  },
+  {
+   "id": "b0112",
+   "t": "text",
+   "w": "h3",
+   "en": "(C) Training stage on CHstacked; rref: BASEBASE30.31987.7–0.081 0.081–0.000FS30.62488.3–0.122 0.081–+0.041FT31.07487.1–0.129 0.081–+0.048FT+PO31.07887.1–0.132 0.081–+0.051AT410.64988.0–0.177 0.081–+0.096CAL410.63388.1–0.184 0.081–+0.103"
+  },
+  {
+   "id": "b0113",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 1: Consolidated results grid. ∆= rref −r inpanel A (how far LLM–human sits below inter-LLM)and r−rref in B–C. Panel A: all three r legs pairwise;θ and θhh reference-matched, so the judge and the held-out human face the same two-rater target (DLQ only:CH merges its annotators into one reference, so no ﬂoorexists there and its θ is against that single reference).Panels B–C: per-judge stacked angles (C: bootstrap stagemeans), which run higher than panel A by construction(Table 4; App. N). 4: lifts all four CH rubrics over BASE(unmarked trained rows do not; base judges take nomarker). Shaded cells mark the decisive numbers: sand= the worst case in a panel, mist = the relief case. Key,codes, strata: App. H.1."
+  },
+  {
+   "id": "b0114",
+   "t": "text",
+   "w": "p",
+   "en": "012"
+  },
+  {
+   "id": "b0115",
+   "t": "text",
+   "w": "p",
+   "en": "LLM-judge score"
+  },
+  {
+   "id": "b0116",
+   "t": "text",
+   "w": "p",
+   "en": "0"
+  },
+  {
+   "id": "b0117",
+   "t": "text",
+   "w": "p",
+   "en": "1"
+  },
+  {
+   "id": "b0118",
+   "t": "text",
+   "w": "p",
+   "en": "2"
+  },
+  {
+   "id": "b0119",
+   "t": "text",
+   "w": "p",
+   "en": "mean-human score"
+  },
+  {
+   "id": "b0120",
+   "t": "text",
+   "w": "p",
+   "en": "r̄=0.27ling. accept. [subj.]"
+  },
+  {
+   "id": "b0121",
+   "t": "text",
+   "w": "p",
+   "en": "01"
+  },
+  {
+   "id": "b0122",
+   "t": "text",
+   "w": "p",
+   "en": "LLM-judge score"
+  },
+  {
+   "id": "b0123",
+   "t": "text",
+   "w": "p",
+   "en": "0"
+  },
+  {
+   "id": "b0124",
+   "t": "text",
+   "w": "p",
+   "en": "1r̄=0.32halluc. [subj.]"
+  },
+  {
+   "id": "b0125",
+   "t": "text",
+   "w": "p",
+   "en": "012"
+  },
+  {
+   "id": "b0126",
+   "t": "text",
+   "w": "p",
+   "en": "LLM-judge score"
+  },
+  {
+   "id": "b0127",
+   "t": "text",
+   "w": "p",
+   "en": "0"
+  },
+  {
+   "id": "b0128",
+   "t": "text",
+   "w": "p",
+   "en": "1"
+  },
+  {
+   "id": "b0129",
+   "t": "text",
+   "w": "p",
+   "en": "2r̄=0.52task quality [obj.]"
+  },
+  {
+   "id": "b0130",
+   "t": "text",
+   "w": "h3",
+   "en": "Figure 3: Three-rater mean human score against LLM-judge score for the ﬁve DLQ base judges, one panel perrubric (hexbin density, dashed identity line, solid least-squares ﬁt). Axes follow each rubric’s own ordinal scale({0, 1, 2}; hallucinations is binary). ¯r is the judge-vs-mean-human Pearson, the quantity these panels plot; thepairwise leg comparable with inter-human agreement islower (0.418/0.207/0.239) and is what Table 1A reports.The two subjective rubrics stay ﬂat against the identityline; task quality tracks it."
+  },
+  {
+   "id": "b0131",
+   "t": "text",
+   "w": "h3",
+   "en": "The boundary is a large change of degree, nota crossing: judges close most but not all of thegap where the rubric is veriﬁable. Scoring judgesagainst the three-rater mean while scoring humansagainst each other puts task quality above the hu-man ﬂoor, but that ordering is an artefact of themismatched reference and does not survive match-ing."
+  },
+  {
+   "id": "b0132",
+   "t": "text",
+   "w": "p",
+   "en": "We do not claim that LLM-as-judge failsin general:subjective rubrics with high rater-"
+  },
+  {
+   "id": "b0133",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 6]"
+  },
+  {
+   "id": "b0134",
+   "t": "text",
+   "w": "h3",
+   "en": "0.00.20.40.60.81.01.21.4σ-ratio (judge spread / human spread)"
+  },
+  {
+   "id": "b0135",
+   "t": "text",
+   "w": "p",
+   "en": "85"
+  },
+  {
+   "id": "b0136",
+   "t": "text",
+   "w": "p",
+   "en": "86"
+  },
+  {
+   "id": "b0137",
+   "t": "text",
+   "w": "p",
+   "en": "87"
+  },
+  {
+   "id": "b0138",
+   "t": "text",
+   "w": "p",
+   "en": "88"
+  },
+  {
+   "id": "b0139",
+   "t": "text",
+   "w": "p",
+   "en": "89"
+  },
+  {
+   "id": "b0140",
+   "t": "text",
+   "w": "p",
+   "en": "90"
+  },
+  {
+   "id": "b0141",
+   "t": "text",
+   "w": "p",
+   "en": "angle to human ( ∘)"
+  },
+  {
+   "id": "b0142",
+   "t": "text",
+   "w": "h3",
+   "en": "σJ = σH"
+  },
+  {
+   "id": "b0143",
+   "t": "text",
+   "w": "p",
+   "en": "trained variantsfrontier (closed)"
+  },
+  {
+   "id": "b0144",
+   "t": "text",
+   "w": "p",
+   "en": "open xlopen large"
+  },
+  {
+   "id": "b0145",
+   "t": "text",
+   "w": "p",
+   "en": "open midIndic-focused"
+  },
+  {
+   "id": "b0146",
+   "t": "text",
+   "w": "h3",
+   "en": "Figure 4: All 40 judges in (σ-ratio, angle) space; po-sition and spread, not a ranking. Extended caption inTable 6."
+  },
+  {
+   "id": "b0147",
+   "t": "text",
+   "w": "p",
+   "en": "disagreement dimensionality expose a mismatch be-tween the judge and human subspaces, whereas ob-jective rubrics can be rank-matched. Items illustrat-ing both regimes (factual recall and shared culturalknowledge on one side; healthcare access, aﬀord-ability, overmedicalisation, and emotional framingon the other) are in Tables 26–27 (App. P)."
+  },
+  {
+   "id": "b0148",
+   "t": "text",
+   "w": "p",
+   "en": "5.3Geometric signature of the disagreement"
+  },
+  {
+   "id": "b0149",
+   "t": "text",
+   "w": "h3",
+   "en": "The failure is not only a correlation gap; it has a char-acteristic geometry (Table 1): compressed spread,low rank, high angle, large unrecoverable humanvariance (Sec. 5.4). On CH the median base judgeuses under half the human spread (σ-ratio 0.454)at a stacked angle of 89.3◦. On DLQ, with the ref-erence matched, base judges sit 84.3–88.9◦fromthe two-rater reference while a held-out human sits73.9–78.1◦from it: a gap of roughly 10◦that Pear-son alone does not expose. Rank conﬁrms P2: hu-man references use the full basis (r95 = 4 CH, 3DLQ); 11 of 14 CH base judges sit at r95 ≤3. An-gles are comparable only within one construction(Table 4; App. N)."
+  },
+  {
+   "id": "b0150",
+   "t": "text",
+   "w": "p",
+   "en": "Trainingreliablymovesjudgesrightward(spread) but not downward (angle); Fig. 4 plotsevery judge in that space."
+  },
+  {
+   "id": "b0151",
+   "t": "text",
+   "w": "h3",
+   "en": "Task quality does not merely raise Pearson, itrotates the judge vectors: 4.3◦from the ﬂoor against9.3–11.0◦on the subjective rubrics, even thoughspread stays compressed (σ-ratio 0.687; σH is themean single-rater SD throughout, matching CH’ssingle merged reference). Alignment and spreadcalibration are separable: on the objective rubricjudges point close to the right way but under-usethe range (Fig. 5)."
+  },
+  {
+   "id": "b0152",
+   "t": "text",
+   "w": "p",
+   "en": "0.51.0"
+  },
+  {
+   "id": "b0153",
+   "t": "text",
+   "w": "p",
+   "en": "σ-ratio"
+  },
+  {
+   "id": "b0154",
+   "t": "text",
+   "w": "p",
+   "en": "50"
+  },
+  {
+   "id": "b0155",
+   "t": "text",
+   "w": "p",
+   "en": "60"
+  },
+  {
+   "id": "b0156",
+   "t": "text",
+   "w": "p",
+   "en": "70"
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "p",
+   "en": "80"
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "p",
+   "en": "angle to mean-human (°"
+  },
+  {
+   "id": "b0159",
+   "t": "text",
+   "w": "p",
+   "en": "ling. accept. [subj.]"
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "p",
+   "en": "0.51.0"
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "p",
+   "en": "σ-ratio"
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "p",
+   "en": "halluc. [subj.]"
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "p",
+   "en": "0.51.0"
+  },
+  {
+   "id": "b0164",
+   "t": "text",
+   "w": "p",
+   "en": "σ-ratio"
+  },
+  {
+   "id": "b0165",
+   "t": "text",
+   "w": "p",
+   "en": "task quality [obj.]"
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 5: One panel per rubric, judges and held-outhumans on the matched two-rater reference. Extendedcaption in Table 6."
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "p",
+   "en": "ControlOutcome"
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "h3",
+   "en": "Permutation nullDLQ per-rubric null 88.6–88.7◦; every judge×rubric anglebelow all 500 shuﬄes (p < 0.002 each)CH judge-level + FDRCH stacked null 88.8◦; 11/40 judges below at p < .05 and 6survive Benjamini–Hochberg at q < .05 (20,000 shuﬄes)Ordinal / scaleSpearman = Pearson within 0.02; remap onto human marginalmoves θ by ≤0.13◦(DLQ) / ≤0.31◦(CH)Self-preferencejudges from a generator’s own family rate it no diﬀerently than therest of the cohort does (|∆| ≤0.035 SD, all p ≥0.58)Split-halfitem-half angles agree to ≤2.5◦; DLQ judge ordering acrosshalves r = 0.74–0.97; CH judge ordering does not replicateUnrecoverable var.ridge CV: 55% (TQ), ≈80% (DLQ subj.), ≈100% (CH) ofhuman variance unrecoverable from the judge cohortdR separator (P5)human-only dimensionality splits objective (≈2.1) from subjec-tive (≈2.4) cells before any LLM runs; no graded trend withineither group"
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 2: Controls summary. Procedures, per-rubricvalues, judge-level permutation results with q values,and caveats in App. L, M."
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "p",
+   "en": "5.4Controls: is the geometry real?"
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "p",
+   "en": "Control families, all on released scores with no newinference, test whether the geometry is an artefactand test P1–P6 (Table 2; procedures in App. L–M)."
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "h3",
+   "en": "Against a permutation null (500 shuﬄes/judge;nulls 88.6–88.7◦), every DLQ judge×rubric anglebeats all shuﬄes (p < 0.002, all 15 tests), andthe weakest survives Bonferroni across all 15: taskquality at 60.7◦sits signiﬁcantly below the permu-tation null, and the subjective elevations above theﬂoor are consistent oﬀsets (P3). On CH the cohortsits nearest the null (88.1◦vs. 88.8◦), the strongestcollapse we report, yet individual judges still de-part from it: at 20,000 shuﬄes, 11 of 40 judges arebelow the null at p < .05 (2 expected by chance)and 6 survive Benjamini–Hochberg (Benjamini andHochberg, 1995) at q < .05, including two of thefour frontier closed judges (gpt-5.5, gpt-4o), llama-3.3-70b, and three ﬁne-tuned variants of the Indic-capable open families (Table 19)."
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "h3",
+   "en": "That is each judge against chance, not againsteach other. The permutation is paired, holding ajudge’s matrix ﬁxed while shuﬄing the human rows,so it removes item-sampling variance; an item boot-strap does not, and gives each CH angle a 95%interval 6.3◦wide against a between-judge SD ofonly 1.6◦. We therefore rank no CH judges by an-gle anywhere, and CH comparisons use stacked"
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 7]"
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "p",
+   "en": "Pearson (Sec. 5.7)."
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "h3",
+   "en": "Nor is compression merely cautious scale use:Spearman tracks Pearson to within 0.02 per rubric,and monotone remapping onto the human marginalmoves angles by ≤0.13◦(DLQ) / ≤0.31◦(CH), sojudges occupy a different direction, not a narrowerstretch. We also report a magnitude rather than anall-or-nothing “null-space” claim: cross-validatedridge reconstruction from the entire cohort leaves55% of human variance unrecoverable on task qual-ity, ≈80% on subjective DLQ, essentially 100%on CH (CV R2 ≤0)."
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "h3",
+   "en": "The regimes also separate before any LLM is run(P5). The participation ratio dR (Eq. 1), computedfrom the three human raters alone, tracks the LLM–human angle across the nine DLQ rubric×domaincells (ρ = 0.68, p = 0.042, R2 = 0.83, leave-one-cell-out stable). The relation is between regimes,not graded within them: objective cells cluster atdR ≈2.1 and ≈60◦, subjective at ≈2.4 and ≈74◦,while inside the six subjective cells the correlationvanishes (ρ = −0.03). We read dR as a two-regimeseparator, not a dose–response curve, and quote noslope; with three raters it is capped at 3, measuringrater disagreement at this panel size (see Limita-tions). The supported claim is the useful one: aquantity computable from humans alone tells youwhich regime a rubric is in."
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "h3",
+   "en": "Self-preference is not the driver either. Two ofCH’s three answer generators (sarvam-m, qwen3)also serve as judges, and sarvam-m supplies theheadline calibrated judge, so family favouritismcould manufacture the training result. Within a(language, question) triple, a judge’s standardiseddeviation from its triple mean, minus the human’sand then the rest of the cohort’s, isolates familypreference from item diﬃculty and real quality dif-ferences. No family shows an eﬀect (|∆| ≤0.035SD; permutation p ≥0.58; App. M.8)."
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "h3",
+   "en": "Finally, rank is necessary but orientation is deci-sive (P6): across the 40 CH judges eﬀective rankdoes not predict alignment (r = 0.12; r95 spans1–4, angles 85.0–89.9◦). With task quality stillcompressed (σ-ratio 0.69) yet rotated to within 4.3◦"
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "p",
+   "en": "of the ﬂoor, orientation, not rank or spread, carriesalignment (Eq. 2)."
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "p",
+   "en": "5.5Breadth: domains and languages"
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "h3",
+   "en": "The remaining diagnostics use DLQ, the only setupwith per-cell human ﬂoors. Across domains theboundary reproduces in all three (Fig. 6): on taskquality the LLM mean sits 60.6–63.3◦against a"
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "h3",
+   "en": "matched ﬂoor of 57.7–58.2◦, with LH Pearsonat 85–92% of H–H; on the subjective rubrics thegap widens to 8.3–14.3◦and LH falls to 49–66%.σ-compression (0.67–0.82) is domain-invariant;Fig. 14 (App. H) breaks agreement out by language,domain, and rubric kind across all four domaindatasets."
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "h3",
+   "en": "Across the eight languages the robust ﬁndingsare compression and the agreement gap, not theangle. σ-compression is universal (0.43–0.76) andthe LL−LH gap is positive in all eight, but its sizeranges over two orders of magnitude, from +0.227(Bengali) to +0.005 (Telugu, eﬀectively closed).Per-language angles we do not read: at n=60–300per language the stacked angle saturates near 90◦"
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "h3",
+   "en": "for judges and humans alike, and only 26 of 40judge×language cells sit above their own matchedﬂoor (Fig. 12)."
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "p",
+   "en": "0.51.0"
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "p",
+   "en": "60"
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "p",
+   "en": "80"
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "p",
+   "en": "health & wellness"
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "p",
+   "en": "angle to H (°)"
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "p",
+   "en": "ling. accept. [subj.]"
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "p",
+   "en": "n=284"
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "p",
+   "en": "0.51.0"
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "p",
+   "en": "60"
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "p",
+   "en": "80"
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "p",
+   "en": "halluc. [subj.]"
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "p",
+   "en": "n=284"
+  },
+  {
+   "id": "b0198",
+   "t": "text",
+   "w": "p",
+   "en": "0.51.0"
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "p",
+   "en": "60"
+  },
+  {
+   "id": "b0200",
+   "t": "text",
+   "w": "p",
+   "en": "80"
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "p",
+   "en": "task quality [obj.]"
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "p",
+   "en": "n=284"
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "p",
+   "en": "0.51.0"
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "p",
+   "en": "60"
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "p",
+   "en": "80"
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "p",
+   "en": "finance"
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "p",
+   "en": "angle to H (°)"
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "p",
+   "en": "n=323"
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "0.51.0"
+  },
+  {
+   "id": "b0210",
+   "t": "text",
+   "w": "p",
+   "en": "60"
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "p",
+   "en": "80n=323"
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "p",
+   "en": "0.51.0"
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "p",
+   "en": "60"
+  },
+  {
+   "id": "b0214",
+   "t": "text",
+   "w": "p",
+   "en": "80n=323"
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "p",
+   "en": "0.51.0"
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "p",
+   "en": "60"
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "p",
+   "en": "80"
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "p",
+   "en": "everyday life"
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "p",
+   "en": "angle to H (°)"
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "p",
+   "en": "n=575"
+  },
+  {
+   "id": "b0221",
+   "t": "text",
+   "w": "p",
+   "en": "0.51.0"
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "p",
+   "en": "60"
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "p",
+   "en": "80n=575"
+  },
+  {
+   "id": "b0224",
+   "t": "text",
+   "w": "p",
+   "en": "0.51.0"
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "p",
+   "en": "60"
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "p",
+   "en": "80n=575"
+  },
+  {
+   "id": "b0227",
+   "t": "text",
+   "w": "p",
+   "en": "frontier (closed)open xl"
+  },
+  {
+   "id": "b0228",
+   "t": "text",
+   "w": "p",
+   "en": "open largeopen mid"
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "p",
+   "en": "Indic-focusedLLM mean"
+  },
+  {
+   "id": "b0230",
+   "t": "text",
+   "w": "p",
+   "en": "human floor, held-out rater (DLQ)"
+  },
+  {
+   "id": "b0231",
+   "t": "text",
+   "w": "h3",
+   "en": "Figure 6: Rows = domains, columns = rubrics; eachpanel plots base judges in (σJ /σH horizontally, anglevertically), both against the matched two-rater reference,with the dashed green line the held-out-rater ﬂoor andpale green marking the objective rubric. The objectivecolumn drops toward the ﬂoor in every domain; the twosubjective columns sit clearly above it. CH geometry isin Table 1A and Fig. 2."
+  },
+  {
+   "id": "b0232",
+   "t": "text",
+   "w": "p",
+   "en": "5.6Subspace topology of the judge cohort"
+  },
+  {
+   "id": "b0233",
+   "t": "text",
+   "w": "h3",
+   "en": "Do judges sit in the same direction, or split intosub-clusters equally far from humans? Z-scoringeach judge’s per-rubric scores over the 405 CHcore items and taking cosines between the 1620-d item×rubric vectors measures pure orientation(cosll =0.16 vs. coslh =0.08; Fig. 7)."
+  },
+  {
+   "id": "b0234",
+   "t": "text",
+   "w": "h3",
+   "en": "Three features are invisible to per-judge angleplots. (i) The tightest pairs do not follow modelfamily: the three deepest cells are all cross-vendor,and the only same-family pair (qwen3, 0.50) ranksfourth against a 0.16 cohort mean (values in Ta-ble 6); scale and openness do not organise the map"
+  },
+  {
+   "id": "b0235",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 8]"
+  },
+  {
+   "id": "b0236",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0237",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure on page 8"
+  },
+  {
+   "id": "b0238",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0239",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure on page 8"
+  },
+  {
+   "id": "b0240",
+   "t": "text",
+   "w": "p",
+   "en": "aya"
+  },
+  {
+   "id": "b0241",
+   "t": "text",
+   "w": "p",
+   "en": "krutrim-2"
+  },
+  {
+   "id": "b0242",
+   "t": "text",
+   "w": "p",
+   "en": "llama-3.3-70b"
+  },
+  {
+   "id": "b0243",
+   "t": "text",
+   "w": "p",
+   "en": "mistral-L2"
+  },
+  {
+   "id": "b0244",
+   "t": "text",
+   "w": "p",
+   "en": "human"
+  },
+  {
+   "id": "b0245",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m"
+  },
+  {
+   "id": "b0246",
+   "t": "text",
+   "w": "p",
+   "en": "deepseek-r1"
+  },
+  {
+   "id": "b0247",
+   "t": "text",
+   "w": "p",
+   "en": "gpt-5.5"
+  },
+  {
+   "id": "b0248",
+   "t": "text",
+   "w": "p",
+   "en": "grok-4"
+  },
+  {
+   "id": "b0249",
+   "t": "text",
+   "w": "p",
+   "en": "qwen3-235b"
+  },
+  {
+   "id": "b0250",
+   "t": "text",
+   "w": "p",
+   "en": "qwen3-next-80b"
+  },
+  {
+   "id": "b0251",
+   "t": "text",
+   "w": "p",
+   "en": "gpt-4o"
+  },
+  {
+   "id": "b0252",
+   "t": "text",
+   "w": "p",
+   "en": "gemma"
+  },
+  {
+   "id": "b0253",
+   "t": "text",
+   "w": "p",
+   "en": "llama-4-scout"
+  },
+  {
+   "id": "b0254",
+   "t": "text",
+   "w": "p",
+   "en": "mistral-L3"
+  },
+  {
+   "id": "b0255",
+   "t": "text",
+   "w": "p",
+   "en": "ayakrutrim-2llama-3.3-70b"
+  },
+  {
+   "id": "b0256",
+   "t": "text",
+   "w": "p",
+   "en": "mistral-L2"
+  },
+  {
+   "id": "b0257",
+   "t": "text",
+   "w": "p",
+   "en": "humansarvam-mdeepseek-r1"
+  },
+  {
+   "id": "b0258",
+   "t": "text",
+   "w": "p",
+   "en": "gpt-5.5"
+  },
+  {
+   "id": "b0259",
+   "t": "text",
+   "w": "p",
+   "en": "grok-4qwen3-235bqwen3-next-80b"
+  },
+  {
+   "id": "b0260",
+   "t": "text",
+   "w": "p",
+   "en": "gpt-4ogemmallama-4-scout"
+  },
+  {
+   "id": "b0261",
+   "t": "text",
+   "w": "p",
+   "en": "mistral-L3"
+  },
+  {
+   "id": "b0262",
+   "t": "text",
+   "w": "p",
+   "en": "cos LL = 0.16 cos LH = 0.08"
+  },
+  {
+   "id": "b0263",
+   "t": "text",
+   "w": "p",
+   "en": "−0.6"
+  },
+  {
+   "id": "b0264",
+   "t": "text",
+   "w": "p",
+   "en": "−0.4"
+  },
+  {
+   "id": "b0265",
+   "t": "text",
+   "w": "p",
+   "en": "−0.2"
+  },
+  {
+   "id": "b0266",
+   "t": "text",
+   "w": "p",
+   "en": "0.0"
+  },
+  {
+   "id": "b0267",
+   "t": "text",
+   "w": "p",
+   "en": "0.2"
+  },
+  {
+   "id": "b0268",
+   "t": "text",
+   "w": "p",
+   "en": "0.4"
+  },
+  {
+   "id": "b0269",
+   "t": "text",
+   "w": "p",
+   "en": "0.6"
+  },
+  {
+   "id": "b0270",
+   "t": "text",
+   "w": "p",
+   "en": "cosine sim. (Z-scored)"
+  },
+  {
+   "id": "b0271",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 7: Ward-reordered cosines; the human row staysuniformly pale. Extended caption in Table 6."
+  },
+  {
+   "id": "b0272",
+   "t": "text",
+   "w": "h3",
+   "en": "Rubrick=12345k→∞floor"
+  },
+  {
+   "id": "b0273",
+   "t": "text",
+   "w": "p",
+   "en": "task quality60.755.5 53.3 52.0 51.250.056.4ling. accept.75.471.2 69.4 68.3 67.666.564.4hallucinations73.169.1 67.2 66.2 65.564.663.8"
+  },
+  {
+   "id": "b0274",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 3: Ensemble-size curve (DLQ, matched refer-ence). Mean angle◦over all"
+  },
+  {
+   "id": "b0275",
+   "t": "text",
+   "w": "p",
+   "en": "5"
+  },
+  {
+   "id": "b0276",
+   "t": "text",
+   "w": "h3",
+   "en": "k"
+  },
+  {
+   "id": "b0278",
+   "t": "text",
+   "w": "h3",
+   "en": "subsets of the ﬁve basejudges, each scored against the same held-out two-ratermean that deﬁnes the ﬂoor. k→∞sums the geometrictail of the decrements. Mist marks ensembles alreadyinside their ﬂoor, sand a limit that stays outside it: ontask quality two judges suﬃce, on both subjective rubricsno ensemble of any size reaches the ﬂoor. Caveats inApp. M.10."
+  },
+  {
+   "id": "b0279",
+   "t": "text",
+   "w": "h3",
+   "en": "either, so the shared orientation is a cohort-wideproperty rather than siblings agreeing. (ii) The co-hort splits into a tight frontier+open block (intra0.27) and a looser mid-tier block (intra 0.11; across0.08): a single LL aggregate averages these intoa consensus no judge holds. (iii) The human rowstays uniformly pale after Z-scoring, so the collapsebelongs to the LLM-shared subspace, not to a scaleor single-judge artefact."
+  },
+  {
+   "id": "b0280",
+   "t": "text",
+   "w": "h3",
+   "en": "The shared axis is directly measurable (P4): thecohort’s top three PCs explain 86.6–89.0% of judgevariance on DLQ (66–82% CH), and the dominantaxis sits 47.7◦from humans on task quality but64–66◦on the DLQ subjective rubrics (79–86◦onCH). Averaging moves toward that axis and stopsthere (Table 3): ensembling k judges lowers thematched angle monotonically, but the decrementsshrink by a near-constant factor (≈0.6), so the geo-metric tail bounds an unlimited ensemble of thesejudges outside the subjective ﬂoors. Ensemblingbuys variance reduction toward the shared axis, nota new direction (App. M.10)."
+  },
+  {
+   "id": "b0281",
+   "t": "text",
+   "w": "p",
+   "en": "0"
+  },
+  {
+   "id": "b0282",
+   "t": "text",
+   "w": "p",
+   "en": "1"
+  },
+  {
+   "id": "b0283",
+   "t": "text",
+   "w": "p",
+   "en": "σ-ratio"
+  },
+  {
+   "id": "b0284",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-mgemma-3aya-expanse"
+  },
+  {
+   "id": "b0285",
+   "t": "text",
+   "w": "p",
+   "en": "80"
+  },
+  {
+   "id": "b0286",
+   "t": "text",
+   "w": "p",
+   "en": "85"
+  },
+  {
+   "id": "b0287",
+   "t": "text",
+   "w": "p",
+   "en": "90"
+  },
+  {
+   "id": "b0288",
+   "t": "text",
+   "w": "p",
+   "en": "angle (°)"
+  },
+  {
+   "id": "b0289",
+   "t": "text",
+   "w": "p",
+   "en": "base"
+  },
+  {
+   "id": "b0290",
+   "t": "text",
+   "w": "p",
+   "en": "FS"
+  },
+  {
+   "id": "b0291",
+   "t": "text",
+   "w": "p",
+   "en": "AT"
+  },
+  {
+   "id": "b0292",
+   "t": "text",
+   "w": "p",
+   "en": "CAL"
+  },
+  {
+   "id": "b0293",
+   "t": "text",
+   "w": "p",
+   "en": "FTFT+PO"
+  },
+  {
+   "id": "b0294",
+   "t": "text",
+   "w": "p",
+   "en": "0.0"
+  },
+  {
+   "id": "b0295",
+   "t": "text",
+   "w": "p",
+   "en": "0.2"
+  },
+  {
+   "id": "b0296",
+   "t": "text",
+   "w": "p",
+   "en": "Pearson r"
+  },
+  {
+   "id": "b0297",
+   "t": "text",
+   "w": "p",
+   "en": "base"
+  },
+  {
+   "id": "b0298",
+   "t": "text",
+   "w": "p",
+   "en": "FS"
+  },
+  {
+   "id": "b0299",
+   "t": "text",
+   "w": "p",
+   "en": "AT"
+  },
+  {
+   "id": "b0300",
+   "t": "text",
+   "w": "p",
+   "en": "CAL"
+  },
+  {
+   "id": "b0301",
+   "t": "text",
+   "w": "p",
+   "en": "FTFT+PO"
+  },
+  {
+   "id": "b0302",
+   "t": "text",
+   "w": "p",
+   "en": "base"
+  },
+  {
+   "id": "b0303",
+   "t": "text",
+   "w": "p",
+   "en": "FS"
+  },
+  {
+   "id": "b0304",
+   "t": "text",
+   "w": "p",
+   "en": "AT"
+  },
+  {
+   "id": "b0305",
+   "t": "text",
+   "w": "p",
+   "en": "CAL"
+  },
+  {
+   "id": "b0306",
+   "t": "text",
+   "w": "p",
+   "en": "FTFT+PO"
+  },
+  {
+   "id": "b0307",
+   "t": "text",
+   "w": "h3",
+   "en": "Figure 8: Bootstrap over B =1000 resamples. Spreadrises reliably; angle distributions overlap throughout.Extended caption in Table 6."
+  },
+  {
+   "id": "b0308",
+   "t": "text",
+   "w": "p",
+   "en": "baseFSATCALFTFT+PO"
+  },
+  {
+   "id": "b0309",
+   "t": "text",
+   "w": "p",
+   "en": "0.0"
+  },
+  {
+   "id": "b0310",
+   "t": "text",
+   "w": "p",
+   "en": "0.2"
+  },
+  {
+   "id": "b0311",
+   "t": "text",
+   "w": "p",
+   "en": "Pearson r"
+  },
+  {
+   "id": "b0312",
+   "t": "text",
+   "w": "p",
+   "en": "gpt-5.5"
+  },
+  {
+   "id": "b0313",
+   "t": "text",
+   "w": "p",
+   "en": "clarityhelpfulaccuracycomplete"
+  },
+  {
+   "id": "b0314",
+   "t": "text",
+   "w": "p",
+   "en": "baseFSATCALFTFT+PO"
+  },
+  {
+   "id": "b0315",
+   "t": "text",
+   "w": "p",
+   "en": "1"
+  },
+  {
+   "id": "b0316",
+   "t": "text",
+   "w": "p",
+   "en": "2"
+  },
+  {
+   "id": "b0317",
+   "t": "text",
+   "w": "p",
+   "en": "σ-ratio"
+  },
+  {
+   "id": "b0318",
+   "t": "text",
+   "w": "p",
+   "en": "σ_judge = σ_human"
+  },
+  {
+   "id": "b0319",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 9: Only the demonstration-anchored stages raiseevery rubric. Extended caption in Table 6."
+  },
+  {
+   "id": "b0320",
+   "t": "text",
+   "w": "p",
+   "en": "5.7Training restores spread beforeorientation"
+  },
+  {
+   "id": "b0321",
+   "t": "text",
+   "w": "p",
+   "en": "Which part of the geometry can training change?"
+  },
+  {
+   "id": "b0322",
+   "t": "text",
+   "w": "h3",
+   "en": "On community-health we follow sarvam-m 24B,gemma-3 27B, and aya-expanse 32B throughbase, few-shot, ﬁne-tune, ﬁne-tune+pref-optim,and (sarvam-m only) demonstration-augmentedSFT (AT) and demonstration-anchored calibration(CAL), picking the best in-stage judge per fam-ily by stacked Pearson with paired item-bootstrapCIs. σ-ratio rises strongly under FT and FT+PO(0.32 →1.08) but the angle barely moves: stagemeans stay at 87–88◦with overlapping CIs (Ta-ble 1C; Fig. 8)."
+  },
+  {
+   "id": "b0323",
+   "t": "text",
+   "w": "h3",
+   "en": "The aggregate masks per-rubric reversals (Fig. 9):FT/PO over-spreads accuracy (σ ≈2.2) and de-grades completeness (0.134 →0.079), and few-shot leaves completeness ﬂat, so only the twodemonstration-anchored stages lift all four rubrics.Both were run on sarvam-m alone, so this is awithin-family ordering, not a cross-family compar-ison. Calibration puts the best 24B Indic judge atr = 0.184, above gpt-5.5 (0.123; Fig. 13) yet far"
+  },
+  {
+   "id": "b0324",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 9]"
+  },
+  {
+   "id": "b0325",
+   "t": "text",
+   "w": "p",
+   "en": "0255075100"
+  },
+  {
+   "id": "b0326",
+   "t": "text",
+   "w": "h3",
+   "en": "share of ‖Δs‖2 (%)"
+  },
+  {
+   "id": "b0327",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m FS"
+  },
+  {
+   "id": "b0328",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m FT"
+  },
+  {
+   "id": "b0329",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m FT+PO"
+  },
+  {
+   "id": "b0330",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m AT"
+  },
+  {
+   "id": "b0331",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m CAL"
+  },
+  {
+   "id": "b0332",
+   "t": "text",
+   "w": "p",
+   "en": "gemma FS"
+  },
+  {
+   "id": "b0333",
+   "t": "text",
+   "w": "p",
+   "en": "gemma FT"
+  },
+  {
+   "id": "b0334",
+   "t": "text",
+   "w": "p",
+   "en": "gemma FT+PO"
+  },
+  {
+   "id": "b0335",
+   "t": "text",
+   "w": "p",
+   "en": "aya FS"
+  },
+  {
+   "id": "b0336",
+   "t": "text",
+   "w": "p",
+   "en": "aya FT"
+  },
+  {
+   "id": "b0337",
+   "t": "text",
+   "w": "p",
+   "en": "aya FT+PO"
+  },
+  {
+   "id": "b0338",
+   "t": "text",
+   "w": "p",
+   "en": "23"
+  },
+  {
+   "id": "b0339",
+   "t": "text",
+   "w": "p",
+   "en": "20"
+  },
+  {
+   "id": "b0340",
+   "t": "text",
+   "w": "p",
+   "en": "25"
+  },
+  {
+   "id": "b0341",
+   "t": "text",
+   "w": "p",
+   "en": "21"
+  },
+  {
+   "id": "b0342",
+   "t": "text",
+   "w": "p",
+   "en": "22"
+  },
+  {
+   "id": "b0343",
+   "t": "text",
+   "w": "p",
+   "en": "17"
+  },
+  {
+   "id": "b0344",
+   "t": "text",
+   "w": "p",
+   "en": "29"
+  },
+  {
+   "id": "b0345",
+   "t": "text",
+   "w": "p",
+   "en": "30"
+  },
+  {
+   "id": "b0346",
+   "t": "text",
+   "w": "h3",
+   "en": "Figure 10: Each bar splits ∥∆s∥2 into stretch along thebase axis (blue, labelled), rotation toward the human axis(green, labelled), and oﬀ-axis residual (grey). Rotationtoward the human axis is ≤3.5% in every stage cell.Extended caption in Table 6."
+  },
+  {
+   "id": "b0347",
+   "t": "text",
+   "w": "h3",
+   "en": "below DLQ inter-human agreement (0.474)."
+  },
+  {
+   "id": "b0348",
+   "t": "text",
+   "w": "p",
+   "en": "5.8Decomposing the training delta: stretch,rotate, residual"
+  },
+  {
+   "id": "b0349",
+   "t": "text",
+   "w": "h3",
+   "en": "The bootstrap says what training outputs, not whereeach unit of delta goes. Per (family, stage) we de-compose ∆s=sstage−sbase over the 405 core itemsinto orthogonal energies: stretch along the baseaxis, rotate→human (the only direction that canshrink the angle), and off-axis residual (Fig. 10)."
+  },
+  {
+   "id": "b0350",
+   "t": "text",
+   "w": "h3",
+   "en": "Two ﬁndings give the orientation result ananatomy.First, rotation toward the humanaxis is uniformly tiny: ≤3.5% of ∥∆s∥2 inevery cell (stage means 1.1/2.3/2.8/1.8/1.9%for FS/FT/FT+PO/AT/CAL). The demonstration-anchored stages carrying the headline gain rotate nomore than the weight-updating ones, so their advan-tage is not a subspace correction. Second, the struc-tured part is stretch (17–30% on sarvam-m andgemma, tracking each stage’s σ-ratio gain: addedvariance is mostly a louder base ranking). Aya iso-lates the mechanism by exception: its stretch is≤0.1% and ∼97% of its update is oﬀ-axis reshuf-ﬂing, which is why it moves σ without converting itinto Pearson. Across cells the residual is 67–99%:training ampliﬁes then reshuffles, and the orienta-tion axis is essentially never moved."
+  },
+  {
+   "id": "b0351",
+   "t": "text",
+   "w": "h3",
+   "en": "A complementary check isolates what the demon-strations contribute: post-hoc aﬃne rescaling ofthe FT+PO judge onto human anchors never repro-duces the gains (Fig. 11, Table 23), so the lift needsthe demonstrations at inference, not a scale ﬁx."
+  },
+  {
+   "id": "b0352",
+   "t": "text",
+   "w": "p",
+   "en": "510204080160human-anchored items used"
+  },
+  {
+   "id": "b0353",
+   "t": "text",
+   "w": "p",
+   "en": "−0.10"
+  },
+  {
+   "id": "b0354",
+   "t": "text",
+   "w": "p",
+   "en": "−0.05"
+  },
+  {
+   "id": "b0355",
+   "t": "text",
+   "w": "p",
+   "en": "0.00"
+  },
+  {
+   "id": "b0356",
+   "t": "text",
+   "w": "p",
+   "en": "0.05"
+  },
+  {
+   "id": "b0357",
+   "t": "text",
+   "w": "p",
+   "en": "0.10"
+  },
+  {
+   "id": "b0358",
+   "t": "text",
+   "w": "p",
+   "en": "0.15"
+  },
+  {
+   "id": "b0359",
+   "t": "text",
+   "w": "p",
+   "en": "0.20"
+  },
+  {
+   "id": "b0360",
+   "t": "text",
+   "w": "h3",
+   "en": "held-out stacked Pearson r"
+  },
+  {
+   "id": "b0361",
+   "t": "text",
+   "w": "p",
+   "en": "demonstration-anchored CAL 0.184"
+  },
+  {
+   "id": "b0362",
+   "t": "text",
+   "w": "p",
+   "en": "dotted: same judge, uncalibrated"
+  },
+  {
+   "id": "b0363",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m FT+POgemma-3 FT+PO"
+  },
+  {
+   "id": "b0364",
+   "t": "text",
+   "w": "h3",
+   "en": "Figure 11: Held-out r vs. anchor count; rescalingplateaus below CAL (0.184) and its interval spans zerounder ∼40 anchors. Extended caption in Table 7."
+  },
+  {
+   "id": "b0365",
+   "t": "text",
+   "w": "p",
+   "en": "ConstructionCH baseDLQ base"
+  },
+  {
+   "id": "b0366",
+   "t": "text",
+   "w": "h3",
+   "en": "per-rubric, matchedref. (body)"
+  },
+  {
+   "id": "b0367",
+   "t": "text",
+   "w": "h3",
+   "en": "83.5–85.560.7/73.1/75.4 vs. ﬂoor56.4/63.8/64.4per-rubric, 3-ratermean ref."
+  },
+  {
+   "id": "b0368",
+   "t": "text",
+   "w": "h3",
+   "en": "–58.5/71.6/74.0"
+  },
+  {
+   "id": "b0369",
+   "t": "text",
+   "w": "h3",
+   "en": "per-judge stacked88.384.3–88.9 vs. ﬂoor 73.9–78.1cohort stacked88.0858.54 obj.; 80.17 subj.cohort PCA axis →human"
+  },
+  {
+   "id": "b0370",
+   "t": "text",
+   "w": "h3",
+   "en": "79.0–85.947.7 (TQ); 64.3/65.5 (subj.)"
+  },
+  {
+   "id": "b0371",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 4:One cohort, four angle constructions(TQ/HAL/LA where three values are given). Stackedangles take the largest principal angle, so they upper-bound the picture; the cohort PCA axis is the judges’best shared direction, so it lower-bounds it; per-rubricangles sit between. Human ﬂoors exist only on DLQ,which has three raters. Every body claim compares likewith like inside one construction; the shaded row is theone the body uses. Full discussion in App. N."
+  },
+  {
+   "id": "b0372",
+   "t": "text",
+   "w": "p",
+   "en": "6Conclusion"
+  },
+  {
+   "id": "b0373",
+   "t": "text",
+   "w": "p",
+   "en": "High inter-judge agreement is the de facto licensefor replacing human evaluation with LLM judges.We make that license checkable, and it fails where it"
+  },
+  {
+   "id": "b0374",
+   "t": "text",
+   "w": "h3",
+   "en": "is most relied upon: on subjective rubrics our judgesreach the human panel’s consensus level while re-covering only 58–66% of its agreement, collapsingonto a shared axis 64–66◦from the human one; onthe veriﬁable rubric the gap nearly closes, and train-ing restores spread but not orientation. Because thecheck needs only human-anchored items and judgescores already in hand, it runs as a four-step proto-col (App. B): test spread, rank, and angle againstpermutation nulls, reporting the three agreementlegs together; hold each rater out to build the ﬂoora judge must reach; trust an ensemble only if theshared axis itself passes; and on failure, anchor onhuman-rated demonstrations, not more judges. Con-sensus shows that judges share an axis; geometryshows whether it is the human one."
+  },
+  {
+   "id": "b0375",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 10]"
+  },
+  {
+   "id": "b0376",
+   "t": "text",
+   "w": "p",
+   "en": "Limitations"
+  },
+  {
+   "id": "b0377",
+   "t": "text",
+   "w": "h3",
+   "en": "The geometric account is a diagnostic abstractionover observed score covariance, not a mechanisticclaim about LLM internals (Sec. 3): we cannot tellwhether judges fail to perceive human-weighted di-mensions or perceive but down-weight them, andlabel noise, item ambiguity, and pretraining fa-miliarity remain compatible explanations of theobjective–subjective boundary, so our claim is pre-dictive rather than causal. Consistent with this, dRseparates the two regimes but is ﬂat within each(ρ = −0.03 over six subjective cells) and is entan-gled with inter-rater agreement at n=9 cells. Theobjective regime also rests on a single veriﬁablerubric, replicated across three domains and eightlanguages but still one rubric, and even there thecohort mean does not reach the human ﬂoor: thecrossing we report is for the best single judge andfor two-judge ensembles. Human references areuneven, since community-health merges 15 anno-tators into one pool without per-rater identiﬁers, sono inter-human ﬂoor or rater-level jackknife existsthere and every matched-ﬂoor claim is scoped to theDLQ subset with three independent raters; CH an-gles additionally carry bootstrap intervals 6.3◦wideagainst a 1.6◦between-judge SD, so we rank no CHjudges by angle. Claims are therefore scoped to thetested datasets, languages, and judge families: thedirection of every eﬀect held in all eight languagesbut its size varied by two orders of magnitude andeﬀectively vanished on Telugu, per-language anglesare underpowered at n = 60–300, training coversthree open Indic-capable families (24–32B) on onebenchmark with the demonstration-anchored resultsarvam-m-only, and the diagnostics assume a ﬁxedrubric basis. Finally, closed-API judges may changesilently; we tabulate versions and call dates and re-lease all raw outputs (App. O), but exact reproduc-tion of API-judge scores cannot be guaranteed."
+  },
+  {
+   "id": "b0378",
+   "t": "text",
+   "w": "p",
+   "en": "Ethics Statement"
+  },
+  {
+   "id": "b0379",
+   "t": "text",
+   "w": "p",
+   "en": "Our considerations follow Bender and Fried-man (2018).This study performs no newhuman-subjects data collection: we reuse two re-leased benchmarks, community-health (Samik-sha) (Hamna et al., 2026; Bhat et al., 2025) andreal-world cultural QA (Pariksha) (Watts et al.,2024), whose construction and data collection pro-tocols are documented in those papers. They con-tribute the benchmarks and their human labels; thepresent paper reuses that released data and con-"
+  },
+  {
+   "id": "b0380",
+   "t": "text",
+   "w": "p",
+   "en": "tributes the geometric diagnostics and regime anal-ysis built on it, with no overlap in stated contribu-tions. The released data contain no sensitive per-sonal information, and the items are advisory ques-tions rather than patient records. The paper’s centralcaution is itself a risk-mitigation contribution: de-ploying LLM judges without the geometric check ofSec. 6 risks silently optimising community-facingsystems, such as health advice, toward a judge axisorthogonal to community needs. We used AI assis-tants as detailed in App. Q; all substantive analyses,evaluations, and interpretations were performed andveriﬁed manually by the authors."
+  },
+  {
+   "id": "b0381",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 11]"
+  },
+  {
+   "id": "b0382",
+   "t": "text",
+   "w": "p",
+   "en": "References"
+  },
+  {
+   "id": "b0383",
+   "t": "text",
+   "w": "p",
+   "en": "Sanjeev Arora, Yuanzhi Li, Yingyu Liang, Tengyu Ma,"
+  },
+  {
+   "id": "b0384",
+   "t": "text",
+   "w": "h3",
+   "en": "and Andrej Risteski. 2018. Linear algebraic struc-ture of word senses, with applications to polysemy.Transactions of the Association for ComputationalLinguistics, 6:483–495."
+  },
+  {
+   "id": "b0385",
+   "t": "text",
+   "w": "p",
+   "en": "Yuntao Bai, Andy Jones, Kamal Ndousse, Amanda"
+  },
+  {
+   "id": "b0386",
+   "t": "text",
+   "w": "p",
+   "en": "Askell, Anna Chen, Nova DasSarma, Dawn Drain,Stanislav Fort, Deep Ganguli, Tom Henighan,Nicholas Joseph, Saurav Kadavath, Jackson Kernion,Tom Conerly, Sheer El-Showk, Nelson Elhage, ZacHatﬁeld-Dodds, Danny Hernandez, Tristan Hume,and 12 others. 2022. Training a helpful and harmlessassistant with reinforcement learning from humanfeedback."
+  },
+  {
+   "id": "b0387",
+   "t": "text",
+   "w": "h3",
+   "en": "Emily M. Bender and Batya Friedman. 2018.Datastatements for natural language processing: Towardmitigating system bias and enabling better science.Transactions of the Association for ComputationalLinguistics, 6:587–604."
+  },
+  {
+   "id": "b0388",
+   "t": "text",
+   "w": "p",
+   "en": "Yoav Benjamini and Yosef Hochberg. 1995. Control-"
+  },
+  {
+   "id": "b0389",
+   "t": "text",
+   "w": "h3",
+   "en": "ling the false discovery rate: A practical and pow-erful approach to multiple testing. Journal of theRoyal Statistical Society: Series B (Methodological),57(1):289–300."
+  },
+  {
+   "id": "b0390",
+   "t": "text",
+   "w": "p",
+   "en": "Gayatri Bhat, Hamna Hamna, Sourabrata Mukherjee,"
+  },
+  {
+   "id": "b0391",
+   "t": "text",
+   "w": "p",
+   "en": "Manan Uppadhyay, Brintha Chandrasekaran, Mon-ali Shelar, Faisal Lalani, Evan Heaﬁeld, Kavitha K,Vivek Seshadri, Manu Chopra, Divya Siddarth, Ka-lika Bali, and Sunayana Sitaram. 2025. Samiksha:What large-scale, community-driven evaluation re-veals about language models for India. TechnicalReport."
+  },
+  {
+   "id": "b0392",
+   "t": "text",
+   "w": "p",
+   "en": "Åke Björck and Gene H Golub. 1973. Numerical meth-"
+  },
+  {
+   "id": "b0393",
+   "t": "text",
+   "w": "h3",
+   "en": "ods for computing angles between linear subspaces.Mathematics of Computation, 27(123):579–594."
+  },
+  {
+   "id": "b0394",
+   "t": "text",
+   "w": "p",
+   "en": "Tom B. Brown, Benjamin Mann, Nick Ryder, Melanie"
+  },
+  {
+   "id": "b0395",
+   "t": "text",
+   "w": "h3",
+   "en": "Subbiah, Jared Kaplan, Prafulla Dhariwal, ArvindNeelakantan, Pranav Shyam, Girish Sastry, AmandaAskell, Sandhini Agarwal, Ariel Herbert-Voss,Gretchen Krueger, Tom Henighan, Rewon Child,Aditya Ramesh, Daniel M. Ziegler, Jeﬀrey Wu,Clemens Winter, and 12 others. 2020. Languagemodels are few-shot learners. In Proceedings of the34th International Conference on Neural InformationProcessing Systems, NIPS ’20, Red Hook, NY, USA.Curran Associates Inc."
+  },
+  {
+   "id": "b0396",
+   "t": "text",
+   "w": "p",
+   "en": "Nitay Calderon, Roi Reichart, and Rotem Dror. 2025."
+  },
+  {
+   "id": "b0397",
+   "t": "text",
+   "w": "h3",
+   "en": "The alternative annotator test for LLM-as-a-judge:How to statistically justify replacing human anno-tators with LLMs.In Proceedings of the 63rdAnnual Meeting of the Association for Computa-tional Linguistics (Volume 1: Long Papers), pages16051–16081, Vienna, Austria. Association for Com-putational Linguistics."
+  },
+  {
+   "id": "b0398",
+   "t": "text",
+   "w": "p",
+   "en": "Cheng-Han Chiang and Hung-yi Lee. 2023. Can large"
+  },
+  {
+   "id": "b0399",
+   "t": "text",
+   "w": "h3",
+   "en": "language models be an alternative to human evalua-tions? In Proceedings of the 61st Annual Meeting ofthe Association for Computational Linguistics (Vol-ume 1: Long Papers), pages 15607–15631, Toronto,Canada. Association for Computational Linguistics."
+  },
+  {
+   "id": "b0400",
+   "t": "text",
+   "w": "p",
+   "en": "Jacob Cohen. 1960. A coeﬃcient of agreement for nom-"
+  },
+  {
+   "id": "b0401",
+   "t": "text",
+   "w": "h3",
+   "en": "inal scales. Educational and Psychological Measure-ment, 20(1):37–46."
+  },
+  {
+   "id": "b0402",
+   "t": "text",
+   "w": "p",
+   "en": "John Dang, Shivalika Singh, Daniel D’souza, Arash"
+  },
+  {
+   "id": "b0403",
+   "t": "text",
+   "w": "h3",
+   "en": "Ahmadian, and 1 others. 2024. Aya expanse: Com-bining research breakthroughs for a new multilingualfrontier. Preprint, arXiv:2412.04261."
+  },
+  {
+   "id": "b0404",
+   "t": "text",
+   "w": "p",
+   "en": "DeepSeek-AI. 2025. DeepSeek-R1 incentivizes reason-"
+  },
+  {
+   "id": "b0405",
+   "t": "text",
+   "w": "h3",
+   "en": "ing in LLMs through reinforcement learning. Nature,645(8081):633–638."
+  },
+  {
+   "id": "b0406",
+   "t": "text",
+   "w": "p",
+   "en": "Yann Dubois, Xuechen Li, Rohan Taori, Tianyi Zhang,"
+  },
+  {
+   "id": "b0407",
+   "t": "text",
+   "w": "h3",
+   "en": "Ishaan Gulrajani, Jimmy Ba, Carlos Guestrin, PercyLiang, and Tatsunori B. Hashimoto. 2023. Alpaca-Farm: A simulation framework for methods that learnfrom human feedback. In Advances in Neural Infor-mation Processing Systems 36 (NeurIPS 2023)."
+  },
+  {
+   "id": "b0408",
+   "t": "text",
+   "w": "p",
+   "en": "Bradley Efron. 1979. Bootstrap methods: Another look"
+  },
+  {
+   "id": "b0409",
+   "t": "text",
+   "w": "h3",
+   "en": "at the jackknife. The Annals of Statistics, 7(1):1–26."
+  },
+  {
+   "id": "b0410",
+   "t": "text",
+   "w": "h3",
+   "en": "Gemma Team. 2025.Gemma 3 technical report.Preprint, arXiv:2503.19786. Google DeepMind."
+  },
+  {
+   "id": "b0411",
+   "t": "text",
+   "w": "p",
+   "en": "Aaron Grattaﬁori, Abhimanyu Dubey, Abhinav Jauhri,"
+  },
+  {
+   "id": "b0412",
+   "t": "text",
+   "w": "h3",
+   "en": "Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle,Aiesha Letman, Akhil Mathur, Alan Schelten, AlexVaughan, Amy Yang, Angela Fan, Anirudh Goyal, An-thony Hartshorn, Aobo Yang, Archi Mitra, Archie Sra-vankumar, Artem Korenev, Arthur Hinsvark, and 540others. 2024. The llama 3 herd of models. Preprint,arXiv:2407.21783."
+  },
+  {
+   "id": "b0413",
+   "t": "text",
+   "w": "p",
+   "en": "Chuan Guo, GeoﬀPleiss, Yu Sun, and Kilian Q. Wein-"
+  },
+  {
+   "id": "b0414",
+   "t": "text",
+   "w": "h3",
+   "en": "berger. 2017. On calibration of modern neural net-works.In Proceedings of the 34th InternationalConference on Machine Learning, volume 70 ofProceedings of Machine Learning Research, pages1321–1330. PMLR."
+  },
+  {
+   "id": "b0415",
+   "t": "text",
+   "w": "p",
+   "en": "Rishav Hada, Varun Gumma, Adrian de Wynter,"
+  },
+  {
+   "id": "b0416",
+   "t": "text",
+   "w": "h3",
+   "en": "Harshita Diddee, Mohamed Ahmed, Monojit Choud-hury, Kalika Bali, and Sunayana Sitaram. 2024. Arelarge language model-based evaluators the solutionto scaling up multilingual evaluation? In Findings ofthe Association for Computational Linguistics: EACL2024, pages 1051–1070, St. Julian’s, Malta. Associa-tion for Computational Linguistics."
+  },
+  {
+   "id": "b0417",
+   "t": "text",
+   "w": "p",
+   "en": "Hamna Hamna, Gayatri Bhat, Sourabrata Mukherjee,"
+  },
+  {
+   "id": "b0418",
+   "t": "text",
+   "w": "h3",
+   "en": "Faisal M. Lalani, Evan Hadﬁeld, Divya Siddarth,Kalika Bali, and Sunayana Sitaram. 2026. Build-ing benchmarks from the ground up: Community-centered evaluation of LLMs in healthcare chatbotsettings. In Proceedings of the 2026 CHI Conferenceon Human Factors in Computing Systems, CHI ’26,pages 1–19, New York, NY, USA. Association forComputing Machinery."
+  },
+  {
+   "id": "b0419",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 12]"
+  },
+  {
+   "id": "b0420",
+   "t": "text",
+   "w": "p",
+   "en": "Daniel Hershcovich, Stella Frank, Heather Lent, Miryam"
+  },
+  {
+   "id": "b0421",
+   "t": "text",
+   "w": "h3",
+   "en": "de Lhoneux, Mostafa Abdou, Stephanie Brandl,Emanuele Bugliarello, Laura Cabello Piqueras, IliasChalkidis, Ruixiang Cui, Constanza Fierro, KaterinaMargatina, Phillip Rust, and Anders Søgaard. 2022.Challenges and strategies in cross-cultural NLP. InProceedings of the 60th Annual Meeting of the As-sociation for Computational Linguistics (Volume 1:Long Papers), pages 6997–7013, Dublin, Ireland. As-sociation for Computational Linguistics."
+  },
+  {
+   "id": "b0422",
+   "t": "text",
+   "w": "p",
+   "en": "Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan"
+  },
+  {
+   "id": "b0423",
+   "t": "text",
+   "w": "h3",
+   "en": "Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, andWeizhu Chen. 2022. LoRA: Low-rank adaptation oflarge language models. In International Conferenceon Learning Representations (ICLR)."
+  },
+  {
+   "id": "b0424",
+   "t": "text",
+   "w": "p",
+   "en": "Ian T. Jolliﬀe and Jorge Cadima. 2016. Principal com-"
+  },
+  {
+   "id": "b0425",
+   "t": "text",
+   "w": "h3",
+   "en": "ponent analysis: a review and recent developments.Philosophical Transactions of the Royal Society A:Mathematical, Physical and Engineering Sciences,374(2065):20150202."
+  },
+  {
+   "id": "b0426",
+   "t": "text",
+   "w": "p",
+   "en": "Andrew V Knyazev and Merico E Argentati. 2002."
+  },
+  {
+   "id": "b0427",
+   "t": "text",
+   "w": "h3",
+   "en": "Principal angles between subspaces in an a-basedscalar product: Algorithms and perturbation esti-mates.SIAM Journal on Scientiﬁc Computing,23(6):2008–2040."
+  },
+  {
+   "id": "b0428",
+   "t": "text",
+   "w": "p",
+   "en": "Tom Kocmi and Christian Federmann. 2023. Large lan-"
+  },
+  {
+   "id": "b0429",
+   "t": "text",
+   "w": "h3",
+   "en": "guage models are state-of-the-art evaluators of trans-lation quality. In Proceedings of the 24th AnnualConference of the European Association for MachineTranslation, pages 193–203, Tampere, Finland. Euro-pean Association for Machine Translation."
+  },
+  {
+   "id": "b0430",
+   "t": "text",
+   "w": "p",
+   "en": "Yang Liu, Dan Iter, Yichong Xu, Shuohang Wang,"
+  },
+  {
+   "id": "b0431",
+   "t": "text",
+   "w": "h3",
+   "en": "Ruochen Xu, and Chenguang Zhu. 2023. G-eval:NLG evaluation using GPT-4 with better human align-ment. In Proceedings of the 2023 Conference onEmpirical Methods in Natural Language Processing,pages 2511–2522, Singapore. Association for Com-putational Linguistics."
+  },
+  {
+   "id": "b0432",
+   "t": "text",
+   "w": "h3",
+   "en": "OpenAI. 2024.GPT-4o system card.Preprint,arXiv:2410.21276."
+  },
+  {
+   "id": "b0433",
+   "t": "text",
+   "w": "p",
+   "en": "OpenAI, Josh Achiam, Steven Adler, Sandhini Agar-"
+  },
+  {
+   "id": "b0434",
+   "t": "text",
+   "w": "h3",
+   "en": "wal, Lama Ahmad, Ilge Akkaya, Florencia Leoni Ale-man, Diogo Almeida, Janko Altenschmidt, Sam Alt-man, Shyamal Anadkat, Red Avila, Igor Babuschkin,Suchir Balaji, Valerie Balcom, Paul Baltescu, Haim-ing Bao, Mohammad Bavarian, JeﬀBelgum, and261 others. 2023. Gpt-4 technical report. Preprint,arXiv:2303.08774."
+  },
+  {
+   "id": "b0435",
+   "t": "text",
+   "w": "p",
+   "en": "Long Ouyang, JeﬀWu, Xu Jiang, Diogo Almeida, Car-"
+  },
+  {
+   "id": "b0436",
+   "t": "text",
+   "w": "h3",
+   "en": "roll L. Wainwright, Pamela Mishkin, Chong Zhang,Sandhini Agarwal, Katarina Slama, Alex Ray, JohnSchulman, Jacob Hilton, Fraser Kelton, Luke Miller,Maddie Simens, Amanda Askell, Peter Welinder,Paul Christiano, Jan Leike, and Ryan Lowe. 2022.Training language models to follow instructions withhuman feedback. In Advances in Neural Informa-tion Processing Systems 35 (NeurIPS 2022), pages27730–27744."
+  },
+  {
+   "id": "b0437",
+   "t": "text",
+   "w": "p",
+   "en": "John C. Platt. 1999. Probabilistic outputs for support"
+  },
+  {
+   "id": "b0438",
+   "t": "text",
+   "w": "h3",
+   "en": "vector machines and comparisons to regularized like-lihood methods. In Alexander J. Smola, Peter Bartlett,Bernhard Schölkopf, and Dale Schuurmans, editors,Advances in Large Margin Classiﬁers, pages 61–74.MIT Press."
+  },
+  {
+   "id": "b0439",
+   "t": "text",
+   "w": "h3",
+   "en": "Qwen Team. 2025. Qwen3 technical report. Preprint,"
+  },
+  {
+   "id": "b0440",
+   "t": "text",
+   "w": "p",
+   "en": "arXiv:2505.09388."
+  },
+  {
+   "id": "b0441",
+   "t": "text",
+   "w": "p",
+   "en": "Rafael Rafailov, Archit Sharma, Eric Mitchell, Stefano"
+  },
+  {
+   "id": "b0442",
+   "t": "text",
+   "w": "h3",
+   "en": "Ermon, Christopher D. Manning, and Chelsea Finn.2023. Direct preference optimization: Your languagemodel is secretly a reward model. In Advances inNeural Information Processing Systems 36 (NeurIPS2023)."
+  },
+  {
+   "id": "b0443",
+   "t": "text",
+   "w": "p",
+   "en": "Maithra Raghu, Justin Gilmer, Jason Yosinski, and"
+  },
+  {
+   "id": "b0444",
+   "t": "text",
+   "w": "h3",
+   "en": "Jascha Sohl-Dickstein. 2017. SVCCA: Singular vec-tor canonical correlation analysis for deep learningdynamics and interpretability. In Advances in Neu-ral Information Processing Systems 30 (NIPS 2017).Curran Associates, Inc."
+  },
+  {
+   "id": "b0445",
+   "t": "text",
+   "w": "p",
+   "en": "Sarvam AI. 2025. Sarvam-m. https://www.sarv"
+  },
+  {
+   "id": "b0446",
+   "t": "text",
+   "w": "p",
+   "en": "am.ai/blogs/sarvam-m. Technical blog post, 23May 2025; model weights at https://huggingface.co/sarvamai/sarvam-m. Accessed 2026-08-28."
+  },
+  {
+   "id": "b0447",
+   "t": "text",
+   "w": "p",
+   "en": "Hinrich Schütze. 1992. Dimensions of meaning. In"
+  },
+  {
+   "id": "b0448",
+   "t": "text",
+   "w": "h3",
+   "en": "Proceedings of the 1992 ACM/IEEE Conference onSupercomputing, pages 787–796."
+  },
+  {
+   "id": "b0449",
+   "t": "text",
+   "w": "p",
+   "en": "Peiyi Wang, Lei Li, Liang Chen, Zefan Cai, Dawei Zhu,"
+  },
+  {
+   "id": "b0450",
+   "t": "text",
+   "w": "h3",
+   "en": "Binghuai Lin, Yunbo Cao, Lingpeng Kong, Qi Liu,Tianyu Liu, and Zhifang Sui. 2024. Large languagemodels are not fair evaluators. In Proceedings of the62nd Annual Meeting of the Association for Compu-tational Linguistics (Volume 1: Long Papers), pages9440–9450, Bangkok, Thailand. Association for Com-putational Linguistics."
+  },
+  {
+   "id": "b0451",
+   "t": "text",
+   "w": "p",
+   "en": "Ishaan Watts, Varun Gumma, Aditya Yadavalli, Vivek"
+  },
+  {
+   "id": "b0452",
+   "t": "text",
+   "w": "h3",
+   "en": "Seshadri, Manohar Swaminathan, and SunayanaSitaram. 2024. PARIKSHA: A large-scale investi-gation of human-LLM evaluator agreement on mul-tilingual and multi-cultural data. In Proceedings ofthe 2024 Conference on Empirical Methods in Natu-ral Language Processing, pages 7900–7932, Miami,Florida, USA. Association for Computational Lin-guistics."
+  },
+  {
+   "id": "b0453",
+   "t": "text",
+   "w": "p",
+   "en": "Frank Wilcoxon. 1945. Individual comparisons by rank-"
+  },
+  {
+   "id": "b0454",
+   "t": "text",
+   "w": "h3",
+   "en": "ing methods. Biometrics Bulletin, 1(6):80–83."
+  },
+  {
+   "id": "b0455",
+   "t": "text",
+   "w": "p",
+   "en": "Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan"
+  },
+  {
+   "id": "b0456",
+   "t": "text",
+   "w": "h3",
+   "en": "Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin,Zhuohan Li, Dacheng Li, Eric P. Xing, Hao Zhang,Joseph E. Gonzalez, and Ion Stoica. 2023. JudgingLLM-as-a-judge with MT-bench and chatbot arena.In Advances in Neural Information Processing Sys-tems 36 (NeurIPS 2023), Datasets and BenchmarksTrack, pages 46595–46623."
+  },
+  {
+   "id": "b0457",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 13]"
+  },
+  {
+   "id": "b0458",
+   "t": "text",
+   "w": "p",
+   "en": "AAppendix guide"
+  },
+  {
+   "id": "b0459",
+   "t": "text",
+   "w": "p",
+   "en": "The appendix is organised so that each part answersone kind of question. Readers checking a speciﬁcclaim can go directly to the relevant row of Table 5."
+  },
+  {
+   "id": "b0460",
+   "t": "text",
+   "w": "p",
+   "en": "BExtended discussion: the pre-trustprotocol"
+  },
+  {
+   "id": "b0461",
+   "t": "text",
+   "w": "p",
+   "en": "Sec. 6 states the check in prose. This appendix givesthe reading of the results that motivates it, and thenthe procedure itself."
+  },
+  {
+   "id": "b0462",
+   "t": "text",
+   "w": "h3",
+   "en": "Subjective inter-LLM consensus is perspectivecollapse, not alignment.On real-world cul-tural QA’s subjective rubrics the cohort reachesthe human panel’s consensus level (rll 0.356/0.349vs. rhh 0.357/0.364) while agreeing with humans atonly 58–66% of it (Table 1A). Raters legitimatelydiﬀer on culturally embedded items; the LLMsmatch the consensus statistic not by recovering thatperspective variance but by collapsing onto a sharedaxis 64–66◦from the human one on DLQ (79–86◦"
+  },
+  {
+   "id": "b0463",
+   "t": "text",
+   "w": "h3",
+   "en": "on CH), at eﬀective rank ≤3 where humans usethe full basis (Sec. 5.3, 5.6). In Table 27 the co-hort scores medical completeness while humansweight institutional vulnerability, aﬀordability, andemotional reassurance. Reporting the three legsseparately on one construction makes the collapselegible; an averaged human reference hides it."
+  },
+  {
+   "id": "b0464",
+   "t": "text",
+   "w": "h3",
+   "en": "Training corrects spread, not orientation, andaggregate gains hide per-rubric harm.Fine-tuning and FT+PO move σJ /σH from 0.32 to 1.08while the angle stays at 87–88◦: rotate-→-human is≤3.5% of ∥∆s∥2 in every stage cell, including thetwo demonstration-anchored stages that produce thelargest Pearson gains (Sec. 5.8). Those stages alsodegrade completeness while over-spreading accu-racy. On sarvam-m only, demonstration anchoringlifts all four rubrics, putting a calibrated 24B In-dic judge (0.184) above gpt-5.5 (0.123) yet still farbelow DLQ inter-human agreement (0.474)."
+  },
+  {
+   "id": "b0465",
+   "t": "text",
+   "w": "p",
+   "en": "The protocol, step by step.The four-step checkbelow is the procedure that follows from the read-ings above; the commentary after it explains whyeach step matters."
+  },
+  {
+   "id": "b0466",
+   "t": "text",
+   "w": "p",
+   "en": "Geometric check for LLM-judge consensus"
+  },
+  {
+   "id": "b0467",
+   "t": "text",
+   "w": "h3",
+   "en": "1. Compute σJ /σH, r95, θ against a permutation null;report rll, rlh, rhh together.2. With ≥3 raters, hold one out; score it and each judgeagainst the rest. Rank-matched only if θ beats the nulland nears that ﬂoor.3. Ensembling stalls at the cohort’s shared axis: it substi-tutes only if that axis passes.4. On failure, anchor on human-rated demonstrations;rescaling does not help."
+  },
+  {
+   "id": "b0468",
+   "t": "text",
+   "w": "h3",
+   "en": "Step 2 is the one most often skipped, and it is the onethat changes conclusions: scoring a judge againsta multi-rater mean while scoring humans againsteach other ﬂatters the judge by several degrees andcan place it above a ﬂoor it does not actually reach(App. N). Budget for it, too: at half our item countthe below-null verdict stopped replicating (App. M).Step 3 matters because a panel’s headline numberaverages over judges that may share one axis; onour subjective rubrics an unlimited ensemble of thetested judges is bounded at 66.5◦/64.6◦, still outsidethe 64.4◦/63.8◦ﬂoor (Table 3). Step 4 is demonstra-tion anchoring rather than rescaling: purely post-hoc aﬃne maps never reach the calibrated judge,and below ∼40 anchors their interval spans zero(Fig. 11)."
+  },
+  {
+   "id": "b0469",
+   "t": "text",
+   "w": "p",
+   "en": "CExtended figure captions"
+  },
+  {
+   "id": "b0470",
+   "t": "text",
+   "w": "p",
+   "en": "Main-body ﬁgures carry short captions to keep theanalysis compact. The full reading of each, in-cluding construction, references, and the caveatsattached to it, is given here."
+  },
+  {
+   "id": "b0471",
+   "t": "text",
+   "w": "p",
+   "en": "DThe geometric lens, expanded"
+  },
+  {
+   "id": "b0472",
+   "t": "text",
+   "w": "p",
+   "en": "This section expands Sec. 3. It adds the conceptualpicture that motivates the diagnostics, works thevariance identity through to the measured magni-tudes, and states what the lens does and does notclaim."
+  },
+  {
+   "id": "b0473",
+   "t": "text",
+   "w": "h3",
+   "en": "An idealised picture (conceptual, not mechanis-tic).Imagine quality as a vector with stylistic, fac-tual, and culturally situated components, weightedrubric-conditionally by a rater: objective rubricsconcentrate weight on the factual component, sub-jective rubrics spread it onto culturally situated ones(Hershcovich et al., 2022). A judge whose scoresvary along few directions behaves, at the level ofits score matrix, like a low-rank map. The pictureorganises the predictions P1–P6 and nothing more:we do not model the judge as a literal projectionoperator, and no measurement in this paper dependson that reading. Where the text says a cohort “shares"
+  },
+  {
+   "id": "b0474",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 14]"
+  },
+  {
+   "id": "b0475",
+   "t": "text",
+   "w": "p",
+   "en": "App.ContentsAnswers the question"
+  },
+  {
+   "id": "b0476",
+   "t": "text",
+   "w": "h3",
+   "en": "AThis guideWhat is where in the appendix?BThe pre-trust protocol, in fullHow do I actually run the geometric check on my ownjudge and rubric?CExtended ﬁgure and table captionsWhat exactly do the main-body ﬁgures and tablesshow?DThe geometric lens, expandedWhat exactly does Sec. 3 claim, and what does it not?EPer-domain breakdown: datasets, languages, generators, judgesHow many items, languages, and judges are in eachcell, and how do the totals add up?FJudge roster, trained-variant rosterWhich models judge which benchmark, and what isevery trained variant?GRubric deﬁnitions and ordinal scalesWhat exactly was each rubric asking, and on whatscale?HResults-grid column key and codesHow do I read Table 1?IVerbatim evaluation promptsWhat were the judges actually shown?JVariant recipes and hyper-parametersHow was each trained judge produced?KBoundary condition and scopeWhich rubrics fall in which regime, and what does thelens not claim?LAngle methodology, permutation baselineHow is every angle computed, and against what null?MRobustness and control tablesDo the results survive ordinal, reference, FDR, self-preference, and split-half controls?NReconciling the four angle constructionsWhy do angles for the same cohort diﬀer by 30◦acrosstables?OReproducibility, artifact index, API versionsHow do I regenerate every number in this paper?PQualitative item studyWhat do the two regimes look like at the level of singleitems?QUse of AI assistantsWhere were LLM-based tools used, and how was theiroutput checked?"
+  },
+  {
+   "id": "b0477",
+   "t": "text",
+   "w": "p",
+   "en": "Table 5: Reader’s guide to the appendix."
+  },
+  {
+   "id": "b0478",
+   "t": "text",
+   "w": "p",
+   "en": "an axis,” the evidence is a principal-component de-composition of observed scores (Sec. 5.6), not aclaim about model internals."
+  },
+  {
+   "id": "b0479",
+   "t": "text",
+   "w": "h3",
+   "en": "From the identity to the measured magnitudes.Equation 2 is an identity, not an analogy: for a sin-gle direction cos θ = |r|, so 1 −cos2 θ = 1 −r2 isexactly the fraction of human score variance that thejudge direction leaves unexplained. This wires thelens to quantities we can measure. On task qualityone judge direction leaves 1−0.4182 = 83% of hu-man variance unexplained; the entire judge cohort,given a cross-validated ridge ﬁt, still leaves 55%(App. M). Aggregation therefore recovers part ofthe residual but not most of it, which is the same con-clusion the ensemble analysis reaches geometrically(Sec. 5.6). On the subjective DLQ rubrics the co-hort leaves ≈80% unexplained, and on community-health essentially all of it (CV R2 ≤0)."
+  },
+  {
+   "id": "b0480",
+   "t": "text",
+   "w": "h3",
+   "en": "Why rank is necessary but not sufficient.A co-hort whose scores span kJ directions cannot repro-duce human variation that needs dR of them whenkJ < dR, which makes kJ ≥dR necessary. It isnot suﬃcient because rank is a budget, not an aim:a judge may spend four directions on distinctions"
+  },
+  {
+   "id": "b0481",
+   "t": "text",
+   "w": "h3",
+   "en": "humans do not make. Our data separate the twocleanly. Across the 40 CH judges eﬀective rank isuncorrelated with alignment (r = 0.12; r95 spans1–4 while angles span 85.0–89.9◦), whereas the ob-jective rubric stays compressed (σ-ratio 0.687) yetrotates to within 4.3◦of the matched human ﬂoor.Orientation, not capacity, is what tracks agreement,which is why we state the boundary as an overlapcondition and treat blindness risk as increasing with1 −overlap rather than with a rank deﬁcit alone."
+  },
+  {
+   "id": "b0482",
+   "t": "text",
+   "w": "p",
+   "en": "EPer-domain breakdown of datasets,languages, generators, and judges"
+  },
+  {
+   "id": "b0483",
+   "t": "text",
+   "w": "p",
+   "en": "Per-domain coverage (referenced from Sec. 4). Ta-ble 8 lists languages, item counts, and rubrics perdomain; Table 9 lists answer generators and judgevariants per domain. Trained judge variants applyonly to community-health. Every count in thesetables is regenerated from the released CSVs by onescript (App. O)."
+  },
+  {
+   "id": "b0484",
+   "t": "text",
+   "w": "p",
+   "en": "Human reference panels.community-health:the released labels carry no per-rater identiﬁers andhave only sparse per-rater overlap, so ratings aremerged into one human-community-health refer-"
+  },
+  {
+   "id": "b0485",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 15]"
+  },
+  {
+   "id": "b0486",
+   "t": "text",
+   "w": "p",
+   "en": "FigureExtended caption"
+  },
+  {
+   "id": "b0487",
+   "t": "text",
+   "w": "h3",
+   "en": "Fig. 2Agreement-gap mapOne row per rubric×dataset cell: red = mean LLM–human r, blue = mean inter-LLM r, black ticks = inter-human r (DLQ only); segment length = the LL−LHgap. All three legs are pairwise, so the three markers are directly comparable.Subjective CH rubrics gap widest; task quality narrows it most.Fig. 4Per-judge signature (CH)All 40 CH judges in (σ-ratio, angle-to-human) space, against the single mergedhuman reference (no inter-human ﬂoor exists on CH, so no ﬂoor line is drawn).Colour and marker give the judge family (same mapping as Figs. 12, 6), size scaleswith r95, grey dots are trained variants. Per-judge angles here are not separablefrom one another (Sec. 5.4); the ﬁgure shows the cohort’s position and spread, nota ranking.Fig. 5Rubric-conditional geometry (DLQ)One panel per rubric in (σ-ratio, angle) space, both against the matched two-raterreference: dots = the ﬁve base judges, × = the three held-out humans, + = theﬁve-judge ensemble mean, shaded = judge density. This is the domain-pooled viewof Fig. 6’s columns: task quality pulls the judges toward the human band while σstays below 1, and the subjective panels leave a clear separation.Fig. 12Per-language signature (DLQ)n = 60–300 per panel; total 1, 182. Each panel plots the ﬁve base judges in(σJ /σH, angle) space, both measured against the matched two-rater reference:"
+  },
+  {
+   "id": "b0488",
+   "t": "text",
+   "w": "h3",
+   "en": "colour = judge category, cream band = the σ <1 compression zone, dashed green= the held-out-rater human ﬂoor, open diamond = the ﬁve-judge ensemble mean.Compression is universal, but the angle axis is underpowered at these cell sizes andsaturates near 90◦for judges and humans alike, so we draw no per-language angleconclusions (Sec. 5.5); note also that the diamond averages ﬁve judges while theﬂoor is a single rater, so it is favoured by construction.Fig. 7Inter-judge subspace similarity (CH)Pairwise cosines between Z-scored item×rubric vectors of the 14 base judges +human, Ward-reordered; side strips = family; the human row is outlined and uni-formly pale. cosll =0.16 vs. coslh =0.08; the deepest cells are qwen3-next↔gpt-4o (0.72), llama-3.3↔mistral-L2 (0.67), llama-4-scout↔mistral-L3 (0.54), thenthe qwen3 pair (0.50) — the ﬁrst three cross-vendor, which is why Sec. 5.6 readsthe shared orientation as cohort-wide rather than familial."
+  },
+  {
+   "id": "b0489",
+   "t": "text",
+   "w": "p",
+   "en": "Table 6: Extended captions for the main-body figures (part 1)."
+  },
+  {
+   "id": "b0490",
+   "t": "text",
+   "w": "p",
+   "en": "ence (which is why no CH inter-human ﬂoor exists;see Limitations). real-world cultural QA: threeindependent raters (h1, h2, h3) per item per (domain,language), giving a measurable H–H reference."
+  },
+  {
+   "id": "b0491",
+   "t": "text",
+   "w": "p",
+   "en": "FJudge models"
+  },
+  {
+   "id": "b0492",
+   "t": "text",
+   "w": "p",
+   "en": "Table 10 lists the 15 base LLM judges; Table 11enumerates the 27 trained variants over three Indic-capable families, plus the 4 human reference poolsused as anchors. Four judges (deepseek-r1, grok-4,mistral-large-3, llama-3.3-70b) act as cross-datasetanchors."
+  },
+  {
+   "id": "b0493",
+   "t": "text",
+   "w": "p",
+   "en": "GRubrics and scoring scales"
+  },
+  {
+   "id": "b0494",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 12 gives per-dataset rubric deﬁnitionsand ordinal scales (Sec. 4).The community-health comparative paradigm returns one of{A, B, Not Sure} per item with a one-sentenceEnglish rationale. Verbatim prompts in App. I."
+  },
+  {
+   "id": "b0495",
+   "t": "text",
+   "w": "p",
+   "en": "HAdditional figures"
+  },
+  {
+   "id": "b0496",
+   "t": "text",
+   "w": "p",
+   "en": "H.1Consolidated results grid: column keyand codes"
+  },
+  {
+   "id": "b0497",
+   "t": "text",
+   "w": "p",
+   "en": "Table 13 is a compact legend for Table 1. Per-panelnarrative summary in Table 14."
+  },
+  {
+   "id": "b0498",
+   "t": "text",
+   "w": "p",
+   "en": "IEvaluation prompts"
+  },
+  {
+   "id": "b0499",
+   "t": "text",
+   "w": "p",
+   "en": "Two prompts: standalone multi-rubric and com-parative pairwise. Both are language-agnostic;the judge evaluates within the answer’s languageand writes the explanation in English."
+  },
+  {
+   "id": "b0500",
+   "t": "text",
+   "w": "p",
+   "en": "Standalone Multi-Rubric Scoring Prompt"
+  },
+  {
+   "id": "b0501",
+   "t": "text",
+   "w": "h3",
+   "en": "Task.Evaluate the answer to the question on fourrubrics.Audience. Internal evaluator. Do not browse. Use onlygeneral knowledge and the given text.Language. The (question, answer) pair may be in Hindi,Kannada, Malayalam, Bengali, Tamil, Telugu, Marathi,or Odia. Judge within the answer’s language. Write theexplanation in concise English."
+  },
+  {
+   "id": "b0502",
+   "t": "text",
+   "w": "p",
+   "en": "Rubrics (one rating per rubric: Yes / Somewhat / No):"
+  },
+  {
+   "id": "b0503",
+   "t": "text",
+   "w": "h3",
+   "en": "i. Clarity & fluency: is the language clear, gram-"
+  },
+  {
+   "id": "b0504",
+   "t": "text",
+   "w": "p",
+   "en": "matically correct, easy to understand?"
+  },
+  {
+   "id": "b0505",
+   "t": "text",
+   "w": "h3",
+   "en": "ii. Helpfulness & relevance: does the answer directly"
+  },
+  {
+   "id": "b0506",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 16]"
+  },
+  {
+   "id": "b0507",
+   "t": "text",
+   "w": "p",
+   "en": "FloatExtended caption"
+  },
+  {
+   "id": "b0508",
+   "t": "text",
+   "w": "h3",
+   "en": "Fig. 8Stage-wise bootstrapB =1000 over the 405 CH core items: rows are the three diagnostics, columns the threefamilies; violins are bootstrap distributions, points stage means. Stages are groupedby intervention type — the prompt- and demonstration-based ones ﬁrst (base, FS, AT,CAL), then the weight-updating ones (FT, FT+PO) — which is neither pipeline ordernor the order of their Pearson gains; Fig. 10 instead uses pipeline order. Spread risesreliably; angle distributions overlap throughout.Fig. 9Per-rubric training progressionBest in-stage judge per family; one line per community-health rubric. Top: Pearson r,dotted line = the gpt-5.5 anchor. Bottom: σ-ratio, dotted line = judge spread equal tohuman spread. Fine-tuning lifts accuracy while pushing its spread past 2× the humanrange and dragging completeness down; only the demonstration-anchored stages (AT,CAL) raise every rubric with spread still inside the human range.Fig. 10Training-delta decompositionPer-(family, stage) decomposition of ∥∆s∥2 into stretch along the base axis (blue),rotation toward the human axis after the base direction is removed (green), andoﬀ-axis residual (grey);rubric-mean over the four CH rubrics.Stages runbase→FS→FT→FT+PO→AT→CAL, the pipeline order, which is not the order oftheir Pearson gains. Rotation toward human is ≤3.5% across all eleven stage cells, in-cluding both demonstration-anchored stages; aya’s near-zero stretch with ∼97% residualis the clearest case of variance added without alignment.Fig. 11Anchor-size curveHeld-out stacked Pearson r after ﬁtting per-rubric aﬃne maps of two FT+PO judges on nhuman-anchored items (500 resamples; bands are 95% intervals). Dotted lines: the samejudges uncalibrated. Dashed line: the demonstration-anchored calibrated judge (0.184).Rescaling improves monotonically with anchors but plateaus below the uncalibratedjudge on gemma-3 and below CAL on both, and under ∼40 anchors its interval spanszero: the calibration gain of Sec. 5.7 is not a scale correction that more anchors wouldbuy.Table 23Rescaling by anchor countHeld-out stacked Pearson r after ﬁtting per-rubric aﬃne maps of the FT+PO judge onton human-anchored items (500 resamples, seed 20260828; “–” = degenerate ﬁts at n=5).Rescaling never reaches the demonstration-anchored calibrated judge (0.184) and hurtsbelow ∼40–80 anchors; on gemma-3 it never beats the uncalibrated judge at all. Thecalibration lift therefore requires the human-rated demonstrations at inference, not ascale correction.Table 3Ensemble-size curveMean angle◦over all"
+  },
+  {
+   "id": "b0509",
+   "t": "text",
+   "w": "p",
+   "en": "5"
+  },
+  {
+   "id": "b0510",
+   "t": "text",
+   "w": "h3",
+   "en": "k"
+  },
+  {
+   "id": "b0512",
+   "t": "text",
+   "w": "h3",
+   "en": "subsets of the ﬁve base judges, each scored against the sameheld-out two-rater mean that deﬁnes the ﬂoor in the last column. k→∞sums thegeometric tail of the decrements, which shrink by a near-constant factor (0.59–0.62).On task quality two judges already pass the ﬂoor and the limit is 6◦inside it; on bothsubjective rubrics no attainable ensemble reaches the ﬂoor, and the extrapolated limitstays outside it. Note the asymmetry that runs against us: the ensemble averages ﬁvejudges while the human side is a single rater."
+  },
+  {
+   "id": "b0513",
+   "t": "text",
+   "w": "p",
+   "en": "Table 7: Extended captions for the main-body figures and tables (part 2)."
+  },
+  {
+   "id": "b0514",
+   "t": "text",
+   "w": "p",
+   "en": "address the question and provide useful informa-tion?"
+  },
+  {
+   "id": "b0515",
+   "t": "text",
+   "w": "h3",
+   "en": "iii. Accuracy (general perception): based on general"
+  },
+  {
+   "id": "b0516",
+   "t": "text",
+   "w": "p",
+   "en": "knowledge, does the information seem trustworthyand factually correct?"
+  },
+  {
+   "id": "b0517",
+   "t": "text",
+   "w": "h3",
+   "en": "iv. Completeness & conciseness: does the answer"
+  },
+  {
+   "id": "b0518",
+   "t": "text",
+   "w": "p",
+   "en": "provide suﬃcient detail without being verbose orrepetitive?"
+  },
+  {
+   "id": "b0519",
+   "t": "text",
+   "w": "p",
+   "en": "Scoring. Yes= 2, Somewhat= 1, No= 0. Overall =sum of the four."
+  },
+  {
+   "id": "b0520",
+   "t": "text",
+   "w": "p",
+   "en": "Output schema (strict, single minified JSON, noprose, no code fences; line breaks below are for displayonly):"
+  },
+  {
+   "id": "b0521",
+   "t": "text",
+   "w": "p",
+   "en": "{"
+  },
+  {
+   "id": "b0522",
+   "t": "text",
+   "w": "p",
+   "en": "\"clarity\": {\"rating\":\"Yes|Somewhat|No\","
+  },
+  {
+   "id": "b0523",
+   "t": "text",
+   "w": "p",
+   "en": "\"explanation\":\"...\"},\"helpfulness\": {\"rating\":\"Yes|Somewhat|No\","
+  },
+  {
+   "id": "b0524",
+   "t": "text",
+   "w": "p",
+   "en": "\"explanation\":\"...\"},\"accuracy\": {\"rating\":\"Yes|Somewhat|No\","
+  },
+  {
+   "id": "b0525",
+   "t": "text",
+   "w": "p",
+   "en": "\"explanation\":\"...\"},\"completeness\": {\"rating\":\"Yes|Somewhat|No\","
+  },
+  {
+   "id": "b0526",
+   "t": "text",
+   "w": "p",
+   "en": "\"explanation\":\"...\"},\"scores\": {\"clarity\":int,\"helpfulness\":int,"
+  },
+  {
+   "id": "b0527",
+   "t": "text",
+   "w": "p",
+   "en": "\"accuracy\":int,\"completeness\":int,\"overall\":int}}"
+  },
+  {
+   "id": "b0528",
+   "t": "text",
+   "w": "p",
+   "en": "Question: {{question}}Answer: {{answer}}"
+  },
+  {
+   "id": "b0529",
+   "t": "text",
+   "w": "p",
+   "en": "Return the JSON now."
+  },
+  {
+   "id": "b0530",
+   "t": "text",
+   "w": "h3",
+   "en": "On real-world cultural QA the same tem-plate substitutes three rubrics: task quality, lin-guistic acceptability ({0, 1, 2}), hallucinations({0, 1})."
+  },
+  {
+   "id": "b0531",
+   "t": "text",
+   "w": "p",
+   "en": "Comparative (Pairwise Preference) Prompt"
+  },
+  {
+   "id": "b0532",
+   "t": "text",
+   "w": "p",
+   "en": "Task. Compare two answers to the same question andpick the better one overall.Audience. Internal evaluator. Use only the question, thetwo answers, and general world knowledge; no externalbrowsing.Languages. The (question, A, B) triple may be in Hindi,Kannada, or Malayalam. Judge within the answers’ lan-"
+  },
+  {
+   "id": "b0533",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 17]"
+  },
+  {
+   "id": "b0534",
+   "t": "text",
+   "w": "p",
+   "en": "Domain datasetLanguagesQsQARubrics (eval type)"
+  },
+  {
+   "id": "b0535",
+   "t": "text",
+   "w": "h3",
+   "en": "community-health (Hamna et al., 2026; Bhat et al., 2025)Hi; Kn; Ml8102,430clarity,helpfulness,ac-curacy,completeness(standalone, {0, 1, 2}); A/B/NS(comparative, 2,430 pairs)DLQ: health & wellness (Watts et al., 2024)8 Indic†–284taskquality({0, 1, 2},obj.);linguisticacceptability({0, 1, 2});hallucinations({0, 1}) (standalone)DLQ: finance (Watts et al., 2024)8 Indic†–323same as aboveDLQ: everyday life (Watts et al., 2024)8 Indic†–575same as above"
+  },
+  {
+   "id": "b0536",
+   "t": "text",
+   "w": "h3",
+   "en": "Totals8 unique langs9683,6124 domain datasets;170,890LLM-judge calls"
+  },
+  {
+   "id": "b0537",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 8: Per-domain breakdown (datasets, languages, items, rubrics). Hi/Kn/Ml = Hindi/Kannada/Malayalam.†DLQ languages: Bengali, Hindi, Kannada, Malayalam, Marathi, Odia, Tamil, Telugu; per-language item countsare uneven (Hindi 300, Telugu 166, Tamil 150, Bengali 144, Malayalam 130, Kannada 121, Marathi 111, Odia60). DLQ retains the 1,182 items with three complete human ratings, drawn from 158 questions across 27 answergenerators (per-question counts vary, so no per-domain question total is deﬁned). community-health: 270 questions× 3 languages × 3 answer generators = 2,430 QA pairs; all geometric/training analyses use its 405-item core(45 questions/language × 3 languages × 3 generators) with complete topic metadata (Sec. 4). DLQ’s separatelycollected comparative split (21,610 pairs over 10 languages, adding Gujarati and Punjabi) is excluded from analysis(App. M.12)."
+  },
+  {
+   "id": "b0538",
+   "t": "text",
+   "w": "p",
+   "en": "Fieldcommunity-health"
+  },
+  {
+   "id": "b0539",
+   "t": "text",
+   "w": "h3",
+   "en": "Answer generators3: llama-3.1-405b, qwen3, sarvam-m (Hamna et al., 2026; Bhat et al., 2025)Judges, base (14)deepseek-r1; gpt-5.5; gpt-4o; grok-4; mistral-large-3; mistral-large-2; llama-4-scout-17b; llama-3.3-70b; qwen3-235b; qwen3-next-80b; krutrim-2-instruct;aya-expanse-32b; gemma-3-27b; sarvam-m-24bJudges, improved sarvam-m (12 standalone + 1)few-shot; ﬁne-tune v1/v2/v3; pref-optim v2 (v1 comparative-only); ﬁne-tune+pref-optim v1/v2; demo-SFT v1/v2; demo-SFT v1-inf3; calibratedv2/v3Judges, improved gemma-3 (7)few-shot; ﬁne-tune v1/v1-b128/v2; pref-optim v1/v2; ﬁne-tune+pref-optimv2Judges, improved aya-expanse (7)few-shot; ﬁne-tune v1/v2; pref-optim v1/v2; ﬁne-tune+pref-optim v1/v2"
+  },
+  {
+   "id": "b0540",
+   "t": "text",
+   "w": "p",
+   "en": "FieldDLQ: health & wellness / finance / everyday life (identical rosteracross all three)"
+  },
+  {
+   "id": "b0541",
+   "t": "text",
+   "w": "h3",
+   "en": "Answer generators27 Indic and general instruction-tuned models (Watts et al., 2024)Judges, base (5)deepseek-r1; gpt-4; grok-4; mistral-large-3; llama-3.3-70bJudges, improvednone (trained variants not applied to DLQ)"
+  },
+  {
+   "id": "b0542",
+   "t": "text",
+   "w": "p",
+   "en": "Table 9: Answer generators and judge variants per domain. community-health totals 14 base + 27 trainedvariants (26 in the standalone paradigm; sarvam-m pref-optim v1 appears only in the comparative paradigm); thethree DLQ domains share the same 5 base judges, of which four (deepseek-r1, grok-4, mistral-large-3, llama-3.3-70b)also judge community-health. Combined: 42 distinct LLM judges (15 base + 27 trained) across the study."
+  },
+  {
+   "id": "b0543",
+   "t": "text",
+   "w": "h3",
+   "en": "guage; write the explanation in concise English (≤40words)."
+  },
+  {
+   "id": "b0544",
+   "t": "text",
+   "w": "p",
+   "en": "Holistic criteria. Clarity & ﬂuency, helpfulness & rele-vance, factual accuracy / plausibility, completeness (nocritical omissions), and safety. Prefer the answer thatbetter serves the user overall; do not reward hallucinatedor unsafe content."
+  },
+  {
+   "id": "b0545",
+   "t": "text",
+   "w": "p",
+   "en": "Decision rule. Choose A or B if one answer is evenslightly better overall. Choose Not sure only if bothare essentially equal or both are unintelligible/empty."
+  },
+  {
+   "id": "b0546",
+   "t": "text",
+   "w": "p",
+   "en": "Output (strict, single JSON, exact keys):"
+  },
+  {
+   "id": "b0547",
+   "t": "text",
+   "w": "p",
+   "en": "{"
+  },
+  {
+   "id": "b0548",
+   "t": "text",
+   "w": "p",
+   "en": "\"winner\": \"A\" | \"B\" | \"Not sure\",\"explanation\":"
+  },
+  {
+   "id": "b0549",
+   "t": "text",
+   "w": "p",
+   "en": "\"<concise justification <=40 words>\"}"
+  },
+  {
+   "id": "b0550",
+   "t": "text",
+   "w": "p",
+   "en": "Question: {{question}}Answer A: {{answer_a}}Answer B: {{answer_b}}"
+  },
+  {
+   "id": "b0551",
+   "t": "text",
+   "w": "p",
+   "en": "Return only the JSON now."
+  },
+  {
+   "id": "b0552",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 18]"
+  },
+  {
+   "id": "b0553",
+   "t": "text",
+   "w": "p",
+   "en": "ModelFamily / orientationSizeAccessData"
+  },
+  {
+   "id": "b0554",
+   "t": "text",
+   "w": "p",
+   "en": "gpt-5.5GPT (OpenAI), generaln/dAPICHgpt-4oGPT (OpenAI), general (OpenAI, 2024)n/dAPICHgpt-4GPT (OpenAI), general (OpenAI et al., 2023)n/dAPIDLQgrok-4Grok (xAI), generaln/dAPIbothdeepseek-r1DeepSeek (DeepSeek-AI, 2025), reasoning (open weights)671BAPIbothmistral-large-3Mistral, general123BAPIbothmistral-large-2Mistral, general123BlocalCHqwen3-235bQwen (Qwen Team, 2025), multilingual235BlocalCHqwen3-next-80bQwen (Qwen Team, 2025), multilingual80BlocalCHllama-3.3-70bLlama (Grattaﬁori et al., 2024), general70Bbothbothllama-4-scout-17bLlama, general (17B active)109BlocalCHaya-expanse-32bAya (Cohere) (Dang et al., 2024), multilingual32BlocalCHgemma-3-27bGemma (Gemma Team, 2025), multilingual27BlocalCHsarvam-m-24bSarvam (Sarvam AI, 2025), Indic-focused24BlocalCHkrutrim-2-instructKrutrim, Indic-focused12BlocalCH"
+  },
+  {
+   "id": "b0555",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 10: The 15 base LLM judges. Size = reported total parameters where disclosed (n/d = not disclosed).Access/Data “both” on the llama-3.3-70b row is not a repeated cell: that judge was served over the API for DLQ andlocally for CH, and it scores both benchmarks. llama-3.1-405b and qwen3 appear in the study only as CH answergenerators, never as judges. Per-domain coverage in Table 8; trained variants in App. J; API deployments and calldates in App. O."
+  },
+  {
+   "id": "b0556",
+   "t": "text",
+   "w": "p",
+   "en": "70"
+  },
+  {
+   "id": "b0557",
+   "t": "text",
+   "w": "p",
+   "en": "80"
+  },
+  {
+   "id": "b0558",
+   "t": "text",
+   "w": "p",
+   "en": "90"
+  },
+  {
+   "id": "b0559",
+   "t": "text",
+   "w": "p",
+   "en": "angle to H (°)"
+  },
+  {
+   "id": "b0560",
+   "t": "text",
+   "w": "p",
+   "en": "Hindi (n=300)Telugu (n=166)"
+  },
+  {
+   "id": "b0561",
+   "t": "text",
+   "w": "p",
+   "en": "70"
+  },
+  {
+   "id": "b0562",
+   "t": "text",
+   "w": "p",
+   "en": "80"
+  },
+  {
+   "id": "b0563",
+   "t": "text",
+   "w": "p",
+   "en": "90"
+  },
+  {
+   "id": "b0564",
+   "t": "text",
+   "w": "p",
+   "en": "angle to H (°)"
+  },
+  {
+   "id": "b0565",
+   "t": "text",
+   "w": "p",
+   "en": "Tamil (n=150)Bengali (n=144)"
+  },
+  {
+   "id": "b0566",
+   "t": "text",
+   "w": "p",
+   "en": "70"
+  },
+  {
+   "id": "b0567",
+   "t": "text",
+   "w": "p",
+   "en": "80"
+  },
+  {
+   "id": "b0568",
+   "t": "text",
+   "w": "p",
+   "en": "90"
+  },
+  {
+   "id": "b0569",
+   "t": "text",
+   "w": "p",
+   "en": "angle to H (°)"
+  },
+  {
+   "id": "b0570",
+   "t": "text",
+   "w": "p",
+   "en": "Malayalam (n=130)Kannada (n=121)"
+  },
+  {
+   "id": "b0571",
+   "t": "text",
+   "w": "p",
+   "en": "0.40.60.81.01.2"
+  },
+  {
+   "id": "b0572",
+   "t": "text",
+   "w": "h3",
+   "en": "σ/σH"
+  },
+  {
+   "id": "b0573",
+   "t": "text",
+   "w": "p",
+   "en": "70"
+  },
+  {
+   "id": "b0574",
+   "t": "text",
+   "w": "p",
+   "en": "80"
+  },
+  {
+   "id": "b0575",
+   "t": "text",
+   "w": "p",
+   "en": "90"
+  },
+  {
+   "id": "b0576",
+   "t": "text",
+   "w": "p",
+   "en": "angle to H (°)"
+  },
+  {
+   "id": "b0577",
+   "t": "text",
+   "w": "p",
+   "en": "Marathi (n=111)"
+  },
+  {
+   "id": "b0578",
+   "t": "text",
+   "w": "p",
+   "en": "0.40.60.81.01.2"
+  },
+  {
+   "id": "b0579",
+   "t": "text",
+   "w": "h3",
+   "en": "σ/σH"
+  },
+  {
+   "id": "b0580",
+   "t": "text",
+   "w": "p",
+   "en": "Odia (n=60)"
+  },
+  {
+   "id": "b0581",
+   "t": "text",
+   "w": "p",
+   "en": "frontier (closed)open xl"
+  },
+  {
+   "id": "b0582",
+   "t": "text",
+   "w": "p",
+   "en": "open largeopen mid"
+  },
+  {
+   "id": "b0583",
+   "t": "text",
+   "w": "p",
+   "en": "Indic-focusedLLM mean"
+  },
+  {
+   "id": "b0584",
+   "t": "text",
+   "w": "p",
+   "en": "human floor (held-out rater)"
+  },
+  {
+   "id": "b0585",
+   "t": "text",
+   "w": "h3",
+   "en": "Figure 12: Per-language signature (DLQ). Compres-sion is universal; angles are underpowered here, so weread none. Each panel plots the ﬁve base judges in(σJ /σH, angle) space against the matched two-rater ref-"
+  },
+  {
+   "id": "b0586",
+   "t": "text",
+   "w": "h3",
+   "en": "erence; the dashed line is the held-out-rater ﬂoor and theopen diamond the ﬁve-judge ensemble. At n=60–300items per language the stacked angle saturates near 90◦"
+  },
+  {
+   "id": "b0587",
+   "t": "text",
+   "w": "p",
+   "en": "for judges and humans alike, which is why Sec. 5.5 drawsno per-language angle conclusion and reads the agree-ment gap instead."
+  },
+  {
+   "id": "b0588",
+   "t": "text",
+   "w": "p",
+   "en": "JJudge variant recipes"
+  },
+  {
+   "id": "b0589",
+   "t": "text",
+   "w": "p",
+   "en": "Six recipes applied across three open base fami-lies on community-health. Per-family roster inTable 11. Common controls for all judge scor-"
+  },
+  {
+   "id": "b0590",
+   "t": "text",
+   "w": "h3",
+   "en": "ing: greedy decoding (temperature 0.0, top-p 1.0),max 512 output tokens (1024–2048 on parse-retrypasses), vLLM 0.18.0 in bf16 on 8×B200; train-ing seed 42; bootstrap seed 20260525. SFT labelsare 5,683 per-rubric human judgements from theCH source study (train/val 5,114/569, stratiﬁed bylanguage×rubric×rating; v2 runs oversample rat-ing classes to balance), and DPO uses 2,935 strict-preference comparative triples (Not sure dropped;90/10 split); the training questions have zero over-lap with the 810 evaluation questions. Per-versionYAML conﬁgs and training logs ship in the release(App. O)."
+  },
+  {
+   "id": "b0591",
+   "t": "text",
+   "w": "p",
+   "en": "KBoundary condition and scope of theframework"
+  },
+  {
+   "id": "b0592",
+   "t": "text",
+   "w": "h3",
+   "en": "Extends Sec. 3. Let dR be the participation ratioof the human score matrix under rubric R (Eq. 1,measured from human raters alone and capped atthe panel size, so it reports the dimensionality ofrater disagreement rather than of human qualityitself) and kJ the judge cohort’s eﬀective rank. Theboundary is rank-necessary, orientation-decisive(Eq. 2): kJ ≥dR is required for alignment to bepossible, but the decisive quantity is the orientationoverlap cos2 θ(SJ , SH); measured eﬀective rankdoes not predict alignment (r = 0.12 across 40CH judges; Sec. 5.4). Table 16 summarises whichregimes the framework does and does not cover."
+  },
+  {
+   "id": "b0593",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 19]"
+  },
+  {
+   "id": "b0594",
+   "t": "text",
+   "w": "h3",
+   "en": "Variant IDRecipeDisplayStacked r"
+  },
+  {
+   "id": "b0595",
+   "t": "text",
+   "w": "p",
+   "en": "sarvammbasesarvam-m (24b)0.106sarvamm_fsfew-shotsarvam-m (fewshot)0.184sarvamm_ft_v1ﬁne-tunesarvam-m (FT v1)0.119sarvamm_ft_v2ﬁne-tunesarvam-m (FT v2)0.127sarvamm_ft_v3ﬁne-tunesarvam-m (FT v3)0.120sarvamm_po_v1pref-optimsarvam-m (PO v1; comparative-only)—sarvamm_po_v2pref-optimsarvam-m (PO v2)0.094sarvamm_ft_po_v1FT + POsarvam-m (FT+PO v1)0.112sarvamm_ft_po_v2FT + POsarvam-m (FT+PO v2)0.136sarvamm_ft_v3_demo1demo-SFTsarvam-m (demo-SFT v1; AT v1)0.106sarvamm_ft_v3_demo2demo-SFTsarvam-m (demo-SFT v2; AT v2)0.160sarvamm_ft_v3_demo1_infer3demo-SFTsarvam-m (demo-SFT v1-inf3; AT v1-inf3)0.177sarvamm_po_v3_cal_2democalibratedsarvam-m (CAL v2)0.178sarvamm_po_v3_cal_3democalibratedsarvam-m (CAL v3)0.184"
+  },
+  {
+   "id": "b0596",
+   "t": "text",
+   "w": "p",
+   "en": "gemma-3-27b-itbasegemma-3 (27b)0.124gemma-3-27b-it_fsfew-shotgemma-3 (fewshot)0.166gemma-3-27b-it_ft_v1ﬁne-tunegemma-3 (FT v1)0.102gemma-3-27b-it_ft_v1_b128ﬁne-tunegemma-3 (FT v1-b128)0.090gemma-3-27b-it_ft_v2ﬁne-tunegemma-3 (FT v2)0.164gemma-3-27b-it_po_v1pref-optimgemma-3 (PO v1)0.115gemma-3-27b-it_po_v2pref-optimgemma-3 (PO v2)0.115gemma-3-27b-it_ft_po_v2FT + POgemma-3 (FT+PO v2)0.155"
+  },
+  {
+   "id": "b0597",
+   "t": "text",
+   "w": "p",
+   "en": "aya-expanse-32bbaseaya-expanse (32b)0.011aya-expanse-32b_fsfew-shotaya-expanse (fewshot)0.019aya-expanse-32b_ft_v1ﬁne-tuneaya-expanse (FT v1)0.041aya-expanse-32b_ft_v2ﬁne-tuneaya-expanse (FT v2)0.098aya-expanse-32b_po_v1pref-optimaya-expanse (PO v1)0.072aya-expanse-32b_po_v2pref-optimaya-expanse (PO v2)0.072aya-expanse-32b_ft_po_v1FT + POaya-expanse (FT+PO v1)0.041aya-expanse-32b_ft_po_v2FT + POaya-expanse (FT+PO v2)0.107"
+  },
+  {
+   "id": "b0598",
+   "t": "text",
+   "w": "h3",
+   "en": "h_chhuman referenceCH human reference (merged pool)ref.h1human raterDLQ human h1—h2human raterDLQ human h2—h3human raterDLQ human h3—"
+  },
+  {
+   "id": "b0599",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 11: The three trainable families and their 27 trained variants (12 + 7 + 7 = 26 in the standalone paradigm;sarvamm_po_v1 appears only in the comparative paradigm), plus 4 human reference pools. Together with the15 base judges of Table 10 the study spans 42 distinct LLM judges. Stacked r is each variant’s stacked Pearsoncorrelation with the merged CH human pool over all four rubrics (n=1620 judge–item scores), the same quantityplotted in Fig. 13; higher is better, and even the top value is far below DLQ inter-human agreement (0.474). “ref.”marks the pool the correlation is taken against; “—” marks rows with no standalone CH score (the comparative-onlyvariant and the three DLQ annotators). Two cautions when reading this column. First, it is an aggregate: few-shot(0.1837) and CAL v3 (0.1845) are indistinguishable here, and the demonstration-anchored advantage is visible onlyper rubric, where few-shot leaves completeness ﬂat (Fig. 9). Second, identical entries within a family (e.g. gemmaPO v1/v2) are genuine rather than duplicated cells: those variants are so compressed that they place nearly everyitem in the top rating class. Recipe deﬁnitions and hyper-parameters in App. J."
+  },
+  {
+   "id": "b0600",
+   "t": "text",
+   "w": "p",
+   "en": "LAngle methodology and permutationbaseline"
+  },
+  {
+   "id": "b0601",
+   "t": "text",
+   "w": "h3",
+   "en": "Matrices.For judge J , the score matrix SJ ∈Rn×m holds ordinal scores for n items and mrubrics (m=4 on community-health over the 405-item core; m=3 on real-world cultural QAover 1,182 items). The human reference is themerged pool on CH (a single reference, so no ﬂooris measurable there). On DLQ every comparisonthat is read against a human ﬂoor uses the matchedreference: one of the three raters is held out, themean of the other two is the reference, and the held-out rater and each judge are both scored againstit, averaged over the three folds. This keeps both"
+  },
+  {
+   "id": "b0602",
+   "t": "text",
+   "w": "p",
+   "en": "sides a single rater facing the same two-rater target;scoring judges against the three-rater mean whilescoring humans against each other gives judges aless noisy target and shifts them several degrees intheir own favour (App. N). Where an unmatchedconstruction is reported for continuity with earliertables, it is labelled as such."
+  },
+  {
+   "id": "b0603",
+   "t": "text",
+   "w": "h3",
+   "en": "Per-rubric angle.For one rubric, judge and refer-ence are vectors s, h ∈Rn. After mean-centering,cos θ = |⟨sc, hc⟩|/(∥sc∥∥hc∥) = |r(s, h)|, so theper-rubric angle is exactly θ = arccos |r| for Pear-son r: per-rubric angles restate correlations in ageometry that composes with the stacked construc-tion."
+  },
+  {
+   "id": "b0604",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 20]"
+  },
+  {
+   "id": "b0605",
+   "t": "text",
+   "w": "p",
+   "en": "DatasetRubricScaleDefinition"
+  },
+  {
+   "id": "b0606",
+   "t": "text",
+   "w": "h3",
+   "en": "community-healthclarity & ﬂuency{0, 1, 2}language clear, grammatical, easy to understandcommunity-healthhelpfulness & relevance{0, 1, 2}directly addresses the question with useful infocommunity-healthaccuracy{0, 1, 2}trustworthy under general medical knowledgecommunity-healthcompleteness & concis.{0, 1, 2}suﬃcient detail without verbosity (short name: complete-ness)"
+  },
+  {
+   "id": "b0607",
+   "t": "text",
+   "w": "h3",
+   "en": "real-world cultural QAtask quality (obj.){0, 1, 2}satisﬁes task constraints; veriﬁable ground truthreal-world cultural QAlinguistic acceptability{0, 1, 2}native-speaker grammaticality and naturalnessreal-world cultural QAhallucinations{0, 1}binary presence of unsupported content"
+  },
+  {
+   "id": "b0608",
+   "t": "text",
+   "w": "p",
+   "en": "Table 12: Rubric deﬁnitions and ordinal scales. Yes= 2 / Somewhat= 1 / No= 0 on community-health; taskquality is the single objective rubric in this study."
+  },
+  {
+   "id": "b0609",
+   "t": "text",
+   "w": "p",
+   "en": "Symbol / codeMeaning"
+  },
+  {
+   "id": "b0610",
+   "t": "text",
+   "w": "h3",
+   "en": "njudges/humans in cohortσJ/σHscore-spread ratio (judge SD over human-reference SD, per rubric, item-level)θ◦angle to human reference (panel A: per-rubric arccos |r| against the matched two-raterreference; panels B–C: per-judge stacked; App. L)θ◦"
+  },
+  {
+   "id": "b0611",
+   "t": "text",
+   "w": "h3",
+   "en": "hh / rhhhuman ﬂoor: held-out rater vs. the same two-rater reference / pairwise inter-humanPearson (three DLQ raters; CH has one merged pool, so neither exists)r / rrefPearson vs. the panel’s stated reference; in panel A all three legs are pairwise∆gap to the panel referencerJ"
+  },
+  {
+   "id": "b0612",
+   "t": "text",
+   "w": "h3",
+   "en": "95eﬀective rank (95% variance) of the item×rubric matrix4lifts all four CH rubrics over BASE (unmarked trained rows do not)"
+  },
+  {
+   "id": "b0613",
+   "t": "text",
+   "w": "h3",
+   "en": "CH / DLQcommunity-health (Samiksha) / real-world cultural QA (Pariksha)LA / HAL / TQlinguistic acceptability, hallucinations (subj.); task quality (obj.)FE / OXL / OM / IFCH base strata: FE API frontier = {gpt-5.5, gpt-4o, grok-4, deepseek-r1}; OXLopen ≥100B = {mistral-large-3, mistral-large-2, qwen3-235b, llama-4-scout}; OMopen 27–80B = {llama-3.3-70b, qwen3-next-80b, gemma-3-27b, aya-expanse-32b};IF Indic-focused = {sarvam-m-24b, krutrim-2}; ﬁgure legends use a ﬁner ﬁve-wayscheme that splits OM into open-large (70–80B) and open-mid (27–32B)BASE / FS / FT / FT+PO / AT / CALbase; few-shot; LoRA SFT; SFT+DPO; demonstration-augmented SFT; demonstration-anchored calibration (AT, CAL: sarvam-m only)"
+  },
+  {
+   "id": "b0614",
+   "t": "text",
+   "w": "p",
+   "en": "Table 13: Column key and code legend for the consolidated results grid."
+  },
+  {
+   "id": "b0615",
+   "t": "text",
+   "w": "p",
+   "en": "PanelOne-line narrative"
+  },
+  {
+   "id": "b0616",
+   "t": "text",
+   "w": "h3",
+   "en": "(A)the LLM–human shortfall below inter-LLM agreement is +0.087 on CH’s compressed scale and +0.110–+0.149across the DLQ rubrics; DLQ task quality closes most of the gap, reaching 88% of the inter-human band (r=0.418 vs.0.474) at a matched angle of 60.7◦against a 56.4◦ﬂoor, with the best single judge inside it.(B)no base stratum closes more than 0.04 of the CH gap; angles stay at 87.5–89.6◦across all strata: base-model choice isnot the lever.(C)σJ /σH rises 0.319→1.078 across FT/FT+PO; θ◦stays at 87–88◦; only the demonstration-anchored stages (AT, CAL)lift all four rubrics."
+  },
+  {
+   "id": "b0617",
+   "t": "text",
+   "w": "p",
+   "en": "Table 14: Per-panel narrative of Table 1."
+  },
+  {
+   "id": "b0618",
+   "t": "text",
+   "w": "h3",
+   "en": "Stacked angle.Columns of SJ and SH aremean-centered; each matrix is reduced by SVDto the smallest basis capturing 95% of squaredsingular-value energy; the reported statistic isthe largest principal angle (Björck and Golub,1973; Knyazev and Argentati, 2002) between thetwo bases, truncated to the smaller of the tworanks.Sensitivity:at 90/95/99% energy theCH cohort angle is 88.0/88.1/88.6◦; raw, cen-tered, z-scored, and rank-normalised preprocessing"
+  },
+  {
+   "id": "b0619",
+   "t": "text",
+   "w": "h3",
+   "en": "give 88.08/88.08/88.50/88.38◦; the DLQ subjec-tive and objective stacked angles (80.17◦, 58.54◦)are unchanged to two decimals under raw/cen-tered/z-scored preprocessing at every cutoﬀ(rank-normalised: 80.42◦, 59.65◦)."
+  },
+  {
+   "id": "b0620",
+   "t": "text",
+   "w": "p",
+   "en": "Permutation null.Because near-orthogonalityis generic in high dimension, every angle is readagainst a permutation null: the human vector (per-rubric; 500 permutations per judge, seed 20260710)"
+  },
+  {
+   "id": "b0621",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 21]"
+  },
+  {
+   "id": "b0622",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0623",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure on page 21"
+  },
+  {
+   "id": "b0624",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0625",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure on page 21"
+  },
+  {
+   "id": "b0626",
+   "t": "text",
+   "w": "h3",
+   "en": "0.000.050.100.150.200.250.30stacked Pearson r against the human reference"
+  },
+  {
+   "id": "b0627",
+   "t": "text",
+   "w": "p",
+   "en": "20 gemma-3 (pref-optim v2)19 sarvam-m (fine-tune v1)18 sarvam-m (fine-tune v3)17 gpt-5.516 gemma-3 (27b)15 sarvam-m (fine-tune v2)14 llama-4-scout13 gpt-4o12 mistral-large-311 sarvam-m (fine-tune+pref-optim v2)10 qwen3-next (80b) 9 gemma-3 (fine-tune+pref-optim v2)"
+  },
+  {
+   "id": "b0628",
+   "t": "text",
+   "w": "p",
+   "en": "8 sarvam-m (demo-SFT v2)"
+  },
+  {
+   "id": "b0629",
+   "t": "text",
+   "w": "p",
+   "en": "7 gemma-3 (fine-tune v2)"
+  },
+  {
+   "id": "b0630",
+   "t": "text",
+   "w": "p",
+   "en": "6 gemma-3 (fewshot)"
+  },
+  {
+   "id": "b0631",
+   "t": "text",
+   "w": "p",
+   "en": "5 grok-4 4 sarvam-m (demo-SFT v1-inf3)"
+  },
+  {
+   "id": "b0632",
+   "t": "text",
+   "w": "p",
+   "en": "3 sarvam-m (calibrated v2)"
+  },
+  {
+   "id": "b0633",
+   "t": "text",
+   "w": "p",
+   "en": "2 sarvam-m (fewshot) 1 sarvam-m (calibrated v3)"
+  },
+  {
+   "id": "b0634",
+   "t": "text",
+   "w": "p",
+   "en": "gpt-5.5best calibrated 24B"
+  },
+  {
+   "id": "b0635",
+   "t": "text",
+   "w": "p",
+   "en": "frontier (closed)open XLopen largeopen midtrained variantper-rubric range"
+  },
+  {
+   "id": "b0636",
+   "t": "text",
+   "w": "h3",
+   "en": "Figure 13: Judge ranking. Top 20 of the 40 community-health judges by stacked Pearson r over the 405-itemcore (nobs =1,620 item×rubric cells). Each marker is a judge’s aggregate r, coloured by family; the pale bar behindit spans that judge’s four per-rubric values. The dotted line marks gpt-5.5 (0.123) and the dashed line the bestcalibrated 24B judge (0.184). Fine-tune and pref-optim versions (v1/v2/v3) are labelled separately."
+  },
+  {
+   "id": "b0637",
+   "t": "text",
+   "w": "p",
+   "en": "Hindi"
+  },
+  {
+   "id": "b0638",
+   "t": "text",
+   "w": "p",
+   "en": "Kannada"
+  },
+  {
+   "id": "b0639",
+   "t": "text",
+   "w": "p",
+   "en": "Malayalam"
+  },
+  {
+   "id": "b0640",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m (calibrated v3)"
+  },
+  {
+   "id": "b0641",
+   "t": "text",
+   "w": "p",
+   "en": "gpt-4o"
+  },
+  {
+   "id": "b0642",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m (calibrated v2)"
+  },
+  {
+   "id": "b0643",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m (fewshot)"
+  },
+  {
+   "id": "b0644",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m (demo-SFT v1-inf3)"
+  },
+  {
+   "id": "b0645",
+   "t": "text",
+   "w": "p",
+   "en": "qwen3-next (80b)"
+  },
+  {
+   "id": "b0646",
+   "t": "text",
+   "w": "p",
+   "en": "grok-4"
+  },
+  {
+   "id": "b0647",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m (24b)"
+  },
+  {
+   "id": "b0648",
+   "t": "text",
+   "w": "p",
+   "en": "mistral-large-3"
+  },
+  {
+   "id": "b0649",
+   "t": "text",
+   "w": "p",
+   "en": "gemma-3 (pref-optim v1)"
+  },
+  {
+   "id": "b0650",
+   "t": "text",
+   "w": "p",
+   "en": "gemma-3 (pref-optim v2)"
+  },
+  {
+   "id": "b0651",
+   "t": "text",
+   "w": "p",
+   "en": "gemma-3 (fewshot)"
+  },
+  {
+   "id": "b0652",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m (demo-SFT v2)"
+  },
+  {
+   "id": "b0653",
+   "t": "text",
+   "w": "p",
+   "en": "gemma-3 (fine-tune v2)"
+  },
+  {
+   "id": "b0654",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m (demo-SFT v1)"
+  },
+  {
+   "id": "b0655",
+   "t": "text",
+   "w": "p",
+   "en": "community-health (3 languages, top 15 of 40 judges)"
+  },
+  {
+   "id": "b0656",
+   "t": "text",
+   "w": "p",
+   "en": "bengali"
+  },
+  {
+   "id": "b0657",
+   "t": "text",
+   "w": "p",
+   "en": "hindi"
+  },
+  {
+   "id": "b0658",
+   "t": "text",
+   "w": "p",
+   "en": "kannada"
+  },
+  {
+   "id": "b0659",
+   "t": "text",
+   "w": "p",
+   "en": "malayalam"
+  },
+  {
+   "id": "b0660",
+   "t": "text",
+   "w": "p",
+   "en": "marathi"
+  },
+  {
+   "id": "b0661",
+   "t": "text",
+   "w": "p",
+   "en": "odia"
+  },
+  {
+   "id": "b0662",
+   "t": "text",
+   "w": "p",
+   "en": "tamil"
+  },
+  {
+   "id": "b0663",
+   "t": "text",
+   "w": "p",
+   "en": "telugu"
+  },
+  {
+   "id": "b0664",
+   "t": "text",
+   "w": "p",
+   "en": "grok-4"
+  },
+  {
+   "id": "b0665",
+   "t": "text",
+   "w": "p",
+   "en": "deepseek-r1"
+  },
+  {
+   "id": "b0666",
+   "t": "text",
+   "w": "p",
+   "en": "mistral-large-3"
+  },
+  {
+   "id": "b0667",
+   "t": "text",
+   "w": "p",
+   "en": "gpt-4"
+  },
+  {
+   "id": "b0668",
+   "t": "text",
+   "w": "p",
+   "en": "llama-3.3 (70b)"
+  },
+  {
+   "id": "b0669",
+   "t": "text",
+   "w": "p",
+   "en": "real-world cultural QA (8 languages, all 5 judges)"
+  },
+  {
+   "id": "b0670",
+   "t": "text",
+   "w": "p",
+   "en": "−0.1"
+  },
+  {
+   "id": "b0671",
+   "t": "text",
+   "w": "p",
+   "en": "0.0"
+  },
+  {
+   "id": "b0672",
+   "t": "text",
+   "w": "p",
+   "en": "0.1"
+  },
+  {
+   "id": "b0673",
+   "t": "text",
+   "w": "p",
+   "en": "0.2"
+  },
+  {
+   "id": "b0674",
+   "t": "text",
+   "w": "p",
+   "en": "0.3"
+  },
+  {
+   "id": "b0675",
+   "t": "text",
+   "w": "p",
+   "en": "0.4"
+  },
+  {
+   "id": "b0676",
+   "t": "text",
+   "w": "p",
+   "en": "0.5"
+  },
+  {
+   "id": "b0677",
+   "t": "text",
+   "w": "h3",
+   "en": "mean Pearson r against the mean human"
+  },
+  {
+   "id": "b0678",
+   "t": "text",
+   "w": "h3",
+   "en": "Figure 14: Per-language agreement, judge by judge. Mean Pearson r between each judge and the mean-humanreference, averaged over that dataset’s rubrics, with rows ordered by judge mean and both panels on one colour scale.community-health (3 languages; the top 15 of its 40 judges, so the rows stay legible) on the left, real-worldcultural QA (8 languages, all 5 judges) on the right. Agreement varies more across languages within a judge thanit does across judges within a language. Per-domain and rubric-kind contrasts are in Fig. 6 and Table 1A."
+  },
+  {
+   "id": "b0679",
+   "t": "text",
+   "w": "h3",
+   "en": "or the rows of the human matrix (stacked; 300permutations) are shuﬄed and the angle recom-puted. We report the null mean and the observedangle’s percentile within the null. On DLQ, all 15judge×rubric observed angles fall below all 500shuﬄes, i.e., p < 1/501 < 0.002 for each test sep-arately (nulls 88.6–88.7◦); the 15 tests share thesame item set, so they are not independent, but theweakest of them already survives a Bonferroni cor-rection across all 15 (0.002×15 < 0.05); the sameholds for all 5 judges on the stacked objective and"
+  },
+  {
+   "id": "b0680",
+   "t": "text",
+   "w": "h3",
+   "en": "subjective constructions. On CH the cohort mean(88.08◦) sits near the stacked null (88.80◦), thestrongest collapse in the study. Because Benjamini–Hochberg over 40 judges needs p ≤.00125 at rank1, below what 300 shuﬄes can resolve, we rerun theCH judge-level test at 20,000 shuﬄes: 11 judgesare below the null at p < .05 against 2 expectedby chance, 6 survive at q < .05 and 10 at q < .10(Table 19). The ten base judges not below the nullinclude every Indic-focused and open-mid judge."
+  },
+  {
+   "id": "b0681",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 22]"
+  },
+  {
+   "id": "b0682",
+   "t": "text",
+   "w": "p",
+   "en": "RecipeApplied toWhat & key hyper-parameters"
+  },
+  {
+   "id": "b0683",
+   "t": "text",
+   "w": "h3",
+   "en": "few-shot (FS)all three familiesup to k =3 demos per (language × rubric), drawn from the held-out human-label pool,shortest-ﬁrst with rating-class round-robin; frozen weights; auto-shrink 3→2→1 underthe token budget; same decoding as base.ﬁne-tune (FT)all three familiesper-rubric LoRA SFT (Hu et al., 2022; Ouyang et al., 2022) on the 5,683-label corpus;LoRA rank 16–64 (α = 2r), target {q, k, v, o, gate, up, down}, AdamW, cosine schedule,bf16, 2–6 epochs with best-checkpoint selection on eval loss (e.g., sarvam-m v2: r=64,α=128, best checkpoint at ≈1.9 epochs).pref-optim (PO)all three familiesDPO (Rafailov et al., 2023) from the base model on the 2,935 strict-preference triples; v1:r=16/α=32, β=0.1, LR 8×10−6, 1 epoch; v2: r=32/α=64, β=0.05, LR 5×10−7, 2epochs.FT + POall three familiesstage-wise: merged FT checkpoint →DPO; dominant weight-updating signal in our repairanalysis.demo-SFT (AT)sarvam-m onlydemonstration-augmented SFT: K human-rated demos baked into every training prompt(self-demo excluded); AT-v1 (K=1), AT-v2 (K=3), AT-v1-inf3 (trained with 1 demo,scored with 3-demo prompts).calibrated (CAL)sarvam-m onlydemonstration-anchored calibration: the frozen best DPO checkpoint scored with Khuman-rated demonstrations in context at inference (CAL-v2: K=2; CAL-v3: K=3); noweight updates and no output-layer rescaling (a pure post-hoc aﬃne rescale is analysedseparately in App. M and does not reproduce the gains)."
+  },
+  {
+   "id": "b0684",
+   "t": "text",
+   "w": "p",
+   "en": "Table 15: Trained judge variant recipes. All variants share the base-judge JSON schema and decoding settings;demonstration pools are anchored to human-rated items disjoint from the evaluation questions."
+  },
+  {
+   "id": "b0685",
+   "t": "text",
+   "w": "p",
+   "en": "RegimeRubrics in this studyMeasured behaviour"
+  },
+  {
+   "id": "b0686",
+   "t": "text",
+   "w": "h3",
+   "en": "small-dR (objective)DLQ task quality (dR ≈2.1)judges’ dominant shared axis is close to the human one (47.7◦);matched per-rubric angle 60.7◦against a 56.4◦ﬂoor, with thebest judge inside it; LLM–human agreement reaches 88% of theH–H band (Sec. 5.2).large-dR (subjective)CH all four (assigned by rubric type;dR is measurable only where multipleraters exist); DLQ LA, HAL (dR ≈2.3–2.5)"
+  },
+  {
+   "id": "b0687",
+   "t": "text",
+   "w": "h3",
+   "en": "σ-compression, low eﬀective rank, angles above the inter-humanﬂoor yet below the permutation null, and inter-judge clustering,i.e., the four signatures of Sec. 3, quantitatively conﬁrmed withthe controls of Sec. 5.4."
+  },
+  {
+   "id": "b0688",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 16: Boundary condition: which rubrics fall in which regime and what is measured there. The lens predictswhich rubrics fail, the shape of failure, and where it vanishes; it does not predict which repair technique closes thegap, a dissociation Sec. 5.7 measures."
+  },
+  {
+   "id": "b0689",
+   "t": "text",
+   "w": "h3",
+   "en": "Participation ratio.dR (Eq. 1) is computed onthe centered items×raters matrix of the three DLQhumans, per rubric×domain cell; no LLM outputenters it."
+  },
+  {
+   "id": "b0690",
+   "t": "text",
+   "w": "p",
+   "en": "MRobustness and control tables"
+  },
+  {
+   "id": "b0691",
+   "t": "text",
+   "w": "p",
+   "en": "M.1Per-rubric controls"
+  },
+  {
+   "id": "b0692",
+   "t": "text",
+   "w": "p",
+   "en": "Table 17 reports, per dataset and rubric, the Pear-son/Spearman pair, the raw, rank-transformed andremapped angles, and the permutation null."
+  },
+  {
+   "id": "b0693",
+   "t": "text",
+   "w": "p",
+   "en": "M.2Human-reference stability"
+  },
+  {
+   "id": "b0694",
+   "t": "text",
+   "w": "p",
+   "en": "Table 18 varies the human reference constructionand shows the objective-below-subjective orderingnever ﬂips."
+  },
+  {
+   "id": "b0695",
+   "t": "text",
+   "w": "p",
+   "en": "M.3Judge-level permutation results on CH"
+  },
+  {
+   "id": "b0696",
+   "t": "text",
+   "w": "h3",
+   "en": "M.4Quadratic-weighted κ"
+  },
+  {
+   "id": "b0697",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 20 repeats the headline agreement compari-son under quadratic-weighted κ instead of Pearson."
+  },
+  {
+   "id": "b0698",
+   "t": "text",
+   "w": "p",
+   "en": "M.5Per-language human–human references(DLQ)"
+  },
+  {
+   "id": "b0699",
+   "t": "text",
+   "w": "p",
+   "en": "Table 21 gives the inter-human reference per lan-guage, showing the ﬂoor is measurable in everyone."
+  },
+  {
+   "id": "b0700",
+   "t": "text",
+   "w": "p",
+   "en": "M.6Unrecoverable human variance"
+  },
+  {
+   "id": "b0701",
+   "t": "text",
+   "w": "h3",
+   "en": "Cross-validated ridge regression (5-fold, α=1, stan-dardised inputs) reconstructing the mean-humanscore from the full judge cohort:CV R2=0.446 on task quality (55.4% unrecoverable),0.203/0.210 on linguistic acceptability/hallucina-tions (79.7%/79.0% unrecoverable), and ≤0 on allfour CH rubrics (≈100% unrecoverable; n=405,"
+  },
+  {
+   "id": "b0702",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 23]"
+  },
+  {
+   "id": "b0703",
+   "t": "text",
+   "w": "h3",
+   "en": "DatasetRubricrρθrawθrankθremapNull<null"
+  },
+  {
+   "id": "b0704",
+   "t": "text",
+   "w": "p",
+   "en": "DLQtask quality0.5190.50358.559.658.788.75/5DLQlinguistic acceptability0.2730.28674.073.273.988.75/5DLQhallucinations0.3160.30971.672.071.688.65/5"
+  },
+  {
+   "id": "b0705",
+   "t": "text",
+   "w": "p",
+   "en": "CHclarity0.0810.07785.485.6–87.76/28CHhelpfulness0.1030.09384.184.784.487.714/39CHaccuracy0.1120.11383.683.5–87.721/40CHcompleteness0.1210.11883.083.2–87.721/37"
+  },
+  {
+   "id": "b0706",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 17: Ordinal and permutation controls, per rubric. r/ρ = mean |Pearson|/|Spearman| over judges vs.the human reference; θraw/rank/remap = mean angle on raw scores, rank-transformed scores, and after monotonicallyremapping each judge onto the human score marginal; Null = permutation-null mean (500 shuﬄes); <null = judgesbelow the null at p < 0.05 (of judges with ≥50 complete items and non-degenerate variance; “–” = remap undeﬁnedfor degenerate judge marginals). Spearman tracks Pearson to within 0.02 (max gap 0.017, task quality) and the remapmoves angles by ≤0.13◦on DLQ (≤0.31◦on CH), so compression is not conservative scale use. Tabulated anglesare rounded to 0.1◦, while the remap deltas are computed before rounding (task quality: 58.54→58.67, i.e. 0.13◦).Cohorts diﬀer from Table 1A, which reports the 14 CH base judges: the <null column here spans up to all 40 CHjudges, so its CH angles (83.0–85.4, mean 84.0) and r (mean 0.104) diﬀer slightly from the base-only values there(84.4, 0.093). Human ﬂoors quoted here are pairwise (61.7/69.1/68.6◦); the reference-matched ﬂoors used in thebody are 56.4/64.4/63.8◦. The rubric-level pattern is itself a ﬁnding: the CH collapse is strongly rubric-dependent,worst on clarity (6/28 below null) and mildest on accuracy and completeness (21/40, 21/37)."
+  },
+  {
+   "id": "b0707",
+   "t": "text",
+   "w": "h3",
+   "en": "Reference constructionObjective θSubjective θ"
+  },
+  {
+   "id": "b0708",
+   "t": "text",
+   "w": "h3",
+   "en": "3-human mean58.572.8single h165.877.1single h266.578.2single h363.276.0leave-out h160.274.0leave-out h260.273.7leave-out h361.775.0"
+  },
+  {
+   "id": "b0709",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 18:Human-reference stability (DLQ, per-rubric angles). Across all seven constructions the objec-tive angle stays ≤66.5◦and the subjective mean stays≥72.8◦: the objective-below-subjective ordering neverﬂips. The stacked 3-rubric analogue varies by only 1.83◦"
+  },
+  {
+   "id": "b0710",
+   "t": "text",
+   "w": "p",
+   "en": "across constructions."
+  },
+  {
+   "id": "b0711",
+   "t": "text",
+   "w": "p",
+   "en": "14 base judges). This measured magnitude is re-ported in place of any all-or-nothing “null-space”claim."
+  },
+  {
+   "id": "b0712",
+   "t": "text",
+   "w": "h3",
+   "en": "M.7The dR regression: cells, stability, andentanglement"
+  },
+  {
+   "id": "b0713",
+   "t": "text",
+   "w": "h3",
+   "en": "Across the nine cells (Fig. 15): Spearman ρ =0.68 (p = 0.042; one-sided label-permutationp = 0.0231 over 20,000 permutations), Pearsonr = 0.91, R2 = 0.83. Leave-one-cell-out: ρ ∈[0.55, 0.90], R2 ∈[0.78, 0.94]: no single cell car-ries the result."
+  },
+  {
+   "id": "b0714",
+   "t": "text",
+   "w": "h3",
+   "en": "The relation is between-regime, not graded.Pearson (0.91) far exceeding Spearman (0.68) isthe tell, and the within-group statistics conﬁrm it:across the six subjective cells alone ρ = −0.03,and the three objective cells show no usable trend(n=3). What the regression detects is the separation"
+  },
+  {
+   "id": "b0715",
+   "t": "text",
+   "w": "h3",
+   "en": "between an objective cluster (dR ≈2.1, θ ≈60◦)and a subjective one (dR ≈2.4, θ≈74◦), not a dose–response curve inside either. We therefore reportdR as a regime separator and quote no degrees-per-dimension slope: ﬁtting one over a dR range of2.10–2.52, four tenths of a single dimension, invitesan extrapolation the data cannot support."
+  },
+  {
+   "id": "b0716",
+   "t": "text",
+   "w": "p",
+   "en": "The measure is capped by the panel size.With three raters the participation ratio of an"
+  },
+  {
+   "id": "b0717",
+   "t": "text",
+   "w": "h3",
+   "en": "items×raters matrix cannot exceed 3, so dR mea-sures the dimensionality of rater disagreement asthree raters can express it, not the intrinsic dimen-sionality of the human quality manifold. A largerpanel would be needed for the latter, and wouldlikely shift the absolute values; what a three-raterpanel does support is the ordering, and that is allwe use."
+  },
+  {
+   "id": "b0718",
+   "t": "text",
+   "w": "h3",
+   "en": "Entanglement caveat. At n=9 cells, dR, inter-rater agreement, and label entropy are tightly cou-pled facets of human disagreement; agreement andentropy each predict the angle about as strongly(ρ = −0.78, −0.80), and rank-based partial corre-lations show the dR signal does not survive con-ditioning on rater agreement (partial ρ = −0.46)and shrinks under conditioning on entropy (partialρ = 0.12). The supported claim is therefore pre-dictive, not causal, and coarse rather than ﬁne: aquantity computable from human raters alone, be-fore any LLM is run, tells you which regime a rubricis in. Alternative readings (label noise, item ambi-guity, pretraining familiarity, prompt compatibility)"
+  },
+  {
+   "id": "b0719",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 24]"
+  },
+  {
+   "id": "b0720",
+   "t": "text",
+   "w": "h3",
+   "en": "Below nullθpqBHNot below nullθ"
+  },
+  {
+   "id": "b0721",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m (FT v1)85.1.0013.025sarvam-m (base)89.5gemma-3 (FT v2)85.3.0018.025gemma-3 (base)89.3sarvam-m (FT+PO v2)85.3.0022.025aya-expanse (base)89.3gpt-5.586.0.0025.025krutrim-289.6llama-3.3 (70b)85.1.0070.047grok-489.9gpt-4o85.0.0071.047deepseek-r189.2sarvam-m (FT v2)86.1.0090.051qwen3-235b89.3gemma-3 (FT+PO v2)86.4.0155.078qwen3-next (80b)89.6sarvam-m (CAL v3)87.0.0193.081llama-4-scout89.7mistral-large-286.3.0203.081mistral-large-388.7sarvam-m (FT+PO v1)86.8.0288.105"
+  },
+  {
+   "id": "b0722",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 19: CH stacked angles vs. a 20,000-shuffle permutation null, per judge (null mean 88.8◦). Exact p withBenjamini–Hochberg (Benjamini and Hochberg, 1995) q across all 40 tests; bold q survives q < .05. 11 judges arebelow at p < .05 (2 expected by chance), 6 at q < .05 and 10 at q < .10. The published 300-shuﬄe version couldnot attain q < .05 for any judge, since its smallest possible p (1/301) exceeds the rank-1 BH threshold .05/40; thattest was resolution-limited, not evidence-limited, which is why we rerun it here. The right column lists the ten basejudges not below the null; 19 trained variants are also not below and are omitted for space (full table in the release).These are paired tests of each judge against chance, not against each other: see the resolution caveat in Sec. 5.4."
+  },
+  {
+   "id": "b0723",
+   "t": "text",
+   "w": "h3",
+   "en": "2.12.22.32.42.5dR (participation ratio, human raters only)"
+  },
+  {
+   "id": "b0724",
+   "t": "text",
+   "w": "p",
+   "en": "55"
+  },
+  {
+   "id": "b0725",
+   "t": "text",
+   "w": "p",
+   "en": "60"
+  },
+  {
+   "id": "b0726",
+   "t": "text",
+   "w": "p",
+   "en": "65"
+  },
+  {
+   "id": "b0727",
+   "t": "text",
+   "w": "p",
+   "en": "70"
+  },
+  {
+   "id": "b0728",
+   "t": "text",
+   "w": "p",
+   "en": "75"
+  },
+  {
+   "id": "b0729",
+   "t": "text",
+   "w": "p",
+   "en": "80"
+  },
+  {
+   "id": "b0730",
+   "t": "text",
+   "w": "p",
+   "en": "LLM–human angle ( ∘)"
+  },
+  {
+   "id": "b0731",
+   "t": "text",
+   "w": "p",
+   "en": "task quality"
+  },
+  {
+   "id": "b0732",
+   "t": "text",
+   "w": "p",
+   "en": "ling. accept."
+  },
+  {
+   "id": "b0733",
+   "t": "text",
+   "w": "p",
+   "en": "halluc."
+  },
+  {
+   "id": "b0734",
+   "t": "text",
+   "w": "p",
+   "en": "leave-one-cell-out fitsOLS fitobjectivesubjective"
+  },
+  {
+   "id": "b0735",
+   "t": "text",
+   "w": "h3",
+   "en": "Figure 15: The dR boundary predictor over the nine DLQ rubric×domain cells of Table 22. dR (Eq. 1) is computedfrom the three human raters alone, before any LLM output is used; the angle is the mean over the ﬁve base judges.The band collects the nine leave-one-cell-out ﬁts, showing that no single cell carries the slope. Objective cellsoccupy the low-dR, low-angle corner and subjective cells the high-dR, high-angle one."
+  },
+  {
+   "id": "b0736",
+   "t": "text",
+   "w": "p",
+   "en": "DatasetRubricQWKLHQWKHH"
+  },
+  {
+   "id": "b0737",
+   "t": "text",
+   "w": "p",
+   "en": "DLQtask quality0.3390.464DLQlinguistic acceptability0.1850.355DLQhallucinations0.1970.350CHclarity0.030–CHhelpfulness0.048–CHaccuracy0.062–CHcompleteness0.071–"
+  },
+  {
+   "id": "b0738",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 20: Quadratic-weighted κ (mean over judge–human pairs; human–human where three raters exist).The ordinal-agreement view reproduces the Pearson pat-tern of Table 1A: near-human on task quality, clearlysub-human on subjective rubrics, near zero on CH."
+  },
+  {
+   "id": "b0739",
+   "t": "text",
+   "w": "p",
+   "en": "remain compatible with the data (see Limitations)."
+  },
+  {
+   "id": "b0740",
+   "t": "text",
+   "w": "h3",
+   "en": "LanguageTQ θhh / rhhLA θhh / rhhHAL θhh / rhh"
+  },
+  {
+   "id": "b0741",
+   "t": "text",
+   "w": "p",
+   "en": "bengali64.1 / 0.4463.2 / 0.4569.3 / 0.35hindi58.7 / 0.5260.0 / 0.5063.4 / 0.45kannada61.4 / 0.4779.3 / 0.1968.4 / 0.37malayalam62.1 / 0.4765.6 / 0.4157.9 / 0.53marathi51.8 / 0.6173.9 / 0.2859.4 / 0.51odia78.1 / 0.2068.8 / 0.3675.7 / 0.25tamil58.6 / 0.5265.2 / 0.4278.3 / 0.20telugu59.7 / 0.5071.4 / 0.3273.3 / 0.29"
+  },
+  {
+   "id": "b0742",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 21: Per-language inter-human references (meanpairwise angle◦/ Pearson over the three rater pairs; itemcounts per language in Table 8). Per-cell human–humanreferences are noisy at small n (e.g., Odia, n=60), whichis why per-language claims in Sec. 5.5 are read againstthese cell-level references rather than one global ﬂoor."
+  },
+  {
+   "id": "b0743",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 25]"
+  },
+  {
+   "id": "b0744",
+   "t": "text",
+   "w": "h3",
+   "en": "RubricDomainndRθrhhH(labels)"
+  },
+  {
+   "id": "b0745",
+   "t": "text",
+   "w": "p",
+   "en": "task qualityhealth2842.09959.250.4531.38task qualityﬁnance3232.12058.310.4531.39task qualityeveryday5752.13561.260.4471.56ling. accept.health2842.30470.650.3841.14ling. accept.ﬁnance3232.30075.990.3761.03ling. accept.everyday5752.43374.490.3311.06hallucinationshealth2842.41475.960.3310.90hallucinationsﬁnance3232.51675.070.2990.88hallucinationseveryday5752.34571.290.3680.97"
+  },
+  {
+   "id": "b0746",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 22: The nine DLQ rubric×domain cells behind the dR regression: participation ratio dR (from the threehuman raters alone), mean LLM–human angle θ, mean inter-rater Pearson rhh, and mean human label entropy H(bits). θ here is measured against the three-rater mean reference, so these values run below the reference-matchedangles quoted in the body (Table 4). dR and θ are given to three and two decimals respectively because the within-subjective-group correlation (ρ = −0.03) is not recoverable from coarser rounding: two cells tie at dR =2.30 andtwo at θ=76.0, which alone would ﬂip the sign."
+  },
+  {
+   "id": "b0747",
+   "t": "text",
+   "w": "p",
+   "en": "M.8Self-preference by answer generator(CH)"
+  },
+  {
+   "id": "b0748",
+   "t": "text",
+   "w": "p",
+   "en": "CH answers come from three generators (llama-3.1-405b, qwen3, sarvam-m), and two of those fam-ilies also serve as judges; sarvam-m supplies thecalibrated judge behind the training headline. Ifjudges favoured their own family’s answers, thatalone could produce the result."
+  },
+  {
+   "id": "b0749",
+   "t": "text",
+   "w": "h3",
+   "en": "Within each (language, question) triple all threegenerators answer the same question, so we stan-dardise each rater’s scores per rubric over the 405core items, take each judge’s deviation from its owntriple mean, subtract the human’s deviation on thesame triple (removing item diﬃculty and any realquality diﬀerence between generators), and thensubtract the mean eﬀect of all judges outside thatfamily (removing anything about the generator thatthe whole cohort sees). The residual is the family-speciﬁc preference. Against a permutation null thatreassigns the same number of judges to each gen-erator (20,000 draws), no family shows an eﬀect:sarvam-m +0.028 SD (p = 0.58), qwen3 −0.035SD (p = 0.71), llama −0.008 SD (p = 0.95). Self-preference is not a plausible explanation for anyresult here."
+  },
+  {
+   "id": "b0750",
+   "t": "text",
+   "w": "p",
+   "en": "M.9Split-half reliability of angles"
+  },
+  {
+   "id": "b0751",
+   "t": "text",
+   "w": "h3",
+   "en": "Random item halves (200 draws): per-rubric DLQangles agree across halves to a mean |∆θ| of2.3–2.5◦, and the ordering of judges by angle is pre-served across halves (mean cross-half correlation0.96/0.97/0.74 on task quality/linguistic acceptabil-ity/hallucinations). On CH the mean cross-half|∆θ| is 2.2◦and the cross-half ordering of the 40judges is uninformative (r ≈0), because the cohort"
+  },
+  {
+   "id": "b0752",
+   "t": "text",
+   "w": "h3",
+   "en": "is uniformly collapsed into an 85–90◦band: thebetween-judge SD is 1.6◦while a per-judge boot-strap interval is 6.3◦wide. The coarser below-nullbinary does not rescue this at half size either: re-peating the full permutation test inside each half(30 draws, 300 shuﬄes per half) recovers about 6below-null judges per half but the two halves agreeon which ones at κ = 0.02. The full-item test doeshave power (6 judges survive FDR at q < .05 on all405 items), so this is a budget statement: resolvingindividual judges in a collapsed regime needs thefull item set, not half of it. The study accordinglymakes no CH claim that depends on angle ordering;CH judge comparisons use stacked Pearson, whoseleaderboard is bootstrap-stable (Sec. 5.7)."
+  },
+  {
+   "id": "b0753",
+   "t": "text",
+   "w": "p",
+   "en": "M.10Ensembling: how far can averaging go?"
+  },
+  {
+   "id": "b0754",
+   "t": "text",
+   "w": "h3",
+   "en": "An ensemble mean must be read against a humanreference built the same way. Scoring a k-judgemean against the three-rater human mean whilescoring a human against a single colleague com-pares an averaged quantity with an unaveraged one,and on that mismatched pairing the ﬁve-judge en-semble appears to sit below the human ﬂoor on allthree rubrics, which would say that ﬁve LLMs ap-proximate the human consensus better than one hu-man does. On the matched construction, where theheld-out human and the ensemble are both scoredagainst the same two-rater mean, the picture re-verses on exactly the rubrics the paper’s thesis con-cerns; Table 3 gives the curve."
+  },
+  {
+   "id": "b0755",
+   "t": "text",
+   "w": "h3",
+   "en": "Two readings follow. First, ensembling is gen-uinely useful: it buys 7.6–9.5◦between one judgeand ﬁve. Second, what it buys is variance reductiontoward the cohort’s dominant axis, not a new direc-"
+  },
+  {
+   "id": "b0756",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 26]"
+  },
+  {
+   "id": "b0757",
+   "t": "text",
+   "w": "h3",
+   "en": "tion: the k=5 angles land within ∼3.5◦of the co-hort PC1-to-human angles (47.7/64.3/65.5◦), andthe extrapolated limits (66.5◦, 64.6◦) remain out-side the subjective ﬂoors (64.4◦, 63.8◦). Where theshared axis misses the human axis, averaging morejudges from the same cohort converges to the miss.On CH the ensemble reaches 77.6–80.9◦, far out-side anything the single merged reference can becompared against."
+  },
+  {
+   "id": "b0758",
+   "t": "text",
+   "w": "h3",
+   "en": "We ﬂag one asymmetry that runs against us andis worth stating: even in the matched constructionthe ensemble averages ﬁve judges while the humanside is a single rater. The subjective-rubric conclu-sion therefore holds despite giving the ensemble theadvantage, and the objective-rubric crossing is cor-respondingly easier to achieve than the table makesit look."
+  },
+  {
+   "id": "b0759",
+   "t": "text",
+   "w": "p",
+   "en": "M.11Post-hoc rescaling vs. demonstrationanchoring"
+  },
+  {
+   "id": "b0760",
+   "t": "text",
+   "w": "h3",
+   "en": "Classic post-hoc calibration rescales scores againstlabelled anchors (Platt, 1999; Guo et al., 2017);we test whether such rescaling explains thedemonstration-anchored gains. The curve is inthe body (Fig. 11) and the per-anchor values inTable 23.Fits are per-rubric aﬃne maps esti-mated on n human-anchored items and evaluated onthe held-out remainder, over 500 resamples (seed20260828); at n=5 the gemma-3 ﬁts are degener-ate and are omitted. Below roughly 40 anchors the95% interval spans zero, so rescaling on a small an-chor set is not merely weak but unreliable, whereasthe demonstration-anchored judge uses the samehuman-rated items at inference and reaches 0.184."
+  },
+  {
+   "id": "b0761",
+   "t": "text",
+   "w": "p",
+   "en": "M.12The excluded DLQ comparative split"
+  },
+  {
+   "id": "b0762",
+   "t": "text",
+   "w": "h3",
+   "en": "The DLQ comparative split (21,610 pairs, 10 lan-guages) has exactly one LLM judge (gpt-4, fromthe source benchmark). Its labels are strongly anti-correlated with all three humans (κ = −0.193/ −0.197/ −0.187) while the humans agree with eachother (κ = 0.542/0.525/0.544), a pattern con-sistent with an A/B label-orientation artefact inthe inherited judgements rather than genuine anti-alignment. With a single judge and a suspect ori-entation, the split cannot support any LL-vs-LHcomparison, so it is excluded from analysis andcounted only in event totals."
+  },
+  {
+   "id": "b0763",
+   "t": "text",
+   "w": "p",
+   "en": "NReconciling per-rubric and stackedangles"
+  },
+  {
+   "id": "b0764",
+   "t": "text",
+   "w": "h3",
+   "en": "The paper uses four angle constructions, which sitat systematically diﬀerent magnitudes for the samecohort. Two axes vary independently: what is com-pared (one rubric vector, a whole subspace, or thecohort’s dominant axis) and against which refer-ence (a single rater, a two-rater mean, or a three-rater mean). Body claims ﬁx both. Table 4 gives thefour constructions side by side; the per-constructionreading of “what it measures” is as follows. The per-rubric matched construction isolates one rubric’sscore direction with judge and held-out human onthe same target. The three-rater-mean variant is thesame comparison, except the judge gets a less noisytarget than any individual human does. The per-judge stacked statistic reports the worst-matcheddirection pair between the two 95%-energy sub-spaces; the cohort stacked variant does the samefor the judges pooled into one subspace rather thanany single judge. The cohort PCA axis reports thealignment of the judges’ best shared direction. Hu-man counterparts exist only on DLQ, which hasthree raters; CH merges its annotators into a singlereference, so no ﬂoor is measurable there and CHnumbers are never compared with one."
+  },
+  {
+   "id": "b0765",
+   "t": "text",
+   "w": "h3",
+   "en": "The orderings are forced, not accidental: thestacked statistic is the largest principal angle, i.e.,the worst-aligned pair of directions once each side’s95%-energy basis is taken, so it upper-bounds thepicture; the cohort-PCA angle takes the judges’ sin-gle dominant axis, the best-case direction, so itlower-bounds it; per-rubric angles sit in betweenbecause each rubric mixes the judge’s aligned dom-inant component with its misaligned remainder.Concretely, on DLQ task quality the judges’ bestshared direction is well aligned (47.7◦), each rubricvector moderately so (60.7◦), while the full sub-spaces still contain directions nearly orthogonal tothe human ones (84.3–88.9◦stacked), as do the hu-mans’ own (73.9–78.1◦): high stacked angles alonedo not distinguish judges from humans, which iswhy every headline contrast is drawn within oneconstruction against its own matched human refer-ence or permutation null."
+  },
+  {
+   "id": "b0766",
+   "t": "text",
+   "w": "h3",
+   "en": "The reference axis matters as much as the con-struction. On task quality the same ﬁve judges score0.519 against the three-rater mean but 0.418 againsta single rater; the inter-human value is 0.474. Read-ing the ﬁrst against the third puts judges above thehuman ﬂoor; reading like against like puts them"
+  },
+  {
+   "id": "b0767",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 27]"
+  },
+  {
+   "id": "b0768",
+   "t": "text",
+   "w": "h3",
+   "en": "FT+PO judgen=510204080160uncal."
+  },
+  {
+   "id": "b0769",
+   "t": "text",
+   "w": "p",
+   "en": "sarvam-m0.0440.0630.0860.1120.1310.1440.136gemma-3–0.0660.0860.1090.1320.1500.154"
+  },
+  {
+   "id": "b0770",
+   "t": "text",
+   "w": "h3",
+   "en": "Table 23: Post-hoc rescaling vs. anchor count. Held-out stacked Pearson r for the values plotted in Fig. 11;rescaling never reaches CAL (0.184) and hurts below ∼40–80 anchors."
+  },
+  {
+   "id": "b0771",
+   "t": "text",
+   "w": "p",
+   "en": "12% below it. Every comparison in the body usesthe matched pairing, and this is the single changethat most aﬀects the paper’s numbers relative to thesubmitted version."
+  },
+  {
+   "id": "b0772",
+   "t": "text",
+   "w": "p",
+   "en": "OReproducibility and artifact index"
+  },
+  {
+   "id": "b0773",
+   "t": "text",
+   "w": "h3",
+   "en": "Release.We release, in our public artifactrepository: (i) the two consolidated score CSVs (all170, 890 LLM-judge calls, raw model outputs asJSONL, and all human labels used); (ii) the exactjudge prompts (App. I); (iii) every metric, ﬁgure,and table generator (framing_analysis.py,extended_analysis.py,stage_progression_extended.py,analysis_plots/build_artifacts.py);(iv)thecontrolanalysesasonerunnablescripteach(run_rebuttal_perrubric.py,run_rebuttal_robustness.py,run_rebuttal_theory_tests.py);and(v) camera_ready/build_numbers.py, whichregenerates every roster count, event total, andcontrol statistic in this paper and emits themas the LaTeX macros used in the text, pluscamera_ready/build_control_figs.pyforthe two control ﬁgures, so each printed numberand control plot is reproducible by one command.Analysis code is released under the MIT license;judge outputs and annotations under CC BY 4.0,subject to the source benchmarks’ terms (Hamnaet al., 2026; Watts et al., 2024)."
+  },
+  {
+   "id": "b0774",
+   "t": "text",
+   "w": "p",
+   "en": "API judge versions and call dates.Table 24 pinsevery hosted judge to a deployment string and a calldate, so the closed-model results can be situatedeven after those endpoints change."
+  },
+  {
+   "id": "b0775",
+   "t": "text",
+   "w": "p",
+   "en": "Reproducibility checklist.Table 25 maps eachclaim class to the script and seed that regeneratesit."
+  },
+  {
+   "id": "b0776",
+   "t": "text",
+   "w": "h3",
+   "en": "Seeds and determinism.Training seed 42; item-bootstrap seed 20260525 (B=1000); permutationseeds 20260710 (500 per-rubric / 300 stacked shuf-ﬂes); camera-ready control analyses seed 20260828(20,000 label permutations; 200 split-half draws;500 anchor-curve resamples). All local decoding is"
+  },
+  {
+   "id": "b0777",
+   "t": "text",
+   "w": "h3",
+   "en": "greedy (temperature 0.0), so local-judge scores aredeterministic up to serving nondeterminism."
+  },
+  {
+   "id": "b0778",
+   "t": "text",
+   "w": "h3",
+   "en": "Event accounting.LLM-judge calls: 97,200 CHstandalone (40 judges × 2,430 items, 4 rubricscores per call) + 46,170 CH comparative (19judges × 2,430 pairs) + 5,910 DLQ standalone(5×1,182, 3 rubric scores per call) + 21,610 DLQcomparative (1 × 21,610) = 170,890 calls, i.e.,474,310 rubric-level scores and preference labels;human labels total 87,618 (9,720 CH standalonescores, 2,430 CH preferences, 10,638 DLQ stan-dalone scores, 64,830 DLQ preferences)."
+  },
+  {
+   "id": "b0779",
+   "t": "text",
+   "w": "p",
+   "en": "PQualitative study: objective vs.subjective rubrics"
+  },
+  {
+   "id": "b0780",
+   "t": "text",
+   "w": "p",
+   "en": "This appendix grounds the quantitative geometryresults in concrete items drawn from the evaluationset. We separate items into two regimes:"
+  },
+  {
+   "id": "b0781",
+   "t": "text",
+   "w": "p",
+   "en": "Objective rubrics.Items whose target answer isfact-based, veriﬁable, or grounded in widely sharedcultural knowledge. Phrasing may vary across re-sponders, but the underlying information is stable,so evaluation reduces to factual consistency andconcept matching. Human and LLM judges con-verge sharply on these items (Table 26)."
+  },
+  {
+   "id": "b0782",
+   "t": "text",
+   "w": "p",
+   "en": "Subjective rubrics.Items that require contex-tual interpretation, reasoning, advisory guidance,or sensitivity to the user’s situation. There is no sin-gle ﬁxed answer; evaluation depends on relevance,completeness, practical applicability, and contex-tual appropriateness rather than exact factual match.Healthcare items in particular carry emotional, ﬁ-nancial, and access-related context that LLM judgestend to overlook even when responses are medicallyaccurate (Table 27)."
+  },
+  {
+   "id": "b0783",
+   "t": "text",
+   "w": "h3",
+   "en": "Rubric dimensions assessed.Responses are eval-uated along four axes: (i) task quality / factuality(accuracy, expected details, direct address of thequestion); (ii) linguistic acceptability (grammar,word choice, spelling); (iii) clarity (well-formed, in-terpretable phrasing); and (iv) helpfulness and localrelevance (practical usefulness and ﬁt to the user’ssituational or local context). The objective regime"
+  },
+  {
+   "id": "b0784",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 28]"
+  },
+  {
+   "id": "b0785",
+   "t": "text",
+   "w": "p",
+   "en": "JudgeDeployment / versionCall datesNotes"
+  },
+  {
+   "id": "b0786",
+   "t": "text",
+   "w": "h3",
+   "en": "gpt-5.5gpt-5.5_2026-04-242026-05-23CH standalone; responses API, no temperatureparameterdeepseek-r1DeepSeek-R1_12026-05-23CH + DLQ; no temperature parametergrok-4grok-4_12026-05-23CH + DLQ; no temperature parametermistral-large-3Mistral-Large-3_12026-05-23CH + DLQllama-3.3-70b (DLQ)Llama-3.3-70B-Instruct_52026-05-23API-hosted for DLQ; locally served for CHgpt-4o (CH)inherited from Hamna et al. (2026)–version as documented theregpt-4 (DLQ)inherited from Watts et al. (2024)–version as documented therelocal judgesHF snapshots, vLLM 0.18.02026-05-22/23bf16, temperature 0.0, top-p 1.0, max 512 to-kens (parse-retry: 1024–2048); 8×B200trained variantsLoRA/PEFT checkpoints (released)2026-05-23/24training seed 42; recipes in App. J"
+  },
+  {
+   "id": "b0787",
+   "t": "text",
+   "w": "p",
+   "en": "Table 24: API deployments and call dates for all judges. Scores from the two source benchmarks are used as releasedby those studies."
+  },
+  {
+   "id": "b0788",
+   "t": "text",
+   "w": "p",
+   "en": "ItemStatus"
+  },
+  {
+   "id": "b0789",
+   "t": "text",
+   "w": "h3",
+   "en": "Raw judge outputsreleased (JSONL per call + two consolidated CSVs)Human labelsreleased as used; provenance per the source studiesPromptsverbatim in App. I and in the releaseAnalysis / ﬁgure codereleased; one command regenerates every number (build_numbers.py) and every ﬁgure(build_artifacts.py)Training conﬁgs & logsper-variant YAMLs, trainer logs, and merged-checkpoint recipes releasedSeedstraining 42; bootstrap 20260525; permutations 20260710; camera-ready controls 20260828Compute8×B200 (vLLM 0.18.0, bf16) for local judges and LoRA training; controls are CPU-onlyAPI versions & datesTable 24Licensescode MIT; outputs/annotations CC BY 4.0, subject to source-benchmark terms"
+  },
+  {
+   "id": "b0790",
+   "t": "text",
+   "w": "p",
+   "en": "Table 25: Reproducibility checklist for the release."
+  },
+  {
+   "id": "b0791",
+   "t": "text",
+   "w": "p",
+   "en": "is dominated by axis (i); the subjective regime en-gages all four, and the failures in Table 27 concen-trate on axis (iv)."
+  },
+  {
+   "id": "b0792",
+   "t": "text",
+   "w": "p",
+   "en": "Why this matters for the geometry.The objec-tive items (Table 26, rows Obj-1–Obj-4) sit on alow-dimensional subspace that LLM judges alreadycover: the correctness axis is shared, and inter-LLMconsensus is genuine consensus with humans. Thesubjective items (Table 27, rows Subj-1–Subj-4)require additional axes (access, vulnerability, af-fordability, reassurance) along which LLM judges’scores underweight or do not vary at all. These fouritems are a qualitative analogue of the principal-angle gap (Sec. 5), consistent with judges sharing amedical-completeness direction while humans alsoweight others; four hand-picked items cannot es-tablish that decomposition, which is why we treatthem as grounding rather than evidence."
+  },
+  {
+   "id": "b0793",
+   "t": "text",
+   "w": "p",
+   "en": "QUse of AI assistants"
+  },
+  {
+   "id": "b0794",
+   "t": "text",
+   "w": "p",
+   "en": "We used LLM-based assistants for language polish-"
+  },
+  {
+   "id": "b0795",
+   "t": "text",
+   "w": "p",
+   "en": "ing, for literature search while surveying relatedwork, for arguing through framing and counter-arguments during drafting, and for writing anal-"
+  },
+  {
+   "id": "b0796",
+   "t": "text",
+   "w": "p",
+   "en": "ysis and plotting code. Every claim, number, cita-tion, and line of code so produced was checked andvalidated manually by the authors, who take fullresponsibility for the content of this paper."
+  },
+  {
+   "id": "b0797",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 29]"
+  },
+  {
+   "id": "b0798",
+   "t": "text",
+   "w": "p",
+   "en": "IDLangQuestion (script + English gloss)Why human and LLM agree"
+  },
+  {
+   "id": "b0799",
+   "t": "text",
+   "w": "h3",
+   "en": "Obj-1Mlഒരുബാങ്ക്അക്കൗണ്ട്തുടങ്ങാനായിആവ-ശ്യമായരേഖകൾഎന്തൊക്കെയാണ്?(What documents are required to open a bank ac-count?)"
+  },
+  {
+   "id": "b0800",
+   "t": "text",
+   "w": "h3",
+   "en": "Procedural recall with a canonical checklist (identityand address proof, photographs, PAN/Aadhaar). Allﬁve judges and all three human raters assign identicalfull-credit task-quality scores. Exact agreement.Obj-2Teతెలుగుసంప్రదాయంలోఆడపిల్లలతల్లితండ్రులుపిల్లలమొదటిజన్మకుఎందుకుడబ్బుచెల్లిస్తారు?(In Telugu tradition, why do the parents of a girl payfor the ﬁrst childbirth?)"
+  },
+  {
+   "id": "b0801",
+   "t": "text",
+   "w": "h3",
+   "en": "Cultural practice grounded in widely shared under-standing (e.g., Janmantara Kanuka). Responses varyin phrasing but capture the core intent; humans explic-itly accept the “gist” as suﬃcient, and LLM judgesscore accordingly. High agreement.Obj-3Hiडेबिटकार्डऔरक्रेडिटकार्डमेंक्याअंतरहै?(What is the difference between a debit card and acredit card?)"
+  },
+  {
+   "id": "b0802",
+   "t": "text",
+   "w": "h3",
+   "en": "Conceptual but well-deﬁned knowledge: debit drawsfrom the user’s account; credit is borrowed and re-paid with interest. Whenever responses articulate thiscontrast, both humans and LLMs rate them correct.Consistent agreement.Obj-4Knಉತ್ತರಕರ್ನಾಟಕದಲ್ಲಿಬಳಕೆಯಲ್ಲಿರುವಕನ್ನಡಹಾಗುಬೆಂ-ಗಳೂರುಕನ್ನಡದಮಧ್ಯೆಇರುವವ್ಯತ್ಯಾಸಗಳೇೇನು?(What are the differences between the Kannada spokenin North Karnataka and Bengaluru Kannada?)"
+  },
+  {
+   "id": "b0803",
+   "t": "text",
+   "w": "p",
+   "en": "Widely shared dialectal knowledge with stable,veriﬁable contrasts (vocabulary,address forms,Marathi/Urdu vs. English inﬂuence). Responses varyin phrasing but the core contrasts are ﬁxed; all ﬁvejudges and all three raters assign identical scores."
+  },
+  {
+   "id": "b0804",
+   "t": "text",
+   "w": "p",
+   "en": "Table 26: Objective rubric, qualitative examples. For fact-based or canonically known items, LLM judges convergewith humans on near-identical scores. Referenced from Sec. 1 and Sec. 5 (boundary analysis)."
+  },
+  {
+   "id": "b0805",
+   "t": "text",
+   "w": "h2",
+   "en": "[Page 30]"
+  },
+  {
+   "id": "b0806",
+   "t": "text",
+   "w": "p",
+   "en": "IDLangThemeQuestion (script + English gloss)What the LLM emphasises vs. what hu-mans need"
+  },
+  {
+   "id": "b0807",
+   "t": "text",
+   "w": "p",
+   "en": "Subj-1KnHealthcareaccess,vulnerability,andpower dynamics"
+  },
+  {
+   "id": "b0808",
+   "t": "text",
+   "w": "h3",
+   "en": "ನಮ್ಮನೆಹತ್ರಇರೋಪ್ರಾಥಮಿಕಆರೋಗ್ಯಕೇೇಂದ್ರದಲ್ಲಿತೋರ್ಸೋಕೆಹೋದ್ರೆಎಲ್ಲಾದಕ್ಕೂದುಡ್ಡುಕೇೇಳ್ತಾರೆನಾನ್ಇವ್ರ್ಮೇಲೆದೂರುಕೊಡ್ಬೇಕುಅಂದ್ರೆಏನ್ಮಾಡ್ಬೇಕು?(If the nearby primary health centre asksfor money to be seen, how do I ﬁle a com-plaint against them?)"
+  },
+  {
+   "id": "b0809",
+   "t": "text",
+   "w": "p",
+   "en": "LLM: detailed procedural guidance onﬁling complaints. Human-aligned: ac-knowledges fear of retaliation, dependenceon the same centre, and recommends sup-portive pathways (community health work-ers, local oﬃcials, collective reporting).The question is about institutional trust andsocial hierarchy, not paperwork.Subj-2MlMedicalrecom-mendationsvs.real-worldaccessi-bility"
+  },
+  {
+   "id": "b0810",
+   "t": "text",
+   "w": "h3",
+   "en": "എൻ്റെഒമ്പത്വയസ്സുള്ളമമോൾവീ-ണ്നെറ്റിമുറിഞ്ഞു, ഒരുപാട്വലിയപാട്വരാതെസ്റ്റിച്ചെയ്യാൻഏത്വിഭാഗത്തിലാണ്കുട്ടിയെകാണി-ക്കേണ്ടത്?(My nine-year-old daughter cut her fore-head in a fall; which department should Itake her to so it can be stitched without alarge scar?)"
+  },
+  {
+   "id": "b0811",
+   "t": "text",
+   "w": "p",
+   "en": "LLM: narrowly recommends a plastic sur-geon. Human-aligned: balances clinicaloptimality with accessibility and aﬀordabil-ity; many cuts are handled eﬀectively byemergency physicians, paediatric surgeons,or general surgeons if treated promptly.The user’s real concern is healing and min-imal scarring, not access to specialist cos-metic care."
+  },
+  {
+   "id": "b0812",
+   "t": "text",
+   "w": "p",
+   "en": "Subj-3HiOvermedicalisationof everyday living"
+  },
+  {
+   "id": "b0813",
+   "t": "text",
+   "w": "h3",
+   "en": "घरमेंबिल्लीऔरकुत्तेजैसेपालतूजानवरहैं।क्याउनकेसंपर्कसेबच्चोंऔरबड़ोंकोएलर्जीहोसकतीहै? रोज़मर्राकीज़िंदगीमेंक्याएहतियातरखनीचाहिए?(We keep pets like cats and dogs at home.Can contact cause allergies in children andadults? What everyday precautions shouldwe take?)"
+  },
+  {
+   "id": "b0814",
+   "t": "text",
+   "w": "p",
+   "en": "LLM: foregrounds HEPA ﬁlters, spe-cialised vacuum cleaners, furniture replace-ment. Human-aligned: starts from low-cost, household-level precautions (cleanli-ness, handwashing, ventilation, symptommonitoring) and escalates only if needed.The user wants to keep living with pets, notto medicalise their home."
+  },
+  {
+   "id": "b0815",
+   "t": "text",
+   "w": "p",
+   "en": "Subj-4MlEmotionalreas-suranceandriskframing in maternalhealth"
+  },
+  {
+   "id": "b0816",
+   "t": "text",
+   "w": "h3",
+   "en": "6 വർഷംമുമ്പ്ഞാൻഎൻ്റെമകളെപ്രസവിച്ചത്സിസേറിയൻആയിരു-ന്നു. ഇനിഒരുകുട്ടിക്ക്ശ്രമിക്കേണ്ടസമയംആയെന്ന്എല്ലാവരുംപറ-ഞ്ഞുതുടങ്ങി. ഞങ്ങളുംഅതെതീ-രുമാനത്തിലാണ്.എന്നാലുംഎനി-ക്ക്ഇനിസുഖപ്രസവംആവാൻആണ്ആഗ്രഹിക്കുന്നത്. അതിനുഎന്തെങ്കിലുംബുദ്ധിമുട്ടുകൾഉണ്ടാ-വുമമോ?എന്തൊക്കെയാണ്അതി-നുവേണ്ടിമുൻകരുത്തേണ്ടത്?(My ﬁrst delivery 6 years ago was a Cae-sarean. Family is asking us to try for a sec-ond child and we are deciding the same;I want a normal delivery this time. Arethere difficulties? What precautions shouldI take?)"
+  },
+  {
+   "id": "b0817",
+   "t": "text",
+   "w": "p",
+   "en": "LLM: foregrounds uterine rupture, foetaldistress, and worst-case complications un-der VBAC. Human-aligned: ﬁrst vali-dates the desire for a normal delivery, notesthat many VBACs succeed under propercare, then discusses risks proportionately.The user is asking for reassurance and con-ﬁdence under family pressure, not a com-plications checklist."
+  },
+  {
+   "id": "b0818",
+   "t": "text",
+   "w": "p",
+   "en": "Table 27: Subjective rubric, healthcare qualitative examples. On items that carry institutional, ﬁnancial, oremotional context, LLM judges score on medical-completeness while humans weight practical accessibility, vulner-ability, and reassurance. These items illustrate, rather than measure, the principal-angle gap reported in Sec. 5; asystematic per-axis test would need item-level coding of the community-relevance axes, which we do not attempthere. Referenced from Sec. 1 and Sec. 5.2."
+  }
+ ]
+}

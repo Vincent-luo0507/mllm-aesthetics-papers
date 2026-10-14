@@ -1,0 +1,1792 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Texture or Semantics? Vision-Language Models Get Lost in Font Recognition"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Modern Vision-Language Models (VLMs) exhibit remarkable visual and linguistic capabilities, achieving impressive performance in various tasks such as image recognition and object localization. However"
+  },
+  {
+   "id": "b0003",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "p",
+   "en": "Font recognition is a fundamental visual task with applications across various domains. It is particularly relevant to graphic design, publishing, advertising, and digital content creation, where typography plays a crucial role in visual communication (Zramdini & Ingold, 1998; Chen et al., 2014b; Zhu et al., 2001). For example, researchers may seek to identify aesthetically appealing fonts in academic papers or images, while designers sometimes encounter unique typefaces they wish to integrate into their projects. Statistics indicate that over 60% of websites utilize custom or non-system fonts, highlighting the significance of font identification in web design. Additionally, Google Fonts are used on more than 50 million websites, demonstrating the extensive adoption of diverse typefaces (Solomons, 2023). This widespread demand underscores the need for efficient and accurate font recognition tools."
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Traditionally, Convolutional Neural Networks (CNNs) have been the predominant architecture for font recognition (Chen et al., 2021; Li et al., 2022b). While CNNs achieve high accuracy, they rely on large and well-annotated datasets for training (Wang & Zong, 2023; Zhang, 2023; Tonmoy et al., 2024). The process of data collection, annotation, and"
+  },
+  {
+   "id": "b0006",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: An illustrative example where the image displays the word ’Arial’ rendered in the ’Monoton’ font. The vision-language model incorrectly predicts the font as ’Arial’, indicating an over-reliance on textual content and limited sensitivity to font semantics."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "curation is time-consuming and resource-intensive, limiting the scalability and adaptability of CNN-based systems in real-world applications. In contrast, VLMs, pre-trained on large-scale multimodal datasets, have demonstrated remarkable capabilities in processing both visual and textual information (Zhang et al., 2024c; Bordes et al., 2024; OpenAI et al., 2024b; OpenAI, 2024; Team et al., 2024; Google, 2025). Their ability to generalize across diverse visual tasks without extensive task-specific training makes them highly versatile. Additionally, many VLMs are open-weight and freely accessible, positioning them as practical alternatives for everyday font recognition."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Although VLMs have the potential to aid in font recognition, there has been no comprehensive analysis or systematic evaluation of their capabilities in this domain. In this paper, we introduce a font recognition benchmark comprising 15 commonly used fonts, with images containing textual content rendered in these typefaces. To ensure a rigorous evaluation, we construct two dataset versions: an easy version, where fonts are recognized from images containing sentences, and a hard version, which introduces the stroop effect (Besner et al., 1997; MacLeod, 1991; Verhaeghen & De Meersman, 1998) by displaying font names in mismatched typefaces, adding an additional layer of difficulty. This benchmark provides a systematic assessment of state-of-the-art VLMs’ font recognition abilities."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "We conduct extensive evaluations on 13 open-weight and closed-source VLMs. All tested models are struggle to differentiate between font types and exhibit high sensitivity to the textual content within images, as illustrated in Figure 1. The best-performing model achieves only around 30% accuracy on the easy version of the benchmark, while performance on the hard version is even more challenging, with accuracy dropping to approximately 15%. Additionally, chain-of-thought (CoT) prompting (Wei et al., 2023; Kojima et al., 2023) provides limited performance gains in this task. Furthermore, we incorporate single-letter images as demonstrations in few-shot learning scenarios to help VLMs identify font similarities. Interestingly, despite the widespread familiarity of these fonts and the relatively low difficulty of the task for humans, where few-shot examples significantly aid in font recognition, current VLMs continue to exhibit poor performance."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "In summary, our contributions are threefold:"
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "(i) We propose a font recognition benchmark with two versions to systematically evaluate the capabilities of VLMs and conduct a comprehensive assessment of 13 different models."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "(ii) Our results reveal that current VLMs perform poorly in font recognition, with neither Chain-of-Thought prompting nor few-shot learning providing significant improvements."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "(iii) We analyze attention matrices across image patches to gain deeper insights into their failure modes and susceptibility to texture-based perturbations."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Works"
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Vision-Language Models"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "With the foundation laid by Transformer and CLIP (Vaswani et al., 2023; Radford et al., 2021), Vision-Language Models (VLMs) have emerged as powerful multimodal systems that seamlessly integrate both visual and linguistic modalities. These models bridges the gap between image and text understanding, enabling them to process and interpret complex multimodal data efficiently (OpenAI et al., 2024a; Bai et al., 2025; Team et al., 2024; Li et al., 2024; Liu et al., 2023; Caffagni et al., 2024; Zhang et al., 2024a; Yin et al., 2024; Team et al., 2025; Chen et al., 2024)."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "Recent advancements in large-scale image-text datasets and contrastive learning have significantly improved VLM performance. These models now exhibit strong general representation capabilities, effectively aligning visual and textual information and achieving state-of-the-art results across multiple benchmarks, establishing themselves as key technologies in multimodal AI research (Zhang et al., 2024c; Bordes et al., 2024; Schuhmann et al., 2022; Li et al., 2023; Chen et al., 2025; Chen et al., 2020)."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "The strong multimodal capabilities of VLMs make them valuable tools in real-world applications. Models such as BLIP (Li et al., 2022a), Flamingo (Alayrac et al., 2022) and later GPT-4o (OpenAI et al., 2024b) exhibit impressive performance in visual question answering, image captioning, and multimodal dialogue, enabling applications in interactive AI agents and assistive technologies for visually impaired individuals (Agrawal et al., 2016; Zhang et al., 2024b; Guo et al., 2024; Gao et al., 2024; Zhai et al., 2024). These advancements underscore the versatility of VLMs in handling complex multimodal tasks."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Font Recognition"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "Font recognition, a critical task for people such as researchers and designers, inherently combines visual and textual components. However, it has received limited attention within the Vision-Language Models (VLMs) research community. Traditionally, it has been approached as a text-image classification problem, predominantly relying on CNN-based methods (Wang et al., 2015b; Tensmeyer et al., 2017; Qi et al., 2025; Wang & Zong, 2023; Mohammadian et al., 2022; Cui & Inoue, 2021). While these approaches achieve relatively high accuracy with their proposed CNN-based architectures on specific datasets, they typically require extensive fine-tuning on large-scale datasets. This requirement makes them time-consuming and also limits their generalization capabilities."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "VLMs have recently emerged as versatile tools in visual tasks, offering strong adaptability through large-scale pretraining. They present a promising, convenient solution for font recognition. However, their capabilities in this task remain underexplored, motivating our study to provide a systematic evaluation and identify potential limitations."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Font Recognition Benchmark"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "We propose the Font Recognition Benchmark (FRB) to assess VLMs’ ability to recognize typographic styles from images. Unlike different versions or subsets of the VFR dataset, which contains more than 2,400 font classes and further categorizes the same font style into regular, bold, and other sub-types, the VFR dataset is more suitable for CNN-based model training rather than for basic capability exploration of VLMs in line with our objectives (Wang et al., 2015a; Chen et al., 2014a). In contrast, FRB follows three principles: practicality, using commonly encountered fonts; diversity, covering multiple font categories; and graduated challenge, testing different recognition scenarios. It includes two versions: an easy version, where sentences appear in various fonts, and a hard version, where font names are displayed in mismatched typefaces, creating a stroop effect."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Font Selection"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "Fonts are generally categorized into three major types: Serif Fonts, Sans-Serif Fonts, and Script & Decorative Fonts. To ensure stylistic diversity in our experiments, we select 15 widely used fonts from these three categories, We choose these fonts based on responses from GPT-4o, Claude-3.5-Sonnet, and statistical data (as shown in Appendix A). The classification and corresponding font names are as follows:"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "Serif Fonts: Baskerville SC, Georgia, Merriweather, Times New Roman, Roboto Slab."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "Sans-Serif Fonts: Arial, Calibri, Consola, Helvetica, Monoton, Vera."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "Script & Decorative Fonts: Great Vibes, Lobster, Pacifico, Satisfy."
+  },
+  {
+   "id": "b0030",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: An overview of the complete pipeline for constructing the font recognition benchmark, including the two-tier evaluation design. TTF files and corresponding codes ensure visual consistency across images. The easy task evaluates the basic font recognition ability of VLMs, while the hard task introduces stroop effect to assess robustness under semantic-visual conflict."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Benchmark Image Construction"
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "We generate 10 images per font, each containing a distinct sentence designed to incorporate as many of the 26 English letters as possible. This results in a total of ⟦SLOT_0⟧ images, forming the easy version of the benchmark. These images are created using a consistent Python script that ensures uniform line breaks, font size, and background, maintaining a balanced aspect ratio aligned with the model’s input requirements. This easy version allows VLMs to focus exclusively on font recognition without interference from textual content."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "For the hard version of the benchmark, we generate 15 additional images per font, each displaying its respective name. The image generation process employs a unified Python script utilizing the ImageDraw and ImageFont packages, ensuring consistency in font size and background dimensions across all images. This approach eliminates discrepancies associated with alternative methods such as screenshots. The inclusion of font names introduces the stroop effect, increasing the benchmark’s difficulty. In total, this results in ⟦SLOT_1⟧ images, constituting the complete hard version of the benchmark."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Finally, to support few-shot learning experiments, we generate 52 additional images, each containing one uppercase or lowercase letter from the 26 English alphabets. These images serve as reference samples, allowing VLMs to leverage few-shot learning for feature comparison and adaptation in subsequent experiments."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Challenges"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "h4",
+   "en": "3.3.1 Font Recognition"
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "When the text content in an image consists of sentences, this task simulates real-world scenarios where individuals capture screenshots of textual content to identify the font used. The primary objective is to assess the VLMs’ ability to recognize fonts. The presence of a greater number of letters enhances the models’ capacity to capture distinctive font characteristics, while the relatively small text size further challenges its ability to perform fine-grained recognition."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "h4",
+   "en": "3.3.2 Stroop Effect"
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "When image text contains font names, a conflict between the textual meaning and the visual font triggers the stroop effect (MacLeod, 1991; Verhaeghen & De Meersman, 1998; Besner et al., 1997). For instance, the word “Times New Roman” rendered in Lobster font may mislead a model to predict the text’s meaning rather than the actual font. Even with clear visual differences, models often misclassify due to cognitive interference. This setup challenges VLMs to disentangle textual semantics from typographic appearance."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Experimental Setup"
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Vision Language Models"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "To effectively assess the capabilities of the latest VLMs, we conduct experiments on 13 widely recognized models. Detailed information about these models is provided in Appendix B."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Few-Shot Selection"
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "Given the large number of tokens required for image input and the common real-world practice of identifying fonts by analyzing individual letter styles, we construct a dataset comprising 52 images, each representing an uppercase or lowercase letter from the 26 English alphabets. To ensure consistency and fairness in selecting few-shot samples, we employ the CLIP model for image similarity retrieval. In this setup, the 52 single-letter images serve as the retrieval database, while the experimental images containing font names and sentences function as target samples. We design six experimental scenarios, ranging from 1-shot to 6-shot settings."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "Base Model EASY-VERSION HARD-VERSION Zero-Shot Zero-Shot CoT Zero-ShotM Zero-Shot CoTM Zero-Shot Zero-Shot CoT Zero-ShotM Zero-Shot CoTM Closed-Source Models GPT-4o 24.67 30.67 66.67 46.67 12.44 15.11 27.11 25.78 Claude-3.5-Sonnet 31.33 29.33 28.67 29.33 8.44 7.11 7.11 6.67 Gemini-2.0-Flash-001 18.67 18.00 18.67 18.00 9.78 9.78 9.78 9.78 GPT-4o-mini 0.00 2.67 33.33 28.00 4.44 4.89 8.44 8.89 Open-Weight Models Llama-3.2-90B-Vision-Instruct 9.33 12.67 11.33 11.33 8.44 9.78 9.33 7.11 Llama-3.2-11B-Vision-Instruct 18.67 9.33 16.67 14.00 13.33 7.56 6.67 5.33 Phi-3.5-Vision-Instruct 4.67 0.00 6.67 3.33 2.67 2.22 6.67 6.22 Phi-3-Vision-128K-Instruct 0.67 0.00 10.00 4.67 0.00 0.89 6.67 5.33 Qwen2-VL-7B-Instruct 0.00 2.00 7.33 7.33 4.44 4.44 6.67 7.56 Qwen2.5-VL-7B-Instruct 12.00 5.33 17.33 12.00 5.33 5.33 6.67 8.00 Qwen2-VL-72B-Instruct 8.00 7.33 6.67 7.33 6.22 6.22 6.67 5.78 Idefics3-8B-Llama3 1.33 1.33 7.33 7.33 4.89 0.89 6.67 6.22 Idefics2-8B 8.00 11.33 9.33 8.00 8.44 7.11 6.22 6.22"
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: The accuracy of 13 open-weight and closed-source vision-language models on both the easy and hard versions of the benchmark under different settings. M indicates the use of a MCQ setting for inference. The highest accuracy in each setting is highlighted in bold, while the second-best results are underlined."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Experimental Results"
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate multiple VLMs using our proposed font recognition benchmark. The inference methods include the standard zero-shot approach, as well as Chain-of-Thought (CoT) (Wei et al., 2023; Kojima et al., 2023) and few-shot methods, providing a comprehensive assessment of VLMs’ font recognition capabilities. All experimental prompts are provided in Appendix F."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 Vision-Language Models Fail on Font Recognition Task"
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "Table 1 demonstrates that contemporary VLMs exhibit suboptimal performance on font recognition tasks, despite the selected 15 fonts being among the more commonly used ones across three major font categories. Under the easy version of the benchmark in a zero-shot setting, the Claude-3.5-Sonnet achieves the highest accuracy among the evaluated models but only reaches approximately 31%, while powerful GPT-4o-mini achieves even 0% accuracy. Among open-weight models, performance remains notably poor, with only Llama-3.2-11B-Vision-Instruct surpassing 10%, achieving an accuracy of nearly 19%."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "Performance further deteriorates under the hard version of the benchmark, which incorporates the stroop effect. In this setting, almost all models fail to exceed 15% accuracy in a zero-shot scenario. The sole exception is GPT-4o, which attains around 15% accuracy while using zero-shot CoT. Even other powerful closed-source models fail to surpass 10% accuracy, regardless of whether CoT is applied. These findings underscore the fundamental limitations of existing VLMs in font recognition tasks."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2 Vision-Language Models Can Rely on Spurious Visual Cues"
+  },
+  {
+   "id": "b0054",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Accuracy comparison on the hard version of the benchmark under two labeling conditions: whether the rendered content in the image conflicts with the actual font label. M denotes inference under a multiple-choice setting."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "To further investigate whether contemporary VLMs possess font recognition capabilities, we conduct an experiment using multiple-choice questions (MCQ) under zero-shot setting, where models are explicitly instructed to select the correct font category from the 15 given options. The results of this experiment are also presented in Table 1. We now compare these experimental results under the setting that does not use CoT prompting:"
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "For the easy version of the benchmark, we observe that among the four powerful closed-source models, MCQ does not lead to a significant improvement for Claude-3.5-Sonnet and Gemini-2.0-Flash-001. However, it significantly improves the accuracy of the two GPT-series models. Among all open-weight models, MCQ improves accuracy by 6–10 percentage points for Idefics3-8B-Llama3, Qwen2-VL-7B-Instruct, and Phi-3-Vision-128K-Instruct. However, this improvement remains marginal, as their original accuracy is close to 0%, indicating that even with a constrained choice set, these models still perform poorly. For other models, the accuracy gains under the MCQ setting are smaller, remaining below 4 percentage points."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "For the hard version of the benchmark, among closed-source models, only GPT-4o exhibits a significant improvement in accuracy under the MCQ setting, while other models show little to no change. Among open-weight models, a notable finding is that after applying MCQ, all models achieve an accuracy close to 6.67% which is precisely the expected accuracy if a model correctly identifies the font only when the font style matches the font name in the image. Figure 3 demonstrates that applying MCQ to the hard version of the benchmark only further amplifies the influence of the stroop effect. However, it has minimal impact when the text in the image does not match its font type. This strongly suggests that these models lack the capability to discern the correct font under the stroop effect; instead, they are merely influenced by the textual content in the image. This result further underscores the susceptibility of VLMs to the stroop effect in this task. Given their inherent limitations in font recognition, even when provided with explicit answer choices, these models fail to leverage the constraints meaningfully. Instead, they appear to be even more influenced by the textual content, as evidenced by the accuracy drop observed in Llama-3.2-11B-Vision-Instruct on the hard version."
+  },
+  {
+   "id": "b0059",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Few-shot accuracy (1-shot to 6-shot) on the hard benchmark setting, evaluated across six vision-language models from distinct model families."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "h3",
+   "en": "5.3 Few-shot Learning Provides Limited Improvements"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "In real-world scenarios, when given reference images of individual letters written in a specific font style, humans can carefully compare these samples with a test image to determine the font type. This raises the question of whether few-shot learning can enhance VLMs’ font recognition capabilities — specifically, whether VLMs can focus on the features provided in the demonstrations and leverage comparison-based reasoning to identify the correct font in the final test image."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "To investigate this, we conduct few-shot experiments on six open-weight and closed-source VLMs under the setting described in Section 4.2. As shown in Figure 4, increasing the number of shots from 1 to 6 results in only a marginal improvement in model accuracy, with gains of less than 4 percentage points across all models. Given the dataset size for the hard version of the benchmark evaluation, this level of improvement is not ideal. Furthermore, we observe that, with the exception of the Qwen2-VL-72B-Instruct, whose accuracy either increases or remains stable as the number of shots increases, other models exhibit fluctuations in accuracy despite receiving more examples, which is counterintuitive. This instability further underscores the limited capabilities of VLMs in font recognition under few-shot settings. Notably, this contrasts sharply with human performance in fine-grained recognition tasks, where individuals effectively leverage reference samples to improve accuracy."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Categories of Errors"
+  },
+  {
+   "id": "b0065",
+   "t": "keep",
+   "w": "table",
+   "en": "Error Type Easy Version (%) Hard Version (%) Content-Biased Misattribution 0.00 70.11 Explicit Inability Acknowledgment 10.88 2.13 Indecisive Classification 64.87 14.46 Confidently Incorrect Predictio"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Error ratios for four distinct error categories, aggregated over all incorrect predictions by 13 vision-language models on both benchmark tiers (easy and hard)."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "To investigate the reasons behind the suboptimal performance of VLMs in font recognition, we conduct a detailed analysis of model outputs to identify specific error patterns. Based on our observations, we classify the errors into four distinct categories and provide representative examples of each in Table 3."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "Content-Biased Misattribution: Error occurs primarily in the hard version of the benchmark, where the model mistakenly assumes that the font name appearing in the image corresponds to the actual font used for the text."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "Explicit Inability Acknowledgment: The model explicitly admits it cannot determine the font, often stating “more information is needed” or “I can’t determine the font”, reflecting awareness of its limitations."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "Indecisive Classification: The model analyzes font characteristics and distinguishes broad categories like Serif vs. Sans-Serif but fails to name a specific font, instead listing multiple candidates."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "Confidently Incorrect Prediction: The model gives a definitive but incorrect answer, sometimes with font analysis, displaying unjustified confidence and leading to misleading results."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "Table 2 presents the distribution of error types across two benchmark levels. Notably, in the easy version, where the image content consists of complete sentences, content-biased misattribution does not occur. Although the textual content in this setting does not pose a stroop effect challenge, a considerable portion of the model responses indicate either an explicit acknowledgment of their inability to perform the font recognition task or the provision of only a set of possible candidates or a broader font category, without a definitive prediction. This suggests that current VLMs lack the robustness required for accurate font recognition and often exhibit uncertainty when faced with this task."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "In contrast, in the hard version, the presence of font names within the images introduces significant confusion. Even when utilizing Chain-of-Thought prompting, most models struggle to consistently analyze font features and instead rely heavily on the textual content. Only a few sufficiently strong models demonstrate the ability to reason in the correct direction. These findings indicate that current VLMs lack robustness and are not yet capable of reliably handling font recognition tasks."
+  },
+  {
+   "id": "b0074",
+   "t": "keep",
+   "w": "table",
+   "en": "Error Category Label Incorrect Model Prediction Content-Biased Misattribution Lobster The text in the image is ‘Georgia’. This is a font name, which is used to describe the style and appearance of the"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Examples of four different error types in both the easy and hard versions of the benchmark, displaying the incorrect model predictions alongside the corresponding ground-truth labels."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h2",
+   "en": "7 Do VLMs Truly Focus on Crucial Edge Regions?"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "Different VLMs utilize distinct mechanisms for processing image inputs. Considering both their popularity and open-weight availability, we analyze the attention matrices from two models: Llama-3.2-11B-Vision-Instruct and Qwen2-VL-7B-Instruct."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 5 presents the attention matrix of the final cross-attention layer for the Llama-3.2-11B-Vision-Instruct model on incorrect predictions from the hard version of the benchmark. All images in this figure share a common characteristic: the displayed font name does not match the actual font used. If VLMs truly possess the ability to identify fonts, their predictions should not be heavily influenced by this discrepancy. For instance, a human observer would easily recognize that the text displaying ‘Baskervville SC’ is not written in the Baskervville SC font, as the characteristics of the letters suggest a script-style font. However, as observed in the attention matrix, Llama-3.2-11B-Vision-Instruct fails to focus on the regions that capture distinctive font features, such as the edges of individual characters. Instead, across all six sub-images, the model exhibits misplaced attention, often focusing on irrelevant background regions rather than the critical font-defining elements. This misalignment in attention leads to the failure of the recognition task, highlighting the model’s limitations in accurately distinguishing font styles."
+  },
+  {
+   "id": "b0079",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Attention heatmaps from the final cross-attention layer of Llama-3.2-11B-Vision-Instruct, illustrating how text tokens attend to image patches for six input images from the hard version of the benchmark, all of which the model fails to classify correctly. Attention weights are averaged across all heads."
+  },
+  {
+   "id": "b0081",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Attention heatmaps from the middle cross-attention layer (⟦SLOT_2⟧) of Qwen2-VL-7B-Instruct, illustrating how text tokens attend to image patches for six input images from the easy version of the benchmark, all of which the model fails to classify correctly. Attention weights are averaged across all heads."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 6 presents the attention matrix for Qwen2-VL-7B-Instruct on the easy version of the benchmark. Compared to Llama-3.2-11B-Vision-Instruct, Qwen2-VL-7B-Instruct employs a larger merged patch size. However, regardless of patch size, a similar issue persists: the model’s attention does not sufficiently focus on the edges of the letters in the image. Instead, only a few letters receive more attention than other parts, and in many cases, the model assigns higher attention to the white background rather than the textual content. However, when comparing the attention matrices in Figure 6 with those in Figure 5, we observe that in the easy version of the benchmark, Qwen2-VL-7B-Instruct demonstrates a stronger tendency to focus on the textual regions. The red-highlighted areas in the attention matrix cover most of the text, even though the highest attention weights are not fully concentrated on the letters. Nevertheless, this represents a notable improvement over Llama-3.2-11B-Vision-Instruct ’s performance on the hard version of the benchmark, where attention is more poorly distributed."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "p",
+   "en": "Based on our analysis of the above two VLMs, we infer that current VLMs remain inadequate for font recognition tasks, even for widely used font styles. This limitation likely arises from their inability to focus on the critical regions of the textual input that are essential for accurate font identification. We posit that this shortcoming stems from an insufficient alignment between visual attention mechanisms and the subtle typographic features that define font identity. Consequently, advancing font recognition within VLMs demands a more targeted modeling of local visual regions and a deeper integration of typographic priors."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "h2",
+   "en": "8 Conclusion"
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we introduce a specially designed Font Recognition Benchmark (FRB) comprising 15 popular font styles, designed with both easy and hard versions to comprehensively assess the capabilities of contemporary VLMs in this fine-grained recognition task. We conduct extensive experiments with a range of VLMs and observe that these models consistently struggle with font recognition, particularly on the hard version of the benchmark, where the stroop effect substantially reduces accuracy. This finding highlights that VLMs remain susceptible to misleading visual cues even when performing semantically grounded tasks. To further examine the capacity of VLMs in this setting, we evaluate various inference strategies, including CoT prompting, Multiple-Choice Question answering, and Few-Shot Learning. However, our results demonstrate that these methods offer only marginal improvements in overall accuracy. Additionally, we categorize the error types exhibited by VLMs into four distinct categories and analyze the attention patterns of two publicly available VLMs. Our analysis reveals that these models fail to adequately focus on the edge information of characters in the input images, which impairs their ability to correctly identify font styles and renders them vulnerable to variations in texture content."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "h2",
+   "en": "9 Limitation"
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we propose a specially designed benchmark comprising two task versions to enable a comprehensive evaluation of VLMs’ performance on font recognition and analyze the factors contributing to their suboptimal performance. However, our study still has the following limitations: (i) Due to budget constraints, we are unable to conduct few-shot inference on more powerful models such as Claude-3.5-Sonnet and GPT-4o. (ii) As certain high-performing models are closed-source, we are unable to analyze their attention matrices, limiting our understanding of their decision-making processes. (iii) Our experiments rely on straightforward prompts for inference. Designing more sophisticated prompts, such as guiding models to focus on key regions in the input image, may enhance their performance on this task. We plan to explore these directions in future work."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgments"
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "The work is partially supported by the NSF of the United States Grant CRII 2451683, an NVIDIA Academic Grants Program, the University of California, Merced, and a UC Merced Faculty Research Award. The views and conclusions are those of the authors and should not reflect the official policy or position of the U.S. Government."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "h2",
+   "en": "Ethics Statement"
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "Ethical considerations play a central role in this research. All models used in this study are either open-weight or widely adopted within the scientific community, ensuring transparency and reproducibility. The proposed benchmark and evaluation framework aim to assess the capabilities of current VLMs on font recognition without introducing or reinforcing harmful biases. No personally identifiable information or sensitive data is involved in this work. We are committed to responsible research practices, and we advocate for the transparent reporting and ethical deployment of AI technologies in ways that serve the broader interests of society."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abdin et al. (2024) Marah Abdin, Jyoti Aneja, Hany Awadalla, Ahmed Awadallah, Ammar Ahmad Awan, Nguyen Bach, Amit Bahree, Arash Bakhtiari, Jianmin Bao, Harkirat Behl, Alon Benhaim, Misha Bilenko, Joha"
+  },
+  {
+   "id": "b0095",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Agrawal et al. (2016) Aishwarya Agrawal, Jiasen Lu, Stanislaw Antol, Margaret Mitchell, C. Lawrence Zitnick, Dhruv Batra, and Devi Parikh. Vqa: Visual question answering, 2016. URL https://arxiv.org/a"
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Alayrac et al. (2022) Jean-Baptiste Alayrac, Jeff Donahue, Pauline Luc, Antoine Miech, Iain Barr, Yana Hasson, Karel Lenc, Arthur Mensch, Katie Millican, Malcolm Reynolds, Roman Ring, Eliza Rutherford"
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Anthropic (2024) Anthropic. Claude 3.5 sonnet. https://www.anthropic.com/news/claude-3-5-sonnet , June 2024. Accessed Jun 20, 2024."
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al. (2025) Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, Sibo Song, Kai Dang, Peng Wang, Shijie Wang, Jun Tang, Humen Zhong, Yuanzhi Zhu, Mingkun Yang, Zhaohai Li, Jianqiang Wan, "
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Besner et al. (1997) Derek Besner, Jennifer A Stolz, and Clay Boutilier. The stroop effect and the myth of automaticity. Psychonomic bulletin & review , 4(2):221–225, 1997."
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bordes et al. (2024) Florian Bordes, Richard Yuanzhe Pang, Anurag Ajay, Alexander C. Li, Adrien Bardes, Suzanne Petryk, Oscar Mañas, Zhiqiu Lin, Anas Mahmoud, Bargav Jayaraman, Mark Ibrahim, Melissa H"
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Caffagni et al. (2024) Davide Caffagni, Federico Cocchi, Luca Barsellotti, Nicholas Moratelli, Sara Sarto, Lorenzo Baraldi, Lorenzo Baraldi, Marcella Cornia, and Rita Cucchiara. The revolution of mult"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2014a) Guang Chen, Jianchao Yang, Hailin Jin, Jonathan Brandt, Eli Shechtman, Aseem Agarwala, and Tony X. Han. Large-scale visual font recognition. In 2014 IEEE Conference on Computer Vis"
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2014b) Guang Chen, Jianchao Yang, Hailin Jin, Jonathan Brandt, Eli Shechtman, Aseem Agarwala, and Tony X Han. Large-scale visual font recognition. In Proceedings of the IEEE Conference on"
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2021) Jingchao Chen, Shiyi Mu, Shugong Xu, and Youdong Ding. Henet: forcing a network to think more for font recognition. In Proceedings of the 3rd International Conference on Advanced In"
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2020) Ting Chen, Simon Kornblith, Mohammad Norouzi, and Geoffrey Hinton. A simple framework for contrastive learning of visual representations, 2020. URL https://arxiv.org/abs/2002.05709 "
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024) Zhe Chen, Jiannan Wu, Wenhai Wang, Weijie Su, Guo Chen, Sen Xing, Muyan Zhong, Qinglong Zhang, Xizhou Zhu, Lewei Lu, Bin Li, Ping Luo, Tong Lu, Yu Qiao, and Jifeng Dai. Internvl: Sc"
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2025) Zhe Chen, Weiyun Wang, Yue Cao, Yangzhou Liu, Zhangwei Gao, Erfei Cui, Jinguo Zhu, Shenglong Ye, Hao Tian, Zhaoyang Liu, Lixin Gu, Xuehui Wang, Qingyun Li, Yimin Ren, Zixuan Chen, J"
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cui & Inoue (2021) Wenyi Cui and Kohei Inoue. Chinese calligraphy recognition system based on convolutional neural network. ICIC Express Letters , 15(11):1187–1195, 2021."
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gao et al. (2024) Zhi Gao, Bofei Zhang, Pengxiang Li, Xiaojian Ma, Tao Yuan, Yue Fan, Yuwei Wu, Yunde Jia, Song-Chun Zhu, and Qing Li. Multi-modal agent tuning: Building a vlm-driven agent for efficie"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Google (2025) Google. Gemini 2.0. https://developers.googleblog.com/en/gemini-2-family-expands/ , February 2025. Accessed FEB. 5, 2025."
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Guo et al. (2024) Taicheng Guo, Xiuying Chen, Yaqi Wang, Ruidi Chang, Shichao Pei, Nitesh V Chawla, Olaf Wiest, and Xiangliang Zhang. Large language model based multi-agents: A survey of progress and "
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kojima et al. (2023) Takeshi Kojima, Shixiang Shane Gu, Machel Reid, Yutaka Matsuo, and Yusuke Iwasawa. Large language models are zero-shot reasoners, 2023. URL https://arxiv.org/abs/2205.11916 ."
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024) Jian Li, Weiheng Lu, Hao Fei, Meng Luo, Ming Dai, Min Xia, Yizhang Jin, Zhenye Gan, Ding Qi, Chaoyou Fu, et al. A survey on benchmarks of multimodal large language models. arXiv prepr"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2022a) Junnan Li, Dongxu Li, Caiming Xiong, and Steven Hoi. Blip: Bootstrapping language-image pre-training for unified vision-language understanding and generation, 2022a. URL https://arxi"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023) Junnan Li, Dongxu Li, Silvio Savarese, and Steven Hoi. Blip-2: Bootstrapping language-image pre-training with frozen image encoders and large language models, 2023. URL https://arxiv."
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2022b) Xudong Li, Jingyi Wang, Haiyang Zhang, Yongke Huang, and Huihui Huang. Swordnet: Chinese character font style recognition network. IEEE Access , 10:8388–8398, 2022b."
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023) Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. Visual instruction tuning, 2023. URL https://arxiv.org/abs/2304.08485 ."
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "MacLeod (1991) Colin M MacLeod. Half a century of research on the stroop effect: an integrative review. Psychological bulletin , 109(2):163, 1991."
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Meta AI (2024) Meta AI. Llama 3.2: Revolutionizing edge ai and vision with open, customizable models. Meta AI Blog , 2024. URL https://ai.meta.com/blog/llama-3-2-connect-2024-vision-edge-mobile-device"
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mohammadian et al. (2022) Mehrdad Mohammadian, Neda Maleki, Tobias Olsson, and Fredrik Ahlgren. Persis: A persian font recognition pipeline using convolutional neural networks. In 2022 12th Internatio"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2024) OpenAI. Gpt-4o-mini. https://openai.com/index/gpt-4o-mini-advancing-cost-efficient-intelligence/ , July 2024. Accessed JUL. 18, 2024."
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI et al. (2024a) OpenAI, Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia Leoni Aleman, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shyamal Anadkat, Red Avila, I"
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI et al. (2024b) OpenAI, Aaron Hurst, Adam Lerer, Adam P. Goucher, Adam Perelman, Aditya Ramesh, Aidan Clark, AJ Ostrow, Akila Welihinda, Alan Hayes, Alec Radford, Aleksander Madry, Alex Baker-Wh"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qi et al. (2025) Hengnian Qi, Hao Yang, Zhaojiang Wang, Jiabin Ye, Qiuyi Xin, Chu Zhang, and Qing Lang. Ancientglyphnet: an advanced deep learning framework for detecting ancient chinese characters in"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Radford et al. (2021) Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, Gretchen Krueger, and Ilya Sut"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Schuhmann et al. (2022) Christoph Schuhmann, Romain Beaumont, Richard Vencu, Cade Gordon, Ross Wightman, Mehdi Cherti, Theo Coombes, Aarush Katta, Clayton Mullis, Mitchell Wortsman, et al. Laion-5b: A"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Solomons (2023) Monique Solomons. 75 font statistics: Usage and market analysis. Linearity Blog , 2023. URL https://www.linearity.io/blog/font-statistics/ ."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Team et al. (2024) Gemini Team, Petko Georgiev, Ving Ian Lei, Ryan Burnell, Libin Bai, Anmol Gulati, Garrett Tanzer, Damien Vincent, Zhufeng Pan, Shibo Wang, Soroosh Mariooryad, Yifan Ding, Xinyang Ge"
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Team et al. (2025) Gemma Team, Aishwarya Kamath, Johan Ferret, Shreya Pathak, Nino Vieillard, Ramona Merhej, Sarah Perrin, Tatiana Matejovicova, Alexandre Ramé, Morgane Rivière, Louis Rouillard, Thoma"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tensmeyer et al. (2017) Chris Tensmeyer, Daniel Saunders, and Tony Martinez. Convolutional neural networks for font classification. In 2017 14th IAPR international conference on document analysis and "
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tonmoy et al. (2024) Moshiur Rahman Tonmoy, Akhtaruzzaman Adnan, Aloke Kumar Saha, MF Mridha, and Nilanjan Dey. Descriptor: Multilingual visual font recognition dataset (mvfr). IEEE Data Descriptions "
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tronchon et al. (2024) Léo Tronchon, Hugo Laurençon, and Victor Sanh. Introducing idefics2: A powerful 8b vision-language model for the community. Hugging Face Blog , 2024. URL https://huggingface.co/"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Vaswani et al. (2023) Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, and Illia Polosukhin. Attention is all you need, 2023. URL https://arxiv.o"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Verhaeghen & De Meersman (1998) Paul Verhaeghen and Lieve De Meersman. Aging and the stroop effect: a meta-analysis. Psychology and aging , 13(1):120, 1998."
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2024) Peng Wang, Shuai Bai, Sinan Tan, Shijie Wang, Zhihao Fan, Jinze Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, Yang Fan, Kai Dang, Mengfei Du, Xuancheng Ren, Rui Men, Dayihen"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang & Zong (2023) Yixuan Wang and Yanyi Zong. Calligraphy font recognition algorithm based on improved densenet network. In 2023 Global Conference on Information Technologies and Communications (GCIT"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2015a) Zhangyang Wang, Jianchao Yang, Hailin Jin, Eli Shechtman, Aseem Agarwala, Jonathan Brandt, and Thomas S. Huang. Deepfont: Identify your font from an image, 2015a. URL https://arxiv"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2015b) Zhangyang Wang, Jianchao Yang, Hailin Jin, Eli Shechtman, Aseem Agarwala, Jonathan Brandt, and Thomas S Huang. Real-world font recognition using deep network and domain adaptation."
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wei et al. (2023) Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed Chi, Quoc Le, and Denny Zhou. Chain-of-thought prompting elicits reasoning in large language models,"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yin et al. (2024) Shukang Yin, Chaoyou Fu, Sirui Zhao, Ke Li, Xing Sun, Tong Xu, and Enhong Chen. A survey on multimodal large language models. National Science Review , 11(12), November 2024. ISSN 20"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhai et al. (2024) Simon Zhai, Hao Bai, Zipeng Lin, Jiayi Pan, Peter Tong, Yifei Zhou, Alane Suhr, Saining Xie, Yann LeCun, Yi Ma, et al. Fine-tuning large vision-language models as decision-making ag"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2024a) Duzhen Zhang, Yahan Yu, Jiahua Dong, Chenxing Li, Dan Su, Chenhui Chu, and Dong Yu. Mm-llms: Recent advances in multimodal large language models, 2024a. URL https://arxiv.org/abs/"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2024b) Jingyi Zhang, Jiaxing Huang, Sheng Jin, and Shijian Lu. Vision-language models for vision tasks: A survey. IEEE Transactions on Pattern Analysis and Machine Intelligence , 2024b."
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2024c) Jingyi Zhang, Jiaxing Huang, Sheng Jin, and Shijian Lu. Vision-language models for vision tasks: A survey, 2024c. URL https://arxiv.org/abs/2304.00685 ."
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang (2023) Xiangyang Zhang. Design and implementation of the chinese character font recognition system based on binary convolutional encoding and decoding network. In 2023 IEEE 5th International Con"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2001) Yong Zhu, Tieniu Tan, and Yunhong Wang. Font recognition based on global texture analysis. IEEE Transactions on pattern analysis and machine intelligence , 23(10):1192–1200, 2001."
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zramdini & Ingold (1998) Abdelwahab Zramdini and Rolf Ingold. Optical font recognition using typographical features. IEEE Transactions on pattern analysis and machine intelligence , 20(8):877–882, 199"
+  },
+  {
+   "id": "b0148",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Font Introduction"
+  },
+  {
+   "id": "b0149",
+   "t": "text",
+   "w": "p",
+   "en": "Fonts are generally categorized into three major types: Serif Fonts, Sans-Serif Fonts, and Script & Decorative Fonts."
+  },
+  {
+   "id": "b0150",
+   "t": "text",
+   "w": "p",
+   "en": "Serif fonts are well-suited for print materials, formal documents, and books, as their serifs help guide the reader’s eye, improving the readability of long passages of text. Sans-serif fonts are commonly used in web design, presentations, and modern typographic layouts due to their enhanced clarity on digital screens. Script and decorative fonts are typically employed in posters, logos, and invitations, where individuality and artistic expression are prioritized."
+  },
+  {
+   "id": "b0151",
+   "t": "text",
+   "w": "p",
+   "en": "We provide a brief introduction to all fonts used in this study. Additionally, Table 4 presents statistical data on several popular fonts analyzed in our experiments (Solomons, 2023)."
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "table",
+   "en": "Font Name Usage Percentage Popular in Industry Year Created Helvetica 25% Graphic Design 1957 Times New Roman 20% Publishing 1932 Arial 15% Business 1982 Roboto 10% Web Design 2011 Georgia 5% Digital "
+  },
+  {
+   "id": "b0153",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Some popular fonts used in the paper, along with their typical usage statistics."
+  },
+  {
+   "id": "b0154",
+   "t": "text",
+   "w": "h3",
+   "en": "A.1 Serif Fonts"
+  },
+  {
+   "id": "b0155",
+   "t": "text",
+   "w": "p",
+   "en": "Baskerville SC: A classic serif font with small caps styling, Baskerville SC exudes elegance and traditional sophistication. It is ideal for formal documents, book titles, and branding."
+  },
+  {
+   "id": "b0156",
+   "t": "text",
+   "w": "p",
+   "en": "Georgia: Designed for readability on screens, Georgia is a warm and robust serif font with a classic touch. Its sturdy letterforms make it suitable for both print and digital use."
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "p",
+   "en": "Merriweather: A modern serif font with a slightly condensed design, Merriweather offers a pleasant reading experience. It is often used for digital content, thanks to its balanced contrast and legibility."
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "p",
+   "en": "Times New Roman: A widely recognized serif font, Times New Roman is synonymous with formal and academic writing. Its narrow proportions make it efficient for fitting text into limited spaces."
+  },
+  {
+   "id": "b0159",
+   "t": "text",
+   "w": "p",
+   "en": "Roboto Slab: A geometric slab-serif font, Roboto Slab combines a modern feel with a sturdy, industrial aesthetic. It is commonly used for branding, web design, and contemporary editorial layouts."
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "h3",
+   "en": "A.2 Sans-Serif Fonts"
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "p",
+   "en": "Arial: One of the most widely used sans-serif fonts, Arial is known for its clean and simple design. It is commonly used in digital and print media due to its high legibility."
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "p",
+   "en": "Calibri: A default font in Microsoft Office, Calibri features a modern and rounded design. It provides a smooth reading experience and is often used in professional documents."
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "p",
+   "en": "Consola: A monospaced sans-serif font, Consola is frequently used in coding environments. Its even spacing ensures clarity in programming and technical texts."
+  },
+  {
+   "id": "b0164",
+   "t": "text",
+   "w": "p",
+   "en": "Helvetica: A timeless and versatile sans-serif font, Helvetica is known for its neutrality and balanced proportions. It is extensively used in corporate branding and signage."
+  },
+  {
+   "id": "b0165",
+   "t": "text",
+   "w": "p",
+   "en": "Monoton: A decorative sans-serif font, Monoton features a retro, futuristic design with bold, high-contrast strokes. It is best suited for eye-catching headlines and artistic typography."
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "p",
+   "en": "Vera: A clean and modern sans-serif font, Vera provides excellent readability and is commonly used in user interfaces. Its simplicity makes it adaptable to various design applications."
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "h3",
+   "en": "A.3 Script & Decorative Fonts"
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "p",
+   "en": "Great Vibes: A flowing script font with elegant curves, Great Vibes is perfect for invitations and sophisticated branding. Its graceful letterforms add a touch of luxury to any design."
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "p",
+   "en": "Lobster: A bold and stylish script font, Lobster features connected letterforms with a casual yet artistic feel. It is widely used in branding, menus, and creative projects."
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "p",
+   "en": "Pacifico: Inspired by 1950s American surf culture, Pacifico is a playful script font with a relaxed, handwritten feel. It is often used for casual branding, logos, and fun designs."
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "p",
+   "en": "Satisfy: A charming script font, Satisfy strikes a balance between casual and elegant lettering. It works well for branding, invitations, and creative typography."
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Vision-Language Models"
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "p",
+   "en": "To effectively assess the font recognition capabilities of the latest VLMs, we conduct experiments on a selection of well-known models."
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "p",
+   "en": "Closed-Source Models: We evaluate two multimodal models developed by OpenAI: GPT-4o and GPT-4o-mini (OpenAI et al., 2024b; OpenAI, 2024), along with two widely recognized models from Anthropic and Google: Claude-3.5-Sonnet and Gemini-2.0-Flash-001 (Anthropic, 2024; Google, 2025)."
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "p",
+   "en": "Open-Weight Models: Our experiments include a diverse range of open-weight VLMs, spanning nine models across multiple series. Specifically, we test:"
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "li",
+   "en": "• Three models from the Qwen multimodal series: Qwen2-VL-7B-Instruct, Qwen2.5-VL-7B-Instruct and Qwen2-VL-72B-Instruct (Wang et al., 2024; Bai et al., 2025)."
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "li",
+   "en": "• Two models from the latest Llama 3.2 Vision series: Llama-3.2-90B-Vision-Instruct and Llama-3.2-11B-Vision-Instruct (Meta AI, 2024)."
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "li",
+   "en": "• Two models from the Phi series developed by Microsoft: Phi-3.5-Vision-Instruct and Phi-3-Vision-128K-Instruct (Abdin et al., 2024)."
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "li",
+   "en": "• Two models from the Idefics series: Idefics3-8B-Llama3 and Idefics2-8B (Tronchon et al., 2024)."
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "p",
+   "en": "Here we provide a brief introduction to all Vision-Language Models utilized in this study."
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "h3",
+   "en": "B.1 Closed-Source Models"
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "p",
+   "en": "GPT-4o: Developed by OpenAI, GPT-4o is a state-of-the-art multimodal model capable of processing text and images efficiently. It enhances vision-language understanding with improved reasoning, speed, and adaptability."
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "p",
+   "en": "GPT-4o-mini: A compact version of GPT-4o, GPT-4o-mini is designed for faster inference while maintaining strong multimodal capabilities. It is optimized for applications requiring efficiency without sacrificing quality."
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "p",
+   "en": "Claude-3.5-Sonnet: Developed by Anthropic, Claude-3.5-Sonnet is a highly capable vision-language model known for its alignment with human intent. It provides strong contextual understanding and excels in multimodal reasoning tasks."
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "p",
+   "en": "Gemini-2.0-Flash-001: Created by Google, Gemini-2.0-Flash-001 is an optimized vision-language model focused on rapid image-text processing. It is designed for applications that demand fast and efficient multimodal comprehension."
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "h3",
+   "en": "B.2 Open-Weight Models"
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "p",
+   "en": "Qwen2-VL-7B-Instruct: Part of the Qwen multimodal series, Qwen2-VL-7B-Instruct is an open-weight vision-language model by Alibaba. It provides a balance between efficiency and accuracy for multimodal reasoning tasks."
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "p",
+   "en": "Qwen2.5-VL-7B-Instruct: A refined version of its predecessor, Qwen2.5-VL-7B-Instruct introduces improved visual understanding and stronger text-image alignment. It is designed for tasks requiring high accuracy in multimodal analysis."
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "p",
+   "en": "Qwen2-VL-72B-Instruct: The most powerful model in the Qwen2 series, Qwen2-VL-72B-Instruct features a larger architecture for superior vision-language comprehension. It excels in complex tasks that require deep reasoning across modalities."
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "p",
+   "en": "Llama-3.2-90B-Vision-Instruct: A high-capacity model from Meta’s Llama series, Llama-3.2-90B-Vision-Instruct is designed for advanced vision-language interaction. Its large-scale architecture enhances performance in multimodal understanding."
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "p",
+   "en": "Llama-3.2-11B-Vision-Instruct: A smaller variant of the Llama 3.2 Vision series, Llama-3.2-11B-Vision-Instruct offers a balance between efficiency and capability. It is ideal for resource-constrained environments requiring vision-language processing."
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "p",
+   "en": "Phi-3.5-Vision-Instruct: Developed by Microsoft, Phi-3.5-Vision-Instruct is a lightweight yet powerful model tailored for multimodal tasks. It is optimized for efficiency while maintaining strong vision-language reasoning."
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "p",
+   "en": "Phi-3-Vision-128K-Instruct: A larger-scale version in the Phi series, Phi-3-Vision-128K-Instruct supports longer context lengths, making it suitable for detailed and complex multimodal tasks. It enhances vision-language applications with broader contextual awareness."
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "p",
+   "en": "Idefics3-8B-Llama3: A vision-language model from the Idefics series, Idefics3-8B-Llama3 focuses on open-ended multimodal reasoning. It is designed to handle diverse vision-language tasks with improved contextual understanding."
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "p",
+   "en": "Idefics2-8B: Another model from the Idefics family, Idefics2-8B provides a strong foundation for vision-language applications. It is optimized for tasks requiring nuanced text-image comprehension."
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Implementation Details"
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "h3",
+   "en": "C.1 Metric"
+  },
+  {
+   "id": "b0198",
+   "t": "text",
+   "w": "p",
+   "en": "We use the most straightforward metric: Accuracy. The model’s performance is assessed by extracting the predicted labels from the text output and comparing them to the ground truth labels using string matching. The accuracy of a model is calculated as follows:"
+  },
+  {
+   "id": "b0199",
+   "t": "keep",
+   "w": "table",
+   "en": "Accuracy = 1 N ​ ∑ i = 1 N I ​ ( y i = y ^ i ) \\text{Accuracy}=\\frac{1}{N}\\sum_{i=1}^{N}\\text{I}(y_{i}=\\hat{y}_{i}) (1)"
+  },
+  {
+   "id": "b0200",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_3⟧ is an indicator function that is 1 if the condition is true and 0 otherwise, ⟦SLOT_4⟧ represents the true label, ⟦SLOT_5⟧ is the predicted label, and ⟦SLOT_6⟧ is the total number of samples."
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "h3",
+   "en": "C.2 Model Implementation"
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "p",
+   "en": "For all VLMs used in the experiments, we set the temperature to 0.0 and top_p to 0.95 to ensure faithfulness and minimize generation randomness, thereby enhancing reproducibility."
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "p",
+   "en": "For open-weight models, we obtain the weights from HuggingFace and perform inference using bfloat16 precision. All experiments involving these models are mainly conducted on a setup with four NVIDIA A100 80GB GPUs."
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "p",
+   "en": "For closed-source models, we access the official API for inference. All experiments are conducted between January 25, 2025, and March 25, 2025. To compute the similarity between images for selecting few-shot demonstrations, we employ the openai/clip-vit-base-patch32 model on HuggingFace."
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D Capability Gaps Between Open-weight and Closed-source Models"
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "p",
+   "en": "The experimental results indicate that contemporary VLMs struggle with font recognition tasks, with a significant accuracy gap persisting between open-weight and closed-source models."
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "p",
+   "en": "In the sentence-based font recognition task, which is more commonly encountered in real-world scenarios, three out of four closed-source VLMs achieve at least 18% accuracy across various inference settings, with the best-performing model reaching nearly 67% under the multiple-choice question (MCQ) setting. In contrast, among all open-weight VLMs evaluated in this study, only Llama-3.2-11B-Vision-Instruct and Qwen2-VL-72B-Instruct attain approximately 18% accuracy, while the remaining models fall below 10%, with some approaching 0% accuracy. These findings highlight the substantial performance disparity between open-weight and closed-source VLMs in font recognition."
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "p",
+   "en": "For the more challenging version of the task, overall performance remains low across both open-weight and closed-source models. The hard version introduces the stroop effect, adding an additional cognitive challenge that negatively impacts nearly all VLMs. Under the MCQ setting, all closed-source models are able to achieve accuracy above 6.67%, indicating that, in some cases, they successfully identify font styles rather than being misled by the textual content in the image. In contrast, open-weight models fail to do so in almost all cases, with the only exception of Llama-3.2-90B-Vision-Instruct."
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix E Comparative Analysis of Model Accuracy Across Different Fonts"
+  },
+  {
+   "id": "b0210",
+   "t": "text",
+   "w": "p",
+   "en": "To demonstrate the capability gap of VLMs in recognizing different font types, we evaluate 10 models across 15 distinct fonts and report the overall number of correct predictions under the four inference methods described in Table 1, on both the easy and hard versions of the benchmark."
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "p",
+   "en": "From the results presented in Figure 11 to Figure 30, it is evident that each model tends to perform well on one or two specific font types, but struggles significantly with the remaining fonts. Notably, there is no single font or even a small subset of fonts that all models consistently recognize with high accuracy. Among the tested fonts, Arial and Times New Roman appear to be relatively easier for many models, likely due to their widespread use and higher representation in training corpora. In contrast, other fonts yield highly variable performance across models. For instance, Llama-3.2-90B-Vision-Instruct correctly identifies 23 instances of the Pacifico font in the easy version of the benchmark, whereas Llama-3.2-11B-Vision-Instruct, despite belonging to the same model family, fails to recognize any instances under identical conditions. This highlights a critical limitation of current VLMs: they lack generalizable font recognition capabilities and exhibit substantial performance disparities across font types."
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix F Experimental Prompts"
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "p",
+   "en": "We present the simple prompts employed in the experiments shown in Figures 7 through 10."
+  },
+  {
+   "id": "b0214",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Zero-Shot prompt for all experiments in this paper."
+  },
+  {
+   "id": "b0216",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8: Zero-Shot CoT prompt for all experiments in this paper."
+  },
+  {
+   "id": "b0218",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9: Zero-Shot Multiple-Choice Questions prompt for all experiments in this paper."
+  },
+  {
+   "id": "b0220",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0221",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 10: Zero-Shot CoT Multiple-Choice Questions prompt for all experiments in this paper."
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix G Additional Attention Visualizations"
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "p",
+   "en": "Due to space constraints in the main part of the paper, we give additional visualizations for two open-weight models to illustrate their attention patterns on the same input image across different layers. For Llama-3.2-11B-Vision-Instruct, we present attention matrices from all cross-attention layers, highlighting how attention evolves throughout the network. These visualizations reveal that, regardless of whether a layer is shallow or deep, the model consistently struggles to attend to the edge regions of characters in the image, which are critical for accurate font recognition."
+  },
+  {
+   "id": "b0224",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 11: Number of correct predictions made by Claude-3.5-Sonnet on the Easy Benchmark for different fonts. The model performs best on Roboto Slab (39 correct predictions) and Merriweather (27 correct predictions), while struggling with fonts like Helevetica (0 correct predictions), Monoton (0 correct predictions), and Vera (0 correct predictions). The total number of experimental trials for each font is 40."
+  },
+  {
+   "id": "b0226",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0227",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 12: Number of correct predictions made by Claude-3.5-Sonnet on the Hard Benchmark for different fonts. The model performs best on Helvetica (11 correct predictions) and Arial (9 correct predictions), while struggling with fonts like Satisfy (2 correct predictions), Vera (2 correct predictions), and Baskerville SC (0 correct predictions). The total number of experimental trials for each font is 60."
+  },
+  {
+   "id": "b0228",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 13: Number of correct predictions made by GPT-4o on the Easy Benchmark for different fonts. The model performs best on Arial (40 correct predictions) and Times New Roman (40 correct predictions), while struggling with fonts like Helevetica (2 correct predictions), Roboto Slab (0 correct predictions), and Vera (0 correct predictions). The total number of experimental trials for each font is 40."
+  },
+  {
+   "id": "b0230",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0231",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 14: Number of correct predictions made by GPT-4o on the Hard Benchmark for different fonts. The model performs best on Great Vibes (32 correct predictions) and Monoton (30 correct predictions), while struggling with fonts like Merriweather (4 correct predictions), Roboto Slab (4 correct predictions), and Vera (2 correct predictions). The total number of experimental trials for each font is 60."
+  },
+  {
+   "id": "b0232",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0233",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 15: Number of correct predictions made by GPT-4o-mini on the Easy Benchmark for different fonts. The model performs best on Great Vibes (21 correct predictions) and Arial (20 correct predictions), while struggling with fonts like Calibri (0 correct predictions), Lobster (0 correct predictions), and Pacifico (0 correct predictions). The total number of experimental trials for each font is 40."
+  },
+  {
+   "id": "b0234",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0235",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 16: Number of correct predictions made by GPT-4o-mini on the Hard Benchmark for different fonts. The model performs best on Great Vibes (12 correct predictions) and Lobster (5 correct predictions), while struggling with fonts like Consola (2 correct predictions), Vera (2 correct predictions), and Baskervville SC (0 correct predictions). The total number of experimental trials for each font is 60."
+  },
+  {
+   "id": "b0236",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0237",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 17: Number of correct predictions made by Gemini-2.0-Flash-001 on the Easy Benchmark for different fonts. The model performs best on Arial (40 correct predictions) and Times New Roman (33 correct predictions), while struggling with fonts like Calibri (0 correct predictions), Pacifico (0 correct predictions), and Satisfy (0 correct predictions). The total number of experimental trials for each font is 40."
+  },
+  {
+   "id": "b0238",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0239",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 18: Number of correct predictions made by Gemini-2.0-Flash-001 on the Hard Benchmark for different fonts. The model performs best on Arial (24 correct predictions) and Times New Roman (20 correct predictions), while struggling with fonts like Baskervville SC (0 correct predictions), Satisfy (0 correct predictions), and Vera (0 correct predictions). The total number of experimental trials for each font is 60."
+  },
+  {
+   "id": "b0240",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0241",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 19: Number of correct predictions made by Llama-3.2-90B-Vision-Instruct on the Easy Benchmark for different fonts. The model performs best on Pacifico (23 correct predictions) and Times New Roman (21 correct predictions), while struggling with fonts like Calibri (0 correct predictions), Consola (0 correct predictions), and Georgia (0 correct predictions). The total number of experimental trials for each font is 40."
+  },
+  {
+   "id": "b0242",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0243",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 20: Number of correct predictions made by Llama-3.2-90B-Vision-Instruct on the Hard Benchmark for different fonts. The model performs best on Arial (19 correct predictions) and Helvetica (12 correct predictions), while struggling with fonts like Baskervville SC (0 correct predictions), Satisfy (0 correct predictions), and Lobster (0 correct predictions). The total number of experimental trials for each font is 60."
+  },
+  {
+   "id": "b0244",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0245",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 21: Number of correct predictions made by Llama-3.2-11B-Vision-Instruct on the Easy Benchmark for different fonts. The model performs best on Times New Roman (24 correct predictions) and Monoton (18 correct predictions), while struggling with fonts like Calibri (0 correct predictions), Consola (0 correct predictions), and Vera (0 correct predictions). The total number of experimental trials for each font is 40."
+  },
+  {
+   "id": "b0246",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0247",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 22: Number of correct predictions made by Llama-3.2-11B-Vision-Instruct on the Hard Benchmark for different fonts. The model performs best on Arial (18 correct predictions) and Times New Roman (15 correct predictions), while struggling with fonts like Roboto Slab (2 correct predictions), Satisfy (2 correct predictions), and Vera (2 correct predictions). The total number of experimental trials for each font is 60."
+  },
+  {
+   "id": "b0248",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0249",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 23: Number of correct predictions made by Qwen2-VL-72B-Instruct on the Easy Benchmark for different fonts. The model performs best on Arial (40 correct predictions) and Times New Roman (4 correct predictions), while struggling with all remaining fonts. The total number of experimental trials for each font is 40."
+  },
+  {
+   "id": "b0250",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0251",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 24: Number of correct predictions made by Qwen2-VL-72B-Instruct on the Hard Benchmark for different fonts. The model performs best on Arial (9 correct predictions) and Helvetica (8 correct predictions), while struggling with fonts like Baskervville SC (0 correct predictions), Great Vibes (0 correct predictions), and Vera (0 correct predictions). The total number of experimental trials for each font is 60."
+  },
+  {
+   "id": "b0252",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0253",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 25: Number of correct predictions made by Qwen2-VL-7B-Instruct on the Easy Benchmark for different fonts. The model performs best on Arial (14 correct predictions) and Great Vibes (6 correct predictions), while struggling with fonts like Calibri (0 correct predictions), Consola (0 correct predictions), and Georgia (0 correct predictions). The total number of experimental trials for each font is 40."
+  },
+  {
+   "id": "b0254",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0255",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 26: Number of correct predictions made by Qwen2-VL-7B-Instruct on the Hard Benchmark for different fonts. The model performs best on Arial (5 correct predictions), while struggling with fonts like Baskervville SC (2 correct predictions), and Satisfy (2 correct predictions). The total number of experimental trials for each font is 60."
+  },
+  {
+   "id": "b0256",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0257",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 27: Number of correct predictions made by Qwen2.5-VL-7B-Instruct on the Easy Benchmark for different fonts. The model performs best on Arial (23 correct predictions) and Pacifico (14 correct predictions), while struggling with fonts like Lobster (0 correct predictions), Monoton (0 correct predictions), and Vera (0 correct predictions). The total number of experimental trials for each font is 40."
+  },
+  {
+   "id": "b0258",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0259",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 28: Number of correct predictions made by Qwen2.5-VL-7B-Instruct on the Hard Benchmark for different fonts. The model performs best on Arial (7 correct predictions) and Pacifico (6 correct predictions), while struggling with fonts like Baskervville SC (2 correct predictions), Great Vibes (2 correct predictions), and Monoton (2 correct predictions). The total number of experimental trials for each font is 60."
+  },
+  {
+   "id": "b0260",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0261",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 29: Number of correct predictions made by Idefics3-8B-Llama3 on the Easy Benchmark for different fonts. The model performs best on Times New Roman (14 correct predictions) and Calibri (7 correct predictions), while struggling with fonts like Consola (0 correct predictions), Monoton (0 correct predictions), and Vera (0 correct predictions). The total number of experimental trials for each font is 40."
+  },
+  {
+   "id": "b0262",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0263",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 30: Number of correct predictions made by Idefics3-8B-Llama3 on the Hard Benchmark for different fonts. The model performs best on Times New Roman (6 correct predictions), while struggling with fonts like Baskervville SC (0 correct predictions). The total number of experimental trials for each font is 60."
+  },
+  {
+   "id": "b0264",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0265",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 31: Visualization of attention weights from six cross-attention layers of Llama-3.2-11B-Vision-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0266",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0267",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 32: Visualization of attention weights from six cross-attention layers of Llama-3.2-11B-Vision-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0268",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0269",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 33: Visualization of attention weights from six cross-attention layers of Llama-3.2-11B-Vision-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0270",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0271",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 34: Visualization of attention weights from six cross-attention layers of Llama-3.2-11B-Vision-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0272",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0273",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 35: Visualization of attention weights from six cross-attention layers of Llama-3.2-11B-Vision-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0274",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0275",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 36: Visualization of attention weights from six cross-attention layers of Llama-3.2-11B-Vision-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0276",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0277",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 37: Visualization of attention weights from six cross-attention layers of Llama-3.2-11B-Vision-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0278",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0279",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 38: Visualization of attention weights from six cross-attention layers of Llama-3.2-11B-Vision-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0280",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0281",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 39: Visualization of attention weights from six cross-attention layers of Llama-3.2-11B-Vision-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0282",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0283",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 40: Visualization of attention weights from six cross-attention layers of Llama-3.2-11B-Vision-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0284",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0285",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 41: Visualization of attention weights from the 17th layer to the final attention layer of Qwen2-VL-7B-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0286",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0287",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 42: Visualization of attention weights from the 17th layer to the final attention layer of Qwen2-VL-7B-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0288",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0289",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 43: Visualization of attention weights from the 17th layer to the final attention layer of Qwen2-VL-7B-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0290",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0291",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 44: Visualization of attention weights from the 17th layer to the final attention layer of Qwen2-VL-7B-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0292",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0293",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 45: Visualization of attention weights from the 17th layer to the final attention layer of Qwen2-VL-7B-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0294",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0295",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 46: Visualization of attention weights from the 17th layer to the final attention layer of Qwen2-VL-7B-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  },
+  {
+   "id": "b0296",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0297",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 47: Visualization of attention weights from the 17th layer to the final attention layer of Qwen2-VL-7B-Instruct (averaged across all attention heads), illustrating the progression of attention across the model’s layers."
+  }
+ ]
+}

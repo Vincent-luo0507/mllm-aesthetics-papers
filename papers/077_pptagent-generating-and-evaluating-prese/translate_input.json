@@ -1,0 +1,1426 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "PPTAgent : Generating and Evaluating Presentations Beyond Text-to-Slides"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Automatically generating presentations from documents is a challenging task that requires accommodating content quality, visual appeal, and structural coherence. Existing methods primarily focus on im"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Presentations are a widely used medium for information delivery, valued for their visual effectiveness in engaging and communicating with audiences. However, creating high-quality presentations requires a captivating storyline, well-designed layouts, and rich, compelling content (Fu et al., 2022). Consequently, creating well-rounded presentations requires advanced presentation skills and significant effort. Given the inherent complexity of the presentation creation, there is growing interest in automating the presentation generation process (Mondal et al., 2024; Maheshwari et al., 2024; Ge et al., 2025) by leveraging the generalization capabilities of Large Language Models (LLMs) and Multimodal Large Language Models (MLLMs)."
+  },
+  {
+   "id": "b0006",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Comparison between our PPTAgent approach (left) and the conventional abstractive summarization method (right)."
+  },
+  {
+   "id": "b0008",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Overview of the PPTAgent workflow. StageI: Presentation Analysis involves analyzing the input presentation to cluster slides into groups and extract their content schemas. Stage II: Presentation Generation generates new presentations guided by the outline, incorporating self-correction mechanisms to ensure robustness."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "Existing approaches typically follow a text-to-slides paradigm, which converts LLM outputs into slides using predefined rules or templates. As shown in Figure 1, prior studies (Mondal et al., 2024; Sefid et al., 2021) tend to treat presentation generation as an abstractive summarization task, focusing primarily on textual content while neglecting the visual-centric nature (Fu et al., 2022) of presentation. This results in text-heavy and monotonous presentations that fail to engage audiences effectively (Barrick et al., 2018)."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "Rather than creating complex presentations from scratch in a single pass, human workflows typically involve selecting exemplary slides as references and then summarizing and transferring key content onto them (Duarte, 2010). Inspired by this process, we propose PPTAgent, which decomposes slide generation into two phases: selecting the reference slide and editing it step by step. However, achieving such an edit-based approach for presentation generation is challenging. First, due to the layout and modal complexity of presentations, it is difficult for LLMs to directly determine which slides should be referenced. The key challenge lies in enhancing LLMs’ understanding of reference presentations’ structure and content patterns. Second, most presentations are saved in PowerPoint’s XML format, as demonstrated in Figure 11, which is inherently verbose and redundant (Gryk, 2022), making it challenging for LLMs to robustly perform editing operations."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "To address these challenges, PPTAgent operates in two stages. Stage I performs a comprehensive analysis of reference presentations to extract functional types and content schemas of slides, facilitating subsequent reference selection and slide generation. Stage II introduces a suite of edit APIs with HTML-rendered representation that simplifies slide modifications through code interaction (Wang et al., 2024b). Furthermore, we implement a self-correction mechanism (Kamoi et al., 2024) that allows LLMs to iteratively refine generated editing actions based on intermediate results and execution feedback, ensuring robust generation. As shown in Figure 2, we first analyze and cluster reference slides into categories (e.g., opening slides, bullet-point slides). For each new slide, PPTAgent selects an appropriate reference slide (e.g., opening slide for the first slide) and generates a series of editing actions (e.g., replace_span) to modify it."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "Due to the lack of a comprehensive evaluation framework, we propose PPTEval, which adopts the MLLM-as-a-judge paradigm Chen et al. (2024a) to evaluate presentations across three dimensions: Content, Design, and CoherenceDuarte (2010). Human evaluations validate the reliability and effectiveness of PPTEval. Results demonstrate that PPTAgent generates high-quality presentations, achieving an average score of 3.67 for the three dimensions in PPTEval."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "Our main contributions can be summarized as follows:"
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_0⟧ We propose PPTAgent, a framework that redefines automatic presentation generation as an edit-based process guided by reference presentations."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_1⟧ We introduce PPTEval, a comprehensive evaluation framework that assesses presentations across three dimensions: Content, Design, and Coherence."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_2⟧ We release the PPTAgent and PPTEval codebases, along with a new presentation dataset Zenodo10K, to support future research."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h2",
+   "en": "2 PPTAgent"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we formulate the presentation generation task and introduce our proposed PPTAgent framework, which consists of two distinct stages. In stage I, we analyze reference presentations through slide clustering and schema extraction, providing a comprehensive understanding of input presentations that facilitates subsequent reference selection and slide generation. In stage II, we leverage analyzed reference presentations to select reference slides and generate the target presentation for the input document through an iterative editing process. An overview of our workflow is illustrated in Figure 2."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Problem Formulation"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "PPTAgent is designed to generate an engaging presentation through an edit-based process. We provide formal definitions for the conventional method and PPTAgent to highlight their key differences."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "The conventional method (Bandyopadhyay et al., 2024; Mondal et al., 2024) for creating each slide ⟦SLOT_3⟧ is formalized in Equation 1. Given the input content ⟦SLOT_4⟧, it generates ⟦SLOT_5⟧ slide elements, each defined by its type, content, and styling attributes, such as ⟦SLOT_6⟧."
+  },
+  {
+   "id": "b0023",
+   "t": "keep",
+   "w": "table",
+   "en": "𝑺 = { e 1 , e 2 , … , e n } = f ⁡ ( C ) \\bm{S}=\\{e_{1},e_{2},\\dots,e_{n}\\}=f(C) (1)"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "While this conventional method is straightforward, it requires manual specification of styling attributes, which is challenging for automated generation (Guo et al., 2023). Instead of creating slides from scratch, PPTAgent generates a sequence of executable actions to edit reference slides, thereby preserving their well-designed layouts and styles. As shown in Equation 2, given the input content ⟦SLOT_7⟧ and the ⟦SLOT_8⟧-th reference slide ⟦SLOT_9⟧, which is selected from the reference presentation, PPTAgent generates a sequence of ⟦SLOT_10⟧ executable actions, where each action ⟦SLOT_11⟧ corresponds to a line of executable code."
+  },
+  {
+   "id": "b0025",
+   "t": "keep",
+   "w": "table",
+   "en": "𝑨 = { a 1 , a 2 , … , a m } = g ⁡ ( C , R j ) \\bm{A}=\\{a_{1},a_{2},\\dots,a_{m}\\}=g(C,R_{j}) (2)"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Stage I : Presentation Analysis"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "In this stage, we analyze the reference presentation to guide the reference selection and slide generation. Firstly, we categorize slides based on their structural and layout characteristics through slide clustering. Then, we extract content schemas to identify the content organization of the slide in each cluster, providing a comprehensive description of slide elements."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "h4",
+   "en": "Slide Clustering"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "Slides can be categorized into two main types based on their functionalities: structural slides that support the presentation’s organization (e.g., opening slides) and content slides that convey specific information (e.g., bullet-point slides). To distinguish between these two types, we employ LLMs to segment the presentation accordingly. For structural slides, we leverage LLMs’ long-context capability to analyze all slides in the input presentation, identifying structural slides, labeling their structural roles based on their textual features, and grouping them accordingly. For content slides, we first convert them into images and then apply a hierarchical clustering approach to group similar slide images. Subsequently, we utilize MLLMs to analyze the converted slide images, identifying layout patterns within each cluster. Further details are provided in Appendix D."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "h4",
+   "en": "Schema Extraction"
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "After clustering, we further analyzed their content schemas to facilitate the slide generation. Specifically, we define an extraction framework where each element is represented by its category, description, and content. This framework enables a clear and structured representation of each slide. Detailed instructions are provided in Appendix F, with an example of the schema shown below."
+  },
+  {
+   "id": "b0032",
+   "t": "keep",
+   "w": "table",
+   "en": "Category Description Data Title Main title Sample Library Date Date of the event 15 February 2018 Image Primary image to illustrate the slide Picture: Children in a library with …"
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "h3",
+   "en": "2.3 Stage II : Presentation Generation"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "PPTAgent first generates an outline specifying reference slides and relevant content for each new slide. Then, it iteratively edits elements from reference slides through edit APIs to create the target presentation."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "h4",
+   "en": "Outline Generation"
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Figure 2, we utilize LLM to generate a structured outline consisting of multiple entries. Each entry represents a new slide, containing the reference slide and relevant document content of the new slide. The reference slide is selected based on the slide-level functional description in Stage I, while the relevant document content is identified based on the input document."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "h4",
+   "en": "Slide Generation"
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "Guided by the structured outline, slides are generated iteratively based on the corresponding entries. For each slide, LLMs incorporate textual content and extracted image captions from the input document. The new slide adopts the layout of the reference slide while ensuring consistency in content and structural clarity."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "Specifically, to generate a new slide based on the corresponding entry in the outline, we design edit-based APIs to enable LLMs to edit the reference slide. As shown below, these APIs support editing, removing, and duplicating slide elements. Moreover, given the complexity of the XML format in presentations, which is demonstrated in Appendix E, we render the reference slide into an HTML representation (Feng et al., 2024), offering a more precise and intuitive format for easier understanding. This HTML-based format, combined with our edit-based APIs, enables LLMs to perform precise content modifications on reference slides."
+  },
+  {
+   "id": "b0040",
+   "t": "keep",
+   "w": "table",
+   "en": "Function Name Description del_span Delete a span. del_image Delete an image element. clone_paragraph Create a duplicate of an existing paragraph. replace_span Replace the content of a span. replace_im"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "Furthermore, to enhance robustness during the editing process, we implement a self-correction mechanism (Kamoi et al., 2024). Specifically, the generated editing actions are executed within a REPL11 1 https://en.wikipedia.org/wiki/REPL environment. When actions fail to apply to reference slides, the REPL provides execution feedback22 2 https://docs.python.org/3/tutorial/errors.html to assist LLMs in refining their actions. The LLM then analyzes this feedback to adjust its editing actions (Guan et al., 2024; Wang et al., 2024b), enabling iterative refinement until a valid slide is generated or the maximum retry limit is reached."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "h2",
+   "en": "3 PPTEval"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "We introduce PPTEval, a comprehensive framework that evaluates presentation quality from multiple dimensions, addressing the absence of reference-free evaluation for presentations. The framework provides both numeric scores (1-to-5 scale) and detailed rationales to justify each dimension’s assessment."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "Grounded in established presentation design principles (Duarte, 2008; Duarte, 2010), our evaluation framework focuses on three key dimensions, as summarized in Table 1. Specially, given a generated presentation, we assess the content and design at the slide level, while evaluating coherence across the entire presentation."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "The complete evaluation process is illustrated in Figure 3, with detailed scoring criteria and representative examples provided in Appendix B."
+  },
+  {
+   "id": "b0046",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: PPTEval assesses presentations from three dimensions: content, design, and coherence."
+  },
+  {
+   "id": "b0048",
+   "t": "keep",
+   "w": "table",
+   "en": "Dimension Criteria Content Text should be concise and grammatically sound, supported by relevant images. Design Harmonious colors and proper layout ensure readability, while visual elements like geome"
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: The scoring criteria of dimensions in PPTEval, all evaluated in 1-5 scale."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Experiment"
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Dataset"
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "Existing presentation datasets, such as Mondal et al. (2024); Sefid et al. (2021); Sun et al. (2021); Fu et al. (2022), have two main issues. First, they are mostly stored in PDF or JSON formats, which leads to a loss of semantic information, such as structural relationships and styling attributes of elements. Additionally, these datasets primarily consist of academic presentations in artificial intelligence, limiting their diversity. To address these limitations, we introduce Zenodo10K, a new dataset sourced from Zenodo (European Organization For Nuclear Research and OpenAIRE, 2013), which hosts diverse artifacts across domains, all under clear licenses. We have curated 10,448 presentations from this source and made them publicly available to support further research."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "Following Mondal et al. (2024), we sample 50 presentations in five domains to serve as reference presentations. In addition, we collected 50 documents from the same domains to be used as input documents. The sampling criteria and preprocessing details are provided in Appendix A, while the dataset statistics are summarized in Table 2."
+  },
+  {
+   "id": "b0054",
+   "t": "keep",
+   "w": "table",
+   "en": "Domain Document Presentation #Chars #Figs #Chars #Figs #Pages Culture 12,708 2.9 6,585 12.8 14.3 Education 12,305 5.5 3,993 12.9 13.9 Science 16,661 4.8 5,334 24.0 18.4 Society 13,019 7.3 3,723 9.8 12"
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Statistics of the dataset used in our experiments, detailing the number of characters (‘#Chars’) and figures (‘#Figs’), as well as the number of pages (‘#Pages’)."
+  },
+  {
+   "id": "b0056",
+   "t": "keep",
+   "w": "table",
+   "en": "Configuration Existing Metrics PPTEval Language Model Vision Model SR(%) ↑ \\uparrow PPL ↓ \\downarrow ROUGE-L ↑ \\uparrow FID ↓ \\downarrow Content ↑ \\uparrow Design ↑ \\uparrow Coherence ↑ \\uparrow Avg. "
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Performance comparison of presentation generation methods, including DocPres, KCTV, and our proposed PPTAgent. The best/second-best scores are bolded/underlined. Results are reported using existing metrics, including Success Rate (SR), Perplexity (PPL), Rouge-L, Fréchet Inception Distance (FID), and PPTEval."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Implementation Details"
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "PPTAgent is implemented with three models: GPT-4o-2024-08-06 (GPT-4o), Qwen2.5-72B-Instruct (Qwen2.5, Yang et al., 2024), and Qwen2-VL-72B-Instruct (Qwen2-VL, Wang et al., 2024a). These models are categorized according to the specific modalities they handle, whether textual or visual, as indicated by their subscripts. Specifically, we define configurations as combinations of a language model (LM) and a vision model (VM), such as Qwen2.5⟦SLOT_12⟧+Qwen2-VL⟦SLOT_13⟧."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "Experiment data covers 5 domains, each with 10 input documents and 10 reference presentations, totaling 500 presentation generation tasks per configuration (5 domains × 10 input documents × 10 reference presentations). Each slide generation allows a maximum of two self-correction iterations. We use Chen et al. (2024b) and Wu et al. (2020) to compute the text and image embeddings respectively. All open-source LLMs are deployed using the VLLM framework (Kwon et al., 2023) on NVIDIA A100 GPUs. The total computational cost for experiments are approximately 500 GPU hours."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Baselines"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "We choose the following baseline methods: DocPres (Bandyopadhyay et al., 2024) propose a rule-based approach that generates narrative-rich slides through multi-stages, and incorporates images through a similarity-based mechanism. KCTV (Cachola et al., 2024) propose a template-based method that creates slides in an intermediate format before converting them into final presentations using predefined templates. The baseline methods operate without vision models since they do not process visual information. Each configuration generates 50 presentations (5 domains × 10 input documents), as they do not require reference presentations. Consequently, the FID metric is excluded from their evaluation."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "h3",
+   "en": "4.4 Evaluation Metrics"
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluated the presentation generation using the following metrics:"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_14⟧ Success Rate (SR) evaluates the robustness of presentation generation (Wu et al., 2024), calculated as the percentage of successfully completed tasks. For PPTAgent, success requires the generation of all slides without execution errors after self-correction. For KCTV, success is determined by the successful compilation of the generated LaTeX file. DocPres is excluded from this evaluation due to its deterministic rule-based conversion."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_15⟧ Perplexity (PPL) measures the likelihood of the model generating the given sequence. Using Llama-3-8B (Dubey et al., 2024), we calculate the average perplexity across all slides in a presentation. Lower perplexity scores indicate higher textual fluency (Bandyopadhyay et al., 2024)."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_16⟧ Rouge-L (Lin, 2004) evaluates textual similarity by measuring the longest common subsequence between generated and reference texts. We report the F1 score to balance precision and recall."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_17⟧ FID (Heusel et al., 2017) measures the similarity between the generated presentation and the reference presentation in the feature space. Due to the limited sample size, we calculate the FID using a 64-dimensional output vector."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_18⟧ PPTEval employs GPT-4o as the judging model to evaluate presentation quality across three dimensions: content, design, and coherence. We compute content and design scores by averaging across slides, while coherence is assessed at the presentation level."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "h3",
+   "en": "4.5 Overall Result"
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "Table 3 presents the performance comparison between PPTAgent and baselines, revealing that:"
+  },
+  {
+   "id": "b0072",
+   "t": "keep",
+   "w": "table",
+   "en": "Setting SR(%) Content Design Coherence Avg. PPTAgent 95.0 3.28 3.27 4.48 3.67 w/o Outline 91.0 3.24 3.30 3.36 3.30 w/o Schema 78.8 3.08 3.23 4.04 3.45 w/o Structure 92.2 3.28 3.25 3.45 3.32 w/o CodeRe"
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Ablation analysis of PPTAgent utilizing the Qwen2.5⟦SLOT_19⟧+Qwen2-VL⟦SLOT_20⟧ configuration, demonstrating the contribution of each components."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "h4",
+   "en": "PPTAgent Significantly Improves Overall Presentation Quality."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "p",
+   "en": "PPTAgent demonstrates statistically significant performance improvements over baseline methods across all three dimensions of PPTEval. Compared to the rule-based baseline (DocPres), PPTAgent exhibits substantial improvements in both the design and content dimensions (3.34 vs. 2.37, +40.9%; 3.34 vs. 2.98, +12.1%), as presentations generated by the DocPres method show minimal design effort. In comparison with the template-based baseline (KCTV), PPTAgent also achieves notable improvements in both design and content (3.34 vs. 2.95, +13.2%; 3.28 vs. 2.55, +28.6%), underscoring the efficacy of the edit-based paradigm. Most notably, PPTAgent shows a significant enhancement in the coherence dimension (4.48 vs. 3.57, +25.5% for DocPres; 4.48 vs. 3.28, +36.6% for KCTV). This improvement can be attributed to PPTAgent ’s comprehensive analysis of the structural role of slides."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h4",
+   "en": "PPTAgent Exhibits Robust Generation Performance."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "Our approach empowers LLMs to produce well-rounded presentations with remarkable success rate, achieving ⟦SLOT_21⟧ success rate for both Qwen2.5⟦SLOT_22⟧+Qwen2-VL⟦SLOT_23⟧ and GPT-4o⟦SLOT_24⟧+GPT-4o⟦SLOT_25⟧, which is a significant improvement compared to KCTV (97.8% vs. 88.0%). Moreover, detailed performance of Qwen2.5⟦SLOT_26⟧+Qwen2-VL⟦SLOT_27⟧ across various domains is illustrated in Table 8, underscoring the versatility and robustness of our approach."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "h4",
+   "en": "PPTEval Demonstrates Superior Evaluation Capability."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "Traditional metrics like PPL and ROUGE-L demonstrate inconsistent evaluation trends compared to PPTEval. For instance, KCTV achieves a high ROUGE-L (16.76) but a low content score (2.55), while our method shows the opposite trend with ROUGE-L (14.25) and content score (3.28). Moreover, we observe that ROUGE score overemphasizes textual alignment with source documents, potentially compromising the expressiveness of presentations. Most importantly, PPTEval advances beyond existing metrics through its dual capability of reference-free design assessment and holistic evaluation of presentation coherence. Further agreement evaluation is shown in Section 5.5."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Analysis"
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 Ablation Study"
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "We conducted ablation studies across four settings: (1) randomly selecting a slide as the reference (w/o Outline), (2) omitting structural slides during outline generation (w/o Structure), (3) replacing the slide representation with the method proposed by Guo et al. (2023) (w/o CodeRender), and (4) removing guidance from the content schema (w/o Schema). All experiments were conducted using the Qwen2.5⟦SLOT_28⟧+Qwen2-VL⟦SLOT_29⟧ configuration."
+  },
+  {
+   "id": "b0083",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Score distributions of presentations generated by PPTAgent, DocPres, and KCTV across the three evaluation dimensions: Content, Design, and Coherence, as assessed by PPTEval."
+  },
+  {
+   "id": "b0085",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Comparative analysis of presentation generation across different methods. PPTAgent generates under different reference presentations, indicated as PPTAgent (a) and PPTAgent (b)."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "As demonstrated in Table 4, our experiments reveal two key findings: 1) The HTML-based representation significantly reduces interaction complexity, evidenced by the substantial decrease in success rate from 95.0% to 74.6% when removing the Code Render component. 2) The presentation analysis is crucial for generation quality, as removing the outline and structural slides significantly degrades coherence (from 4.48 to 3.36/3.45) and eliminating the slide schema reduces the success rate from 95.0% to 78.8%."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2 Case Study"
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "We present representative examples of presentations generated under different configurations in Figure 5. PPTAgent demonstrates superior presentation quality across multiple dimensions. First, it effectively incorporates visual elements with contextually appropriate image placements, while maintaining concise and well-structured slide content. Second, it exhibits diversity in generating visually engaging slides under diverse references. In contrast, baseline methods (DocPres and KCTV) produce predominantly text-based slides with limited visual variation, constrained by their rule-based or template-based paradigms."
+  },
+  {
+   "id": "b0090",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: The number of iterative self-corrections required to generate a single slide under different models."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "h3",
+   "en": "5.3 Score Distribution"
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "We further investigated the score distribution of generated presentations to compare the performance characteristics across methods, as shown in Figure 4. Constrained by their rule-based or template-based paradigms, baseline methods exhibit limited diversity in both content and design dimensions, with scores predominantly concentrated at levels 2 and 3. In contrast, PPTAgent demonstrates a more dispersed score distribution, with the majority of presentations (>80%) achieving scores of 3 or higher in these dimensions. Furthermore, due to PPTAgent’s comprehensive consideration of structural slides, it achieves notably superior coherence scores, with over 80% of the presentations receiving scores above 4."
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "h3",
+   "en": "5.4 Effectiveness of Self-Correction"
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 6 illustrates the number of iterations required to generate a slide using different language models. Although GPT-4o exhibits superior self-correction capabilities compared to Qwen2.5, Qwen2.5 encounters fewer errors in the first generation. Additionally, we observed that Qwen2-VL experiences errors more frequently and has poorer self-correction capabilities, likely due to its multimodal post-training (Wang et al., 2024a). Ultimately, all three models successfully corrected more than half of the errors, demonstrating that our iterative self-correction mechanism effectively ensures the success of the generation process."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "h3",
+   "en": "5.5 Agreement Evaluation"
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Correlation heatmap between existing automated evaluation metrics along with the content and design dimension in PPTEval."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "h4",
+   "en": "PPTEval with Human Preferences"
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "p",
+   "en": "Despite Chen et al. (2024a) have highlighted the impressive human-like discernment of LLMs in various generation tasks. However, it remains crucial to assess the correlation between LLM evaluations and human evaluations in the context of presentations. This necessity arises from findings by Laskar et al. (2024), which indicate that LLMs may not be adequate evaluators for complex tasks. Table 5 shows the correlation of ratings between humans and LLMs. The average Pearson correlation of 0.71 exceeds the scores of other evaluation methods (Kwan et al., 2024), indicating that PPTEval aligns well with human preferences."
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "h4",
+   "en": "PPTEval with Existing Metrics"
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "p",
+   "en": "We analyzed the relationships between PPTEval’s content and design dimensions and existing metrics through Pearson correlation analysis, as shown in Figure 7. The Pearson correlation coefficients reveal that current metrics are ineffective for presentation evaluation. Specifically, PPL primarily measures text fluency but performs poorly on slide content due to its inherent fragmented nature, frequently producing outlier measurements. Similarly, while ROUGE-L and FID quantify similarity to reference text and presentations respectively, these metrics inadequately assess content and design quality, as high conformity to references does not guarantee presentation effectiveness. These weak correlations highlight the necessity of PPTEval for robust and comprehensive presentation evaluation that considers both content quality and design effectiveness."
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Related Works"
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "h4",
+   "en": "Automated Presentation Generation"
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "p",
+   "en": "Recent proposed methods for slide generation can be categorized into rule-based and template-based based on how they handle element placement and styling. Rule-based methods, such as those proposed by Mondal et al. (2024) and Bandyopadhyay et al. (2024), often focus on enhancing textual content but neglect the visual-centric nature of presentations, leading to outputs that lack engagement. Template-based methods, including Cachola et al. (2024) and industrial solutions like Tongyi, rely on predefined templates to create visually appealing presentations. However, their dependence on extensive manual effort for template annotation significantly limits scalability and flexibility."
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "h4",
+   "en": "LLM Agent"
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "p",
+   "en": "Numerous studies (Li et al., 2024; Deng et al., 2024; Tang et al., 2025) have explored the potential of LLMs to act as agents assisting humans in a wide array of tasks. For example, Wang et al. (2024b) demonstrate the capability of LLMs to accomplish tasks by generating executable actions. Furthermore, Guo et al. (2023) demonstrated the potential of LLMs in automating presentation-related tasks through API integration."
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "h4",
+   "en": "LLM as a Judge"
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "p",
+   "en": "LLMs have exhibited strong capabilities in instruction following and context perception, which has led to their widespread adoption as judges (Liu et al., 2023; Zheng et al., 2023). Chen et al. (2024a) demonstrated the feasibility of using MLLMs as judges, while Kwan et al. (2024) proposed a multi-dimensional evaluation framework. Additionally, Ge et al. (2025) investigated the use of LLMs for assessing single-slide quality. However, they did not evaluate presentation quality from a holistic perspective."
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "table",
+   "en": "Correlation Content Design Coherence Avg. Pearson 0.70 0.90 0.55 0.71 Spearman 0.73 0.88 0.57 0.74"
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: The correlation scores between human ratings and LLM ratings under different dimensions (Coherence, Content, Design). All presented data of similarity exhibit a p-value below 0.05, indicating a statistically significant level of confidence."
+  },
+  {
+   "id": "b0112",
+   "t": "text",
+   "w": "h2",
+   "en": "7 Conclusion"
+  },
+  {
+   "id": "b0113",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we introduce PPTAgent, which conceptualizes presentation generation as a two-stage presentation editing task completed through LLMs’ abilities to understand and generate code. Moreover, we propose PPTEval to provide quantitative metrics for assessing presentation quality. Our experiments across data from multiple domains have demonstrated the superiority of our method. This research provides a new paradigm for generating slides under unsupervised conditions and offers insights for future work in presentation generation."
+  },
+  {
+   "id": "b0114",
+   "t": "text",
+   "w": "h2",
+   "en": "Limitations"
+  },
+  {
+   "id": "b0115",
+   "t": "text",
+   "w": "p",
+   "en": "While PPTAgent demonstrates promising capabilities in presentation generation, several limitations remain. First, despite achieving a high success rate (>95%) on our dataset, the model occasionally fails to generate presentations, which could limit its reliability. Second, although we can provide high-quality preprocessed presentations as references, the quality of generated presentations is still influenced by the input reference presentation, which may lead to suboptimal outputs. Third, although PPTAgent shows improvements in layout optimization compared to prior approaches, it does not fully utilize visual information to refine the slide design. This manifests in occasional design flaws, such as overlapping elements, which can compromise the readability of generated slides. Future work should focus on enhancing the robustness, reducing reference dependency, and better incorporating visual information into the generation process."
+  },
+  {
+   "id": "b0116",
+   "t": "text",
+   "w": "h2",
+   "en": "Ethical Considerations"
+  },
+  {
+   "id": "b0117",
+   "t": "text",
+   "w": "p",
+   "en": "In the construction of Zenodo10K, we utilized the publicly available API to scrape data while strictly adhering to the licensing terms associated with each artifact. Specifically, artifacts that were not permitted for modification or commercial use under their respective licenses were filtered out to ensure compliance with intellectual property rights. Additionally, all annotation personnel involved in the project were compensated at rates exceeding the minimum wage in their respective cities, reflecting our commitment to fair labor practices and ethical standards."
+  },
+  {
+   "id": "b0118",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bandyopadhyay et al. (2024) Sambaran Bandyopadhyay, Himanshu Maheshwari, Anandhavelu Natarajan, and Apoorv Saxena. 2024. Enhancing presentation slide generation by llms with a multi-staged end-to-end "
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Barrick et al. (2018) Andrea Barrick, Dana Davis, and Dana Winkler. 2018. Image versus text in powerpoint lectures: Who does it benefit? Journal of Baccalaureate Social Work , 23(1):91–109."
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cachola et al. (2024) Isabel Alyssa Cachola, Silviu Cucerzan, Allen Herring, Vuksan Mijovic, Erik Oveson, and Sujay Kumar Jauhar. 2024. Knowledge-centric templatic views of documents . In Findings of "
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024a) Dongping Chen, Ruoxi Chen, Shilin Zhang, Yinuo Liu, Yaochen Wang, Huichi Zhou, Qihui Zhang, Pan Zhou, Yao Wan, and Lichao Sun. 2024a. Mllm-as-a-judge: Assessing multimodal llm-as-a"
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024b) Jianlv Chen, Shitao Xiao, Peitian Zhang, Kun Luo, Defu Lian, and Zheng Liu. 2024b. Bge m3-embedding: Multi-lingual, multi-functionality, multi-granularity text embeddings through s"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Deng et al. (2024) Xiang Deng, Yu Gu, Boyuan Zheng, Shijie Chen, Sam Stevens, Boshi Wang, Huan Sun, and Yu Su. 2024. Mind2web: Towards a generalist agent for the web. Advances in Neural Information Pr"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Duarte (2008) Nancy Duarte. 2008. Slide: ology: The art and science of creating great presentations , volume 1. O’Reilly Media Sebastapol."
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Duarte (2010) Nancy Duarte. 2010. Resonate: Present visual stories that transform audiences . John Wiley & Sons."
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dubey et al. (2024) Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Amy Yang, Angela Fan, et al. 2024. The llama 3 herd of"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "European Organization For Nuclear Research and OpenAIRE (2013) European Organization For Nuclear Research and OpenAIRE. 2013. Zenodo ."
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Feng et al. (2024) Weixi Feng, Wanrong Zhu, Tsu-jui Fu, Varun Jampani, Arjun Akula, Xuehai He, Sugato Basu, Xin Eric Wang, and William Yang Wang. 2024. Layoutgpt: Compositional visual planning and gen"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fu et al. (2022) Tsu-Jui Fu, William Yang Wang, Daniel McDuff, and Yale Song. 2022. Doc2ppt: Automatic presentation slides generation from scientific documents . Proceedings of the AAAI Conference on "
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ge et al. (2025) Jiaxin Ge, Zora Zhiruo Wang, Xuhui Zhou, Yi-Hao Peng, Sanjay Subramanian, Qinyue Tan, Maarten Sap, Alane Suhr, Daniel Fried, Graham Neubig, et al. 2025. Autopresent: Designing structu"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gryk (2022) Michael Robert Gryk. 2022. Human readability of data files. Balisage series on markup technologies , 27."
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Guan et al. (2024) Xinyan Guan, Yanjiang Liu, Hongyu Lin, Yaojie Lu, Ben He, Xianpei Han, and Le Sun. 2024. Mitigating large language model hallucinations via autonomous knowledge graph-based retrofit"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Guo et al. (2023) Yiduo Guo, Zekai Zhang, Yaobo Liang, Dongyan Zhao, and Duan Nan. 2023. Pptc benchmark: Evaluating large language models for powerpoint task completion. arXiv preprint arXiv:2311.0176"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Heusel et al. (2017) Martin Heusel, Hubert Ramsauer, Thomas Unterthiner, Bernhard Nessler, and Sepp Hochreiter. 2017. Gans trained by a two time-scale update rule converge to a local nash equilibrium."
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kamoi et al. (2024) Ryo Kamoi, Yusen Zhang, Nan Zhang, Jiawei Han, and Rui Zhang. 2024. When can llms actually correct their own mistakes? a critical survey of self-correction of llms. Transactions of"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kwan et al. (2024) Wai-Chung Kwan, Xingshan Zeng, Yuxin Jiang, Yufei Wang, Liangyou Li, Lifeng Shang, Xin Jiang, Qun Liu, and Kam-Fai Wong. 2024. Mt-eval: A multi-turn capabilities evaluation benchmar"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kwon et al. (2023) Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody Hao Yu, Joseph Gonzalez, Hao Zhang, and Ion Stoica. 2023. Efficient memory management for large language mode"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Laskar et al. (2024) Md Tahmid Rahman Laskar, Sawsan Alqahtani, M Saiful Bari, Mizanur Rahman, Mohammad Abdullah Matin Khan, Haidar Khan, Israt Jahan, Amran Bhuiyan, Chee Wei Tan, Md Rizwan Parvez, En"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024) Yanda Li, Chi Zhang, Wanqi Yang, Bin Fu, Pei Cheng, Xin Chen, Ling Chen, and Yunchao Wei. 2024. Appagent v2: Advanced agent for flexible mobile interactions. arXiv preprint arXiv:2408"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lin (2004) Chin-Yew Lin. 2004. ROUGE: A package for automatic evaluation of summaries . In Text Summarization Branches Out , pages 74–81, Barcelona, Spain. Association for Computational Linguistics."
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023) Yang Liu, Dan Iter, Yichong Xu, Shuohang Wang, Ruochen Xu, and Chenguang Zhu. 2023. G-eval: NLG evaluation using gpt-4 with better human alignment . In Proceedings of the 2023 Confer"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Maheshwari et al. (2024) Himanshu Maheshwari, Sambaran Bandyopadhyay, Aparna Garimella, and Anandhavelu Natarajan. 2024. Presentations are not always linear! gnn meets llm for document-to-presentation"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mondal et al. (2024) Ishani Mondal, S Shwetha, Anandhavelu Natarajan, Aparna Garimella, Sambaran Bandyopadhyay, and Jordan Boyd-Graber. 2024. Presentations by the humans and for the humans: Harnessing"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sefid et al. (2021) Athar Sefid, Prasenjit Mitra, and Lee Giles. 2021. Slidegen: an abstractive section-based slide generator for scholarly documents. In Proceedings of the 21st ACM Symposium on Docum"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sun et al. (2021) Edward Sun, Yufang Hou, Dakuo Wang, Yunfeng Zhang, and Nancy XR Wang. 2021. D2s: Document-to-slide generation via query-based text summarization. arXiv preprint arXiv:2105.03664 ."
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tang et al. (2025) Hao Tang, Darren Key, and Kevin Ellis. 2025. Worldcoder, a model-based llm agent: Building world models by writing code and interacting with the environment. Advances in Neural Info"
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "VikParuchuri (2023) VikParuchuri. 2023. marker ."
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2024a) Peng Wang, Shuai Bai, Sinan Tan, Shijie Wang, Zhihao Fan, Jinze Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, et al. 2024a. Qwen2-vl: Enhancing vision-language model’s perc"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2024b) Xingyao Wang, Yangyi Chen, Lifan Yuan, Yizhe Zhang, Yunzhu Li, Hao Peng, and Heng Ji. 2024b. Executable code actions elicit better llm agents. arXiv preprint arXiv:2402.01030 ."
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2020) Bichen Wu, Chenfeng Xu, Xiaoliang Dai, Alvin Wan, Peizhao Zhang, Zhicheng Yan, Masayoshi Tomizuka, Joseph Gonzalez, Kurt Keutzer, and Peter Vajda. 2020. Visual transformers: Token-bas"
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2024) Tong Wu, Guandao Yang, Zhibing Li, Kai Zhang, Ziwei Liu, Leonidas Guibas, Dahua Lin, and Gordon Wetzstein. 2024. Gpt-4v (ision) is a human-aligned evaluator for text-to-3d generation."
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2024) An Yang, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chengyuan Li, Dayiheng Liu, Fei Huang, Haoran Wei, et al. 2024. Qwen2. 5 technical report. arXiv preprint arXi"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zheng et al. (2023) Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric Xing, et al. 2023. Judging llm-as-a-judge with mt-bench "
+  },
+  {
+   "id": "b0155",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Data Preprocessing"
+  },
+  {
+   "id": "b0156",
+   "t": "text",
+   "w": "p",
+   "en": "To maintain a reasonable cost, we selected presentations ranging from 12 to 64 pages and documents with text lengths from 2,048 to 20,480 characters. We extracted both textual and visual content from the source documents using VikParuchuri (2023). The extracted text was then organized into sections. For visual content, we generated image captions to assist in relevant image selection through textual descriptions. To minimize redundancy, we identified and removed duplicate images if their image embeddings had a cosine similarity score exceeding 0.85. For slide-level deduplication, we removed individual slides if their text embeddings had a cosine similarity score above 0.8 compared to the preceding slide, as suggested by Fu et al. (2022)."
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Details of PPTEval"
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "p",
+   "en": "We recruited four graduate students through a Shanghai-based crowdsourcing platform to evaluate a total of 250 presentations: 50 randomly selected from Zenodo10K representing real-world presentations, along with two sets of 100 presentations generated by the baseline method and our approach respectively. Following the evaluation framework proposed by PPTEval, assessments were conducted across three dimensions using the scoring criteria detailed in Appendix F. Evaluators were provided with converted slide images, scored them individually, and then discussed the results to reach a consensus on the final scores."
+  },
+  {
+   "id": "b0159",
+   "t": "text",
+   "w": "p",
+   "en": "Moreover, We measured inter-rater agreement using Fleiss’ Kappa, with an average score of 0.59 across three dimensions (0.61, 0.61, 0.54 for Content, Design, and Coherence, respectively) indicating satisfactory agreement (Kwan et al., 2024) among evaluators. Representative scoring examples are shown in Figure 8."
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "p",
+   "en": "We provided detailed illustration as below:"
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "h4",
+   "en": "Content:"
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "p",
+   "en": "The content dimension evaluates the information presented on the slides, focusing on both text and images. We assess content quality from three perspectives: the amount of information, the clarity and quality of textual content, and the support provided by visual content. High-quality textual content is characterized by clear, impactful text that conveys the proper amount of information. Additionally, images should complement and reinforce the textual content, making the information more accessible and engaging. To evaluate content quality, we employ MLLMs on slide images, as slides cannot be easily comprehended in a plain text format."
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "h4",
+   "en": "Design:"
+  },
+  {
+   "id": "b0164",
+   "t": "text",
+   "w": "p",
+   "en": "Good design not only captures attention but also enhances content delivery. We evaluate the design dimension based on three aspects: color schemes, visual elements, and overall design. Specifically, the color scheme of the slides should have clear contrast to highlight the content while maintaining harmony. The use of visual elements, such as geometric shapes, can make the slide design more expressive. Finally, good design should adhere to basic design principles, such as avoiding overlapping elements and ensuring that design does not interfere with content delivery."
+  },
+  {
+   "id": "b0165",
+   "t": "text",
+   "w": "h4",
+   "en": "Coherence:"
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "p",
+   "en": "Coherence is essential for maintaining audience engagement in a presentation. We evaluate coherence based on the logical structure and the contextual information provided. Effective coherence is achieved when the model constructs a captivating storyline, enriched with contextual information that enables the audience to follow the content seamlessly. We assess coherence by analyzing the logical structure and contextual information extracted from the presentation."
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Detailed Performance of PPTAgent"
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "p",
+   "en": "We present a detailed performance analysis of Qwen2.5LM+Qwen2-VLVM across various domains in Table 8. Additionally, Table 7 and 6 show the success rate-weighted performance, where failed generations receive a PPTEval score of 0, demonstrating that a lower success rate significantly impacts the overall effectiveness of the method."
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "p",
+   "en": "As demonstrated in Table 6. GPT-4o consistently demonstrates outstanding performance across various evaluation metrics, highlighting its advanced capabilities. While Qwen2-VL exhibits limitations in linguistic proficiency due to the trade-offs from multimodal post-training, GPT-4o maintains a clear advantage in handling language tasks. However, the introduction of Qwen2.5 successfully mitigates these linguistic deficiencies, bringing its performance on par with GPT-4o, and achieving the best performance. This underscores the significant potential of open-source LLMs as competitive and highly capable presentation agents."
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D Slide Clustering"
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "p",
+   "en": "We present our hierarchical clustering algorithm for layout analysis in Algorithm 1, where slides are grouped into clusters using a similarity threshold ⟦SLOT_30⟧ of 0.65. To focus exclusively on layout patterns and minimize interference from specific content, we preprocess the slides by replacing text content with a placeholder character (“a”) and substituting image elements with solid-color backgrounds. Then, we compute the similarity matrix using cosine similarity based on the ViT embeddings of converted slide images between each slide pair. Figure 9 illustrates representative examples from the resulting slide clusters."
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix E Code Interaction"
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "p",
+   "en": "For visual reference, Figure 10 illustrates a slide rendered in HTML format, while Figure 11 displays its excerpt (first 60 lines) of the XML representation (out of 1,006 lines)."
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix F Prompts"
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "h3",
+   "en": "F.1 Prompts for Presentation Analysis"
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "p",
+   "en": "The prompts used for presentation analysis are illustrated in Figures 12, 13, and 14."
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "h3",
+   "en": "F.2 Prompts for Presentation Generation"
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "p",
+   "en": "The prompts used for generating presentations are shown in Figures 15, 16, and 17."
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "h3",
+   "en": "F.3 Prompts for PPTEval"
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "p",
+   "en": "The prompts used in PPTEval are shown in Figure 18, 19, 20, 21, 22 and 23."
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Algorithm 1 Slides Clustering Algorithm"
+  },
+  {
+   "id": "b0182",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0184",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0186",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0187",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0188",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0189",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0190",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0191",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0192",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0193",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0194",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0195",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0196",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0197",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0198",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0199",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "table",
+   "en": "Configuration Existing Metrics PPTEval Language Model Vision Model SR(%) ↑ \\uparrow PPL ↓ \\downarrow ROUGE-L ↑ \\uparrow FID ↓ \\downarrow Content ↑ \\uparrow Design ↑ \\uparrow Coherence ↑ \\uparrow Avg. "
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Weighted Performance comparison of presentation generation methods, including DocPres, KCTV, and our proposed PPTAgent. Results are evaluated using Success Rate (SR), Perplexity (PPL), Rouge-L, Fr’echet Inception Distance (FID), and SR-weighted PPTEval."
+  },
+  {
+   "id": "b0202",
+   "t": "keep",
+   "w": "table",
+   "en": "Setting SR(%) Content Design Coherence Avg. PPTAgent 95.0 3.11 3.10 4.25 3.48 w/o Outline 91.0 2.94 3.00 3.05 3.00 w/o Schema 78.8 2.42 2.54 3.18 2.71 w/o Structure 92.2 3.02 2.99 3.18 3.06 w/o CodeRe"
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Ablation analysis of PPTAgent utilizing the Qwen2.5⟦SLOT_31⟧+Qwen2-VL⟦SLOT_32⟧ configuration, with PPTEval scores weighted by success rate to demonstrate each component’s contribution."
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "p",
+   "en": "Domain SR (%) PPL FID PPTEval Culture 93.0 185.3 5.00 3.70 Education 94.0 249.0 7.90 3.69 Science 96.0 500.6 6.07 3.56 Society 95.0 396.8 5.32 3.59 Tech 97.0 238.7 6.72 3.74"
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8: Evaluation results under the configuration of Qwen2-VL⟦SLOT_33⟧+Qwen2-VL⟦SLOT_34⟧ in different domains, using the success rate (SR), PPL, FID and the average PPTEval score across three evaluation dimensions."
+  },
+  {
+   "id": "b0206",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8: Scoring Examples of PPTEval."
+  },
+  {
+   "id": "b0208",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9: Example of slide clusters."
+  },
+  {
+   "id": "b0210",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 10: Example of rendering a slide into HTML format."
+  },
+  {
+   "id": "b0212",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 11: The first 60 lines of the XML representation of a presentation slide (out of 1,006 lines)."
+  },
+  {
+   "id": "b0214",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 12: Illustration of the prompt used for clustering structural slides."
+  },
+  {
+   "id": "b0216",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 13: Illustration of the prompt used to infer layout patterns."
+  },
+  {
+   "id": "b0218",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 14: Illustration of the prompt used to extract the slide schema."
+  },
+  {
+   "id": "b0220",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0221",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 15: Illustration of the prompt used for generating the outline."
+  },
+  {
+   "id": "b0222",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 16: Illustration of the prompt used for generating slide content."
+  },
+  {
+   "id": "b0224",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 17: Illustration of the prompt used for generating editing actions."
+  },
+  {
+   "id": "b0226",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0227",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 18: Illustration of the prompt used to describe content in PPTEval."
+  },
+  {
+   "id": "b0228",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 19: Illustration of the prompt used to describe style in PPTEval."
+  },
+  {
+   "id": "b0230",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0231",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 20: Illustration of the prompt used to extract content in PPTEval."
+  },
+  {
+   "id": "b0232",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0233",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 21: Illustration of the prompt used to evaluate content in PPTEval."
+  },
+  {
+   "id": "b0234",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0235",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 22: Illustration of the prompt used to evaluate style in PPTEval."
+  },
+  {
+   "id": "b0236",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0237",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 23: Illustration of the prompt used to evaluate coherence in PPTEval."
+  }
+ ]
+}

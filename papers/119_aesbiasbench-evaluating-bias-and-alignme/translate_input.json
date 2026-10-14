@@ -1,0 +1,1126 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "AesBiasBench: Evaluating Bias and Alignment in Multimodal Language Models for Personalized Image Aesthetic Assessment"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Multimodal Large Language Models (MLLMs) are increasingly applied in Personalized Image Aesthetic Assessment (PIAA) as a scalable alternative to expert evaluations. However, their predictions may refl"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Multimodal Large Language Models (MLLMs) have demonstrated impressive capabilities in vision-language tasks such as image recognition Alayrac et al. (2022); Zhu et al. (2023), visual reasoning Achiam et al. (2023); Wu et al. (2025), and visual question answering Wu et al. (2023); Xu et al. (2025). Recently, these models have also been applied to Personalized Image Aesthetic Assessment (PIAA), which estimates the photographic or artistic quality of images based on individual preferences Yang et al. (2022). PIAA applications include image retrieval, photo ranking, and creative recommendation Ren et al. (2017)."
+  },
+  {
+   "id": "b0006",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Examples illustrate bias in the image aesthetic empathy task. (a) and (b) show stereotypical bias in model outputs that arise from inherited cognitive priors. (c) presents human preferences for the image, which serve as a reference for evaluating the alignment of model predictions with human judgments."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "Despite their promise, MLLMs may exhibit aesthetic bias, systematic differences in output driven by demographic attributes such as gender, age, geographic region, or education. Prior work has shown that even subtle biases in subjective tasks can lead to skewed outcomes Zangwill (2003); Dhamala et al. (2021); Tamkin et al. (2023); Bai et al. (2024). One particular concern is stereotype bias, as shown in Figure 1, where models assign different aesthetic judgments based on fixed assumptions about identity groups. Despite ongoing efforts to audit and debias deployed models for greater fairness Guo et al. (2022); Smith et al. (2023); Dige et al. (2024); Li et al. (2024a); Li et al. (2024b), implicit and often-overlooked aesthetic biases continue to persist. Moreover, bias detection alone does not explain whether these deviations are problematic. Some output variation may simply reflect valid preference alignment with real human judgments. To address this, we complement bias measurement with an explicit evaluation of alignment, how closely model outputs match the aesthetic preferences of human users from corresponding demographic groups."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "To support this dual analysis, we introduce AesBiasBench, a benchmark for assessing both stereotype bias and preference alignment in MLLMs applied to PIAA. Following the task structure defined in prior work Huang et al. (2024b); Huang et al. (2024a), our benchmark covers three subtasks. The first, Aesthetic Perception, concerns the evaluation of low-level technical properties such as sharpness, lighting, and color. The second, Aesthetic Assessment, captures subjective evaluations of overall visual appeal and composition. The third, Aesthetic Empathy, targets the emotional impact conveyed or evoked by an image. For each subtask, we define dedicated metrics to quantify both bias and alignment, including Identity Frequency Disparity (IFD), Normalized Representation Disparity (NRD) and Aesthetic Alignment Score (AAS)."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate 19 MLLMs spanning a wide range of model families and parameter sizes. The results show that smaller models tend to exhibit stronger stereotype bias, while larger models demonstrate both improved fairness and closer alignment with human preferences. In perception and assessment tasks, model outputs often align most closely with the preferences of female users aged 22 to 25 with a university education. In the empathy task, model responses align with female preferences by default, but shift toward male preferences when gender information is made explicit. This shift highlights strong sensitivity to identity cues rather than neutrality. By analyzing both bias and alignment, AesBiasBench enables a more complete understanding of fairness and demographic sensitivity in MLLMs. It provides a foundation for future work on socially aware and user-aligned multimodal systems."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "The contributions of this work are threefold:"
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "li",
+   "en": "• Revealing stereotype biases in MLLMs for PIAA using tailored metrics that quantify group-specific deviations."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "li",
+   "en": "• Analyzing alignment between model outputs and human aesthetic preferences across perceptual, assessment, and empathy dimensions."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "li",
+   "en": "• Evaluating 19 state-of-the-art MLLMs, highlighting the effect of model size and identity information on fairness and alignment."
+  },
+  {
+   "id": "b0015",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: AesBiasBench framework for stereotype bias measurement and aesthetic alignment evaluation. The model’s default prompt includes an image ⟦SLOT_0⟧ and task ⟦SLOT_1⟧, while the personalized prompt adds a demographic group ⟦SLOT_2⟧. After obtaining model responses for all images, IFD and NRD detect stereotype bias, while AAS identifies alignment, revealing the demographic group the model’s aesthetic preferences align with."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Personalized Image Aesthetic Assessment"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "Image aesthetic assessment (IAA) aims at evaluating image quality based on photographic rules Deng et al. (2017). Due to significant variations in aesthetic preferences among individuals, image aesthetics can be categorized into Generic Image Aesthetic Assessment (GIAA) and Personalized Image Aesthetic Assessment (PIAA). Regarding GIAA, early studies focused on designing and extracting image features, mapping them to annotated aesthetic labels. As a result, numerous IAA datasets have emerged to support research in this field Dhar et al. (2011); Murray et al. (2012); Yi et al. (2023)."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "Personalized Image Aesthetic Assessment aims to capture the unique aesthetic preferences of individuals Yang et al. (2022). Early approaches typically adapted generic aesthetic models by integrating additional attributes or personal rating data. For instance, Ren et al. (2017) introduced residual scores to adjust generic predictions, while Zhu et al. (2020) fine-tuned pretrained GIAA models on user-specific annotations. Similarly, Cui et al. (2020) employed GIAA models as feature extractors to represent personalized preferences. Moving beyond direct adaptation, Hou et al. (2022) modeled personalized aesthetic experiences through interaction matrices between image content and user preferences. More recently, frameworks such as Q-instruct Wu et al. (2024a) and Q-align Wu et al. (2023) have enhanced the visual capabilities of MLLMs, laying a foundation for applying them to PIAA tasks."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Biases in MLLMs"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "The recent success of large language models (LLMs) has fueled exploration into vision-language interaction, leading to the emergence of multimodal large language models (MLLMs). These models have demonstrated strong capabilities in dialogue based on visual inputs. Given their advanced visual understanding, MLLMs can be leveraged to tackle various multimodal tasks related to high-level vision, including image aesthetic assessment Zhou et al. (2024). However, the inherent biases in MLLMs may introduce systematic distortions in image evaluations, leading to biased aesthetic assessments."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "Recent studies have explored the response biases in LLMs, which often influenced by various contextual and cultural factors Gallegos et al. (2024); Tjuatja et al. (2023). Such biases also appear in MLLMs, where visual and textual modalities can interact in ways that reinforce existing societal biases Chen et al. (2024a). These biases are commonly detected and analyzed through its manifestations in model outputs Lin et al. (2024); Kumar et al. (2024); Naous et al. (2023). Specifically, Jiang et al. (2024) revealed differences in occupations, descriptions, and personality traits due to social gender and racial biases across both visual and language modalities. Building on this line of work Bai et al. (2024), where implicit bias is defined as systematic and unconscious associations embedded in model behavior, we extend this notion to the aesthetic domain."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "We define aesthetic bias as a form of subtle bias in which aesthetic judgments consistently correlate with identity attributes such as gender, age, or education, even when the image content remains unchanged. These correlations may result from skewed training distributions or inductive biases in model architecture. We focus on aesthetic biases that emerge when MLLMs evaluate images conditioned on identity information, examining stereotype bias across demographic groups and assessing whether model outputs align with or distort corresponding human aesthetic preferences."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Methodology"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Preliminaries"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "This section introduces our definition and design of bias quantification when MLLMs applied to personalized image aesthetic assessment labeling. Our overall framework is illustrated in Figure 2, and the detailed prompt design can be found in the Appendix A. Basically, the bias quantification problem includes four components: the image to be assessed ⟦SLOT_3⟧, the specific assessment task ⟦SLOT_4⟧, the specific identity ⟦SLOT_5⟧ and the MLLM ⟦SLOT_6⟧ used for quality assessment. For task ⟦SLOT_7⟧, we can collect the response ⟦SLOT_8⟧ from the MLLM as follows:"
+  },
+  {
+   "id": "b0028",
+   "t": "keep",
+   "w": "table",
+   "en": "M ⁡ ( i , t , g ) = k , M(i,t,g)=k, (1)"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_9⟧ and ⟦SLOT_10⟧. Specifically, ⟦SLOT_11⟧ is the model output, ⟦SLOT_12⟧ denotes the output format set, and ⟦SLOT_13⟧ is the identity group, respectively."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "Following Huang et al. (2024b), we focus on three assessment tasks, including Aesthetic Perception which representing the perceived quality of the image, Aesthetic Assessment which representing the subjective aesthetic appeal of the image, and Aesthetic Empathy which capturing the emotional response evoked by the image. Formally, ⟦SLOT_14⟧."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "Take PARA database (Yang et al., 2022) as an example, we define the output format set ⟦SLOT_15⟧ for each of the three tasks. For Aesthetic Perception and Aesthetic Assessment, ⟦SLOT_16⟧. For Aesthetic Empathy, ⟦SLOT_17⟧."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "We define identity group set ⟦SLOT_18⟧ containing three categories, i.e., ⟦SLOT_19⟧ and ⟦SLOT_20⟧. Then, we divide the individuals into different identities ⟦SLOT_21⟧ in each group category ⟦SLOT_22⟧. For age group, ⟦SLOT_23⟧. For education group, ⟦SLOT_24⟧. For gender group, ⟦SLOT_25⟧."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "Following the setting in the previous work Yang et al. (2022), we evaluate the bias among different image types ⟦SLOT_26⟧, where the image type set ⟦SLOT_27⟧ and ⟦SLOT_28⟧."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Quantifying Bias"
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "To analyze stereotype bias, we propose two metrics: Identity Frequency Disparity (IFD) and Normalized Representation Disparity (NRD). IFD measures differences in how often the model assigns specific aesthetic evaluations ⟦SLOT_29⟧ to various identity groups. This metric quantifies disparities in frequency, revealing potential biases in how different identities are assessed. NRD examines the model’s preferences and emotional responses toward different types of images across identities. By normalizing for baseline differences in representation, NRD captures variations in the model’s perceptions and affective reactions that may indicate bias. Together, these metrics provide a structured approach to identify and quantify stereotype bias in the model’s behavior. Both IFD and NRD measure deviations from demographic parity. For unbiased case:"
+  },
+  {
+   "id": "b0036",
+   "t": "keep",
+   "w": "table",
+   "en": "P ⁡ ( M ⁡ ( i , t , g ) = k ) \\displaystyle P\\!\\big(M(i,t,g)=k\\big) = P ⁡ ( M ⁡ ( i , t ) = k ) , \\displaystyle=P\\!\\big(M(i,t)=k\\big), (2)"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_30⟧ and ⟦SLOT_31⟧ is the identity group. It means that the output distributions are the same for input prompt with and without specific identity ⟦SLOT_32⟧."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "For Identity Frequency Disparity (IFD), it’s based on total variation distance:"
+  },
+  {
+   "id": "b0039",
+   "t": "keep",
+   "w": "table",
+   "en": "IFD ​ ( t ) = 1 n Φ × n O ​ ∑ k ∈ O ∑ G ∈ Φ ∑ g ∈ G | p g , k − p G , k | , \\text{IFD}(t)=\\frac{1}{n_{\\Phi}\\times n_{O}}\\sum_{k\\in O}\\sum_{G\\in\\Phi}\\sum_{g\\in G}{\\left|p_{g,k}-p_{G,k}\\right|}, (3)"
+  },
+  {
+   "id": "b0040",
+   "t": "keep",
+   "w": "table",
+   "en": "p g , k = n ⁡ ( M ⁡ ( i , t , g ) = k ) ∑ r = 1 n O n ⁡ ( M ⁡ ( i , t , g ) = r ) , p_{g,k}=\\frac{n(M(i,t,g)=k)}{\\sum_{r=1}^{n_{O}}n(M(i,t,g)=r)}, (4)"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_33⟧ represents the proportion of choice ⟦SLOT_34⟧ in all choices made by the identity ⟦SLOT_35⟧ and ⟦SLOT_36⟧ denotes the number of times the model outputs ⟦SLOT_37⟧. ⟦SLOT_38⟧ represents the proportion of choice ⟦SLOT_39⟧ in all choices made by the all identities in the group ⟦SLOT_40⟧. ⟦SLOT_41⟧ is the number of identities in category ⟦SLOT_42⟧, ⟦SLOT_43⟧ is the number of group categories, and ⟦SLOT_44⟧ is the number of the output choices. The core component is: ⟦SLOT_45⟧. It measures the absolute deviation between the group-specific and the overall output distributions. This term satisfies non-negativity (⟦SLOT_46⟧), which is 0 only if perfect demographic parity holds, i.e., the probability of each output ⟦SLOT_47⟧ is the same across all identity groups."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "The Normalized Representation Disparity (NRD) measures the disparities in the MLLM output ⟦SLOT_48⟧ between different specific identities ⟦SLOT_49⟧ for a given task ⟦SLOT_50⟧, where ⟦SLOT_51⟧, normalized by the total sentiment for each output ⟦SLOT_52⟧ across the identity group. For unbiased case:"
+  },
+  {
+   "id": "b0043",
+   "t": "keep",
+   "w": "table",
+   "en": "P ⁡ ( g ∣ M ⁡ ( i , t ) = k , type ​ ( i ) = m ) = 1 n G , \\displaystyle P(g\\mid M(i,t)=k,\\,\\text{type}(i)=m)=\\tfrac{1}{n_{G}}, (5)"
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "which means different identities have the same preference distribution for a certain type of image."
+  },
+  {
+   "id": "b0045",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0046",
+   "t": "keep",
+   "w": "equation",
+   "en": ""
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Left: IFD scores heatmap across a diverse set of models. Right: Radar chart of IFD scores for InternVL-2.5 series models, showing variations by model size. A higher IFD indicates a greater degree of stereotype bias."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "NRD measures the deviation from this target. It is defined as:"
+  },
+  {
+   "id": "b0049",
+   "t": "keep",
+   "w": "table",
+   "en": "NRD ​ ( t ) = 1 n O ​ ∑ k ∈ O 1 n G ​ ∑ g ∈ G ∑ m ∈ Ω ( q g , k , m − 1 n G ) 2 , \\text{NRD}(t)=\\frac{1}{n_{O}}\\sum_{k\\in O}\\sqrt{\\frac{1}{n_{G}}\\sum_{g\\in G}\\sum_{m\\in\\Omega}\\left(q_{g,k,m}-\\frac{1}{"
+  },
+  {
+   "id": "b0050",
+   "t": "keep",
+   "w": "table",
+   "en": "q g , k , m = n ⁡ ( M ⁡ ( i , t , g ) = k | m ) ∑ h = 1 n G n ⁡ ( M ⁡ ( i , t , h ) = k | m ) , q_{g,k,m}=\\frac{n(M(i,t,g)=k|m)}{\\sum_{h=1}^{n_{G}}n(M(i,t,h)=k|m)}, (7)"
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_54⟧ is the number of times the model outputs ⟦SLOT_55⟧ for the task ⟦SLOT_56⟧ and the specific identity ⟦SLOT_57⟧ within image type ⟦SLOT_58⟧ (⟦SLOT_59⟧). Like IFD, NRD satisfies non-negativity (⟦SLOT_60⟧) which is 0 only if conditional demographic parity holds, meaning that for every output class ⟦SLOT_61⟧ and image type ⟦SLOT_62⟧, all identity groups appear with equal frequency in the outputs."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Alignment Evaluation"
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate the extent to which the biased outputs of MLLMs align with the aesthetic judgments of human users from corresponding demographic groups. This analysis focuses on measuring how closely model outputs reflect real human preferences, providing a complementary perspective on the effects of stereotype bias. We conduct this evaluation from two perspectives:"
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "li",
+   "en": "• We examine which demographic groups the model’s aesthetic judgments are more aligned with its default or pre-trained aesthetic preferences. This focuses on identifying whether the model shows a stronger bias towards certain groups when no specific identity is specified."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "li",
+   "en": "• We explore which demographic groups the model’s aesthetic judgments align more closely with human aesthetic preferences, when given the identity information explicitly. This helps identify whether the model’s outputs reflect the actual preferences of different identity groups."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "To measure the similarity between two outputs, we compute the similarity score using the Jensen-Shannon Divergence. Let ⟦SLOT_63⟧ and ⟦SLOT_64⟧ represent the model’s outputs for images from groups ⟦SLOT_65⟧ and ⟦SLOT_66⟧ where ⟦SLOT_67⟧. To compute the JS divergence, we first map the discrete aesthetic choices in ⟦SLOT_68⟧ to probability distributions using a one-hot encoding scheme, obtaining ⟦SLOT_69⟧ and ⟦SLOT_70⟧. The JS divergence between ⟦SLOT_71⟧ and ⟦SLOT_72⟧ can then be calculated as:"
+  },
+  {
+   "id": "b0057",
+   "t": "keep",
+   "w": "table",
+   "en": "JS ( E g ∥ E h ) = 1 2 [ KL ( E g ∥ E ¯ ) + KL ( E h ∥ E ¯ ) ] , \\displaystyle\\text{JS}(E_{g}\\!\\parallel\\!E_{h})=\\frac{1}{2}\\left[\\text{KL}(E_{g}\\!\\parallel\\!\\bar{E})\\!+\\!\\text{KL}(E_{h}\\!\\parallel\\!\\"
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_73⟧ is the average distribution of ⟦SLOT_74⟧ and ⟦SLOT_75⟧, ⟦SLOT_76⟧. The Kullback-Leibler (KL) divergence KL is given by:"
+  },
+  {
+   "id": "b0059",
+   "t": "keep",
+   "w": "table",
+   "en": "KL ( E ∥ E ¯ ) \\displaystyle\\text{KL}(E\\parallel\\bar{E}) = ∑ j E ⁡ ( j ) ​ log ⁡ ( E ⁡ ( j ) E ¯ ​ ( j ) ) . \\displaystyle=\\sum_{j}E(j)\\log\\left(\\frac{E(j)}{\\bar{E}(j)}\\right). (9)"
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "To evaluate the alignment, we define the similarity score as:"
+  },
+  {
+   "id": "b0061",
+   "t": "keep",
+   "w": "table",
+   "en": "S ( g ) = 1 − JS ( E g ∥ E h ) , S(g)=1-\\text{JS}(E_{g}\\parallel E_{h}), (10)"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "and the Aesthetic Alignment Score (AAS) is defined as follows:"
+  },
+  {
+   "id": "b0063",
+   "t": "keep",
+   "w": "table",
+   "en": "AAS ​ ( g ) = S ​ ( g ) − S ¯ , \\text{AAS}(g)=S(g)-\\bar{S}, (11)"
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_77⟧ is the similarity score of the current identity ⟦SLOT_78⟧ and ⟦SLOT_79⟧ is the mean similarity score of all ⟦SLOT_80⟧ within the category ⟦SLOT_81⟧."
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "This metric is designed to compare the relative accuracy across different demographic groups, highlighting potential disparities in the model’s ability to align with human aesthetic evaluations."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Experiments"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Experimental Setup"
+  },
+  {
+   "id": "b0068",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0069",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Left: NRD scores for age, gender, and education across three tasks. Right: ⟦SLOT_82⟧ scores of fear emotion from different groups for the aesthetic empathy task in Claude-3.5-Sonnet, illustrating stereotype bias."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "Dataset. In our experiments, we investigate bias in three identity dimensions: gender, age, and education. Each dimension is specifically chosen to investigate societal biases in aesthetic perceptions toward the respective groups. We perform extensive testing on a well-established dataset for personalized image aesthetic assessment (Yang et al., 2022), the Personalized Image Aesthetics Database with Rich Attributes (PARA). PARA comprises 31,220 images annotated by 438 human raters with rich feature annotations. Built upon it, we generate three types of task evaluations for the 31,220 images: aesthetic perception, aesthetic assessment, and emotional perception. For aesthetic perception and aesthetic assessment, the scores in PARA range from 1 to 5. The three tasks are evaluated by IFD, NRD, AAS, and similarity score to examine both stereotype bias and aesthetic alignment."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "To consider the diversity of the PIAA database, we also evaluate on the Leuven Art Personalized Image Set (LAPIS) (Maerten et al., 2025), which contains 11,723 artistic images scored on a 0–100 scale by an average of 24 annotators (552 participants in total) and provides demographic metadata (age, gender, nationality, education, and art interest) for finer analysis under controlled conditions. Results on LAPIS are reported in the Appendix B."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "To align with human raters, we convert continuous scores into discrete rating levels. In AesBiasBench, this ensures consistency with the output formats ⟦SLOT_83⟧ and facilitates fair comparisons between model outputs and human judgments. For Aesthetic Perception and Aesthetic Assessment, we adopt equidistant intervals to convert scores into rating levels by mapping ⟦SLOT_84⟧ as in Wu et al. (2023), which is to uniformly divide the range between the highest score (⟦SLOT_85⟧) and lowest score (⟦SLOT_86⟧) into three distinct intervals. For the score ⟦SLOT_87⟧ in the dataset:"
+  },
+  {
+   "id": "b0074",
+   "t": "keep",
+   "w": "table",
+   "en": "L ⁡ ( s ) = l j L(s)=l_{j} (12)"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_88⟧, and ⟦SLOT_89⟧. Take the PARA database as an example, ⟦SLOT_90⟧ and ⟦SLOT_91⟧, while for the LAPIS dataset, ⟦SLOT_92⟧ and ⟦SLOT_93⟧."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "p",
+   "en": "Models. In this work, we investigate a diverse set of models, including InternVL2.5 (1B, 2B, 4B, 8B, 26B, 38B) Chen et al. (2024b); Chen et al. (2024c); Chen et al. (2024d), Qwen2.5-VL (3B, 7B) Yang et al. (2024), LLaVA-v1.5 (7B) Liu et al. (2023b), LLaVA-v1.6-vicuna (7B) Liu et al. (2023a), Llama-3.2-Vision (11B) Grattafiori et al. (2024), mPLUG-Owl3 (7B) Ye et al. (2024), Mono-InternVL (2B) Luo et al. (2024), Phi-3.5-Vision (4B) Abdin et al. (2024), GLM-4V (9B) GLM et al. (2024), and DeepSeek-VL2 (7B) Wu et al. (2024b). We also include closed-source models such as Claude-3.5-Sonnet, Gemini-2.0-flash, and GPT-4o in our analysis. This selection enables systematic evaluation of biases across architectures and scales. With this setup, we can compare bias variations within a model series across sizes and between models of similar sizes. These comparisons provide insights into how architecture, scale, and training paradigms influence bias."
+  },
+  {
+   "id": "b0077",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: AAS of the model on three tasks without identity information, showing the two most common identity patterns for each task. ⟦SLOT_94⟧, ⟦SLOT_95⟧, and ⟦SLOT_96⟧ represent groups by gender, age, and education, respectively."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Stereotype Bias Analysis"
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "h4",
+   "en": "4.2.1 Existence of Bias in MLLMs"
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "We quantify stereotype bias in MLLMs performing PIAA using two metrics: Identity Fairness Deviation (IFD) and Normalized Response Deviation (NRD). The heatmap in Figure 3 shows the IFD scores across multiple models, indicating substantial identity-related biases, where higher IFD values reflect stronger bias. Among these, the InternVL2.5 model series consistently shows lower IFD values, suggesting better fairness across demographic identities."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "Additionally, Figure 4 (left) illustrates NRD scores, confirming strong biases, particularly evident in empathy-driven aesthetic tasks. Gender is consistently identified as a major influencing factor, with notably higher NRD scores across all evaluated models. This emphasizes significant differences in the emotional perception of images among different demographic groups."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "To further illustrate this, Figure 4 right provides a detailed example using Claude-3.5-Sonnet in the empathy task. The model predicts that younger individuals, those with lower educational attainment, and females are more likely to exhibit fear responses. These results suggest that advanced models encode systematic differences across demographic groups in emotional aesthetic judgment, reinforcing the presence of subtle yet persistent stereotypical biases in MLLMs."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "h4",
+   "en": "4.2.2 Impact of Model Size on Bias"
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "p",
+   "en": "The radar chart in Figure 3 right shows the IFD scores across the InternVL2.5 series. The results reveal a clear inverse relationship between model size and stereotype bias: as the model size increases from 1B to 38B, the IFD scores consistently decrease. InternVL2.5-1B shows the highest level of bias, followed by 2B, 4B, and 8B, with each larger model displaying progressively lower bias. The largest models, 26B and 38B, yield the most stable and fair outputs. This trend indicates that identity-related bias decreases consistently with increasing model size."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "This pattern is not limited to the InternVL2.5 series. Similar trends are observed in other model families, where smaller variants consistently exhibit higher IFD scores than their larger counterparts, indicating stronger stereotype bias. While this may appear to reflect the effect of model capacity alone, it is likely influenced by differences in training data scale and diversity as well. Larger models are often trained on broader and more balanced datasets, which may provide better coverage of identity-related variations and contribute to more equitable outputs."
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: AAS of the model on three tasks with identity information, showing the two most common identity patterns for each task. ⟦SLOT_97⟧, ⟦SLOT_98⟧, and ⟦SLOT_99⟧ represent groups by gender, age, and education, respectively."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Aesthetic Alignment Analysis"
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "h4",
+   "en": "4.3.1 Default Aesthetic Preferences of Models"
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "p",
+   "en": "We begin by analyzing the default aesthetic alignment of MLLMs when no identity information is provided in the prompt. Using the Aesthetic Alignment Score (AAS), we measure the similarity between model outputs and the aesthetic preferences of different demographic groups across the three tasks."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "The heatmap and radar plots in Figure 5 and summary statistics in Table 1 reveal clear and consistent demographic biases across tasks. All three tasks show a strong alignment with female aesthetic preferences, with 17 out of 19 models exhibiting this pattern. In terms of age, the 22–25 group dominates in Perception and Assessment, while Empathy shows a shift toward the younger 18–21 group. Educational alignment is more task-specific. The most consistent pattern appears in the Assessment task, where nearly all models align with the same group: female, aged 22–25, with a university education."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "Task-specific patterns also emerge. As shown in Figure 5, the points in the radar plot for the Empathy task are more tightly clustered, indicating that the AAS values are generally lower compared to the other tasks. This aligns with the observation in Figure 3, where the Empathy task also exhibits lower IFD values. Together, these results show that the default models are fairer in the Empathy task and exhibit weaker alignment with human aesthetic preferences."
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "table",
+   "en": "Perception Assessment Empathy Gender female (17) female (17) female (17) Age 22_25 (12) 22_25 (17) 18_21 (8) Education Tech (7) University (17) Junior (7)"
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: The number of models exhibiting the highest AAS with different demographic groups across three tasks. The table summarizes results from 19 models."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "h4",
+   "en": "4.3.2 Sensitivity to Identity in Aesthetic Preferences"
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "To further examine how identity information influences aesthetic alignment, we analyze the consistency of identity patterns across tasks after explicitly including demographic attributes in the prompts."
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "table",
+   "en": "Perception Assessment Empathy Gender female (15) female (14) male (17) Age 22_25 (10) 22_25 (15) 30_34 (8) Education Junior (7) University (10) University (6)"
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: The number of models exhibiting the highest AAS with different demographic groups across three tasks when explicit identity attributes are provided. The table summarizes results from 19 models."
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Figure 6 and summary statistics in Table 2, adding explicit identity information reduces the number of models that share the same dominant aesthetic pattern. This shift reflects that model outputs are sensitive to demographic descriptors, indicating the absence of neutral or identity-invariant behavior. It indicates that aesthetic outputs are systematically influenced by identity descriptors, revealing latent social biases in the models."
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "p",
+   "en": "In particular, Table 2 shows a striking shift in the Empathy task: 17 models align with male identities, which is a complete reversal from the identity-agnostic setting, where 17 models had aligned with female. Table 3 illustrates this bias sensitivity, showing increased alignment with male preferences when gender is added."
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Δ \\Delta S E S_{E} (M) Δ \\Delta S E S_{E} (F) Δ \\Delta GPT-4o 0.0395 -0.0748 0.1143 Claude-3.5-Sonnet 0.1180 -0.1166 0.2346 Gemini-2.0-Flash 0.0274 -0.3780 0.4054 DeepSeek-VL2 -0.0535 -0.0749 0."
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: ⟦SLOT_100⟧(M) and ⟦SLOT_101⟧(F) denote the changes in similarity scores between the model outputs and the aggregated aesthetic preferences of male and female annotators, respectively, when comparing prompts without and with gender identity in the empathy task. ⟦SLOT_102⟧ represents the incremental gain of male over female, computed as ⟦SLOT_103⟧(M) ⟦SLOT_104⟧ ⟦SLOT_105⟧(F). The top 3 highest and lowest ⟦SLOT_106⟧ values are highlighted using soft red and blue gradients."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Table 3, most models show a greater increase in similarity to male preferences after gender is specified, indicating higher sensitivity to male identity. Instead of exposing more balanced behavior, the inclusion of gender information reveals stronger model bias, with responses becoming more aligned to male-associated aesthetic patterns—a deviation possibly reflecting differences in training data composition or architectural design."
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Conclusion"
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "p",
+   "en": "This paper introduced AesBiasBench, a benchmark for evaluating biases in MLLMs on PIAA tasks. To quantify stereotype bias, we proposed two metrics: IFD and NRD. In addition, we used the AAS to measure how model outputs correspond to human aesthetic preferences across demographic groups. Key findings include: (1) Stereotype bias is prevalent across models, with smaller models showing more pronounced deviations and larger models exhibiting lower IFD and NRD scores, indicating increased fairness with scale. (2) Model outputs align disproportionately with certain demographic groups, notably, female individuals aged 22–25 with a university education, even when identity information is not provided. (3) Adding identity descriptors amplifies existing biases, as shown in the empathy task where alignment shifts more strongly toward male preferences, revealing heightened sensitivity to demographic cues rather than neutrality. These results highlight the importance of identity-aware evaluation and point to the need for fairness-oriented design in future MLLMs used for subjective and socially-influenced tasks."
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Discussion"
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "p",
+   "en": "Our focus is to benchmark and identify bias, which could lead to actionable mitigation. The proposed metrics (IFD, NRD, AAS) offer a structured way to quantify which demographic groups are favored or underrepresented. With known bias direction and magnitude, targeted strategies can be applied, which make the mitigation process efficient and transparent. Here we introduce several mitigation strategies"
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "p",
+   "en": "The first is concept editing, which adjusts model representations to weaken associations between aesthetic preferences and demographic attributes Yao et al. (2023). Known bias direction could help us determine which concept we should edit. Another approach is data re-balancing Maudslay et al. (2019), where training data is reweighted or augmented to achieve more equitable demographic representation. For instance, as shown in Figure 4 (right), the model associates the emotion “fear” more strongly with female, junior-high-educated, and younger individuals, suggesting a demographic-specific bias. Balancing the dataset in this context could involve enriching underrepresented groups in the “fear” category to counteract skewed associations. In addition, fairness-aware post-training Yang et al. (2023) can be applied using regularization terms informed by our metrics. These techniques aim to reduce representational disparities while preserving core model capabilities."
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "p",
+   "en": "However, in some application contexts, we may indeed want models to behave differently for different demographic groups. For example, personalization is desired for a recommendation system. Alignment with group-specific preferences is necessary. Our benchmark’s AAS metric is designed to evaluate the degree of alignment between model outputs and human preferences. The fairness and alignment is dual-used and need to be considered together depending on the downstream use case."
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "h2",
+   "en": "Limitations"
+  },
+  {
+   "id": "b0112",
+   "t": "text",
+   "w": "p",
+   "en": "Our AesBiasBench evluates existing MLLMs along two complementary axes: (1) stereotype bias and (2) human preference alignment. To make the results more reliable, we indentify two possible limitations:"
+  },
+  {
+   "id": "b0113",
+   "t": "text",
+   "w": "p",
+   "en": "First, the analysis is restricted to three identity attributes: age, gender, and education. While these dimensions capture important aspects of demographic variation, other factors, such as culture, race, and religion, may also influence aesthetic preferences and model behavior. Incorporating a broader range of identity dimensions could enable a more comprehensive understanding of demographic bias in MLLMs."
+  },
+  {
+   "id": "b0114",
+   "t": "text",
+   "w": "p",
+   "en": "Second, we evaluate 19 MLLMs, including proprietary models (e.g., GPT-4o, Claude-3.5-Sonnet) and open-source models (e.g., InternVL2.5 and Qwen2.5-VL series). While this selection spans a range of model families and sizes, future work could explore a broader set of architectures, training strategies, and deployment contexts, which may reveal additional forms of bias or alternative alignment."
+  },
+  {
+   "id": "b0115",
+   "t": "text",
+   "w": "h2",
+   "en": "Ethics"
+  },
+  {
+   "id": "b0116",
+   "t": "text",
+   "w": "p",
+   "en": "In this study, we constructed AesBiasBench using the publicly accessible Personalized Image Aesthetics Database with Rich Attributes (PARA). No original data collection was conducted; all analyses relied solely on pre-existing dataset resources. To the best of our knowledge, the PARA dataset was developed in strict adherence to academic and scientific data collection protocols, ensuring compliance with ethical standards for research involving human subjects."
+  },
+  {
+   "id": "b0117",
+   "t": "text",
+   "w": "p",
+   "en": "Our research does not involve any personally identifiable information (PII) or process private/sensitive user data. The demographic attributes utilized (e.g., age groups, gender, education levels) are provided in the PARA dataset as anonymized and aggregated metadata, with no individual-level data accessible. This design ensures that no participant can be re-identified through the study’s analyses."
+  },
+  {
+   "id": "b0118",
+   "t": "text",
+   "w": "p",
+   "en": "The core objective of this research is to systematically uncover and characterize biased behaviors of multimodal large language models (MLLMs) in personalized aesthetic judgment tasks. By quantifying demographic disparities in model outputs, we aim to foster greater awareness within the research community and contribute to the development of more equitable, transparent, and socially accountable AI systems. Our work aligns with the broader ethical imperative to promote fairness in machine learning, particularly in applications impacting human values and societal norms."
+  },
+  {
+   "id": "b0119",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abdin et al. (2024) Marah Abdin, Jyoti Aneja, Hany Awadalla, Ahmed Awadallah, Ammar Ahmad Awan, Nguyen Bach, Amit Bahree, Arash Bakhtiari, Jianmin Bao, Harkirat Behl, and 1 others. 2024. Phi-3 technic"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Achiam et al. (2023) Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia Leoni Aleman, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shyamal Anadkat, and 1 others. 2023. G"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Alayrac et al. (2022) Jean-Baptiste Alayrac, Jeff Donahue, Pauline Luc, Antoine Miech, Iain Barr, Yana Hasson, Karel Lenc, Arthur Mensch, Katherine Millican, Malcolm Reynolds, and 1 others. 2022. Flam"
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al. (2024) Xuechunzi Bai, Angelina Wang, Ilia Sucholutsky, and Thomas L Griffiths. 2024. Measuring implicit bias in explicitly unbiased large language models. arXiv preprint arXiv:2402.04105 ."
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024a) Dongping Chen, Ruoxi Chen, Shilin Zhang, Yinuo Liu, Yaochen Wang, Huichi Zhou, Qihui Zhang, Yao Wan, Pan Zhou, and Lichao Sun. 2024a. Mllm-as-a-judge: Assessing multimodal llm-as-a"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024b) Zhe Chen, Weiyun Wang, Yue Cao, Yangzhou Liu, Zhangwei Gao, Erfei Cui, Jinguo Zhu, Shenglong Ye, Hao Tian, Zhaoyang Liu, and 1 others. 2024b. Expanding performance boundaries of op"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024c) Zhe Chen, Weiyun Wang, Hao Tian, Shenglong Ye, Zhangwei Gao, Erfei Cui, Wenwen Tong, Kongzhi Hu, Jiapeng Luo, Zheng Ma, and 1 others. 2024c. How far are we to gpt-4v? closing the g"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024d) Zhe Chen, Jiannan Wu, Wenhai Wang, Weijie Su, Guo Chen, Sen Xing, Muyan Zhong, Qinglong Zhang, Xizhou Zhu, Lewei Lu, and 1 others. 2024d. Internvl: Scaling up vision foundation mod"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cui et al. (2020) Chaoran Cui, Wenya Yang, Cheng Shi, Meng Wang, Xiushan Nie, and Yilong Yin. 2020. Personalized image quality assessment with social-sensed aesthetic preference. Information Sciences "
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Deng et al. (2017) Yubin Deng, Chen Change Loy, and Xiaoou Tang. 2017. Image aesthetic assessment: An experimental survey. IEEE Signal Processing Magazine , 34(4):80–106."
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dhamala et al. (2021) J Dhamala, T Sun, V Kumar, S Krishna, Y Pruksachatkun, K-W Chang, and R Gupta. 2021. Bold: Dataset and metrics for measuring biases in open-ended language generation. In Proceedi"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dhar et al. (2011) Sagnik Dhar, Vicente Ordonez, and Tamara L Berg. 2011. High level describable attributes for predicting aesthetics and interestingness. In CVPR 2011 , pages 1657–1664. IEEE."
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dige et al. (2024) Omkar Dige, Diljot Singh, Tsz Fung Yau, Qixuan Zhang, Borna Bolandraftar, Xiaodan Zhu, and Faiza Khan Khattak. 2024. Mitigating social biases in language models through unlearning. "
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gallegos et al. (2024) Isabel O Gallegos, Ryan A Rossi, Joe Barrow, Md Mehrab Tanjim, Sungchul Kim, Franck Dernoncourt, Tong Yu, Ruiyi Zhang, and Nesreen K Ahmed. 2024. Bias and fairness in large lang"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "GLM et al. (2024) Team GLM, Aohan Zeng, Bin Xu, Bowen Wang, Chenhui Zhang, Da Yin, Diego Rojas, Guanyu Feng, Hanlin Zhao, Hanyu Lai, Hao Yu, Hongning Wang, Jiadai Sun, Jiajie Zhang, Jiale Cheng, Jiayi"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Grattafiori et al. (2024) Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Alex Vaughan, and 1 others. 2"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Guo et al. (2022) Yue Guo, Yi Yang, and Ahmed Abbasi. 2022. Auto-debias: Debiasing masked language models with automated biased prompts. In Proceedings of the 60th Annual Meeting of the Association fo"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hou et al. (2022) Jingwen Hou, Weisi Lin, Guanghui Yue, Weide Liu, and Baoquan Zhao. 2022. Interaction-matrix based personalized image aesthetics assessment. IEEE Transactions on Multimedia , 25:5263–"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024a) Yipo Huang, Xiangfei Sheng, Zhichao Yang, Quan Yuan, Zhichao Duan, Pengfei Chen, Leida Li, Weisi Lin, and Guangming Shi. 2024a. Aesexpert: Towards multi-modality foundation model "
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024b) Yipo Huang, Quan Yuan, Xiangfei Sheng, Zhichao Yang, Haoning Wu, Pengfei Chen, Yuzhe Yang, Leida Li, and Weisi Lin. 2024b. Aesbench: An expert benchmark for multimodal large langu"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jiang et al. (2024) Yukun Jiang, Zheng Li, Xinyue Shen, Yugeng Liu, Michael Backes, and Yang Zhang. 2024. Modscan: Measuring stereotypical bias in large vision-language models from vision and language"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kumar et al. (2024) Abhishek Kumar, Sarfaroz Yunusov, and Ali Emami. 2024. Subtle biases need subtler measures: Dual metrics for evaluating representative and affinity bias in large language models. a"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024a) Cheng Li, Mengzhuo Chen, Jindong Wang, Sunayana Sitaram, and Xing Xie. 2024a. Culturellm: Incorporating cultural differences into large language models. arXiv preprint arXiv:2402.109"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024b) Cheng Li, Damien Teney, Linyi Yang, Jindong Wang, Qingsong Wen, Xing Xie, and Jindong Wang. 2024b. Culturepark: Boosting cross - cultural understanding in large language models. arXi"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2025) Weiqi Li, Xuanyu Zhang, Shijie Zhao, Yabin Zhang, Junlin Li, Li Zhang, and Jian Zhang. 2025. Q-insight: Understanding image quality via visual reinforcement learning. arXiv preprint a"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lin et al. (2024) Luyang Lin, Lingzhi Wang, Jinsong Guo, and Kam-Fai Wong. 2024. Investigating bias in llm-based bias detection: Disparities between llms and human perception. arXiv preprint arXiv:240"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023a) Haotian Liu, Chunyuan Li, Yuheng Li, and Yong Jae Lee. 2023a. Improved baselines with visual instruction tuning."
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023b) Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. 2023b. Visual instruction tuning. In NeurIPS ."
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Luo et al. (2024) Gen Luo, Xue Yang, Wenhan Dou, Zhaokai Wang, Jiawen Liu, Jifeng Dai, Yu Qiao, and Xizhou Zhu. 2024. Mono-internvl: Pushing the boundaries of monolithic multimodal large language mode"
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Maerten et al. (2025) Anne-Sofie Maerten, Li-Wei Chen, Stefanie De Winter, Christophe Bossens, and Johan Wagemans. 2025. Lapis: A novel dataset for personalized image aesthetic assessment. In Proceedi"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Maudslay et al. (2019) Rowan Hall Maudslay, Hila Gonen, Ryan Cotterell, and Simone Teufel. 2019. It’s all in the name: mitigating gender bias with name-based counterfactual data substitution. arXiv pr"
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Murray et al. (2012) Naila Murray, Luca Marchesotti, and Florent Perronnin. 2012. Ava: A large-scale database for aesthetic visual analysis. In 2012 IEEE conference on computer vision and pattern reco"
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Naous et al. (2023) Tarek Naous, Michael J Ryan, Alan Ritter, and Wei Xu. 2023. Having beer after prayer? measuring cultural bias in large language models. arXiv preprint arXiv:2305.14456 ."
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ren et al. (2017) Jian Ren, Xiaohui Shen, Zhe Lin, Radomir Mech, and David J Foran. 2017. Personalized image aesthetics. In Proceedings of the IEEE international conference on computer vision , pages "
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Smith et al. (2023) Brandon Smith, Miguel Farinha, Siobhan Mackenzie Hall, Hannah Rose Kirk, Aleksandar Shtedritski, and Max Bain. 2023. Balancing the picture: Debiasing vision-language datasets with "
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tamkin et al. (2023) A Tamkin, A Askell, L Lovitt, E Durmus, N Joseph, S Kravec, K Nguyen, J Kaplan, and D Ganguli. 2023. Evaluating and mitigating discrimination in language model decisions. arXiv pr"
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tjuatja et al. (2023) Lindia Tjuatja, Valerie Chen, Sherry Tongshuang Wu, Ameet Talwalkar, and Graham Neubig. 2023. Do llms exhibit human-like response biases? a case study in survey design. arXiv pre"
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2024a) Haoning Wu, Zicheng Zhang, Erli Zhang, Chaofeng Chen, Liang Liao, Annan Wang, Kaixin Xu, Chunyi Li, Jingwen Hou, Guangtao Zhai, and 1 others. 2024a. Q-instruct: Improving low-level v"
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2023) Haoning Wu, Zicheng Zhang, Weixia Zhang, Chaofeng Chen, Liang Liao, Chunyi Li, Yixuan Gao, Annan Wang, Erli Zhang, Wenxiu Sun, and 1 others. 2023. Q-align: Teaching lmms for visual sc"
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2025) Mengyang Wu, Yuzhi Zhao, Jialun Cao, Mingjie Xu, Zhongming Jiang, Xuehui Wang, Qinbin Li, Guangneng Hu, Shengchao Qin, and Chi-Wing Fu. 2025. Icm-assistant: instruction-tuning multimo"
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2024b) Zhiyu Wu, Xiaokang Chen, Zizheng Pan, Xingchao Liu, Wen Liu, Damai Dai, Huazuo Gao, Yiyang Ma, Chengyue Wu, Bingxuan Wang, and 1 others. 2024b. Deepseek-vl2: Mixture-of-experts visio"
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xu et al. (2025) Mingjie Xu, Mengyang Wu, Yuzhi Zhao, Jason Chun Lok Li, and Weifeng Ou. 2025. Llava-spacesgg: Visual instruct tuning for open-vocabulary scene graph generation with enhanced spatial r"
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2024) An Yang, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chengyuan Li, Dayiheng Liu, Fei Huang, Haoran Wei, Huan Lin, Jian Yang, Jianhong Tu, Jianwei Zhang, Jianxin Ya"
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2023) Ke Yang, Charles Yu, Yi R Fung, Manling Li, and Heng Ji. 2023. Adept: A debiasing prompt framework. In Proceedings of the AAAI conference on artificial intelligence , volume 37, pag"
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2022) Yuzhe Yang, Liwu Xu, Leida Li, Nan Qie, Yaqian Li, Peng Zhang, and Yandong Guo. 2022. Personalized image aesthetics assessment with rich attributes. In Proceedings of the IEEE/CVF C"
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yao et al. (2023) Yunzhi Yao, Peng Wang, Bozhong Tian, Siyuan Cheng, Zhoubo Li, Shumin Deng, Huajun Chen, and Ningyu Zhang. 2023. Editing large language models: Problems, methods, and opportunities. a"
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ye et al. (2024) Jiabo Ye, Haiyang Xu, Haowei Liu, Anwen Hu, Ming Yan, Qi Qian, Ji Zhang, Fei Huang, and Jingren Zhou. 2024. mplug-owl3: Towards long image-sequence understanding in multi-modal large "
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yi et al. (2023) Ran Yi, Haoyuan Tian, Zhihao Gu, Yu-Kun Lai, and Paul L Rosin. 2023. Towards artistic image aesthetics assessment: a large-scale dataset and a new method. In Proceedings of the IEEE/C"
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zangwill (2003) Nick Zangwill. 2003. Aesthetic judgment."
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhou et al. (2024) Zhaokun Zhou, Qiulin Wang, Bin Lin, Yiwei Su, Rui Chen, Xin Tao, Amin Zheng, Li Yuan, Pengfei Wan, and Di Zhang. 2024. Uniaa: A unified multi-modal image aesthetic assessment baseli"
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2023) Deyao Zhu, Jun Chen, Xiaoqian Shen, Xiang Li, and Mohamed Elhoseiny. 2023. Minigpt-4: Enhancing vision-language understanding with advanced large language models. arXiv preprint arXi"
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2020) Hancheng Zhu, Leida Li, Jinjian Wu, Sicheng Zhao, Guiguang Ding, and Guangming Shi. 2020. Personalized image aesthetics assessment via meta-learning with bilevel gradient optimizatio"
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Prompt Description"
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "p",
+   "en": "We use a structured prompt design with two variants: a default version without demographic information and a personalized version that inserts the demographic cue at the opening clause (“As a [demographic], please …”). The task description and response format remain fixed across variants, so differences in outputs can be attributed to demographic conditioning rather than wording."
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "p",
+   "en": "For each image, we query one of three tasks."
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "p",
+   "en": "The same textual structure and the same image input are used across models, tasks, and demographic conditions to ensure consistent evaluation. The default (non-personalized) version is obtained by removing the leading clause “As a [demographic], …” while keeping the rest unchanged."
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Extended Evaluation"
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: IFD and NRD values across models. InternVL-2.5 variants are grouped together, with Qwen2.5-VL-7B and Q-Insight shown separately. Note: For InternVL-2.5, the IFD score monotonically decreases as model size increases (2B ⟦SLOT_107⟧ 38B). Shading on the IFD row encodes magnitude (darker = larger)."
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "table",
+   "en": "InternVL-2.5 Qwen2.5-VL-7B Q-Insight 2B 4B 8B 26B 38B IFD value 0.4651 0.4437 0.3560 0.2857 0.2020 1.1518 0.6160 NRD Age 0.530 0.154 0.076 0.126 0.336 0.566 0.503 Gender 0.648 0.303 0.318 0.225 0.468 "
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Top-aligned demographic groups with corresponding AAS (in parentheses). InternVL-2.5 models are shown under one block, while Qwen2.5-VL-7B and Q-Insight are listed separately. Abbreviations: edu = education level {B = Bachelor, M = Master, D = Doctorate, P = Primary, S = Secondary}; geo = geographic region {EU = Europe, OC = Oceania}. The highest AAS in each row is highlighted in gray."
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "table",
+   "en": "InternVL-2.5 Qwen2.5-VL-7B Q-Insight 2B 4B 8B 26B 38B Default edu B (0.815) B (0.686) D (0.595) B (0.696) B (0.818) P (0.629) B (0.724) geo EU (0.760) EU (0.706) OC (0.638) EU (0.726) EU (0.838) OC (0"
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate on diverse datasets to demonstrate the generalizability of our findings. We extended our evaluation beyond PARA to the Leuven Art Personalized Image Set Maerten et al. (2025) (LAPIS), a dataset of 11,723 artistic images rated on a 0–100 scale by an average of 24 annotators, with a total of 552 participants. LAPIS includes detailed demographic metadata such as age, gender, nationality, education, and art interest, enabling more fine-grained analysis under controlled conditions. We evaluated the proposed metrics IFD, NRD, and AAS on LAPIS using the following models: InternVL2.5 (2B, 4B, 8B, 26B, and 38B), Qwen2.5-VL (7B) and Q-insight Li et al. (2025), a new aesthetic model trained on Qwen2.5-VL (7B) using Group Relative Policy Optimization (GRPO), designed for score prediction and perceptual reasoning with improved generalization from limited annotations. In particular, experiments on LAPIS were conducted under the Aesthetic Assessment task."
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "p",
+   "en": "IFD. Results in Table 4 agree with PARA: within InternVL2.5, IFD decreases with model size (2B ⟦SLOT_108⟧ 38B). Qwen2.5-VL-7B has the highest IFD, indicating strong demographic skew. Q-Insight improves over its base model but still shows moderate bias."
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "p",
+   "en": "NRD. Table 4 also shows NRD by age, gender, geography, and education. The largest disparities are often on gender and age. Qwen2.5-VL-7B and Q-Insight yield higher NRD than most InternVL2.5 models, which indicates broader imbalance even for an aesthetic-focused model."
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "p",
+   "en": "AAS. Table 5 summarizes alignment. Without identity in the prompt, models most often align with users holding a bachelor’s degree and from Europe. Adding identity produces small shifts (for example, some cases move to master’s or to Oceania), but the same dominant groups remain. These outcomes match the trends observed on PARA and show that the findings generalize across datasets and model variants."
+  }
+ ]
+}

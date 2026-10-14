@@ -1,0 +1,2926 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "text",
+   "w": "p",
+   "en": "[Path=figures/fonts/] [Path=figures/fonts/] [Path=figures/fonts/] [Path=figures/fonts/]"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Graphic-Design-Bench: A Comprehensive Benchmark for Evaluating AI on Graphic Design Tasks"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "We introduce GraphicDesignBench (GDB), the first comprehensive benchmark suite designed specifically to evaluate AI models on the full breadth of professional graphic design tasks. Unlike existing ben"
+  },
+  {
+   "id": "b0004",
+   "t": "keep",
+   "w": "table",
+   "en": ""
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "Design shapes how humans interact with the world, from the layout of a webpage to the typography on a billboard, visual communication is embedded in nearly every product, brand, and piece of media we encounter. At its most structured, this manifests as graphic design: a high-dimensional creative task that integrates spatial layout, typography, color theory, brand identity, and communicative intent into a single visual artifact. Recent advances in vision-language models and diffusion-based image generators have raised the prospect of AI systems that can assist human designers [1, 2, 3, 4, 5], yet the evaluation landscape has not kept pace. Existing benchmarks either measure low-level perceptual quality on natural images [6, 7, 8] or probe generic visual question-answering, neither of which captures the structured, intent-driven, and multi-layered nature of professional design work."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "This gap matters because design tasks impose constraints that differ qualitatively from those in natural-image benchmarks, along several dimensions:"
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "li",
+   "en": "• Multi-constraint satisfaction. A promotional banner is not merely an aesthetically pleasing image; it must render specific text strings legibly, respect a typographic hierarchy, place components within an established grid, and communicate a clear call to action, all simultaneously. Evaluating this requires tasks that test each constraint independently and in combination."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "li",
+   "en": "• Design-specific evaluation. Measuring whether a model meets these requirements demands task-specific metrics such as OCR-based readability, bounding-box IoU for component placement, and perceptually uniform color distance for style fidelity, none of which are captured by FID or CLIPScore."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "li",
+   "en": "• Continuously evolving standards. Visual trends shift continuously across cultures, platforms, and time, meaning that what constitutes good design is not a fixed target. A benchmark must account for this moving landscape rather than treating design quality as a static property."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "li",
+   "en": "• Brand and context dependence. Effective design is often deeply tied to a specific brand identity or creative voice. Unlike object recognition or depth estimation, there is rarely a single objectively correct design solution, making standardized evaluation fundamentally harder than in natural-image settings where ground truth is stable and context-independent."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "The latter two challenges represent open problems for the field at large. In this work, we focus on the first two: constructing tasks that jointly stress-test multi-constraint satisfaction and measuring performance with design-native metrics. Together, these form the foundation of GraphicDesignBench (GDB) a benchmark suite comprising 49 tasks that collectively evaluate the full spectrum of design-relevant capabilities. Our contributions are as follows:"
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "li",
+   "en": "1. The first comprehensive benchmark for graphic design AI. We introduce GDB, covering 49 tasks across layout, typography, SVG & vector, and animation, spanning both understanding and generation, and representing the broadest evaluation of AI design capabilities to date."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "li",
+   "en": "2. A layered-composition evaluation framework. By grounding all tasks in the LICA dataset’s [9] full structural metadata (bounding boxes, z-ordering, typography specs, animation properties, SVG source), we enable evaluation settings that are fundamentally impossible with flat raster images, including partial layout completion, layer-aware inpainting, and template variant generation."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "li",
+   "en": "3. Design-native metrics. We introduce a multi-faceted metric taxonomy purpose-built for design evaluation, combining spatial accuracy, typographic fidelity, structural validity, and human-aligned preference, moving beyond the perceptual quality scores (FID, CLIPScore) that dominate existing image benchmarks but fail to capture design-specific requirements."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "li",
+   "en": "4. A reproducible framework for the community. Rather than a static leaderboard, GDB is designed as an extensible evaluation framework. We evaluate three state-of-the-art frontier model families to establish baselines, reveal persistent failure modes shared across all models, and provide a foundation for the community to benchmark future systems, including open-source models."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "The remainder of this paper is organized as follows. Section 2 describes the dataset, evaluated models, and shared metric definitions. Sections 3–7 present tasks grouped by design domain, each covering both understanding and generation settings. Section 8 synthesizes cross-cutting findings, and Section 9 concludes with directions for future work."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Benchmark Overview"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "Dataset. All tasks in GDB are grounded in the LICA layered-composition dataset [9], a large-scale collection of real-world graphic design templates sourced from a commercial design platform. Unlike flat raster-image datasets, each LICA template preserves the full layered structure of the original design: individual components are annotated with their type (text, image, vector, group), bounding box, z-order, and styling properties. Text components carry typographic specifications including font family, size, weight, color, alignment, letter spacing, line height, curvature, rotation, and inline style ranges. Image and vector components include asset source references, rotation angles, clip paths, and opacity. Templates are further annotated with global metadata such as canvas aspect ratio, background color, category labels (parent and sub-category), user-intent descriptions, aesthetic tags, and color palettes. The animated subset additionally provides per-component entrance animation attributes: motion type (from 32 canonical categories), duration, start-time offset, and keyframe sequences. Each template may have multiple sibling layouts, instantiations that share the same structural theme but differ in content, color scheme, or imagery. This sibling structure enables evaluation settings such as template variant understanding (Section 6) and template variant generation, which cannot be constructed from isolated designs. Figure 1 shows examples from the data."
+  },
+  {
+   "id": "b0020",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: LICA samples [9]. Design layouts with structured, component-level annotations capturing full hierarchy and rich metadata beyond coarse bounding boxes, on which we benchmark models in this report."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluation subsets. From the full dataset, we construct task-specific evaluation subsets with standardized filtering criteria. Table 1 summarizes the primary evaluation sets. Component-level tasks sample up to three elements per layout to control evaluation cost while maintaining coverage."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "The evaluation sizes reflect the full scope of available annotated data at each level of granularity. Layout-level tasks use all 989 non-video layouts in the dataset; component-level tasks (typography, partial completion) further multiply the effective sample size by sampling up to three elements per layout, yielding ⟦SLOT_0⟧2,500 instances. Generation tasks use smaller evaluation sets (typically 100 samples, filtered for resolution and aspect-ratio compatibility) due to the cost and complexity of multiple inference calls per sample to closed-source generation APIs. Animation tasks are evaluated on all 100 compositions with complete temporal annotations; the 50-sample Lottie subset and the 10-brief video generation set reflect the smaller pool of animated assets with full structural metadata. In all cases, the sample sizes are sufficient to support the conclusions drawn: the inter-model performance gaps reported throughout the paper are typically an order of magnitude larger than the statistical uncertainty at the corresponding sample sizes."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Evaluation subsets used across GDB. Component-level tasks sample up to 3 elements per layout."
+  },
+  {
+   "id": "b0025",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Group Section Samples Key Annotations Used Layout understanding 3 989 layouts Bboxes, z-order, aspect ratio, component types Typography understanding 4 2,568 text elems Font, color, size, weight,"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluated tasks. GDB comprises 49 tasks across five domains: layout, typography, SVG & vector, template semantics, and animation, each evaluated under understanding and generation modes (Table 2). These domains were chosen to reflect the core skill axes a professional designer exercises: arranging space, specifying type, working with vector code, interpreting design intent, and reasoning about motion."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "Each domain is evaluated under both understanding and generation settings. Understanding tasks ask whether a model can perceive and reason about an existing design, e.g., identifying fonts, counting components, parsing animation timing, while generation tasks ask whether it can produce or modify design artifacts that satisfy structured constraints. As the two settings may involve different model families (e.g. a vision-language model for understanding vs. a dedicated image-generation model from the same provider), we aim to explore what current AI systems can perceive about a design with what they can actually produce."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: GDB organizes its 49 tasks along two orthogonal axes: design domain (layout, typography, SVG & vector, template semantics, and animation) and capability mode (understanding vs. generation). Understanding tasks probe a model’s ability to perceive and reason about existing designs, while generation tasks evaluate whether a model can produce or edit design artifacts that satisfy structured constraints."
+  },
+  {
+   "id": "b0029",
+   "t": "keep",
+   "w": "table",
+   "en": "Domain Mode # Description Layout Understanding 8 Spatial reasoning over design canvases: aspect ratio, element counting, component type and detection, layer order, rotation, crop shape, and frame dete"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluated models. We evaluate models spanning three frontier model families, covering proprietary API-served systems. These families were selected because they represent the current state of the art across the broadest range of creative tasks, spanning text understanding, image generation, and video synthesis, making them the most natural candidates for assessing design capability in AI systems. Our goal is not simply to rank these models, but to use them as strong baselines to expose where the field as a whole falls short on design-specific tasks. Table 3 summarizes the models, their access methods, and the task groups in which each participates. Not every model is evaluated on every task: some tasks require image-generation capabilities (available only in GPT-Image-1.5, Gemini 3.1 Pro, and Gemini 3.1 Flash Image), while others require structured code output or video understanding. Although we compare model performance, the goal of the paper is to provide a benchmark and insights into current capabilities in this field, rather than highlight specific failure modes of each model."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "Decoding and prompting. All models are evaluated with greedy decoding (temperature ⟦SLOT_1⟧) to ensure reproducibility. Each task uses a single fixed prompt template across all models; prompt templates are provided in Appendix B for reproducibility. Where a task defines multiple prompting conditions, such as open-vocabulary versus label-constrained (Sections 6), all models receive the same prompt variant."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Models evaluated in GDB. “Modalities” indicates the input types accepted for the benchmark tasks."
+  },
+  {
+   "id": "b0033",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Provider / Access Input Modalities Output Modality Gemini-3.1-Pro Google API Text, image, video Text Gemini-3.1-Flash-Image Google API Text, image Image GPT-5.4 OpenAI API Text, image Text GPT-I"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "Modality conditions. Several tasks are evaluated under multiple input modality conditions to disentangle the contribution of visual and structural signals: text-only (the model receives layout JSON or text metadata), image-only (the model receives rendered PNG), and both (JSON and PNG together). Not all modality conditions are available for every model; missing entries are marked in the per-task results tables. For animation tasks (Section 7), Gemini 3.1 Pro natively accepts video as a first-class input modality and processes the full rendered animation. GPT-5.4 and Claude Opus 4.6 do not support native video ingestion; for these models, we extract uniformly sampled keyframes from each animation and supply them as an ordered sequence of still images."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Evaluation Metrics"
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "GDB tasks report metrics drawn from a shared taxonomy. We define all recurring metrics here; task-specific metrics are introduced in their respective sections. Unless otherwise noted, ⟦SLOT_2⟧ denotes higher-is-better and ⟦SLOT_3⟧ denotes lower-is-better."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "Throughout the paper we assign each task one of three solvability labels. Mostly Solved: best-model performance exceeds 95% (or an equivalent metric-specific threshold), with limited room for improvement at the current evaluation granularity. Partially Solved: best-model performance falls between 80–95%, or the task exhibits a clear split where one sub-condition is tractable while another exposes a fundamental gap (e.g. single- vs. multi-element, coarse vs. fine-grained, open-vocab vs. constrained). Unsolved: best-model performance is below 80%, or the task remains structurally beyond current capabilities, e.g. an orders-of-magnitude gap relative to established baselines in other domains. We set this threshold in consultation with design experts to reflect practical usability, as even small errors (e.g., a few pixels) typically require manual correction."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "h4",
+   "en": "Spatial accuracy."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "mIoU (mean Intersection over Union) measures average overlap between predicted and ground-truth bounding boxes. bbox F1 is used as a complementary overlap-quality metric. When explicit target boxes are unavailable, we estimate boxes with an LLM-based detector; implementation details and detector selection are provided in Appendix C. mAP@0.5 and mAP@0.5:0.95 follow the COCO detection protocol [10]: mAP@0.5 counts a detection as correct if its IoU with the ground-truth box exceeds 50%; mAP@0.5:0.95 averages across IoU thresholds from 0.5 to 0.95 in steps of 0.05, rewarding tighter localization. MAE (mean absolute error) and MSE (mean squared error) are used for continuous regression targets such as element counts, font sizes, and animation durations."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "h4",
+   "en": "Perceptual quality."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "LPIPS [11] ⟦SLOT_4⟧ computes learned perceptual distance between two images using deep features; lower values indicate greater perceptual similarity. SSIM [12] ⟦SLOT_5⟧ measures structural similarity based on luminance, contrast, and structure. DreamSim [13] ⟦SLOT_6⟧ captures higher-level, human-aligned visual similarity beyond low-level pixel statistics. FID (Fréchet Inception Distance) [6] ⟦SLOT_7⟧ measures distributional distance between generated and reference image sets in Inception feature space. MSE (pixel-level) ⟦SLOT_8⟧ is the mean squared pixel error between rendered outputs and references, used primarily in SVG evaluation. PSNR (peak signal-to-noise ratio) ⟦SLOT_9⟧ measures reconstruction fidelity on a logarithmic scale."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "h4",
+   "en": "Semantic alignment."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "CLIP Score [8] ⟦SLOT_10⟧ computes cosine similarity between a text prompt and a generated image in CLIP embedding space, measuring text-image alignment. PickScore [14] ⟦SLOT_11⟧ is a learned human-preference metric trained on pick-a-pic data, providing a scalar alignment score. BERTScore [15] ⟦SLOT_12⟧ performs soft token-level alignment between generated and reference texts using contextual embeddings (we use the RoBERTa-large variant). Embedding cosine similarity ⟦SLOT_13⟧ computes cosine similarity between mean-pooled last hidden states of generated and reference texts using Llama-3.2-1B."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "h4",
+   "en": "Human-aligned preference."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "NIMA [16] ⟦SLOT_14⟧ predicts mean opinion scores for aesthetic quality. ImageReward [17] ⟦SLOT_15⟧ is a reward model trained on human preference data for text-to-image generation. HPSv3 [18] (Human Preference Score v3) ⟦SLOT_16⟧ provides a scalar human-preference prediction calibrated on recent generation models."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "h4",
+   "en": "Text fidelity."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "OCR Accuracy ⟦SLOT_17⟧ measures whether generated text is recognized as the intended target string by an off-the-shelf OCR system. Font Family Accuracy ⟦SLOT_18⟧ and Text Align Accuracy ⟦SLOT_19⟧ are discrete match rates for font-family and alignment predictions. Font Size MAE ⟦SLOT_20⟧ is the mean absolute error on predicted font sizes (in pixels). Color distance is reported as ⟦SLOT_21⟧ (CIEDE2000) ⟦SLOT_22⟧, a perceptually uniform color-difference metric, alongside RGB ⟦SLOT_23⟧ distance and hue-bucket accuracy (8-bucket quantisation). A prediction is considered perceptually acceptable when ⟦SLOT_24⟧. Letter Spacing MAE ⟦SLOT_25⟧ measures error in estimated letter spacing. When generating images or components, text-fidelity metrics rely on a custom Text-Params-Predictor, a lightweight model that recovers typographic parameters from rendered text patches for comparison against ground-truth specifications."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "h4",
+   "en": "Structural validity."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "JSON Valid ⟦SLOT_26⟧ is the fraction of model outputs that parse as valid JSON with the expected schema (used in template variant generation). SVG Valid ⟦SLOT_27⟧ is the fraction of generated SVGs that parse and render without error. Compression Ratio ⟦SLOT_28⟧ measures the byte-level ratio between an optimized SVG and the original, with lower values indicating more aggressive size reduction."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "h4",
+   "en": "Rank correlation."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "Kendall’s ⟦SLOT_29⟧ ⟦SLOT_30⟧ measures the fraction of correctly ordered element pairs (robust to local perturbations). Spearman’s ⟦SLOT_31⟧ ⟦SLOT_32⟧ is a rank correlation coefficient that penalizes large rank displacements. Both are used for layer-order and ranking tasks, where a score of 0.5 corresponds roughly to random ordering."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "h4",
+   "en": "Clustering."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "ARI (Adjusted Rand Index) ⟦SLOT_33⟧ and AMI (Adjusted Mutual Information) ⟦SLOT_34⟧ are chance-corrected measures of cluster agreement. V-measure ⟦SLOT_35⟧ is the harmonic mean of homogeneity and completeness. FMI (Fowlkes–Mallows Index) ⟦SLOT_36⟧ is the geometric mean of precision and recall at the pair level."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "h4",
+   "en": "Set-based."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "For multi-label tasks such as aesthetic tag prediction, we report precision, recall, and F1 computed per sample and macro-averaged. We evaluate under two matching criteria: exact matching (string identity after normalization) and fuzzy matching (substring containment with greedy one-to-one assignment)."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "h4",
+   "en": "Judge-based."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "M-Judge[19] ⟦SLOT_37⟧ is an MLLM-based pairwise win-rate metric that compares a model output against the ground-truth layout under the sample-specific intent. The judge selects the better layout based on aesthetics, clarity, usability, creativity, and consistency. In our benchmark, we use M-Judge for layout generation (Section 3), where holistic design quality cannot be fully captured by coordinate- or pixel-level metrics alone. The prompt template is provided in Appendix 65."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Composition Tasks"
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Layout Understanding"
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "A layout defines the spatial arrangement of visual components on a canvas, encompassing their positions, dimensions, z-order stacking, and type. It forms the structural backbone of any graphic design, and understanding it is the most fundamental capability a design-aware model must possess. A model that cannot reliably identify how many components a layout contains, what types they are, or how they are stacked cannot be expected to modify or extend that layout coherently. We evaluate eight progressively harder tasks (Table 4) on 989 designs from the LICA dataset (2). The evaluation set spans a realistic distribution of canvas formats — ⟦SLOT_38⟧ (34.8%), ⟦SLOT_39⟧ (26.2%), and ⟦SLOT_40⟧ (20.4%) together cover 80% of layouts, with rarer formats such as ⟦SLOT_41⟧ and ⟦SLOT_42⟧ appearing fewer than 10 times each — and a wide range of layout complexity, with layouts containing on average 15.7 top-level components (median = 12, ⟦SLOT_43⟧ = 14.0). This class imbalance is reflected in the gap between accuracy and macro-F1 reported below. Tasks range from global geometric inference to fine-grained component localization and depth reasoning, and results show that this capability remains largely unsolved by current frontier systems. Figure 2 shows example layouts illustrating the variance in layout properties."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Spatial composition understanding task definitions and dataset statistics. All tasks draw from the same 989 layouts. Sample counts and distribution might vary across tasks because component-level tasks apply validity filters (e.g., minimum element size) and per-layout sampling caps."
+  },
+  {
+   "id": "b0062",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Description N Classes Distribution Metrics Aspect Ratio Classification Predict the canvas aspect ratio from 9 categories. Tests whether the model can infer global geometric proportions from visua"
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "(a) Layouts spanning multiple aspect ratios (e.g. ⟦SLOT_44⟧, ⟦SLOT_45⟧, ⟦SLOT_46⟧, ⟦SLOT_47⟧)."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "(b) A layout containing a rotated image component."
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "(c) An image placed inside a decorative frame with a circular crop."
+  },
+  {
+   "id": "b0066",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0067",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0068",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Example design templates illustrating the variance of layout properties evaluated in this section. The layouts differ in aspect ratio, number and type of components, spatial composition, and visual complexity (a), and may contain rotated image elements (b) or images placed inside decorative frames with non-rectangular crops (c)."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 5 and 6 present the full results and all metrics are defined in Section 2.1. Figures 4 shows qualitative examples. The results reveal four distinct patterns across the spatial composition tasks:"
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "li",
+   "en": "• Spatial reasoning is highly uneven across models. Aspect ratio classification (93.9% best accuracy), element counting (MAE = 5.81 best), and component type classification (46.1% best accuracy) show large performance gaps, with models trailing by up to ⟦SLOT_48⟧ on counting tasks."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "li",
+   "en": "• Component detection remains effectively unsolved. The best model achieves only 6.4% mAP@0.5, orders of magnitude below natural-image benchmarks, indicating a fundamental gap in design-domain spatial grounding across all evaluated systems."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "li",
+   "en": "• Z-order inference is a distinct capability. Layer order prediction does not correlate with performance on other layout tasks, suggesting that depth and occlusion reasoning requires different visual capabilities than bounding-box prediction."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "li",
+   "en": "• Visual container reasoning is a separate skill. Crop shape detection and frame detection reveal a capability dimension orthogonal to other spatial tasks, with the best models achieving 76.9% and F1 = 0.504 respectively."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Layout Generation"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "Layout generation evaluates whether a model can synthesize or modify a graphic design under structured constraints, rather than only interpret an existing layout. Across the four tasks in this subsection, the model must generate a full design from intent, complete missing components, reinsert masked assets, or adapt a layout to a new canvas ratio. For intent-to-layout generation and layer-aware inpainting, we evaluate on 100 randomly sampled examples after filtering out images with extreme resolutions or aspect ratios."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "For the multi-aspect-ratio adaptation task, we additionally report three human-evaluated binary metrics that capture structural preservation more directly than generic preference models. TextAcc is 1 if the required text is preserved correctly and legibly in the adapted output, and 0 otherwise. Recall is 1 if all core assets from the source layout are retained appropriately after adaptation, and 0 otherwise. Hallucination is 1 if any unsupported text or visual element is introduced by the model, and 0 otherwise. All three metrics are averaged over evaluation samples."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Layout understanding results. Best result per metric in bold. ⟦SLOT_49⟧ = higher is better; ⟦SLOT_50⟧ = lower is better."
+  },
+  {
+   "id": "b0080",
+   "t": "keep",
+   "w": "table",
+   "en": "Aspect Ratio Elem. Counting Comp. Type Clf. Model Acc ↑ \\uparrow F1 ↑ \\uparrow MAE ↓ \\downarrow MSE ↓ \\downarrow Acc ↑ \\uparrow F1 ↑ \\uparrow Gemini-3.1-Flash-Lite 0.236 0.105 12.50 375.7 0.252 0.224 "
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Image rotation prediction results (⟦SLOT_51⟧ = 2,585). Best result per metric in bold."
+  },
+  {
+   "id": "b0082",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Rot. Acc ↑ \\uparrow Angle MAE ↓ \\downarrow Angle MAE rot ↓ \\downarrow Gemini-3.1-Flash-Lite 0.716 17.07 74.93 Gemini-3.1-Pro 0.750 16.29 73.48 GPT-5.4 0.800 13.76 69.43 Claude-Opus-4.6 0.766 15."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Image crop shape prediction (⟦SLOT_52⟧ = 2,585) and frame detection (⟦SLOT_53⟧ = 1,863) results. Best per metric in bold."
+  },
+  {
+   "id": "b0084",
+   "t": "keep",
+   "w": "table",
+   "en": "Image Crop Shape Frame Detection Model is-crop ↑ \\uparrow shape ↑ \\uparrow shape crop ↑ \\uparrow Acc ↑ \\uparrow Prec ↑ \\uparrow Rec ↑ \\uparrow F1 ↑ \\uparrow Gemini-3.1-Flash-Lite 0.557 0.531 0.066 0.7"
+  },
+  {
+   "id": "b0085",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0086",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "(a) Aspect Ratio Classification GT: 16:9 GPT-5.4: 2:3"
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "A wide-format banner is misclassified as a portrait ratio. GPT-5.4 confuses the dominant vertical text column for a portrait canvas, ignoring the actual image dimensions."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "(b) Element Counting GT: 5 GPT-5.4: 95"
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "p",
+   "en": "A simple layout with 5 top-level components is predicted to contain 95 elements. The model appears to count individual characters or decorative sub-pixels rather than functional design components."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "(c) Component Detection GT: 22 components (text, image, vector)"
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "Gemini Pro: 14 boxes, all labelled “text”"
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "The model collapses images and vectors into text labels and produces bounding boxes in a rotated coordinate system unrelated to the actual layout."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Representative failure cases for layout understanding tasks. Models exhibit systematic errors including ratio confusion (a), order-of-magnitude overcounting (b), and type collapse (c)."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "(a) Original layout with correct layer ordering. All components are visible and correctly stacked."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "(b) Layout re-rendered using the z-order predicted by GPT-5.4."
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Layer order prediction failure case (GPT-5.4). The model predicts an incorrect z-order that buries foreground elements (text and decorative shape) behind the background, illustrating that even small rank errors can render a layout unusable."
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8: Layout generation task definitions."
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Description Samples Metrics Intent-to-Layout Generation Generate a complete layout image from communicative intent, layout description, style cues, required text, and target aspect ratio. 100 lay"
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "p",
+   "en": "Table 8 lists the tasks used to evaluate this subsection along with their primary settings and metrics."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 9, 10, 11, and 12 present the full results for the four generation settings, with qualitative examples in Figures 5, 6, and 7. The main takeaways are:"
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "li",
+   "en": "1. Intent-to-layout generation remains bottlenecked by text fidelity. The two evaluated models are closely matched on alignment and aesthetic metrics, but OCR remains in the 73–75% range, indicating that a substantial fraction of required strings are still rendered incorrectly or illegibly."
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "li",
+   "en": "2. Partial layout completion degrades sharply in the multi-element setting. Single-element completion is comparatively tractable, but jointly reasoning about several missing placements remains a substantially harder compositional problem."
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "li",
+   "en": "3. Layer-aware inpainting exposes a trade-off between identity preservation and global harmony. Models that stay closer to the reference asset do not necessarily produce the most coherent final composition, and the gap between image-conditioned and text-conditioned inputs remains relatively modest."
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "li",
+   "en": "4. Multi-aspect-ratio adaptation is not well captured by a single scalar metric. GPT-Image-1.5 better preserves text and achieves stronger preference-model scores, while Gemini preserves core assets more reliably and scores better on M-Judge and DreamSim, indicating complementary strengths."
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 9: Intent-to-layout generation results. Metrics are grouped by text–image alignment, aesthetic quality, and text accuracy."
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "table",
+   "en": "Alignment Aesthetic Quality Text Model Pick ↑ \\uparrow CLIP ↑ \\uparrow NIMA ↑ \\uparrow ImgRwd ↑ \\uparrow HPS ↑ \\uparrow OCR ↑ \\uparrow Gemini-3.1-Flash-Img 19.81 0.310 5.14 0.250 10.28 0.726 GPT-Image"
+  },
+  {
+   "id": "b0112",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 10: Partial layout completion results for single-element and multiple-element settings. Best result per metric in bold."
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "table",
+   "en": "Setting Model mIoU ↑ \\uparrow LPIPS ↓ \\downarrow DreamSim ↓ \\downarrow M-Judge ↑ \\uparrow Single GPT-5.4 0.2299 0.0582 0.0131 0.29 Claude-Opus-4.6 0.1878 0.0677 0.0164 0.26 Gemini-3.1-Pro 0.2413 0.051"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0115",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Partial layout completion visualization. From left to right, we show the composite input image, the multiple target assets with a checkerboard background, and the predictions from three models: Gemini, Opus, and GPT. Both rows illustrate the multiple-placement setting. In the first row, the models fail to account for the cropped nature of the object asset, leading to visually unnatural placements of truncated content, as indicated by the orange arrows. In the second row, the models fail to preserve the shared visual concept of related text elements such as “Jobs” and “About,” placing them too far apart or in the incorrect order, and potentially cropping or misplacing other shapes (GPT-5.4)."
+  },
+  {
+   "id": "b0116",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 11: Layer-aware inpainting results for image-conditioned insertion and text-conditioned synthesis. Identity preservation metrics and reconstruction quality are computed on the inserted object crop; ImageReward and HPSv3 are computed on the final composite."
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "table",
+   "en": "Identity Preservation Reconstruction Design Quality Setting Model CLIP ↑ \\uparrow DINOv2 ↑ \\uparrow DreamSim ↓ \\downarrow LPIPS ↓ \\downarrow PSNR ↑ \\uparrow SSIM ↑ \\uparrow ImgRwd ↑ \\uparrow HPS ↑ \\up"
+  },
+  {
+   "id": "b0118",
+   "t": "text",
+   "w": "p",
+   "en": "(a) Image-conditioned"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "table",
+   "en": "Masked Image Asset GT Gemini-3.1 Flash GPT-Image 1.5"
+  },
+  {
+   "id": "b0120",
+   "t": "text",
+   "w": "p",
+   "en": "(b) Text-conditioned"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "table",
+   "en": "Description: This image features a flat, minimalist illustration of a chocolate chip cookie on a transparent background. The main subject is a perfectly circular, medium brown cookie base, adorned wit"
+  },
+  {
+   "id": "b0122",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Layer-aware inpainting. (a) Image-conditioned inpainting uses the original RGBA asset as reference, yet both models fail to preserve it: GPT-Image-1.5 introduces unintended changes to background color and content, while Gemini-3.1-Flash-Image severely distorts the input asset. (b) Text-conditioned inpainting fails to satisfy the instruction, producing incorrect content and altering the surrounding layout. Orange arrows and boxes highlight these failures. Overall, both models fail to preserve background consistency and adhere to input constraints, resulting in incoherent designs."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "table",
+   "en": "Source Layout (9:16) Target Layout (1:1) Gemini-3.1 Flash Image GPT-Image 1.5"
+  },
+  {
+   "id": "b0124",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Qualitative results for multi-aspect-ratio adaptation (9:16 ⟦SLOT_54⟧ 1:1). For each example, we show the original source layout, the ground-truth target layout, and the adapted outputs from Gemini-3.1 Flash Image and GPT-Image 1.5. The figure highlights whether each model preserves reading order, core assets, and text content while recomposing the design for a substantially different canvas ratio."
+  },
+  {
+   "id": "b0125",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 12: Multi-aspect-ratio adaptation results (long-to-short) using direct image generation. Metrics are grouped into human-evaluated structural-preservation measures and automated aesthetic and preference scores. The best result for each metric is shown in bold."
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "table",
+   "en": "Structural Preservation Aesthetic & Preference Model TextAcc ↑ \\uparrow Recall ↑ \\uparrow Halluc. ↓ \\downarrow M-Judge ↑ \\uparrow PickScore ↑ \\uparrow HPSv3 ↑ \\uparrow ImgRwd ↑ \\uparrow DreamSim ↓ \\do"
+  },
+  {
+   "id": "b0127",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 13: Summary of key findings across layout tasks."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Group Key Finding Best Performance Best Model Status Aspect Ratio & Counting Large performance gaps; counting errors are heavy-tailed on complex layouts 93.9% acc, MAE 5.81 GPT-5.4 Partially solv"
+  },
+  {
+   "id": "b0129",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Typography Tasks"
+  },
+  {
+   "id": "b0130",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Typography Understanding"
+  },
+  {
+   "id": "b0131",
+   "t": "text",
+   "w": "p",
+   "en": "In graphic design, text is not merely readable content but a visual element that conveys hierarchy, tone, and brand identity through its typographic specification. We evaluate whether models can perceive fine-grained text properties across ten tasks on 2,568 text elements extracted from 989 layouts (Section 2), spanning font identification, color estimation, property prediction, curved-text detection, inline style-span recovery, and rotation estimation. Table 14 lists the task definitions and dataset statistics for this domain. Visual examples of the different typographic properties appear in Figure 8."
+  },
+  {
+   "id": "b0132",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0133",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 15–18 present the full results. The results reveal five key patterns across the typography understanding tasks:"
+  },
+  {
+   "id": "b0134",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 14: Typography understanding task definitions and dataset statistics. All tasks draw from text components across 989 layouts, sampling up to 3 text elements per layout. For color prediction, 58 examples are excluded due to missing (optional) values."
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Description Samples Classes Metrics Font Family Prediction Identify the font family used for a target text string. Evaluation set contains 167 distinct typefaces with a long-tail distribution ske"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0137",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8: Typography Properties. From left to right: font family, font size, font weight, text color, alignment, line spacing & letter spacing, rotation and style ranges. An example for curved text appears in Figure 9."
+  },
+  {
+   "id": "b0138",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 15: Font Family and Text Color results. Best result per metric in bold."
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "table",
+   "en": "Font Family Text Color Model Acc ↑ \\uparrow F1 ↑ \\uparrow Δ \\Delta E ↓ \\downarrow RGB ℓ 2 \\ell_{2} ↓ \\downarrow Δ \\Delta E < 5 {<}5 ↑ \\uparrow HueAcc ↑ \\uparrow Gemini-3.1-Flash-Lite 0.065 0.002 52.41"
+  },
+  {
+   "id": "b0140",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 16: Typographic property results. Best result per metric in bold."
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "table",
+   "en": "Font Size Weight Align Line Ht. Letter Sp. Model MAE ↓ \\downarrow Acc ↑ \\uparrow Acc ↑ \\uparrow MAE ↓ \\downarrow MAE ↓ \\downarrow Gemini-3.1-Flash-Lite 38.42 0.390 0.428 43.88 0.045 Gemini-3.1-Pro 35."
+  },
+  {
+   "id": "b0142",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 17: Curved text detection and text rotation results. Best per metric in bold. “Curv-only” columns restricted to the 26 curved elements."
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "table",
+   "en": "Curved Text ( n n =2,568) Text Rotation ( n n =2,568) Model Acc ↑ \\uparrow MAE ↓ \\downarrow Det curv ↑ \\uparrow MAE curv ↓ \\downarrow Acc ↑ \\uparrow MAE ↓ \\downarrow MAE rot ↓ \\downarrow Gemini-3.1-Fl"
+  },
+  {
+   "id": "b0144",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 18: Style range detection: span IoU and exact match, stratified by number of ground-truth style ranges."
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "table",
+   "en": "All ( n n =2,568) 1-range ( n n =2,549) ≥ \\geq 2-range ( n n =19) Model IoU ↑ \\uparrow EM ↑ \\uparrow IoU ↑ \\uparrow EM ↑ \\uparrow IoU ↑ \\uparrow EM ↑ \\uparrow Gemini-3.1-Flash-Lite 0.376 0.000 0.377 0"
+  },
+  {
+   "id": "b0146",
+   "t": "text",
+   "w": "li",
+   "en": "• Font recognition is weak across the board. The best model achieves only 23.7% top-1 accuracy (⟦SLOT_55⟧ over the next best), with Macro-F1 an order of magnitude lower, confirming that correct predictions concentrate on high-frequency typefaces while the vast majority of the 167 families score zero F1."
+  },
+  {
+   "id": "b0147",
+   "t": "text",
+   "w": "li",
+   "en": "• Color perception varies dramatically across models. The best model achieves ⟦SLOT_56⟧E = 5.57 with 63.3% of predictions within the perceptually acceptable ⟦SLOT_57⟧E ⟦SLOT_58⟧ 5 threshold, while the weakest models produce ⟦SLOT_59⟧E ⟦SLOT_60⟧ 52, colors that are perceptually unrelated to the ground truth. Claude occupies an intermediate position (⟦SLOT_61⟧E = 14.05, hue accuracy 69.6%)."
+  },
+  {
+   "id": "b0148",
+   "t": "text",
+   "w": "li",
+   "en": "• Typographic property estimation is unevenly solved. Font size and line height show the largest gaps (up to ⟦SLOT_62⟧ difference; GPT-5.4 MAE = 8.97 px vs. Gemini ⟦SLOT_63⟧36 px), while letter spacing is the easiest property for all models (MAE ⟦SLOT_64⟧ 0.045 em). Text alignment is the most consistently predicted property, with the best model reaching 86.1%."
+  },
+  {
+   "id": "b0149",
+   "t": "text",
+   "w": "li",
+   "en": "• Curved text and rotation expose a binary capability gap. The best models correctly identify 88.5–92.3% of the 26 curved elements, while some models score zero, classifying every element as straight. On text rotation, rotated-only MAE ranges from 18.67° to over 54° across models."
+  },
+  {
+   "id": "b0150",
+   "t": "text",
+   "w": "li",
+   "en": "• Style range localization is achievable but exact recovery is not. The best models achieve span IoU of up to 0.982 (vs. ⟦SLOT_65⟧0.376 for Gemini), but exact match is 0% across all models and all stratifications, indicating that while models can localize styled spans, they cannot jointly recover the full typographic specification within those spans. For representative failure cases, see Figure 9."
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0154",
+   "t": "text",
+   "w": "p",
+   "en": "(a) Font Family Prediction GT:"
+  },
+  {
+   "id": "b0155",
+   "t": "text",
+   "w": "p",
+   "en": "\"Message\" – Lora"
+  },
+  {
+   "id": "b0156",
+   "t": "text",
+   "w": "p",
+   "en": "GPT-5.4:"
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "p",
+   "en": "\"Message\" – Cormorant Garamond"
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "p",
+   "en": "Gemini Lite:"
+  },
+  {
+   "id": "b0159",
+   "t": "text",
+   "w": "p",
+   "en": "\"Message\" – Montserrat"
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "p",
+   "en": "Gemini Pro:"
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "p",
+   "en": "\"Message\" – Bebas Neue"
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "p",
+   "en": "GPT recognizes the serif style but picks the wrong family. Both Gemini variants predict fonts from entirely different categories."
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "p",
+   "en": "(b) Text Color Prediction GT: rgb(1,1,1)"
+  },
+  {
+   "id": "b0165",
+   "t": "text",
+   "w": "p",
+   "en": "GPT-5.4: #FFFFFF"
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "p",
+   "en": "The model predicts the exact opposite color. Gemini Pro returns empty strings on multiple color queries, while Gemini Lite defaults to #000000 regardless of the actual color."
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "p",
+   "en": "(c) Curved Text Detection GT:"
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "p",
+   "en": "curved, curvature = 55"
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "p",
+   "en": "Gemini Lite:"
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "p",
+   "en": "straight, curvature = 0"
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "p",
+   "en": "A clearly arced text element is classified as straight. Both Gemini models achieve zero detection rate on all 26 curved elements, predicting straight for every sample."
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9: Representative failure cases for typography understanding tasks. Models confuse font categories (a), predict inverted colors (b), and miss curved text entirely (c). See task prompts in Table 53."
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "p",
+   "en": "(a) Original layout"
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "p",
+   "en": "(b) Layout re-rendered using predicted font size and text position."
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 10: Text parameter prediction rendering effect. The model (Gemini-3.1-Pro) predicts an incorrect position and size for the text, causing mis-alignments and overlaps. (only font size and text box position were modified in this example)."
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Styled Text Generation"
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "p",
+   "en": "Styled text generation evaluates a model’s ability to translate structured typographic constraints into visually accurate text rendering. In addition to producing the correct string, the model must faithfully reproduce the full typographic specification, including font family, size, color, alignment, and spacing. We evaluate two settings, with both restricted to 1:1 aspect-ratio samples built from Google open-source fonts to ensure evaluator reliability:"
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "li",
+   "en": "• Styled text element generation: the model generates an isolated text patch from a target string and typography specification, without layout context."
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "li",
+   "en": "• Styled text rendering to layout: the model restores missing text into a masked layout image while preserving all surrounding unmasked pixels, with the masked layout provided as additional input."
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "p",
+   "en": "Each model receives the target text content and a structured typography specification (font family, size, color, alignment, spacing); in the layout setting it additionally receives the masked layout image. Table 19 presents the results. The prompt templates used in this task are provided in Appendix B. In the layout setting, the editable text region is provided as a tight polygonal mask computed from the convex hull algorithm."
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "p",
+   "en": "Table 19 reports quantitative results for both element-level generation and layout-level rendering, while Figure 11 illustrates representative failures in the practical layout-editing setting. The central challenge is not simply rendering plausible styled text, but restoring it within the prescribed masked region without altering surrounding content. Across models, this requirement remains unmet: layout-level spatial fidelity is limited, and qualitative examples show that generated text often extends beyond the editable region or modifies nearby design elements. The main observations are as follows:"
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "li",
+   "en": "• Mask-constrained text insertion remains unreliable. In the layout setting, even the best model achieves only IoU = 0.580 and F1 = 0.685, indicating limited agreement with the ground-truth text region. Figure 11 further illustrates that edits frequently overflow outside the input masks and modify the nearby contents. This suggests that current models do not reliably confine text generation to the intended region."
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "li",
+   "en": "• Fine-grained typography recovery remains uneven even in the easier element setting. Gemini-3.1-Flash-Img achieves the best font family accuracy, alignment accuracy, and color MAE in the element setting, indicating stronger adherence to the requested typographic specification than GPT-Image-1.5. Nevertheless, font family accuracy remains low overall, indicating that faithful recovery of detailed typographic attributes remains unsolved."
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 19: Styled text generation results. Each model is evaluated on element-level generation (element) and layout-level rendering (layout). Font and Align denote accuracy; Size and Color denote MAE. IoU/F1, LPIPS, and SSIM are reported only for the layout task, where a full rendered target with spatial reference is available. Best result per metric and task in bold."
+  },
+  {
+   "id": "b0189",
+   "t": "keep",
+   "w": "table",
+   "en": "Spatial Accuracy Font Style Fidelity Render Model Task IoU ↑ \\uparrow F1 ↑ \\uparrow Font ↑ \\uparrow Align ↑ \\uparrow Size ↓ \\downarrow Color ↓ \\downarrow LPIPS ↓ \\downarrow SSIM ↑ \\uparrow GPT-Image-1"
+  },
+  {
+   "id": "b0190",
+   "t": "keep",
+   "w": "table",
+   "en": "Text Prompt Masked Input GT Gemini-3.1 Flash Image GPT-Image 1.5 Instruction: Restore missing text Target text: “Setting SMART goals for personal and professional growth Creating action plans to achie"
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 11: Layout-level styled text generation failures. Each example shows the target text and typography specification, the masked input layout, the ground-truth render, and outputs from Gemini-3.1 Flash Image and GPT-Image 1.5. Both models generate plausible text, but often fail to respect the intended text region: the restored content can extend beyond the masked area or deviate substantially from the prescribed extent. In the first example, both models overshoot the target region when reconstructing a multi-line paragraph; in the second, both render a readable headline, yet neither matches the intended placement and size within the editable area. These examples show that the main bottleneck is not merely rendering stylized text, but confining the edit to the prescribed mask while preserving surrounding content. GT bbox is shown in green, and the predicted text bbox is shown in red."
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Text Removal & Background Regeneration"
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "p",
+   "en": "Text removal evaluates whether a model can support practical design editing by erasing typography without leaving ghosting artefacts and faithfully reconstructing the hidden background structure so that the canvas remains reusable for subsequent editing. This capability is essential for template adaptation, multilingual translation, and iterative copy revision [4, 2, 3, 20, 21, 9, 5]. Each model receives a source design image together with a binary mask indicating the text regions (white = editable, black = preserved) and a unified instruction to remove all text and reconstruct the background naturally. We evaluate on 100 randomly sampled templates from the LICA dataset (Section 2), filtered to exclude low-resolution images (max side ⟦SLOT_66⟧ 1,024 px) and extreme aspect ratios (⟦SLOT_67⟧ 2.0). Since each model supports a different set of aspect ratios, inputs are resized to model-compatible resolutions before generation and resized back to the original dimensions for evaluation. Table 20 presents the results."
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "p",
+   "en": "The results reveal two key patterns across the text removal task:"
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "li",
+   "en": "• Text erasure is effectively solved, but background reconstruction is not. Both models achieve high text removal rates (⟦SLOT_68⟧ 94%), confirming that the text itself is effectively erased. However, they diverge sharply on reconstruction fidelity, with PSNR ranging from 16.64 to 30.22 (⟦SLOT_69⟧13.6 dB difference) and SSIM from 0.743 to 0.944, indicating that faithfully reconstructing the occluded background remains a significant challenge."
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "li",
+   "en": "• Higher removal rate does not imply better reconstruction. The model with a marginally higher raw removal rate (95.3% vs. 94.5%) produces substantially worse background reconstruction (LPIPS = 0.331 vs. 0.088; FID = 115.75 vs. 54.05), suggesting it over-generates or hallucinates content in the masked regions rather than faithfully reconstructing what was occluded."
+  },
+  {
+   "id": "b0198",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 20: Text removal and background regeneration results. Best result per metric in bold."
+  },
+  {
+   "id": "b0199",
+   "t": "keep",
+   "w": "table",
+   "en": "Text Removal Perceptual Quality Reconstruction Model Remove FID ↓ \\downarrow LPIPS ↓ \\downarrow CLIP ↑ \\uparrow DINO ↑ \\uparrow PSNR ↑ \\uparrow SSIM ↑ \\uparrow Gemini-3.1-Flash-Img 0.945 54.05 0.088 0"
+  },
+  {
+   "id": "b0200",
+   "t": "text",
+   "w": "p",
+   "en": "Input Image"
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "p",
+   "en": "Input Mask"
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "p",
+   "en": "Gemini-3.1 Flash Image"
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "p",
+   "en": "GPT-Image 1.5"
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "p",
+   "en": "(a)"
+  },
+  {
+   "id": "b0205",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0206",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0207",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0208",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "(b)"
+  },
+  {
+   "id": "b0210",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0211",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0212",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0213",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0214",
+   "t": "text",
+   "w": "p",
+   "en": "(c)"
+  },
+  {
+   "id": "b0215",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0216",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0217",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0218",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 12: Text erasing across aspect ratios. Given an input image and a text mask, the models shall remove the masked text and inpaint the removed regions. Both models fail to confine edits to the masked region: GPT-Image 1.5 alters background color and tone, while both models further modify non-target elements (e.g., removing or recoloring the box in (b)). These results show that design-aware erasing requires strict preservation of surrounding structure and style. Orange marks structural changes; blue marks unintended color shifts."
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 21: Summary of key findings across typography tasks."
+  },
+  {
+   "id": "b0221",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Group Key Finding Best Performance Best Model Status Font Recognition Weak across the board; correct predictions concentrate on high-frequency typefaces while the vast majority of 167 families sc"
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Infographics Tasks"
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 SVG Understanding & Editing"
+  },
+  {
+   "id": "b0224",
+   "t": "text",
+   "w": "p",
+   "en": "SVG is the native format for vector design assets such as icons, illustrations, decorative strokes, and background frames. Understanding and manipulating SVG code is distinct from raster-image reasoning, since it requires parsing structured markup, reasoning about geometric primitives, and producing syntactically valid code. We evaluate five tasks on 300 SVG assets from the LICA dataset (Section 2), each annotated with a complexity label (easy, medium, hard) based on structural features following the stratification approach of SVGenius [22]."
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "p",
+   "en": "All tasks use code-only input with no rendered images, and span two capability modes: understanding and editing. Understanding tasks are perceptual and semantic multiple-choice Q&As generated by Claude Code agent (Opus-4.6) from the rendered SVG image, with four options and a verified answer. Editing tasks includes bug fixing, code optimization, and style editing, which are programmatically annotated and require the model to parse and reason about an existing SVG before perform the editing; since modifying SVG code presupposes understanding it, we treat editing as an extension of comprehension rather than generation. Bug fixing uses easy (⟦SLOT_70⟧5 errors), medium (⟦SLOT_71⟧7 with misspelled attributes), and hard (⟦SLOT_72⟧7 with path-data corruption) variants; code optimization is evaluated against ground truth generated by SVGO v4 (reference compression ratio 62.6%); and style editing applies 1–3 combined operations from a predefined vocabulary of fill, stroke, opacity, viewBox, transform, and color inversion commands. Table 22 summarizes the five understanding and editing tasks. Complexity labels are assigned by a rule-based scorer over structural features (path count, element depth, attribute diversity)."
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 22: SVG understanding and editing task definitions. All tasks share the same 300 source SVGs; editing tasks generate multiple difficulty variants per SVG."
+  },
+  {
+   "id": "b0227",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Description Samples Metrics Perceptual Q&A Given SVG source code only (no rendered image), answer a multiple-choice question (A–D) about visual properties: dominant color, shape count, element pr"
+  },
+  {
+   "id": "b0228",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "p",
+   "en": "Table 23 presents the results with all metrics defined in Section 2.1. The results reveal three key patterns across the SVG understanding and editing tasks:"
+  },
+  {
+   "id": "b0230",
+   "t": "text",
+   "w": "li",
+   "en": "• Perceptual reasoning about SVG code is harder than semantic interpretation. The gap between perceptual Q&A (87.0% best) and semantic Q&A (93.7% best) confirms empirically that inferring visual properties directly from SVG markup is harder than understanding what an SVG depicts."
+  },
+  {
+   "id": "b0231",
+   "t": "text",
+   "w": "li",
+   "en": "• Understanding and editing strengths are complementary across models. The best model achieves repair similarity of 0.932 and leads on style editing (EditD = 0.183), while the other leads on semantic Q&A (93.7%) and code optimization (CompR = 0.870), suggesting that SVG tasks draw on different underlying capabilities: structured-code proficiency aids repair and editing, while perceptual grounding aids semantic interpretation and compression."
+  },
+  {
+   "id": "b0232",
+   "t": "text",
+   "w": "li",
+   "en": "• Multi-operation geometric transforms remain challenging for all models. Failure cases on style editing reveal that combined rotation and scaling commands produce incorrect angles, positions, and displaced content across both models, indicating that composing multiple geometric operations in SVG space is largely unsolved. For representative failure cases, see Figure 13."
+  },
+  {
+   "id": "b0233",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 23: SVG understanding and editing results (code-only input). Best result per metric in bold. RepSim = repair similarity (⟦SLOT_73⟧); CompR = compression ratio (⟦SLOT_74⟧); EditD = edit distance (⟦SLOT_75⟧). Gemini-3.1† selects the best-performing Gemini-3.1 variant per task (Pro or Flash-Lite; see Appendix)."
+  },
+  {
+   "id": "b0234",
+   "t": "keep",
+   "w": "table",
+   "en": "Understanding Editing Model Perceptual Q&A Acc ↑ \\uparrow Semantic Q&A Acc ↑ \\uparrow Bug Fixing RepSim ↑ \\uparrow Code Optim. CompR ↓ \\downarrow Style Edit EditD ↓ \\downarrow GPT-5.4 0.847 0.937 0.79"
+  },
+  {
+   "id": "b0235",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0236",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 13: SVG editing failures. Bug Fix (rows 1–2): GPT-5.4 corrupts the circle into a fan shape while Gemini repairs it correctly (row 1), yet GPT-5.4 succeeds where Gemini produces invalid output (row 2). Style Edit (row 3): both models produce incorrect scale or displaced content on the multi-step geometric transform."
+  },
+  {
+   "id": "b0237",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2 Infographics Generation"
+  },
+  {
+   "id": "b0238",
+   "t": "text",
+   "w": "p",
+   "en": "Generating valid SVG from a text description, reference image, or both is a code-generation task with visual considerations: the model shall produce syntactically correct vector markup whose rendering matches a target graphic. We evaluate three tasks on 300 SVG assets from the LICA dataset (Section 2), distinguished by input modality: Text-to-SVG (description only), Image-to-SVG (rendered PNG only), and Text+Image-to-SVG (both). Generated SVGs are rendered at ⟦SLOT_76⟧ pixels for evaluation. To further investigate SVG generation across different element types, we curated 50 additional samples for each of the following categories: chart (charts and data visualizations), stroke (decorative strokes and borders), and container (frames and backgrounds)."
+  },
+  {
+   "id": "b0239",
+   "t": "text",
+   "w": "p",
+   "en": "We additionally evaluate generation of Lottie animations using a curated subset of 50 animations (⟦SLOT_77⟧10 layers, ⟦SLOT_78⟧50 KB, mean duration 4.4 s), extending vector generation to the temporal domain. Generated Lottie files are rendered using the official LottieFiles player to ensure evaluation reflects real-world playback fidelity. Table 24 summarizes the five generation tasks."
+  },
+  {
+   "id": "b0240",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 24: SVG and Lottie generation task definitions. All SVG tasks share the same 300 assets; Lottie tasks use a curated 50-animation subset."
+  },
+  {
+   "id": "b0241",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Description Samples Metrics Text-to-SVG Generate SVG code from a natural-language description only. Tests semantic-to-code translation without visual reference. 300 Valid, SSIM, LPIPS, MSE, Compl"
+  },
+  {
+   "id": "b0242",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0243",
+   "t": "text",
+   "w": "p",
+   "en": "For qualitative examples, see Figures 14, 15, and 16."
+  },
+  {
+   "id": "b0244",
+   "t": "text",
+   "w": "p",
+   "en": "The results across static SVG and Lottie generation reveal three key patterns:"
+  },
+  {
+   "id": "b0245",
+   "t": "text",
+   "w": "li",
+   "en": "• SVG generation quality is strongly modality-dependent. Image conditioning dramatically improves fidelity: the best model achieves 0.918 SSIM on image-to-SVG versus 0.733 on text-only (Table 25). GPT-5.4 and Claude-Opus-4.6 achieves near perfect validity (successful render) across all modalities, while Gemini-3.1’s validity drops to 81% (image-only)/84% (text+image) on image-conditioned tasks as output truncation becomes more frequent on complex SVGs."
+  },
+  {
+   "id": "b0246",
+   "t": "text",
+   "w": "li",
+   "en": "• Lottie animation generation is feasible but far from solved. Even the best result (FrameSSIM = 0.598) is far below static SVG performance (Table 27). Multimodal input provides large gains for GPT-5.4 but degrades Gemini’s output quality, dropping its validity from 100% to 66%."
+  },
+  {
+   "id": "b0247",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 25: SVG generation results across input modalities. Best result per metric in bold. Cmplx = weighted complexity. Gemini-3.1† selects the best-performing Gemini-3.1 variant per task."
+  },
+  {
+   "id": "b0248",
+   "t": "keep",
+   "w": "table",
+   "en": "Input Model Valid ↑ \\uparrow SSIM ↑ \\uparrow LPIPS ↓ \\downarrow MSE ↓ \\downarrow Cmplx Text Claude-Opus-4.6 0.970 0.724 0.450 0.118 27.4 GPT-5.4 1.000 0.733 0.498 0.058 25.3 Gemini-3.1 † 0.977 0.723 0"
+  },
+  {
+   "id": "b0249",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 26: SVG generation results stratified by SVG type (50 samples each). Best result per metric within each input modality in bold."
+  },
+  {
+   "id": "b0250",
+   "t": "keep",
+   "w": "table",
+   "en": "Input SVG Type Model Valid ↑ \\uparrow SSIM ↑ \\uparrow LPIPS ↓ \\downarrow MSE ↓ \\downarrow Text chart Claude-Opus-4.6 0.98 0.687 0.526 0.084 GPT-5.4 1.00 0.757 0.551 0.078 Gemini-3.1 1.00 0.733 0.555 0"
+  },
+  {
+   "id": "b0251",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 27: Lottie animation generation results (50 samples each). Best result per metric in bold. FrameSSIM and FrameMSE are averaged over five rendered keyframes. StructSim measures layer, type and dimension similarity."
+  },
+  {
+   "id": "b0252",
+   "t": "keep",
+   "w": "table",
+   "en": "Input Model Valid ↑ \\uparrow FrameSSIM ↑ \\uparrow FrameMSE ↓ \\downarrow StructSim ↑ \\uparrow Length Text Claude-Opus-4.6 0.600 0.324 0.596 0.372 12,443 GPT-5.4 0.980 0.242 0.666 0.612 4,933 Gemini-3.1"
+  },
+  {
+   "id": "b0253",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0254",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 14: SVG generation examples. From left to right: the text prompt, ground truth, and six model outputs for text-to-SVG and image-to-SVG from GPT-5.4, Gemini-3.1 and Claude-Opus-4.6. All models fail to follow the instruction of a black background in the text-to-SVG generation, and introduce artifacts in the image-to-SVG task."
+  },
+  {
+   "id": "b0255",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0256",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 15: Qualitative image-to-SVG examples across SVG types. For the Chart element, GPT-5.4 achieves the closest reproduction (SSIM 0.90), whereas Gemini omits the central hole and labels (0.83) and Claude modifies the endpoints gap and labels (0.78). GPT-5.4 accurately reconstructs the stroke, while Claude-Opus-4.6 exaggerates its width and Gemini-3.1 reduces it. All model produce incorrect gradient values for the container type."
+  },
+  {
+   "id": "b0257",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0258",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 16: Lottie generation failure (animated CTA click cursor). Top: ground-truth keyframes showing a pointing hand with animated blue sparks. Middle: GPT-5.4 produces a static, distorted hand with no spark layer and no animation. Bottom: Claude-Opus-4.6 miss the hand completely, and produce a moving cursor instead to represent the click animation instead. Gemini-3.1’s visual is excluded since output is invalid. All models fail to reproduce the multi-layer animated structure."
+  },
+  {
+   "id": "b0259",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 28: Summary of key findings across SVG & vector tasks."
+  },
+  {
+   "id": "b0260",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Group Key Finding Best Performance Best Model Status Perceptual Q&A Semantic questions are easier than perceptual ones across all models, suggesting that inferring what an SVG depicts from code i"
+  },
+  {
+   "id": "b0261",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Template & Design Semantics"
+  },
+  {
+   "id": "b0262",
+   "t": "text",
+   "w": "p",
+   "en": "This section evaluates models on higher-level design semantics: classifying templates by purpose, predicting designer intent, and understanding and generating template variants. Table 29 lists the task definitions and dataset statistics for this domain."
+  },
+  {
+   "id": "b0263",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 29: Template & design semantics task definitions and dataset statistics."
+  },
+  {
+   "id": "b0264",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Description Samples Classes Metrics Category Classification Predict the parent category and sub-category of a design template from a rendered image. Tested under open-vocabulary and label-constra"
+  },
+  {
+   "id": "b0265",
+   "t": "text",
+   "w": "h3",
+   "en": "6.1 Semantics Understanding: Category Classification"
+  },
+  {
+   "id": "b0266",
+   "t": "text",
+   "w": "p",
+   "en": "Category classification predicts the intended use of a visual design template from a rendered image alone. Each template is annotated with a two-level hierarchy: a parent category, denoting a broad template type (e.g. “business card”, “Instagram post”) and a sub-category describing the visual aesthetic or theme (e.g. “professional”, “skincare”). We test under open-vocabulary and label-constrained prompting (see Appendix Table 59)."
+  },
+  {
+   "id": "b0267",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0268",
+   "t": "text",
+   "w": "p",
+   "en": "Table 30 presents the results for both prompting strategies with all metrics defined in Section 2.1. Figure 17 illustrates the confusion matrices of the best performing model on label-constrained prompting."
+  },
+  {
+   "id": "b0269",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0270",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a) Open-vocabulary prompting"
+  },
+  {
+   "id": "b0271",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0272",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(b) Constrained prompting"
+  },
+  {
+   "id": "b0273",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 17: Confusion matrices for top-10 highest recurring parent category classification on Claude Opus 4.6 (best overall model). (a) Under open-vocabulary prompting, nearly all predictions fall into the “other” bin, illustrating pervasive label aliasing. (b) Providing the closed label set recovers strong diagonal structure; well-delineated categories such as planner & calendar (.98) and resume (.94) are near-perfectly recognized, while visually overlapping categories such as education (.31) and social media (.40) remain challenging."
+  },
+  {
+   "id": "b0274",
+   "t": "text",
+   "w": "p",
+   "en": "The results reveal three key patterns:"
+  },
+  {
+   "id": "b0275",
+   "t": "text",
+   "w": "li",
+   "en": "• Label constraining yields +30–62 pp gains on parent accuracy. Under open-vocabulary prompting, models frequently produce semantically reasonable but lexically mismatched labels (e.g. “social media graphic\" instead of “Instagram post\"), which are scored as incorrect. In practice, this also exposes a usability challenge: a user has no clear way to anticipate which label variants the model will recognize versus treat as mismatches, making effective prompting non-trivial. Providing the closed label set recovers strong diagonal structure in the confusion matrix (Figure 17b), with well-delineated categories."
+  },
+  {
+   "id": "b0276",
+   "t": "text",
+   "w": "li",
+   "en": "• Model rankings shift between prompting conditions. Gemini 3.1 leads open-vocabulary (45.5%), suggesting stronger internalized design vocabulary, while Claude Opus leads label-constrained (78.7% Top-1). GPT 5.4’s open-vocabulary deficit is primarily a naming problem (91.0% Top-5 under constraining)."
+  },
+  {
+   "id": "b0277",
+   "t": "text",
+   "w": "li",
+   "en": "• Sub-category classification remains an open challenge, with the best Top-1 reaching only 10.13% even under label-constrained prompting."
+  },
+  {
+   "id": "b0278",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 30: Parent (⟦SLOT_79⟧) and sub-category (⟦SLOT_80⟧) classification accuracy and macro-F1 across prompting conditions. Claude Opus 4.6 leads label-constrained prompting, while Gemini 3.1 leads open-vocabulary prompting suggesting a stronger internalized design vocabulary."
+  },
+  {
+   "id": "b0279",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Prompt Parent Category Sub-Category Top-1 Acc. Top-5 Acc. Macro-F1 Top-1 Acc. Top-5 Acc. Macro-F1 Gemini-3.1 open-vocab. 45.50 64.00 0.339 03.72 19.58 0.049 label-const. 76.23 91.50 0.474 10.13 "
+  },
+  {
+   "id": "b0280",
+   "t": "text",
+   "w": "h3",
+   "en": "6.2 Semantics Understanding: User Intent Prediction"
+  },
+  {
+   "id": "b0281",
+   "t": "text",
+   "w": "p",
+   "en": "User intent prediction is a free-text generation task: given only a rendered image, the model shall describe the purpose, audience, and desired outcome that motivated the design. We evaluate on 989 templates, each paired with a human-authored single-sentence intent description, and report BERTScore (F1) and Llama embedding cosine similarity (Section 2.1)."
+  },
+  {
+   "id": "b0282",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 31: Semantic similarity between model-generated and human-annotated user intents for design templates.22footnotemark: 2"
+  },
+  {
+   "id": "b0283",
+   "t": "keep",
+   "w": "table",
+   "en": "Model BERTScore (F1) ↑ \\uparrow Llama Cosine Similarity ↑ \\uparrow Gemini-3.1-Flash-Lite 89.55 92.71 GPT-5.4 89.03 91.40 Opus-4.6 88.46 92.29"
+  },
+  {
+   "id": "b0284",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0285",
+   "t": "text",
+   "w": "p",
+   "en": "Table 31 presents the results."
+  },
+  {
+   "id": "b0286",
+   "t": "text",
+   "w": "li",
+   "en": "• All models converge within ⟦SLOT_81⟧1 pp (BERTScore 88.5–89.6, cosine similarity 91.4–92.7), suggesting that single-sentence intent prediction is near ceiling at this annotation granularity."
+  },
+  {
+   "id": "b0287",
+   "t": "text",
+   "w": "li",
+   "en": "• High scores reflect semantic overlap, not exact alignment: BERTScore and cosine similarity reward topical proximity, so a prediction that captures the right domain (e.g. “food promotion”) scores well even if it misidentifies the specific goal (e.g. “brand awareness” vs. “limited-time offer”)."
+  },
+  {
+   "id": "b0288",
+   "t": "text",
+   "w": "li",
+   "en": "• Intent is inherently underdetermined from a single image: multiple plausible intents can explain the same design, which compresses the score distribution and makes it difficult to distinguish genuinely superior reasoning from surface-level pattern matching."
+  },
+  {
+   "id": "b0289",
+   "t": "text",
+   "w": "li",
+   "en": "• Richer intent specifications: multi-sentence descriptions decomposing audience, platform, and emotional response would likely be needed to reveal meaningful differentiation."
+  },
+  {
+   "id": "b0290",
+   "t": "text",
+   "w": "h3",
+   "en": "6.3 Template Variant Understanding"
+  },
+  {
+   "id": "b0291",
+   "t": "text",
+   "w": "p",
+   "en": "Template variant understanding evaluates whether models can recognize that multiple designs originate from the same underlying template despite differing content. We define three progressively harder tasks: pairwise matching, ranking, and clustering, on sibling layouts from the dataset. Figure 18 illustrates the task structure."
+  },
+  {
+   "id": "b0292",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0293",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 18: Template variant understanding tasks, see Appendix B for the exact input prompts. All tasks receive rendered layout screenshots and a text prompt. Pairwise Matching: binary classification of template identity. Ranking: rank 20 candidates by similarity to a reference. Clustering: partition ⟦SLOT_82⟧ layouts into template-identity groups."
+  },
+  {
+   "id": "b0294",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0295",
+   "t": "text",
+   "w": "p",
+   "en": "Table 32 presents LLM and non-LLM baseline results (CLIP, DINOv2, LPIPS, color EMD, font Jaccard, and structural features) across all three tasks. Figure 19 illustrates failure modes across all three tasks: models confuse shared design language with content similarity in matching, rank by surface appearance rather than structural identity in ranking, and either merge visually similar clusters or violate cardinality constraints in clustering."
+  },
+  {
+   "id": "b0296",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 32: Template variant understanding results (all metrics in %), across pairwise Matching (⟦SLOT_83⟧ pairs), ranking (⟦SLOT_84⟧ queries), and clustering (⟦SLOT_85⟧ problems, 914 layouts; ARI and AMI are chance-corrected). Best per metric in bold. Gemini-3.1†: best-performing variant per task."
+  },
+  {
+   "id": "b0297",
+   "t": "keep",
+   "w": "table",
+   "en": "Matching Ranking Clustering Model / Baseline Acc ↑ \\uparrow F1 ↑ \\uparrow AUC ↑ \\uparrow MRR ↑ \\uparrow MAP ↑ \\uparrow nDCG@10 ↑ \\uparrow Rec@10 ↑ \\uparrow ARI ↑ \\uparrow AMI ↑ \\uparrow V-m. ↑ \\uparro"
+  },
+  {
+   "id": "b0298",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0299",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 19: Template variant understanding failure cases. Pairwise matching: both models misclassify a same-template pair as “different” (distinct photos) and a different-template pair as “same” (shared warm palette). Ranking: GPT-5.4 identifies the correct mosaic-grid sibling despite different content; Gemini-3.1 ranks by surface content and places the sibling 20th. Clustering: colored tags show ground-truth membership. GPT-5.4 merges A+C (similar pink palettes); Gemini-3.1 separates them but violates the ⟦SLOT_86⟧ constraint, producing 4 clusters by splitting B on background color."
+  },
+  {
+   "id": "b0300",
+   "t": "text",
+   "w": "li",
+   "en": "• Font Jaccard baseline matches or exceeds both LLMs on all three tasks (97.7% matching, 96.3% MRR, 92.8% ARI), indicating that font-family metadata captures most of the template identity signal in this corpus — yet LLMs, despite having access to both image and text inputs, fail to leverage this signal, suggesting they do not reliably attend to typographic consistency as a grouping cue."
+  },
+  {
+   "id": "b0301",
+   "t": "text",
+   "w": "li",
+   "en": "• Matching and clustering are dissociated from ranking: a model can achieve near-perfect ranking (MRR 99.4%) while failing at binary match decisions (62.6% accuracy), suggesting these sub-tasks probe fundamentally different similarity reasoning abilities."
+  },
+  {
+   "id": "b0302",
+   "t": "text",
+   "w": "li",
+   "en": "• Binary match decisions are subject to strong prediction bias: one model predicts “different” for 874 of 1,000 pairs (precision 1.0, recall 0.25), revealing that pairwise classification collapses under conservative decision thresholds even when relative ordering is well-calibrated."
+  },
+  {
+   "id": "b0303",
+   "t": "text",
+   "w": "h3",
+   "en": "6.4 Template Variant Generation"
+  },
+  {
+   "id": "b0304",
+   "t": "text",
+   "w": "p",
+   "en": "The generation tasks evaluate whether models can produce design layouts that adhere to template conventions. We consider two output modalities. In structural generation, the model receives reference layout JSON file(s) and their rendered image(s) from LICA (Section 2) and shall generate a complete layout specification in JSON format, enabling explicit control over components and attributes. In image generation, the model instead receives rendered reference image(s) and directly produces a rasterized layout. Metrics span three tiers: JSON-level validity and adherence (Tier 1), aesthetic quality (Tier 2), and rendered-image similarity (Tier 3). Figure 20 illustrates the two structural-mode tasks across these modalities."
+  },
+  {
+   "id": "b0305",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0306",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 33–36 present results. Figure 21 shows qualitative examples."
+  },
+  {
+   "id": "b0307",
+   "t": "text",
+   "w": "li",
+   "en": "• Validity is the primary differentiator. GPT-5.4 achieves at least 94% JSON validity across all tasks; Gemini-3.1-Pro achieves at most 83%, limiting the sample on which its style metrics are computed."
+  },
+  {
+   "id": "b0308",
+   "t": "text",
+   "w": "li",
+   "en": "• Pixel-level metrics are insufficient for transformation tasks. Figure 22 shows a style completion example where both structural generation predictions receive low SSIM (0.367 and 0.322) despite remaining stylistically plausible, indicating that image similarity metrics can penalize palette role swaps and do not capture style consistency;"
+  },
+  {
+   "id": "b0309",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 33: Style Completion (⟦SLOT_87⟧). Font: per-component font-family match. color: per-component color match. FS: font-size MAE (px, ⟦SLOT_88⟧). Op.: opacity MAE (⟦SLOT_89⟧). BG: background ⟦SLOT_90⟧ (⟦SLOT_91⟧)."
+  },
+  {
+   "id": "b0310",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Valid ↑ \\uparrow Font ↑ \\uparrow color ↑ \\uparrow FS ↓ \\downarrow Op. ↓ \\downarrow BG ↓ \\downarrow GPT-5.4 0.943 0.961 0.771 1.83 0.010 10.56 Gemini-3.1-Pro 0.550 0.968 0.782 2.47 0.023 8.42"
+  },
+  {
+   "id": "b0311",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 34: Recoloring (⟦SLOT_92⟧). Pos.: position fidelity. Area: area fidelity. Pal.: palette adherence (⟦SLOT_93⟧). Cov.: palette coverage. BG: background ⟦SLOT_94⟧ (⟦SLOT_95⟧)."
+  },
+  {
+   "id": "b0312",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Valid ↑ \\uparrow Pos. ↑ \\uparrow Area ↑ \\uparrow Pal. ↑ \\uparrow Cov. ↑ \\uparrow BG ↓ \\downarrow GPT-5.4 0.965 1.000 1.000 0.946 0.776 14.48 Gemini-3.1-Pro 0.635 1.000 1.00 0.929 0.690 17.76"
+  },
+  {
+   "id": "b0313",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0314",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 20: Template variant generation tasks, and see Appendix B for the exact input prompts. In structural generation, the model receives reference layout JSON file(s) and their rendered image(s) and shall generate a complete layout specification in JSON format. In image generation, the model receives rendered reference image(s) and directly produces a rasterized layout. Style Completion: infer style properties from styled siblings from the same template. Recoloring: recolor to match a target palette from a different template family (shown as color swatches)."
+  },
+  {
+   "id": "b0315",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 35: Tier 2 aesthetic metrics (text+image input). All values in ⟦SLOT_96⟧."
+  },
+  {
+   "id": "b0316",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Task Harmony ↑ \\uparrow Contrast ↑ \\uparrow Hierarchy ↑ \\uparrow GPT-5.4 Style Completion 0.888 0.703 1.000 Recoloring 0.904 0.573 1.000 Gemini-3.1-Pro Style Completion 0.848 0.768 1.000 Recolor"
+  },
+  {
+   "id": "b0317",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 36: Tier 3 image-level metrics. For Style Completion, reference is the ground-truth styled layout. For Recoloring, reference is the source layout before transformation (structural preservation). Structural: model outputs JSON, rendered for comparison. Image: model directly generates a rasterized layout image.⟦SLOT_97⟧: valid, renderable predictions."
+  },
+  {
+   "id": "b0318",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Task N N SSIM ↑ \\uparrow PSNR ↑ \\uparrow LPIPS ↓ \\downarrow Style Completion (ref. = ground-truth styled layout) Structural generation GPT-5.4 132 0.796 16.64 0.238 Gemini-3.1-Pro 77 0.810 17.98"
+  },
+  {
+   "id": "b0319",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0320",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 21: Template generation failure cases, and see Appendix B for the exact input prompts. Style Completion: GPT-5.4 fails to infer the proper text box size, while Gemini-3.1-Pro fails to generate valid JSON file;both image generation models fail to be text or content faithful. Recoloring: All models fail to correctly assign the colors based on the palette, which shows that models lack the understanding of color palette in design. The size differences reflect fixed output resolutions of image generation APIs."
+  },
+  {
+   "id": "b0321",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0322",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 22: Failure of image similarity metrics to reflect stylistic validity. See Appendix B for the exact input prompts. In this style completion example, both structural generation predictions are visually coherent and preserve the sibling style language, but they assign a different palette from the reference. Although the outputs are style consistent, pixel-level similarity remains low (SSIM 0.367 and 0.322) in contrast to image generation results where GPT-Image-1.5 (0.529) preserves the content but generates inconsistent style and Gemini-3.1-Flash-Image (0.456) hallucinates the content, showing that image metrics can undervalue stylistically plausible alternatives. See Appendix B for the exact input prompts."
+  },
+  {
+   "id": "b0323",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 37: Summary of key findings across template & design semantics tasks."
+  },
+  {
+   "id": "b0324",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Key Finding Best Performance Best Model Status Category Classification Label constraining yields +30–62 pp gains; open-vocab difficulty is mostly label aliasing, not perceptual failure 78.7% Top-"
+  },
+  {
+   "id": "b0325",
+   "t": "text",
+   "w": "h2",
+   "en": "7 Animation & Temporal Tasks"
+  },
+  {
+   "id": "b0326",
+   "t": "text",
+   "w": "p",
+   "en": "This section evaluates models on animation understanding and generation tasks: temporal ordering, motion classification, property extraction, and animated video synthesis. Table 38 lists the task definitions and dataset statistics for this domain. All understanding tasks draw from 100 animated compositions. Gemini receives the full video as input; GPT and Claude receive uniformly sampled keyframe sequences."
+  },
+  {
+   "id": "b0327",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 38: Animation & temporal task definitions and dataset statistics."
+  },
+  {
+   "id": "b0328",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Description Samples Classes Metrics Keyframe Ordering Recover the chronological sequence of four shuffled keyframes from an animated composition. 100 Permutation of 4 keyframes Exact Match, Kenda"
+  },
+  {
+   "id": "b0329",
+   "t": "text",
+   "w": "h3",
+   "en": "7.1 Temporal Understanding: Keyframe Ordering"
+  },
+  {
+   "id": "b0330",
+   "t": "text",
+   "w": "p",
+   "en": "Keyframe ordering evaluates temporal reasoning over design animations: given four shuffled keyframes from each of 100 videos, the model must recover the correct chronological sequence. Understanding temporal order is fundamental to animation comprehension, a model that cannot infer narrative or motion progression from visual snapshots cannot be a reliable collaborator in animated design workflows. We report exact match, Kendall’s ⟦SLOT_98⟧, pairwise accuracy, and first-frame accuracy (random baseline: 4.2%, 0.0, 50.0%, 25.0%)."
+  },
+  {
+   "id": "b0331",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0332",
+   "t": "text",
+   "w": "p",
+   "en": "Table 39 presents the results."
+  },
+  {
+   "id": "b0333",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 39: Keyframe ordering: models are given four shuffled keyframes from each of 100 animated compositions and must predict the correct chronological sequence."
+  },
+  {
+   "id": "b0334",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Exact Match ↑ \\uparrow Kendall’s τ \\tau ↑ \\uparrow Pairwise Acc. ↑ \\uparrow First-Frame Acc. ↑ \\uparrow Random baseline 4.2% 0.000 50.0% 25.0% Gemini-3.1-Pro 14.00 17.66 58.83 67.00 GPT-5.4 16.0"
+  },
+  {
+   "id": "b0335",
+   "t": "text",
+   "w": "li",
+   "en": "• All models beat the random baseline but remain weak: exact match ranges from 14–16%, with pairwise accuracy only ⟦SLOT_99⟧10 pp above chance (58.8–61.2%), indicating this as an unsolved task."
+  },
+  {
+   "id": "b0336",
+   "t": "text",
+   "w": "li",
+   "en": "• First-frame identification is substantially easier than full ordering (67–80% vs. 14–16% exact match), suggesting models detect the initial state but struggle with fine-grained temporal progression."
+  },
+  {
+   "id": "b0337",
+   "t": "text",
+   "w": "h3",
+   "en": "7.2 Animation Understanding: Motion Type Classification"
+  },
+  {
+   "id": "b0338",
+   "t": "text",
+   "w": "p",
+   "en": "Motion type classification evaluates whether models can identify the entrance animation effect from 32 canonical types, e.g. rise, fade, pop, tumble) applied to individual elements in 100 LICA animated compositions (Section 2). Compositions contain 1–20 animated elements; we test under open-vocabulary and label-constrained prompting. Gemini receives full video; GPT and Claude receive keyframe sequences. See Figure 23 as an example for top motion types in the LICA dataset."
+  },
+  {
+   "id": "b0339",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0340",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 23: Example motion types. A full list of the 32 motion types are given in the Appendix Table 63)."
+  },
+  {
+   "id": "b0341",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0342",
+   "t": "text",
+   "w": "p",
+   "en": "Table 40 presents the results. We omit qualitative examples for this task as model outputs are too inaccurate to yield meaningful visual analysis. Key findings show:"
+  },
+  {
+   "id": "b0343",
+   "t": "text",
+   "w": "li",
+   "en": "• Motion type classification is largely unsolved: all models achieve below 13% accuracy, with most scoring 0% on single-component scenes."
+  },
+  {
+   "id": "b0344",
+   "t": "text",
+   "w": "li",
+   "en": "• Single-component accuracy is near-zero: five of six model/prompt combinations score 0% on single-component scenes (the exception being Claude constrained at 13.3%). Because these scenes contain only a single animated element and require no decomposition, scene segmentation alone cannot explain the failure. This points to a more fundamental inability to map perceived motion patterns. This is likely because UI motion-graphics primitives (e.g. tumble, pop, stomp) are underrepresented in pretraining data relative to natural-video motion, leaving models without a reliable basis for distinguishing them."
+  },
+  {
+   "id": "b0345",
+   "t": "text",
+   "w": "li",
+   "en": "• Constrained prompting does not reliably help: providing the 32-label vocabulary improves Claude marginally on single-component scenes but degrades Gemini substantially, suggesting that models are not close to solving the task and simply guessing differently when the label set is supplied."
+  },
+  {
+   "id": "b0346",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 40: Motion type classification on each animated element. Results are stratified by scene complexity: Single (1 animated element) vs. Multi (⟦SLOT_100⟧2). Gemini receives the full animation video; GPT and Claude receive uniformly sampled keyframes."
+  },
+  {
+   "id": "b0347",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Input Prompt Acc. (All) ↑ \\uparrow Acc. (Single) ↑ \\uparrow Acc. (Multi) ↑ \\uparrow Count MAE ↓ \\downarrow Gemini-3.1 Video open 7.12 0.00 8.37 3.60 constrained 3.00 0.00 3.52 5.79 GPT-5.4 Keyfr"
+  },
+  {
+   "id": "b0348",
+   "t": "text",
+   "w": "h3",
+   "en": "7.3 Animation Understanding: Animation Property Extraction"
+  },
+  {
+   "id": "b0349",
+   "t": "text",
+   "w": "p",
+   "en": "Animation property extraction evaluates a model’s ability to perceive and quantify temporal characteristics of animated design compositions across three sub-tasks of increasing difficulty on 100 LICA compositions (Section 2): video-level duration prediction, component-level duration prediction, and component-level start-time prediction. Here, a component refers to an individual design element in the layout (e.g., text/image) that is animated independently. The latter two tasks therefore require identifying and tracking each element over time (implicit scene decomposition) as well as fine-grained temporal estimation. The latter two require implicit scene segmentation and fine-grained temporal estimation. Gemini receives full video; GPT and Claude receive keyframe sequences."
+  },
+  {
+   "id": "b0350",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0351",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 41 and 42 present the full results, stratified by scene complexity (single-component vs. multi-component). All metrics are defined in Section 2.1. Figure 24 illustrates an example of the entrance window predictions on Claude Opus 4.6."
+  },
+  {
+   "id": "b0352",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 41: Video-level and Component-level duration prediction, stratified by scene complexity. ⟦SLOT_101⟧1 scores report the percentage of predictions within the given tolerance. MAE is in seconds. Count MAE measures the absolute error in predicting the number of animated components."
+  },
+  {
+   "id": "b0353",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Input Video-level MAE ↓ \\downarrow ≤ \\leq 1 s ↑ \\uparrow ≤ \\leq 2 s ↑ \\uparrow All Gemini 3.1 Video 6.21 25.00 46.00 GPT-5.4 Keyframes 6.44 9.00 28.00 Claude-Opus-4.6 Keyframes 6.28 14.00 25.00 "
+  },
+  {
+   "id": "b0354",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 42: Component-level start-time offset prediction, stratified by scene complexity. MAE is in seconds. The model predicts when each element’s entrance animation begins relative to the start of the video. Count MAE measures the absolute error in predicting the number of animated components."
+  },
+  {
+   "id": "b0355",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Input MAE ↓ \\downarrow ≤ \\leq 0.5 s ↑ \\uparrow ≤ \\leq 1.0 s ↑ \\uparrow Count MAE ↓ \\downarrow All Gemini-3.1 Video 1.41 64.95 82.14 5.82 GPT-5.4 Keyframes 1.44 61.19 80.31 4.07 Claude-Opus-4.6 K"
+  },
+  {
+   "id": "b0356",
+   "t": "text",
+   "w": "li",
+   "en": "• Video-level duration is poorly estimated across the board: all models exhibit MAE ⟦SLOT_102⟧ 6 s, and the majority of predictions are off by more than two seconds, demonstrating that models lack a reliable internal clock for overall composition length."
+  },
+  {
+   "id": "b0357",
+   "t": "text",
+   "w": "li",
+   "en": "• Scene decomposition is the primary bottleneck: single-to-multi performance gap is large and consistent across all sub-tasks, and models with lower component Count MAE estimate timing more accurately."
+  },
+  {
+   "id": "b0358",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0359",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 24: Ground-truth versus predicted entrance windows on one sample. Each bar spans from the component’s entrance start time to the end of its entrance animation (start + duration). Claude-Opus-4.6 correctly identifies the two short rise animations (0-1, 0-2) within 0.25s but substantially underestimates the longer burst and bounce durations (2.80 → 0.80s and 2.50 → 0.30s). The model also hallucinates staggered entrance times (0.0–0.8s offsets) when all four components enter simultaneously at t = 0. Duration MAE: 1.12s; start time MAE: 0.40s."
+  },
+  {
+   "id": "b0360",
+   "t": "text",
+   "w": "h3",
+   "en": "7.4 Animation Generation: Parameter Generation"
+  },
+  {
+   "id": "b0361",
+   "t": "text",
+   "w": "p",
+   "en": "Animation parameter generation evaluates whether video generation models can produce correct animations when given a static design layout and explicit per-component animation specifications. The model receives the last frame of the ground-truth video as a static layout reference along with a text prompt that enumerates, for each component, the animation type (e.g. fade, rise, pan, tumble, flicker, rotate), duration, speed, direction, and animate phase (entrance, continuous, or both). Components are identified only by an integer index and their element type (image, group, or text); the model must resolve which visual region each index refers to using the layout image alone."
+  },
+  {
+   "id": "b0362",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0363",
+   "t": "text",
+   "w": "p",
+   "en": "Qualitative results on 10 samples comparing Sora and Veo are provided in the supplementary HTML33 3 https://lica.world/video-generation-benchmarks. Perceptual similarity scores are given in Table 43 and Figure 25 illustrates an example of the prompt and input static layout used in this task. Key findings:"
+  },
+  {
+   "id": "b0364",
+   "t": "text",
+   "w": "li",
+   "en": "• Grounding is the core failure: given only a static composite frame and a textual list of component indices, models have no reliable way to identify which image region corresponds to “Component ⟦SLOT_103⟧.” They must simultaneously parse the layout, segment it, assign consistent indices, and apply distinct animation parameters to each segment. Precisely controlling attributes such as speed, easing, and magnitude proves substantially harder in this setting."
+  },
+  {
+   "id": "b0365",
+   "t": "text",
+   "w": "li",
+   "en": "• Outputs diverge systematically from specifications: in practice, models either apply a single dominant motion globally, animate the wrong elements, or hallucinate motion unrelated to the prompt."
+  },
+  {
+   "id": "b0366",
+   "t": "text",
+   "w": "li",
+   "en": "• Full video input does not resolve the problem: faithful animation parameter control would require richer conditioning, such as per-component image crops or masks, so that the model can unambiguously associate each instruction with its target region."
+  },
+  {
+   "id": "b0367",
+   "t": "text",
+   "w": "li",
+   "en": "• Automatic metrics are limited: frame-level similarity measures such as FID and LPIPS are uninformative when the layout itself is distorted, and per-component motion metrics presuppose correct component isolation, precisely the capability that is lacking. We report perceptual similarity (LPIPS, SSIM, PSNR) between the input static layout and generated frames to verify that models preserve the original composition, but these scores do not capture whether the correct animations were applied to the correct components. We therefore supplement with qualitative results and leave fine-grained quantitative evaluation to future work with component-level human evaluation."
+  },
+  {
+   "id": "b0368",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 43: Perceptual similarity measured between the input static layout and the first and last frames of the generated video. High similarity does not imply correct execution of the prompt: qualitative results show that both models fail to produce the correct motion types and component counts."
+  },
+  {
+   "id": "b0369",
+   "t": "keep",
+   "w": "table",
+   "en": "Evaluation Dimension Method Metric Sora Veo Perceptual Similarity Static → \\rightarrow First Frame SSIM ↑ \\uparrow 48.51 77.24 Static → \\rightarrow Last Frame SSIM ↑ \\uparrow 44.05 46.48 Static → \\rig"
+  },
+  {
+   "id": "b0370",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0371",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 25: Example outputs from Sora and Veo given a static design layout with explicit per-component animation instructions. The static input is the final frame of the ground-truth video, which fades to white in this example. Sora more faithfully follows the prompt specifications (e.g., correctly matching the described primary color), while Veo adheres more strongly to the input image, preserving its appearance and color scheme. In this example, both models fail to generate the correct number of components for groups 1–3 and 4–10. While the motion direction is generally correct, the motion type is incorrect for all components."
+  },
+  {
+   "id": "b0372",
+   "t": "text",
+   "w": "h3",
+   "en": "7.5 Animation Generation: Motion Trajectory Generation"
+  },
+  {
+   "id": "b0373",
+   "t": "text",
+   "w": "p",
+   "en": "Motion trajectory generation evaluates whether video generation models can synthesize a specific motion primitive (e.g. wipe, fade, rise) given a static layout image and component metadata. The model receives the final resting state of a design, a motion-type label from the 32 LICA primitives, and component specifications (index, type, direction, speed, duration), and must produce keyframes or a video depicting the target transition. We measure motion type accuracy, mean LPIPS (transition smoothness), LPIPS variance (motion evenness), and mean SSIM."
+  },
+  {
+   "id": "b0374",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0375",
+   "t": "text",
+   "w": "p",
+   "en": "Qualitative results on 10 samples comparing Sora and Veo are provided in the supplementary HTML3."
+  },
+  {
+   "id": "b0376",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 44: Human evaluated motion trajectory generation accuracy by motion type. Each sample tests whether the generated video depicts the requested motion primitive. Veo-2.0 and Sora-2 are evaluated on 10 samples spanning 7 of the 32 LICA motion primitives."
+  },
+  {
+   "id": "b0377",
+   "t": "keep",
+   "w": "table",
+   "en": "Motion Type No. Samples Veo-2.0 Sora-2 Motion Accuracy ↑ \\uparrow Motion Accuracy ↑ \\uparrow flicker 1 100.00 0.00 blur 1 0.00 0.00 baseline 1 100.00 0.00 rise 3 66.67 33.33 tumble 1 0.00 0.00 pan 2 1"
+  },
+  {
+   "id": "b0378",
+   "t": "text",
+   "w": "li",
+   "en": "• Fine-grained parameter control remains elusive: even when a model successfully reproduces a motion type, precisely controlling attributes such as speed, easing, and magnitude proves substantially harder, indicating that coarse motion generation does not imply fine-grained controllability."
+  },
+  {
+   "id": "b0379",
+   "t": "text",
+   "w": "li",
+   "en": "• Performance is highly motion-dependent: both models succeed on pan but fail on tumble and blur, suggesting that spatial trajectory primitives are easier to reproduce than visual-effect primitives."
+  },
+  {
+   "id": "b0380",
+   "t": "text",
+   "w": "h3",
+   "en": "7.6 Animation Generation: Short-Form Video Layout Generation"
+  },
+  {
+   "id": "b0381",
+   "t": "text",
+   "w": "p",
+   "en": "Short-form video layout generation evaluates the model’s ability to produce a complete animated marketing video from a text brief alone, without any visual input. The model shall autonomously design the layout, author text, select a color theme, and animate the composition in 9:16 format. We evaluate on 10 marketing briefs spanning diverse industries via human evaluation (binary pass/fail per metric, ⟦SLOT_104⟧)."
+  },
+  {
+   "id": "b0382",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0383",
+   "t": "text",
+   "w": "p",
+   "en": "Table 45 presents the human evaluation results. Qualitative results on 10 samples comparing Sora and Veo are provided in the supplementary HTML3."
+  },
+  {
+   "id": "b0384",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 45: Human evaluation results for short-form video layout generation. Each model receives only a text marketing brief and must generate a complete 9:16 video from scratch. Scores report average correctness percentages over ⟦SLOT_105⟧ samples. For Text Accuracy and Text Readability, we average the per-sample ratios of correct or readable text instances. Spatial Layout Accuracy is computed as the average proportion of correctly matched positioned elements, and Background Correctness is reported as pass rate."
+  },
+  {
+   "id": "b0385",
+   "t": "keep",
+   "w": "table",
+   "en": "Metric Accuracy ↑ \\uparrow Veo-3.1 Sora-2 Text Accuracy 68.69 78.77 Text Readability 81.59 94.13 Spatial Layout Accuracy 80.00 80.00 Background Correctness 80.00 80.00"
+  },
+  {
+   "id": "b0386",
+   "t": "text",
+   "w": "li",
+   "en": "• High-level accuracy falls short at finer granularity. While video generation models can adhere to prompts at a high level, performance degrades substantially when evaluation is decomposed into finer-grained criteria such as component-level positioning or text quality."
+  },
+  {
+   "id": "b0387",
+   "t": "text",
+   "w": "li",
+   "en": "• Text quality is a critical differentiator. Sora-2 renders accurate text in 79% of samples, compared to 69% for Veo-3.1. Even in terms of readability, neither model achieves perfect scores, limiting their usability."
+  },
+  {
+   "id": "b0388",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0389",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 26: Qualitative example of single-layout short-form video generation on Sora-2 and Veo-3.1. Each model receives only a text marketing brief describing a vertical fashion announcement and must design, lay out, and animate a complete 9:16 short-form video from scratch (no image input). The ground truth (top) shows components entering sequentially over 4 seconds: brand name, headline with star accents, tagline box, product photo, and social handle, all on a textured marble background. Veo-3.1 (bottom left) reproduces the layout hierarchy and marble background but does not render the video in the requested 9:16 portrait, generates incorrect text, produces the wrong number of star accents flanking the headline, and exhibits visual style inconsistency by the third frame as the layout shifts to a different color scheme. Sora-2 (bottom right) correctly produces a 9:16 portrait video and legible text, but collapses the staggered reveal into a near-simultaneous appearance of all elements, losing the sequential entrance timing specified in the brief. Neither faithfully reproduce the fine-grained compositional structure: Veo-3.1 fails on aspect ratio and animation style, while Sora-2 fails on temporal sequencing and component-level entrance control."
+  },
+  {
+   "id": "b0390",
+   "t": "text",
+   "w": "p",
+   "en": "While the present evaluation focuses on single-layout short-form videos, real-world marketing content frequently comprises multi-layout compositions in which distinct scenes or slides transition sequentially within a single video. Evaluating multi-layout generation introduces additional challenges beyond those observed here, including inter-layout coherence, consistent branding across scenes, transition quality, and correct allocation of content to the appropriate layout. We leave systematic evaluation of multi-layout short-form video generation to future work."
+  },
+  {
+   "id": "b0391",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 46: Summary of key findings across animation & temporal tasks."
+  },
+  {
+   "id": "b0392",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Key Finding Best Performance Best Model Status Keyframe Ordering Models beat the random baseline but remain weak; first-frame identification ( ∼ {\\sim} 80%) is much easier than full ordering ( ∼ "
+  },
+  {
+   "id": "b0393",
+   "t": "text",
+   "w": "h2",
+   "en": "8 Discussion"
+  },
+  {
+   "id": "b0394",
+   "t": "text",
+   "w": "h3",
+   "en": "8.1 Task Solvability Landscape"
+  },
+  {
+   "id": "b0395",
+   "t": "text",
+   "w": "p",
+   "en": "Across the 49 tasks in GDB, a clear solvability hierarchy emerges. Table 47 organizes all task groups into three tiers based on best-model performance and the nature of remaining gaps."
+  },
+  {
+   "id": "b0396",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 47: Task solvability tiers across GDB. Count refers to the number of individual tasks classified in each tier (49 total)."
+  },
+  {
+   "id": "b0397",
+   "t": "keep",
+   "w": "table",
+   "en": "Tier Count Tasks Why Mostly Solved 2 Template pairwise matching (97.7%), template ranking (MRR = 99.4%) (§ 6 ) Both tasks require binary or ordinal similarity judgments over structured template pairs;"
+  },
+  {
+   "id": "b0398",
+   "t": "text",
+   "w": "h3",
+   "en": "8.2 Why Are the Unsolved Tasks Hard?"
+  },
+  {
+   "id": "b0399",
+   "t": "text",
+   "w": "p",
+   "en": "Nearly half of all tasks remain unsolved, and most of the rest are only partially solved. 22 of 49 tasks see no meaningful progress beyond chance, and 25 further tasks are only partially solved, meaning that even where models show some capability, outputs are too inconsistent or imprecise to be reliably acted upon. In a real design workflow, a partially correct layout suggestion or an almost-right font prediction is often worse than no suggestion at all: a designer must stop, identify the error, manually correct it, and re-evaluate, a process that can block progress for hours. The common thread across both unsolved and partially solved tasks is the same: any capability requiring precise, structured output or fine-grained discrimination exposes a hard ceiling in current models."
+  },
+  {
+   "id": "b0400",
+   "t": "text",
+   "w": "li",
+   "en": "• Layout (8 unsolved tasks). Models cannot reliably count elements (MAE grows sharply with layout complexity), identify component types beyond coarse text/non-text distinctions, or localize components (6.4% mAP@0.5). Layer order prediction, crop shape detection, frame detection, intent-to-layout generation, and partial layout completion all remain intractable at the precision required for real editing workflows. In practice, this means a designer cannot ask an AI to “move the third image to the left” or “add a new element below the heading” and expect a spatially correct result. The model simply does not know where things are with sufficient confidence to act on them."
+  },
+  {
+   "id": "b0401",
+   "t": "text",
+   "w": "li",
+   "en": "• Typography (5 unsolved tasks). Font family recognition tops out at 23.7% across 167 families, with most typefaces scoring zero F1. Text color prediction degrades to ⟦SLOT_106⟧E ⟦SLOT_107⟧ 52 in the weakest models. Font size, weight, and line height estimation all show large absolute errors. For brand-sensitive workflows such as auditing whether a campaign asset uses the correct typeface, extracting a client’s typographic system from a reference design, or checking color compliance against brand guidelines, these failure rates are not acceptable margins of error. They are complete breakdowns. A model that cannot distinguish between two common sans-serif fonts cannot be trusted to maintain brand consistency at scale."
+  },
+  {
+   "id": "b0402",
+   "t": "text",
+   "w": "li",
+   "en": "• SVG & Vector (3 unsolved tasks). Text-to-SVG generation produces schematic interpretations rather than faithful reproductions. Text-to-Lottie and text+image-to-Lottie generation yield low frame similarity and largely unreproduced animated structure, with one model’s validity dropping from 100% to 66% when image input is added. For production workflows where scalable, editable vector assets are a hard requirement such as icon libraries, motion graphics, and brand illustration systems, the inability to generate faithful vector code from natural language means AI cannot yet participate in the creation pipeline, only in rough ideation."
+  },
+  {
+   "id": "b0403",
+   "t": "text",
+   "w": "li",
+   "en": "• Template Semantics (1 unsolved task). Category classification without label constraints remains difficult, with models assigning labels that are semantically adjacent but taxonomically incorrect. For platforms managing thousands of templates across dozens of categories, this makes automated tagging and search unreliable. The deeper issue is that different models carry different internal design vocabularies, meaning that a template a designer calls a “promotional banner” may be categorized inconsistently across tools, creating friction for any cross-platform design workflow."
+  },
+  {
+   "id": "b0404",
+   "t": "text",
+   "w": "li",
+   "en": "• Animation (6 unsolved tasks). Keyframe ordering exact match sits at 16%, motion type classification below 13% across all models, and component-level duration and start-time estimation degrades sharply as scene complexity grows. Animation parameter generation and motion trajectory synthesis both fail to produce controllable, component-faithful outputs. Full video input does not help as the bottleneck is scene decomposition, not temporal resolution. For designers producing social media content, presentations, or motion graphics at scale, this means AI cannot yet reliably replicate an animation style, extend an existing motion sequence, or apply consistent entrance effects across a set of elements. These are all routine tasks in professional motion design."
+  },
+  {
+   "id": "b0405",
+   "t": "text",
+   "w": "h3",
+   "en": "8.3 Evaluation Gaps"
+  },
+  {
+   "id": "b0406",
+   "t": "text",
+   "w": "p",
+   "en": "Despite its breadth, GDB surfaces several limitations that point to open problems in how design AI should be measured and evaluated."
+  },
+  {
+   "id": "b0407",
+   "t": "text",
+   "w": "li",
+   "en": "• Pixel metrics are insufficient for design. SSIM, PSNR, and LPIPS cannot distinguish a correct transformation from a hallucinated one when both diverge equally from the source in pixel space. Design evaluation needs structure-aware metrics that operate on extracted primitives such as bounding boxes, font properties, and color tokens rather than raw pixels."
+  },
+  {
+   "id": "b0408",
+   "t": "text",
+   "w": "li",
+   "en": "• Human evaluation is largely absent. Aside from a small set of preference judgments on generation tasks, GDB relies almost entirely on automatic metrics. Professional designer evaluation is missing: a trained designer can immediately judge whether a layout is usable, a typeface is on-brand, or an animation feels natural, signal that no current automatic metric captures. Large-scale human evaluation with domain experts remains an important missing piece."
+  },
+  {
+   "id": "b0409",
+   "t": "text",
+   "w": "li",
+   "en": "• Only closed-source frontier models are evaluated. All models in this benchmark are proprietary API-served systems. Open-source models, specialized design models, and fine-tuned task-specific systems are not represented, limiting the benchmark’s utility as a community-wide progress tracker. Establishing open-source baselines is a priority for future work."
+  },
+  {
+   "id": "b0410",
+   "t": "text",
+   "w": "li",
+   "en": "• Evaluation breaks down at near-zero performance. For tasks such as motion type classification and animation parameter generation, outputs are so far from ground truth that neither automatic metrics nor human evaluation can produce meaningful signal. The field needs evaluation frameworks that gracefully handle near-zero performance regimes rather than forcing a score onto outputs that bear no relationship to the target."
+  },
+  {
+   "id": "b0411",
+   "t": "text",
+   "w": "li",
+   "en": "• Diversity of design contexts is not fully modeled. GDB covers a broad range of template categories but does not capture the full spectrum of design contexts, including culturally specific aesthetics, platform-specific conventions, accessibility requirements, and domain-specific visual languages such as editorial, packaging, or environmental design. Expanding coverage across these dimensions is left to future work."
+  },
+  {
+   "id": "b0412",
+   "t": "text",
+   "w": "h2",
+   "en": "9 Conclusion"
+  },
+  {
+   "id": "b0413",
+   "t": "text",
+   "w": "p",
+   "en": "We have presented GraphicDesignBench (GDB), a benchmark suite of 49 tasks across five design domains: layout, typography, infographics, template & design semantics, and animation, grounded in real-world layered templates from the LICA dataset. Our evaluation of various frontier model families yields a clear verdict: only 2 of 49 tasks are mostly solved, 25 are partially solved, and 22 remain unsolved. Every domain contributes unsolved tasks, with layout-level and animation the hardest hit, and the gap to practical reliability is large, e.g., component detection peaks at 6.4% mAP, font recognition at 23.7%, and motion type classification below 13%. Closing these gaps will likely require advances on both the modeling and evaluation fronts. On the modeling side, design-specialized pretraining with structural supervision on layered composition data is a promising direction, while architectures supporting longer structured outputs could address the SVG and Lottie truncation bottleneck. Looking ahead, we plan to evaluate open-source vision-language models, conduct a systematic prompt engineering study, release human performance references from a designer evaluation currently underway, expand the study to other open-source datasets, and conduct cross-task ablation studies to better understand whether capabilities transfer across design domains — for instance, whether models that excel at typography understanding also generalize to styled text generation, or whether spatial reasoning in layout tasks correlates with performance in animation decomposition."
+  },
+  {
+   "id": "b0414",
+   "t": "text",
+   "w": "p",
+   "en": "We release GDB as an open benchmark with the goal of accelerating progress toward AI systems that can serve as capable, reliable collaborators in professional design workflows."
+  },
+  {
+   "id": "b0415",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0416",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] Naoto Inoue, Kento Masui, Wataru Shimoda, and Kota Yamaguchi. Opencole: Towards reproducible automatic graphic design generation. In Proceedings of the IEEE/CVF Conference on Computer Vision and P"
+  },
+  {
+   "id": "b0417",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] Yutao Cheng, Zhao Zhang, Maoke Yang, Hui Nie, Chunyuan Li, Xinglong Wu, and Jie Shao. Graphic design with large multimodal model. In Proceedings of the AAAI Conference on Artificial Intelligence ,"
+  },
+  {
+   "id": "b0418",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] Jiawei Lin, Shizhao Sun, Danqing Huang, Ting Liu, Ji Li, and Jiang Bian. From elements to design: A layered approach for automatic graphic design composition. arXiv preprint arXiv:2412.19712 , 202"
+  },
+  {
+   "id": "b0419",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] Peidong Jia, Chenxuan Li, Yuhui Yuan, Zeyu Liu, Yichao Shen, Bohan Chen, Xingru Chen, Yinglin Zheng, Dong Chen, Ji Li, Xiaodong Xie, Shanghang Zhang, and Baining Guo. Cole: A hierarchical generati"
+  },
+  {
+   "id": "b0420",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] Jingye Chen, Zhaowen Wang, Nanxuan Zhao, Li Zhang, Difan Liu, Jimei Yang, and Qifeng Chen. Rethinking layered graphic design generation with a top-down approach. arXiv preprint arXiv:2507.05601 , "
+  },
+  {
+   "id": "b0421",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] Martin Heusel, Hubert Ramsauer, Thomas Unterthiner, Bernhard Nessler, and Sepp Hochreiter. Gans trained by a two time-scale update rule converge to a local nash equilibrium. Advances in neural inf"
+  },
+  {
+   "id": "b0422",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] Tim Salimans, Ian Goodfellow, Wojciech Zaremba, Vicki Cheung, Alec Radford, and Xi Chen. Improved techniques for training gans. Advances in neural information processing systems , 29, 2016."
+  },
+  {
+   "id": "b0423",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] Jack Hessel, Ari Holtzman, Maxwell Forbes, Ronan Le Bras, and Yejin Choi. Clipscore: A reference-free evaluation metric for image captioning. In Proceedings of the 2021 conference on empirical met"
+  },
+  {
+   "id": "b0424",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] Elad Hirsch, Shubham Yadav, Mohit Garg, and Purvanshi Mehta. Lica: Layered image composition annotations for graphic design research. arXiv preprint arXiv:2603.16098 , 2026."
+  },
+  {
+   "id": "b0425",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr Dollár, and C Lawrence Zitnick. Microsoft coco: Common objects in context. In European conference on co"
+  },
+  {
+   "id": "b0426",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] Richard Zhang, Phillip Isola, Alexei A Efros, Eli Shechtman, and Oliver Wang. The unreasonable effectiveness of deep features as a perceptual metric. In Proceedings of the IEEE conference on comp"
+  },
+  {
+   "id": "b0427",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] Zhou Wang, Alan C Bovik, Hamid R Sheikh, and Eero P Simoncelli. Image quality assessment: from error visibility to structural similarity. IEEE transactions on image processing , 13(4):600–612, 20"
+  },
+  {
+   "id": "b0428",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] Stephanie Fu, Netanel Tamir, Shobhita Sundaram, Lucy Chai, Richard Zhang, Tali Dekel, and Phillip Isola. Dreamsim: Learning new dimensions of human visual similarity using synthetic data. arXiv p"
+  },
+  {
+   "id": "b0429",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] Yuval Kirstain, Adam Polyak, Uriel Singer, Shahbuland Matiana, Joe Penna, and Omer Levy. Pick-a-pic: An open dataset of user preferences for text-to-image generation. Advances in neural informati"
+  },
+  {
+   "id": "b0430",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] Tianyi Zhang, Varsha Kishore, Felix Wu, Kilian Q Weinberger, and Yoav Artzi. Bertscore: Evaluating text generation with bert. In International Conference on Learning Representations , 2019."
+  },
+  {
+   "id": "b0431",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] Hossein Talebi and Peyman Milanfar. Nima: Neural image assessment. IEEE transactions on image processing , 27(8):3998–4011, 2018."
+  },
+  {
+   "id": "b0432",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] Jiazheng Xu, Xiao Liu, Yuchen Wu, Yuxuan Tong, Qinkai Li, Ming Ding, Jie Tang, and Yuxiao Dong. Imagereward: Learning and evaluating human preferences for text-to-image generation. Advances in Ne"
+  },
+  {
+   "id": "b0433",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] Yuhang Ma, Xiaoshi Wu, Keqiang Sun, and Hongsheng Li. Hpsv3: Towards wide-spectrum human preference score. In Proceedings of the IEEE/CVF International Conference on Computer Vision , pages 15086"
+  },
+  {
+   "id": "b0434",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] Sohan Patnaik, Rishabh Jain, Balaji Krishnamurthy, and Mausoom Sarkar. Aesthetiq: Enhancing graphic layout design via aesthetic-aware preference alignment of multi-modal large language models. In"
+  },
+  {
+   "id": "b0435",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] Zhao Zhang, Yutao Cheng, Dexiang Hong, Maoke Yang, Gonglei Shi, Lei Ma, Hui Zhang, Jie Shao, and Xinglong Wu. Creatiposter: Towards editable and controllable multi-layer graphic design generation"
+  },
+  {
+   "id": "b0436",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] Yadong Qu, Shancheng Fang, Yuxin Wang, Xiaorui Wang, Zhineng Chen, Hongtao Xie, and Yongdong Zhang. Igd: Instructional graphic design with multimodal layer generation. arXiv preprint arXiv:2507.0"
+  },
+  {
+   "id": "b0437",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] Siqi Chen, Xinyu Dong, Haolei Xu, Xingyu Wu, Fei Tang, Hang Zhang, Yuchen Yan, Linjuan Wu, Wenqi Zhang, Guiyang Hou, et al. Svgenius: Benchmarking llms in svg understanding, editing and generatio"
+  },
+  {
+   "id": "b0438",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] Lawrence Hubert and Phipps Arabie. Comparing partitions. Journal of classification , 2(1):193–218, 1985."
+  },
+  {
+   "id": "b0439",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] Gaurav Sharma, Wencheng Wu, and Edul N Dalal. The CIEDE2000 color-difference formula: Implementation notes, supplementary test data, and mathematical observations. Color Research & Application , "
+  },
+  {
+   "id": "b0440",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] W3C. Web Content Accessibility Guidelines (WCAG) 2.0. https://www.w3.org/TR/WCAG20/ , 2008. W3C Recommendation."
+  },
+  {
+   "id": "b0441",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Metric Definitions"
+  },
+  {
+   "id": "b0442",
+   "t": "text",
+   "w": "p",
+   "en": "Section 2.1 provides an overview of all metrics. This appendix gives formal definitions for the non-trivial metrics reported in the benchmark tables."
+  },
+  {
+   "id": "b0443",
+   "t": "text",
+   "w": "h3",
+   "en": "A.1 Standard Metrics"
+  },
+  {
+   "id": "b0444",
+   "t": "text",
+   "w": "p",
+   "en": "Table 48 summarizes the standard metrics used across multiple tasks."
+  },
+  {
+   "id": "b0445",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 48: Standard evaluation metrics. ⟦SLOT_108⟧ = higher is better; ⟦SLOT_109⟧ = lower is better."
+  },
+  {
+   "id": "b0446",
+   "t": "keep",
+   "w": "table",
+   "en": "Category Metric Dir. Definition Spatial mIoU ↑ \\uparrow Mean intersection-over-union between predicted and ground-truth axis-aligned bounding boxes, averaged over all matched elements. mAP@ θ \\theta ↑"
+  },
+  {
+   "id": "b0447",
+   "t": "text",
+   "w": "p",
+   "en": "For Lottie tasks, MSE and SSIM are computed per keyframe and averaged across five rendered frames (0%, 25%, 50%, 75%, 100% of duration), reported as FrameMSE and FrameSSIM."
+  },
+  {
+   "id": "b0448",
+   "t": "text",
+   "w": "h3",
+   "en": "A.2 Task-Specific Metrics"
+  },
+  {
+   "id": "b0449",
+   "t": "text",
+   "w": "p",
+   "en": "Table 49 defines metrics specific to SVG, Lottie, and template generation tasks."
+  },
+  {
+   "id": "b0450",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 49: Task-specific evaluation metrics. All string comparisons apply whitespace normalization (collapsing runs to single spaces) before comparison."
+  },
+  {
+   "id": "b0451",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Metric Dir. Definition SVG Editing RepSim ↑ \\uparrow Repair similarity ∈ [ 0 , 1 ] \\in[0,1] : the fraction of text shared as identical substrings between predicted and ground-truth SVG, after whi"
+  },
+  {
+   "id": "b0452",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Task Prompts"
+  },
+  {
+   "id": "b0453",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 50: Prompt templates for layout understanding tasks (Section 3.1)."
+  },
+  {
+   "id": "b0454",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Aspect Ratio You are a design layout analyst. Look at this rendered design template and predict the aspect ratio of the canvas. Choose exactly one from: 1:1, 16:9, 9:16, 4:"
+  },
+  {
+   "id": "b0455",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 51: Prompt templates for image understanding tasks (Section 3.1)."
+  },
+  {
+   "id": "b0456",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Image Rotation You are a design expert. Look at this rendered design template. Focus on the image element described as: “{description}” Is this image rotated from its norma"
+  },
+  {
+   "id": "b0457",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 52: Prompt templates for layout generation tasks in Section 3.2."
+  },
+  {
+   "id": "b0458",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Intent-to-Layout You are an expert end-to-end layout designer. User intent: [Description of layout intent] Image description: [Detailed visual description] Aesthetic/style "
+  },
+  {
+   "id": "b0459",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 53: Prompt templates for typography understanding tasks (Section 4.1)."
+  },
+  {
+   "id": "b0460",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Font Family You are a typography expert. Look at this rendered design template. What font family is used for the text: “{target_text}”? Respond with ONLY the font family na"
+  },
+  {
+   "id": "b0461",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 54: Prompt template for the Partial Completion task (Section 3.2)."
+  },
+  {
+   "id": "b0462",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Partial Completion (Section 3.2 ) [Input Images: image_1 (base composite), image_2, …, image_N (component assets)] You are an expert layout planner focused on high-fidelity"
+  },
+  {
+   "id": "b0463",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 55: Prompt template for styled text generation in Section 4.2."
+  },
+  {
+   "id": "b0464",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Styled Text Generation You are an expert typography compositor for structured design layouts. Task: restore one missing text element in the local patch. Target text (exact,"
+  },
+  {
+   "id": "b0465",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 56: Prompt template for text removal in Section 4.3."
+  },
+  {
+   "id": "b0466",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Text Removal You are an expert design retoucher specialized in text removal and background inpainting. Task: remove all visible text while preserving non-text visual conten"
+  },
+  {
+   "id": "b0467",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 57: Prompt templates for SVG understanding and editing tasks (Section 5.1). All tasks receive SVG source code as input (code-only, no rendered images)."
+  },
+  {
+   "id": "b0468",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Perceptual Q&A You are an SVG analysis expert. Analyse the given SVG code and answer the multiple-choice question about its visual properties. Output your answer in the exa"
+  },
+  {
+   "id": "b0469",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 58: Prompt templates for SVG generation tasks (Section 5.2)."
+  },
+  {
+   "id": "b0470",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Text-to-SVG You are an SVG code generator. Given a description of a graphic, output ONLY valid SVG code. Do not include any explanation, markdown fences, or extra text. [Na"
+  },
+  {
+   "id": "b0471",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 59: Prompt templates for template & design semantics tasks (Sections 6.1 and 6.2). Input is a rendered design template PNG image."
+  },
+  {
+   "id": "b0472",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Category Classification (Open-vocab) (Section 6.1 ) You are a design template classifier. Look at this rendered design template image and classify it into a single broad ca"
+  },
+  {
+   "id": "b0473",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 60: Prompt templates for template variant understanding tasks (Section 6.3). Input is layout JSON and/or rendered PNG depending on modality condition."
+  },
+  {
+   "id": "b0474",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Pairwise Matching You are given two layouts (A and B). Determine whether they originate from the same template. Answer with a single digit: 1 if same template, 0 if differe"
+  },
+  {
+   "id": "b0475",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 61: Prompt templates for template variant generation tasks (Section 6.4). All prompts receive structured JSON input and expect JSON output."
+  },
+  {
+   "id": "b0476",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Style Completion You are a professional graphic designer. You are given several sibling layouts that share the same template (as JSON), plus a SKELETON of a new layout from"
+  },
+  {
+   "id": "b0477",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 62: Prompt templates for template variant generation (image generation) tasks (Section 6.4). Prompts receive rendered reference images and expect a single generated image as output."
+  },
+  {
+   "id": "b0478",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Style Completion (Image) You are a professional graphic designer. You are given rendered images of layouts from a template family as style reference, plus a SKELETON wirefr"
+  },
+  {
+   "id": "b0479",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 63: Prompt templates for temporal understanding tasks (Sections 7.1, 7.2, and 7.3). Input is either shuffled keyframe images or an animation video depending on the task."
+  },
+  {
+   "id": "b0480",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Keyframe Ordering (Section 7.1 ) You are an animation analyst. You are shown 4 keyframe images extracted from a single design animation video. The images are presented in a"
+  },
+  {
+   "id": "b0481",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 64: Prompt templates for video generation tasks (Sections 7.4, 7.5, and 7.6). Input varies by task: static layout PNG + text prompt, or text-only brief. Output is a generated video evaluated by human raters."
+  },
+  {
+   "id": "b0482",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Prompt Expected Output Animation Parameter Generation (Section 7.4 ) Animate this static layout image. Apply the following entrance animations to the components. The total animation duration is ["
+  },
+  {
+   "id": "b0483",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 65: Prompt template for M-Judge evaluation."
+  },
+  {
+   "id": "b0484",
+   "t": "keep",
+   "w": "table",
+   "en": "Metric Prompt Expected Output M-Judge You are a visual language model designed to evaluate and rate visual templates. You are presented with 2 visual templates. The first attached image is image_1 and"
+  },
+  {
+   "id": "b0485",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C BBox Detector Selection for Typography Spatial Evaluation"
+  },
+  {
+   "id": "b0486",
+   "t": "text",
+   "w": "p",
+   "en": "We report text-region spatial metrics using IoU and bbox F1. When explicit target text boxes are unavailable, we estimate text boxes with an LLM-based detector. Despite the significant challenges that artistic fonts in posters pose to traditional OCR algorithms, the LLM detector is more robust for this setting. To select a single detector, we benchmarked three LLM detectors on 100 ground-truth typography-layout samples. Detection rate is the fraction of evaluated samples for which the detector returns a valid text bounding box. As shown in Table 66, GPT-5.4 achieved the highest F1 and mIoU, so it is used as the default bbox detector."
+  },
+  {
+   "id": "b0487",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 66: Text-bbox detector selection on GT typography-layout samples (⟦SLOT_110⟧). Best scores are in bold."
+  },
+  {
+   "id": "b0488",
+   "t": "keep",
+   "w": "table",
+   "en": "Detector Detection Rate ↑ \\uparrow mIoU ↑ \\uparrow Precision ↑ \\uparrow Recall ↑ \\uparrow F1 ↑ \\uparrow GPT-5.4 1.000 0.863 0.946 0.905 0.919 Gemini-3.1-Pro 1.000 0.731 0.865 0.797 0.829 Claude Opus 4"
+  }
+ ]
+}

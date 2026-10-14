@@ -1,0 +1,976 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "VisualQuality-R1: Reasoning-Induced Image Quality Assessment via Reinforcement Learning to Rank"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "DeepSeek-R1 has demonstrated remarkable effectiveness in incentivizing reasoning and generalization capabilities of large language models (LLMs) through reinforcement learning. Nevertheless, the poten"
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: VisualQuality-R1 excels at image quality scoring, while generating contextually rich, human-aligned quality descriptions."
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "Image quality assessment (IQA) aims to quantify the visual quality of digital images consistent with human perceptual judgments. Commonly, IQA models are classified into full-reference (FR) and no-reference (NR) approaches [47], depending on the availability of pristine-quality reference images. In this paper, we focus on NR-IQA due to its practical relevance in real-world scenarios where reference images are unavailable. Over the decades, NR-IQA has evolved from knowledge-driven [33, 12] to data-driven approaches [30, 19, 54], and shifted from regression-based to ranking-based [58, 59] techniques. Nevertheless, achieving strong model generalization (e.g., generalization to unseen image distortions) remains a significant, unresolved challenge, driving recent research toward multi-dataset training [6], active fine-tuning [44], and continual model adaptation [57]."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "The rapid advancement of vision-language models (VLMs) offers promising avenues for enhancing NR-IQA generalization by contextualizing it into broader vision tasks [51]. VLMs can effectively integrate multi-modal information, enabling understanding of both low-level image distortions (e.g., noise and blur) and high-level perceptual attributes (e.g., aesthetics and content semantics). This multi-modal semantic contextualization allows VLMs to articulate nuanced quality descriptions with stronger generalization."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "However, current NR-IQA methods mainly leverage VLMs through supervised fine-tuning (SFT), which face several critical limitations [49, 56]. First, constructing informative quality descriptions demands extensive human effort, rendering the annotation process labor-intensive and expensive11 1 Utilizing state-of-the-art proprietary VLMs such as GPT-4o [16] for automated annotation suffers from similar scalability challenges due to high computational costs and financial burdens.. Second, models trained via SFT often overfit to the biases and idiosyncrasies present in training data, and may unintentionally encounter catastrophic forgetting of acquired knowledge during pre-training. Third, SFT typically yields overly rigid and templated outputs (see Fig. 1) that may be less useful."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Reinforcement learning (RL) has recently emerged as a powerful alternative, enhancing the reasoning capabilities of LLMs, while aligning their responses with human preferences [35, 13]. In particular, DeepSeek-R1 [13] demonstrates the effectiveness of RL in promoting generalization by encouraging automated exploration of plausible reasoning paths and employing rule-based rewards to prevent reward hacking [37]. However, a direct adaptation of RL techniques to NR-IQA, as exemplified by the recent Q-Insight model [21], has been limited by its reliance on dataset-specific reward design and additional distortion-type classification. These constraints stem from its treatment of visual quality as an absolute perceptual quantity, thereby framing NR-IQA naïvely as a regression task."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we introduce VisualQuality-R1, a reasoning-induced NR-IQA model, and we train it via reinforcement learning to rank (RL2R), a learning algorithm explicitly designed to capture the inherently relative nature of visual quality. Specifically, we employ group relative policy optimization (GRPO) [36] to derive multiple quality scores for each image in a pair. We then compute comparative probabilities between images using the Thurstone model [41] by assessing the difference between the mean quality score of one image and individual quality scores of another, normalized by their sample variances. Unlike previous methods, we define the reward function using the continuous fidelity measure [42], which provides precise guidance to facilitate quality ranking. Extensive experiments confirm that VisualQuality-R1 effectively assesses visual quality across a diverse range of distortion scenarios, outperforming discriminative deep learning-based NR-IQA models as well as a recent reasoning-induced quality regression method [21]. Moreover, VisualQuality-R1 generates contextually rich, human-aligned quality descriptions (see Fig. 1), which can be leveraged to provide targeted feedback for downstream image processing algorithms, and support fine-grained quality control in digital photography pipelines. Additionally, we demonstrate that VisualQuality-R1 remains effective across multi-dataset training scenarios without requiring perceptual scale realignment."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "This section provides a structured review of related NR-IQA models, emphasizing recent advancements, particularly those leveraging VLMs."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "h4",
+   "en": "Regression-based Models"
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "NR-IQA models primarily employed regression-based approaches, wherein image quality was treated as an absolute perceptual quantity directly estimated from extracted “quality-aware” features. Initially, features were handcrafted based on natural scene statistics [33, 34], degradation-specific characteristics [46, 48, 24], and perceptual models inspired by the human visual system [45]. Nonetheless, these methods were limited by the representational capacity of handcrafted features. Later, deep learning-based regression models emerged as the dominant paradigm, using end-to-end trainable neural networks to directly predict quality scores (or, in some cases, quality distributions) [18, 30, 3, 39, 54, 52]. These models typically utilize standard regression losses such as the mean squared error and mean absolute error, or statistical distances such as the earth mover’s distance [39] and Kullback–Leibler (KL) divergence [55]. Regression-based models often struggle with generalization issues, and require labor-intensive perceptual scale realignment [31] when training on multiple IQA datasets."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "h4",
+   "en": "Ranking-based Models"
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "To address these shortcomings, ranking-based NR-IQA models were introduced, modeling visual quality as an intrinsically relative perceptual quantity. Gao et al. [10] pioneered the concept of quality ranking in NR-IQA, although their initial implementation relied on predefined anchor images and was not end-to-end optimized. Ma et al. [29] adapted RankNet [4] to NR-IQA by training (though not fully end-to-end) on quality-discriminable image pairs. Their subsequent work established the first end-to-end ranking-based NR-IQA method grounded in the Thurstone model [41]. Nevertheless, their approach suffers from scaling ambiguity during variance estimation. Zhang et al. [58] incorporated a hinge loss to regularize variance estimation, yet the scaling ambiguity persisted. Their study also demonstrated the superiority of the fidelity loss [42] over the conventional cross-entropy loss in ranking-based NR-IQA. Subsequent research has adopted a simpler approach by fixing the variance parameter to one (corresponding to the Thurstone Case V model), facilitating active fine-tuning of NR-IQA models on challenging examples [44, 43] and allowing for continual adaptation to novel distortion scenarios [57]. Other losses that enable quality ranking include the margin ranking loss [25], differentiable approximations of Spearman’s rank correlation coefficient (SRCC) [2], Pearson linear correlation coefficient (PLCC) [53], and statistical distances between permutation probabilities [5, 38, 17]."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h4",
+   "en": "VLM-based Models"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "The integration of VLMs into NR-IQA has recently gained traction, particularly due to their proficiency in capturing contextual semantics through multi-modal representation learning. Early attempts include multitask adaptation of CLIP [59], as well as SFT-based methods like Q-Align [50], Compare2Score [60], DepictQA [56], and DeQA-Score [55], which trained VLMs to generate either quality scores, distributions, or descriptions. Closest to ours, Q-Insight [21] explored reasoning-induced quality regression through RL. However, Q-Insight struggles with the dataset-specific reward calibration, added complexity of auxiliary distortion-type classification, and generalization to novel distortion scenarios. In contrast, our VisualQuality-R1 redefines the use of VLMs in NR-IQA by shifting from absolute regression to relative ranking, leading to enhanced generalization across distortion scenarios with better quality justifications."
+  },
+  {
+   "id": "b0019",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: System diagram of the proposed VisualQuality-R1 trained via RL2R. Given an image pair ⟦SLOT_0⟧ with a shared text prompt ⟦SLOT_1⟧, VisualQuality-R1 generates ⟦SLOT_2⟧ responses. Following GRPO [36], each response includes a detailed reasoning process and a predicted quality score. To assess relative visual quality, we calculate the asymmetric comparative probability that image ⟦SLOT_3⟧ is perceived better than ⟦SLOT_4⟧ under the Thurstone model [41]. This involves subtracting the mean predicted score of ⟦SLOT_5⟧ from the ⟦SLOT_6⟧-th score of ⟦SLOT_7⟧, standardized by their sample variances. A fidelity reward is derived from human preference, providing continuous supervisory signals for policy optimization."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Reasoning-Induced NR-IQA"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "To harness both the powerful reasoning-inducing capabilities of RL and the intrinsically relative nature of visual quality, we propose an NR-IQA model—VisualQuality-R1—and an RL2R method of training it that seamlessly integrates the Thurstone model within GRPO. Fig. 2 shows the system diagram of VisualQuality-R1."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 VisualQuality-R1 via RL2R"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "Given a text prompt ⟦SLOT_8⟧ and an image ⟦SLOT_9⟧, our goal is to fine-tune a pre-trained VLM, with policy ⟦SLOT_10⟧, to produce a scalar quality score in the range of ⟦SLOT_11⟧, following a step-by-step reasoning process, encapsulated within specially designated tags for explicit instruction and enhanced interpretability. The complete structured text prompt is provided in Table 1."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "More specifically, for a training batch of images ⟦SLOT_12⟧, where ⟦SLOT_13⟧ is the minibatch size, we apply GRPO to generate ⟦SLOT_14⟧ quality predictions for ⟦SLOT_15⟧, ⟦SLOT_16⟧. This output naturally encodes predictive uncertainty, which is crucial for making reliable relative quality ranking. Under the Thurstone model [41], the visual quality of an image is assumed to follow a Gaussian distribution. Thus, we compute the asymmetric comparative probability for each of the ⟦SLOT_17⟧ ordered image pairs by subtracting the mean quality score of ⟦SLOT_18⟧ from the ⟦SLOT_19⟧-th quality score of ⟦SLOT_20⟧, standardized by their sample variances:"
+  },
+  {
+   "id": "b0026",
+   "t": "keep",
+   "w": "table",
+   "en": "p k ​ ( x i , x j ) = Φ ⁡ ( q k ​ ( x i ) − μ ⁡ ( q ⁡ ( x j ) ) σ 2 ​ ( q ⁡ ( x i ) ) + σ 2 ​ ( q ⁡ ( x j ) ) + γ ) , for ​ i ≠ j , {p}_{k}(x_{i},x_{j})=\\Phi\\left(\\frac{q_{k}(x_{i})-\\mu(q(x_{j}))}{\\sq"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_21⟧ is the standard Gaussian cumulative distribution function. ⟦SLOT_22⟧ and ⟦SLOT_23⟧ represent the mean and variance of the quality predictions for ⟦SLOT_24⟧, respectively. ⟦SLOT_25⟧ is a small positive constant to avoid any potential division by zero. Compared to previous ranking-based NR-IQA models that fix the variance parameter in Eq. (1) to one, we explicitly leverage sample variances derived from GRPO. This gives us an opportunity to dynamically accommodate predictive uncertainty for different images. Meanwhile, using the sample mean for quality comparison stabilizes the asymmetric probability estimate and the subsequent reward calculation by appropriately penalizing outlier predictions."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "The true preference ⟦SLOT_26⟧ is derived from human mean opinion scores (MOSs):"
+  },
+  {
+   "id": "b0029",
+   "t": "keep",
+   "w": "table",
+   "en": "p ⁡ ( x , y ) = { 1 if ​ MOS ​ ( x ) > MOS ⁡ ( y ) 0.5 if ​ MOS ​ ( x ) = MOS ⁡ ( y ) 0 otherwise . p(x,y)=\\begin{cases}1&\\text{if }\\mathrm{MOS}(x)>\\mathrm{MOS}(y)\\\\ 0.5&\\text{if }\\mathrm{MOS}(x)=\\mat"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Structured text prompt used in VisualQuality-R1."
+  },
+  {
+   "id": "b0031",
+   "t": "keep",
+   "w": "table",
+   "en": "You are doing the image quality assessment task. Here is the question: What is your overall rating on the quality of this picture? The rating should be a float between 1 and 5, rounded to two decimal "
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "An important aspect of our RL2R algorithm is that we define the reward function ⟦SLOT_27⟧ for each quality estimate ⟦SLOT_28⟧ as the fidelity measure [42]—a continuous analogue of the discretized binary reward [13, 21], averaged across all ⟦SLOT_29⟧ image pairs:"
+  },
+  {
+   "id": "b0033",
+   "t": "keep",
+   "w": "table",
+   "en": "r k ​ ( x i ) = 1 B − 1 ​ ∑ j ≠ i ( p ⁡ ( x i , x j ) ​ p k ​ ( x i , x j ) + ( 1 − p ⁡ ( x i , x j ) ) ​ ( 1 − p k ​ ( x i , x j ) ) ) . r_{k}(x_{i})=\\frac{1}{B-1}\\sum_{j\\neq i}\\left(\\sqrt{p(x_{i},x_"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "This continuous reward feedback provides precise guidance during RL2R by capturing subtle variations in quality ranking, thus improving generalization across diverse distortion scenarios. We collect ⟦SLOT_30⟧ fidelity rewards for ⟦SLOT_31⟧ into the vector ⟦SLOT_32⟧, and compute the relative advantage ⟦SLOT_33⟧ by standardizing rewards within group:"
+  },
+  {
+   "id": "b0035",
+   "t": "keep",
+   "w": "table",
+   "en": "a k ​ ( x i ) = r k ​ ( x i ) − μ ⁡ ( r ⁡ ( x i ) ) σ ⁡ ( r ⁡ ( x i ) ) . a_{k}(x_{i})=\\frac{r_{k}(x_{i})-\\mu(r(x_{i}))}{\\sigma(r(x_{i}))}. (4)"
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "The final policy update of ⟦SLOT_34⟧ is guided by the regularized objective in GRPO:"
+  },
+  {
+   "id": "b0037",
+   "t": "keep",
+   "w": "table",
+   "en": "ℓ ⁡ ( θ ) = 1 B ​ K ​ ∑ i = 1 B ∑ k = 1 K ( CLOSE \\displaystyle\\ell(\\theta)=\\frac{1}{BK}\\sum_{i=1}^{B}\\sum_{k=1}^{K}\\Bigg( min ⁡ ( π θ ​ ( o k | c , x i ) π θ old ​ ( o k | c , x i ) ​ a k ​ ( x i ) ,"
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "Here, ⟦SLOT_35⟧ denotes the stable reference policy obtained after VLM pre-training, and ⟦SLOT_36⟧ is the policy from the previous RL2R training epoch, from which we sample ⟦SLOT_37⟧ reasoning trajectories ⟦SLOT_38⟧. The second KL divergence term is approximated by"
+  },
+  {
+   "id": "b0039",
+   "t": "keep",
+   "w": "table",
+   "en": "D KL ( π θ ( o k | c , x i ) ∥ π ref ( o k | c , x i ) ) = π ref ​ ( o k | c , x i ) π θ ​ ( o k | c , x i ) − log π ref ​ ( o k | c , x i ) π θ ​ ( o k | c , x i ) − 1 , {D}_{\\text{KL}}\\left(\\pi_{\\th"
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "incorporated to ensure that the updated policy ⟦SLOT_39⟧ does not deviate excessively from ⟦SLOT_40⟧. ⟦SLOT_41⟧ is the clipping threshold to prevent large and potentially destabilizing updates to the policy. The coefficient ⟦SLOT_42⟧ serves as a balancing factor between the reward-weighted likelihood term and the KL regularization term."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "We conclude this section by highlighting the key strengths of our VisualQuality-R1. First, VisualQuality-R1 inherits all the advantages of ranking-based NR-IQA models, enabling effective multi-dataset training, active fine-tuning, and continual model adaptation without requiring perceptual scale realignment [31], a feature notably absent in regression-based NR-IQA approaches. Second, trained via RL2R, VisualQuality-R1 mitigates the scalability and overfitting issues inherent in SFT-based models. Third, VisualQuality-R1 promises to both improve model generalizability and furnish contextually rich textual justifications alongside numerical quality scores, thereby boosting its practical relevance in real-world IQA applications."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Experiments"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "To validate VisualQuality-R1, we conduct comprehensive experiments across diverse distortion scenarios, ablation studies on key design components, and in-depth analysis of model behaviors."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: SRCC and PLCC results of NR-IQA models trained on KADID-10K. Exceptions include Q-Insight† and VisualQuality-R1†, which use a combined training set (KADID-10K and SPAQ). Top two results are highlighted in bold and underline, respectively."
+  },
+  {
+   "id": "b0045",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Imaging-Related Distortion Processing-Related Distortion Avg BID CLIVE KonIQ SPAQ De- blurring Super- Res. De- hazing Image Gen. SRCC Handcrafted NIQE [ 34 ] 0.515 0.450 0.421 0.676 0.360 0.557"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Experimental Setups"
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "h4",
+   "en": "Competing Models and Training Details"
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "Competing methods encompass three categories: 1) handcrafted models: NIQE [34] and BRISQUE [33]; 2) discriminative deep-learning-based models: UNIQUE [58], MUSIQ [19], and MANIQA [54]; 3) VLM-based models: LIQE [59], Q-Align [50], DeQA-Score [55], Q-Insight [21], as well as the pre-trained Qwen2.5-VL-7B [1] baseline."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "We fine-tune Qwen2.5-VL-7B [1] as the backbone for VisualQuality-R1 using GRPO [36]. The AdamW optimizer [27] is employed with an initial learning rate of ⟦SLOT_43⟧ and a linear decay schedule. For GRPO, we generate six candidate responses per prompt (i.e., ⟦SLOT_44⟧) and set the balance coefficient ⟦SLOT_45⟧ to ⟦SLOT_46⟧. Training runs on ⟦SLOT_47⟧ NVIDIA A100 GPUs with a minibatch size of eight per GPU, taking approximately five hours for a total of ⟦SLOT_48⟧ epochs."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Main Results"
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "h4",
+   "en": "Single-Dataset Training"
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "We first train NR-IQA models on the synthetic KADID-10K [23] training set (⟦SLOT_49⟧ split while ensuring content independence) and test in a zero-shot setting across eight datasets with distortions arising from digital imaging and (post-)processing stages: BID [7], CLIVE [11], KonIQ-10k [15], SPAQ [8], Liu13 (deblurring) [26], SRIQA-Bench (super-resolution) [6], Min19 (dehazing) [32], and AGIQA-3K (image generation) [20]."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "The SRCC and PLCC results presented in Table 2 reveal several key observations. First, all VLM-based models outperform traditional and discriminative deep-learning-based ones, with the base Qwen2.5-VL-7B achieving an SRCC of ⟦SLOT_50⟧ despite no IQA-specific training. This underscores the power of current VLMs in capturing generalizable quality cues. Second, reasoning-induced models such as Q-Insight and VisualQuality-R1 surpass SFT-based counterparts like Q-Align and DeQA-Score. Third, the proposed VisualQuality-R1 achieves the best results on average, validating that RL2R aligns better with human perception of image quality than regression-based approaches."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "h4",
+   "en": "Multi-Dataset Training"
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "Our RL2R approach enables multi-dataset training without the need for perceptual scale realignment. To exploit this, we train VisualQuality-R1† on a combination of KADID-10K [23] and SPAQ [8] (again ⟦SLOT_51⟧ split while ensuring content independence). As shown in Table 2, VisualQuality-R1† yields consistent performance gains. Despite a minor dip in the image generation scenario, the average SRCC/PLCC rises from ⟦SLOT_52⟧ to ⟦SLOT_53⟧. In stark contrast, Q-Insight† [21] fails to benefit from multi-dataset training due to its inability to address perceptual scale variations22 2 To enable multi-dataset training of Q-Insight, we linearly rescale MOSs from different IQA datasets to ⟦SLOT_54⟧, and apply a dataset-agnostic threshold to compute binary rewards.: KADID-10K uses ratings from ⟦SLOT_55⟧ to ⟦SLOT_56⟧, while SPAQ spans ⟦SLOT_57⟧ to ⟦SLOT_58⟧."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: PLCC results of VisualQuality-R1 with varying ⟦SLOT_59⟧ in GRPO. The default setting is highlighted in bold."
+  },
+  {
+   "id": "b0057",
+   "t": "keep",
+   "w": "table",
+   "en": "#Generated Responses Imaging-Related Distortion Processing-Related Distortion Avg BID CLIVE KonIQ SPAQ De- blurring Super- Res. De- hazing Image Gen. K = 4 K=4 0.805 0.795 0.839 0.875 0.875 0.815 0.64"
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Ablation Studies"
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "h4",
+   "en": "Effect of ⟦SLOT_60⟧ in GRPO"
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "We vary the number of generated responses, ⟦SLOT_61⟧, while keeping all other settings fixed during GRPO. Table 3 shows that reducing ⟦SLOT_62⟧ from six (default) to four or five has only a marginal effect, offering a favorable trade-off between computational cost and accuracy."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "h4",
+   "en": "Binary Reward vs. Continuous Fidelity Reward"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "Table 4 shows that, within the same RL2R framework, our continuous fidelity reward generalizes better than the binary reward adopted in GRPO [36]. Moreover, both reward variants consistently outperform the regression-based Q-Insight [21], underscoring the effectiveness of our RL2R optimization."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Comparison of different Thurstone model variants [41] in GRPO of VisualQuality-R1."
+  },
+  {
+   "id": "b0064",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Imaging-Related Distortion Processing-Related Distortion Avg BID CLIVE KonIQ SPAQ De- blurring Super- Res. De- hazing Image Gen. SRCC Q-Insight [ 21 ] 0.784 0.761 0.806 0.872 0.831 0.724 0.601 "
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "h4",
+   "en": "Thurstone Model Variants"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "To evaluate the effectiveness of mean quality computation in Eq. (1), we compare it with an alternative that averages probabilities across individual quality comparisons:"
+  },
+  {
+   "id": "b0067",
+   "t": "keep",
+   "w": "table",
+   "en": "p k ​ ( x i , x j ) = 1 K ​ ∑ k ′ = 1 K p k , k ′ ​ ( x i , x j ) = 1 K ​ ∑ k ′ = 1 K Φ ⁡ ( q k ​ ( x i ) − q k ′ ​ ( x j ) σ 2 ​ ( q ⁡ ( x i ) ) + σ 2 ​ ( q ⁡ ( x j ) ) + γ ) . {p}_{k}(x_{i},x_{j})=\\"
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "As reported in Table 4, averaging quality scores rather than probabilities yields higher performance across distortion scenarios, indicating more reliable comparative probability estimates and reward assignments. Taking a step further, we fix the variances in Eq. (7) to one—reducing the model to Thurstone Case V [41]. The constant-variance simplification degrades performance on nearly all datasets. This provides a strong indication that sample variances are capable of capturing the perceptual difficulty of image pairs, thus improving comparison reliability and stabilizing fidelity reward computation. Together, these findings verify that RL2R effectively embeds the Thurstone model within GRPO."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "h3",
+   "en": "4.4 Further Analysis"
+  },
+  {
+   "id": "b0070",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Prediction variability decreases during GRPO. We randomly select ⟦SLOT_63⟧ images from each of CLIVE [11], KonIQ-10k [15], SRIQA-Bench [6], and AGIQA-3K [20]. At successive training steps, we generate multiple responses per image, compute the std of the predicted quality scores, and plot the average std across images. The uniformly downward trend confirms that VisualQuality-R1 becomes steadily more stable in assessing image quality as training progresses."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "h4",
+   "en": "Predicted Score Variability over Iterations"
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "We randomly sample ⟦SLOT_64⟧ images from each of CLIVE [11], KonIQ-10k [15], SRIQA-Bench (super-resolution) [6], and AGIQA-3K (image generation) [20], respectively. At successive training checkpoints, we generate multiple responses per image and compute the standard deviation (std) of the resulting ⟦SLOT_65⟧ quality scores. As illustrated in Fig. 3, the std falls steadily across all datasets, indicating that predictions of VisualQuality-R1 become progressively more stable and confident."
+  },
+  {
+   "id": "b0074",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Evolution of the reasoning capabilities of VisualQuality-R1 on an image super-resolved by SwinIR [22]. Initially, VisualQuality-R1 overlooks artifacts and overestimates quality; at later stages, it progressively detects stylization, blur, and filtering effects, yielding more accurate quality scores and human-aligned textual justifications. Zoom in for improved visibility."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h4",
+   "en": "Visual Reasoning Evolution over Iterations"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "Fig. 4 tracks how the visual reasoning capabilities of VisualQuality-R1 mature over the course of training. The test image is super-resolved by SwinIR [22], which contains subtle, processing-related artifacts, making it an informative probe. Q-Insight notices that the image is “blurry” and “overexposed,” but assigns an extremely low score (i.e., ⟦SLOT_66⟧), indicating limited sensitivity to super-resolution artifacts. The base model Qwen2.5-VL-7B [1] swings to the opposite extreme: it praises the “clear details” and “vibrant colors,” declares the absence of blur or noise, and outputs an inflated score (i.e., ⟦SLOT_67⟧). The model clearly over-trusts superficial sharpness cues and misses hidden processing traces. In contrast, the proposed VisualQuality-R1 progressively refines its visual reasoning over iterations. At the ⟦SLOT_68⟧-th step, it starts to suspect artificial stylization and questions the image’s realism, yet it still values the apparent clarity. By the ⟦SLOT_69⟧-th step, the description becomes more balanced. It acknowledges the level of detail and clarity, yielding a slightly higher but still cautious rating. At the last step, the explanation is now decidedly nuanced. VisualQuality-R1 attributes the remaining softness to possible filtering or to the object’s inherent structure, labels the appearance “surreal,” and reduces the score to ⟦SLOT_70⟧, reflecting a judicious penalty for unnatural post-processing. In summary, RL2R guides VisualQuality-R1 from naïve, superficial remarks to sophisticated, human-aligned reasoning that correctly identifies subtle super-resolution artifacts and calibrates quality scores accordingly."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Conclusion and Discussion"
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "We have introduced VisualQuality-R1, a reasoning-induced NR-IQA model optimized via RL2R. Our approach is grounded in the intrinsic relativity of visual quality, seamlessly integrating the Thurstone model within GRPO to capture predictive uncertainty. By introducing the continuous fidelity reward, VisualQuality-R1 delivers more precise policy-gradient signals."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "p",
+   "en": "Extensive experiments validate that VisualQuality-R1 consistently surpasses strong discriminative deep learning-based methods and a reasoning-induced baseline. Notably, it bridges the performance gap between synthetic and realistic distortions, demonstrating robustness to dataset inductive biases and noise. In addition to quantitative improvements, VisualQuality-R1 generates contextually rich, human-aligned quality descriptions, which not only enhance transparency and interpretability but also facilitate user trust and post-hoc diagnosis in downstream tasks, such as content filtering, local enhancement prioritization, and quality-aware image retrieval."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "h4",
+   "en": "Limitations and Future Directions"
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "Despite the generalization capabilities demonstrated by VisualQuality-R1, several limitations and promising research directions merit further discussion. First, as a specific case of test-time scaling, VisualQuality-R1 is slow, expensive, and memory-hungry; it may also compound early errors into confidently wrong predictions. It is thus desirable to incorporate sample-adaptive reasoning, rationale compression or distillation, and self-consistency sampling to make VisualQuality-R1 faster, cheaper, and more robust. Second, VisualQuality-R1 relies on a single, fixed text prompt for all images, regardless of the underlying distortion scenario or application context. Incorporating application-aware prompt adaptation, for example via learned prompt-tuning or dynamic template selection, could tailor VisualQuality-R1’s reasoning and scoring to specific image processing tasks, therefore improving its flexibility and accuracy. Third, VisualQuality-R1 is currently formulated as an NR-IQA model, focusing solely on distorted inputs without access to pristine-quality counterparts. It is interesting to extend VisualQuality-R1 to a reference-based setting, which allows a (possibly corrupted) reference image [51]—potentially differing in resolution, color gamut, dynamic range, or bit depth—to serve as a flexible anchor for content fidelity. Last, we foresee adapting the proposed RL2R learning algorithm to other perceptual assessment tasks, including image aesthetics assessment [40], human age estimation [14], and perceptual similarity ranking [9]. Collectively, these promising directions aspire to foster more intelligent, transparent, and adaptable perceptual systems."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgments"
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "p",
+   "en": "This work was supported in part by the Hong Kong ITC Innovation and Technology Fund (9440379 and 9440390) and the PolyU-OPPO Joint Innovative Research Center."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0086",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, Sibo Song, Kai Dang, Peng Wang, Shijie Wang, Jun Tang, et al. Qwen2.5-VL technical report. arXiv preprint arXiv:2502.13923 , 2025."
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] Mathieu Blondel, Olivier Teboul, Quentin Berthet, and Josip Djolonga. Fast differentiable sorting and ranking. In International Conference on Machine Learning , pages 950–959, 2020."
+  },
+  {
+   "id": "b0088",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] Sebastian Bosse, Dominique Maniry, Klaus-Robert Müller, Thomas Wiegand, and Wojciech Samek. Deep neural networks for no-reference and full-reference image quality assessment. IEEE Transactions on "
+  },
+  {
+   "id": "b0089",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] Chris Burges, Tal Shaked, Erin Renshaw, Ari Lazier, Matt Deeds, Nicole Hamilton, and Greg Hullender. Learning to rank using gradient descent. In International Conference on Machine Learning , page"
+  },
+  {
+   "id": "b0090",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] Zhe Cao, Tao Qin, Tie-Yan Liu, Ming-Feng Tsai, and Hang Li. Learning to rank: From pairwise approach to listwise approach. In International Conference on Machine Learning , pages 129–136, 2007."
+  },
+  {
+   "id": "b0091",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] Du Chen, Tianhe Wu, Kede Ma, and Lei Zhang. Toward generalized image quality assessment: Relaxing the perfect reference quality assumption. In IEEE/CVF Conference on Computer Vision and Pattern Re"
+  },
+  {
+   "id": "b0092",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] Alexandre Ciancio, André Luiz N Targino Targino da Costa, Eduardo A. B. da Silva, Amir Said, Ramin Samadani, and Pere Obrador. No-reference blur assessment of digital pictures based on multifeatur"
+  },
+  {
+   "id": "b0093",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] Yuming Fang, Hanwei Zhu, Yan Zeng, Kede Ma, and Zhou Wang. Perceptual quality assessment of smartphone photography. In IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 3677–3"
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] Stephanie Fu, Netanel Tamir, Shobhita Sundaram, Lucy Chai, Richard Zhang, Tali Dekel, and Phillip Isola. DreamSim: Learning new dimensions of human visual similarity using synthetic data. In Advan"
+  },
+  {
+   "id": "b0095",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] Fei Gao, Dacheng Tao, Xinbo Gao, and Xuelong Li. Learning to rank for blind image quality assessment. IEEE Transactions on Neural Networks and Learning Systems , 26(10):2275–2290, 2015."
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] Deepti Ghadiyaram and Alan C Bovik. Massive online crowdsourced study of subjective and objective picture quality. IEEE Transactions on Image Processing , 25(1):372–387, 2015."
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] Deepti Ghadiyaram and Alan C Bovik. Perceptual quality prediction on authentically distorted images using a bag of features approach. Journal of Vision , 17(1):32–56, 2017."
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin Xu, Qihao Zhu, Shirong Ma, Peiyi Wang, Xiao Bi, et al. DeepSeek-R1: Incentivizing reasoning capability in LLMs via reinforce"
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] Guodong Guo, Guowang Mu, Yun Fu, and Thomas S Huang. Human age estimation using bio-inspired features. In IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 112–119, 2009."
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] Vlad Hosu, Hanhe Lin, Tamas Sziranyi, and Dietmar Saupe. KonIQ-10k: An ecologically valid database for deep learning of blind image quality assessment. IEEE Transactions on Image Processing , 29:"
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] Aaron Hurst, Adam Lerer, Adam P Goucher, Adam Perelman, Aditya Ramesh, Aidan Clark, AJ Ostrow, Akila Welihinda, Alan Hayes, Alec Radford, et al. GPT-4o system card. arXiv preprint arXiv:2410.2127"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] Ekhine Irurozki, Borja Calvo, and Jose A. Lozano. Mallows and generalized mallows model for matchings. Bernoulli , 25(2):1160–1188, 2019."
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] Le Kang, Peng Ye, Yi Li, and David Doermann. Convolutional neural networks for no-reference image quality assessment. In IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 173"
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] Junjie Ke, Qifei Wang, Yilin Wang, Peyman Milanfar, and Feng Yang. MUSIQ: Multi-scale image quality Transformer. In IEEE/CVF International Conference on Computer Vision , pages 5148–5157, 2021."
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] Chunyi Li, Zicheng Zhang, Haoning Wu, Wei Sun, Xiongkuo Min, Xiaohong Liu, Guangtao Zhai, and Weisi Lin. AGIQA-3K: An open database for AI-generated image quality assessment. IEEE Transactions on"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] Weiqi Li, Xuanyu Zhang, Shijie Zhao, Yabin Zhang, Junlin Li, Li Zhang, and Jian Zhang. Q-Insight: Understanding image quality via visual reinforcement learning. arXiv preprint arXiv:2503.22679 , "
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] Jingyun Liang, Jiezhang Cao, Guolei Sun, Kai Zhang, Luc Van Gool, and Radu Timofte. SwinIR: Image restoration using Swin Transformer. In IEEE/CVF International Conference on Computer Vision Works"
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] Hanhe Lin, Vlad Hosu, and Dietmar Saupe. KADID-10K: A large-scale artificially distorted IQA database. In IEEE International Conference on Quality of Multimedia Experience , pages 1–3, 2019."
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] Hantao Liu, Nick Klomp, and Ingrid Heynderickx. A no-reference metric for perceived ringing artifacts in images. IEEE Transactions on Circuits and Systems for Video Technology , 20(4):529–539, 20"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] Xialei Liu, Joost Van De Weijer, and Andrew D Bagdanov. RankIQA: Learning from rankings for no-reference image quality assessment. In IEEE/CVF International Conference on Computer Vision , pages "
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] Yiming Liu, Jue Wang, Sunghyun Cho, Adam Finkelstein, and Szymon Rusinkiewicz. A no-reference metric for evaluating the quality of motion deblurring. ACM Transactions on Graphics , 32(6):1–12, 20"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] Ilya Loshchilov and Frank Hutter. Decoupled weight decay regularization. In International Conference on Learning Representations , 2017."
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] Kede Ma, Zhengfang Duanmu, Zhou Wang, Qingbo Wu, Wentao Liu, Hongwei Yong, Hongliang Li, and Lei Zhang. Group maximum differentiation competition: Model comparison with few samples. IEEE Transact"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] Kede Ma, Wentao Liu, Tongliang Liu, Zhou Wang, and Dacheng Tao. dipIQ: Blind image quality assessment by learning-to-rank discriminable image pairs. IEEE Transactions on Image Processing , 26(8):"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] Kede Ma, Wentao Liu, Kai Zhang, Zhengfang Duanmu, Zhou Wang, and Wangmeng Zuo. End-to-end blind image quality assessment using deep neural networks. IEEE Transactions on Image Processing , 27(3):"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] Aliaksei Mikhailiuk, María Pérez-Ortiz, Dingcheng Yue, Wilson Suen, and Rafał K Mantiuk. Consolidated dataset and metrics for high-dynamic-range image quality. IEEE Transactions on Multimedia , 2"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] Xiongkuo Min, Guangtao Zhai, Ke Gu, Yucheng Zhu, Jiantao Zhou, Guodong Guo, Xiaokang Yang, Xinping Guan, and Wenjun Zhang. Quality evaluation of image dehazing methods using synthetic hazy images"
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] Anish Mittal, Anush Krishna Moorthy, and Alan Conrad Bovik. No-reference image quality assessment in the spatial domain. IEEE Transactions on Image Processing , 21(12):4695–4708, 2012."
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] Anish Mittal, Rajiv Soundararajan, and Alan C Bovik. Making a “completely blind” image quality analyzer. IEEE Signal Processing Letters , 20(3):209–212, 2012."
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] Rafael Rafailov, Archit Sharma, Eric Mitchell, Christopher D Manning, Stefano Ermon, and Chelsea Finn. Direct preference optimization: Your language model is secretly a reward model. In Advances "
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK Li, Y Wu, and Daya Guo. DeepSeekMath: Pushing the limits of mathematical reasoning in open"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] Joar Skalse, Nikolaus Howe, Dmitrii Krasheninnikov, and David Krueger. Defining and characterizing reward gaming. In Advances in Neural Information Processing Systems , pages 9460–9471, 2022."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] Hal Stern. Models for distributions on permutations. Journal of the American Statistical Association , 85(410):558–564, 1990."
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] Hossein Talebi and Peyman Milanfar. NIMA: Neural image assessment. IEEE Transactions on Image Processing , 27(8):3998–4011, 2018."
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] Xiaoou Tang, Wei Luo, and Xiaogang Wang. Content-based photo quality assessment. IEEE Transactions on Multimedia , 15(8):1930–1943, 2013."
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] Louis L Thurstone. A law of comparative judgment. Psychological Review , 34:273–286, 1927."
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[42] Ming-Feng Tsai, Tie-Yan Liu, Tao Qin, Hsin-Hsi Chen, and Wei-Ying Ma. FRank: A ranking method with fidelity loss. In International ACM SIGIR Conference on Research and Development in Information "
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[43] Zhihua Wang and Kede Ma. Active fine-tuning from gMAD examples improves blind image quality assessment. IEEE Transactions on Pattern Analysis and Machine Intelligence , 44(9):4577–4590, 2021."
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[44] Zhihua Wang, Haotao Wang, Tianlong Chen, Zhangyang Wang, and Kede Ma. Troubleshooting blind image quality models in the wild. In IEEE/CVF Conference on Computer Vision and Pattern Recognition , p"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[45] Zhou Wang and Alan C Bovik. Reduced-and no-reference image quality assessment. IEEE Signal Processing Magazine , 28(6):29–40, 2011."
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[46] Zhou Wang, Alan C Bovik, and Brian L Evan. Blind measurement of blocking artifacts in images. In IEEE International Conference on Image Processing , pages 981–984, 2000."
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[47] Zhou Wang, Alan C Bovik, Hamid R Sheikh, and Eero P Simoncelli. Image quality assessment: From error visibility to structural similarity. IEEE Transactions on Image Processing , 13(4):600–612, 20"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[48] Zhou Wang and Eero P Simoncelli. Local phase coherence and the perception of blur. In Advances in Neural Information Processing Systems , pages 1435–1442, 2003."
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[49] Haoning Wu, Zicheng Zhang, Erli Zhang, Chaofeng Chen, Liang Liao, Annan Wang, Kaixin Xu, Chunyi Li, Jingwen Hou, Guangtao Zhai, Geng Xue, Wenxiu Sun, Qiong Yan, and Weisi Lin. Q-Instruct: Improvi"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[50] Haoning Wu, Zicheng Zhang, Weixia Zhang, Chaofeng Chen, Liang Liao, Chunyi Li, Yixuan Gao, Annan Wang, Erli Zhang, Wenxiu Sun, Qiong Yan, Xiongkuo Min, Guangtao Zhai, and Weisi Lin. Q-ALIGN: Teac"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[51] Tianhe Wu, Kede Ma, Jie Liang, Yujiu Yang, and Lei Zhang. A comprehensive study of multimodal large language models for image quality assessment. In European Conference on Computer Vision , pages"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[52] Tianhe Wu, Shuwei Shi, Haoming Cai, Mingdeng Cao, Jing Xiao, Yinqiang Zheng, and Yujiu Yang. Assessor360: Multi-sequence network for blind omnidirectional image quality assessment. In Advances in"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[53] Kangmin Xu, Liang Liao, Jing Xiao, Chaofeng Chen, Haoning Wu, Qiong Yan, and Weisi Lin. Boosting image quality assessment through efficient Transformer adaptation with local feature enhancement. "
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[54] Sidi Yang, Tianhe Wu, Shuwei Shi, Shanshan Lao, Yuan Gong, Mingdeng Cao, Jiahao Wang, and Yujiu Yang. MANIQA: Multi-dimension attention network for no-reference image quality assessment. In IEEE/"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[55] Zhiyuan You, Xin Cai, Jinjin Gu, Tianfan Xue, and Chao Dong. Teaching large language models to regress accurate image quality scores using score distribution. In IEEE/CVF Conference on Computer V"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[56] Zhiyuan You, Zheyuan Li, Jinjin Gu, Zhenfei Yin, Tianfan Xue, and Chao Dong. Depicting beyond scores: Advancing image quality assessment through multi-modal language models. In European Conferenc"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[57] Weixia Zhang, Dingquan Li, Chao Ma, Guangtao Zhai, Xiaokang Yang, and Kede Ma. Continual learning for blind image quality assessment. IEEE Transactions on Pattern Analysis and Machine Intelligenc"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[58] Weixia Zhang, Kede Ma, Guangtao Zhai, and Xiaokang Yang. Uncertainty-aware blind image quality assessment in the laboratory and wild. IEEE Transactions on Image Processing , 30:3474–3486, 2021."
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[59] Weixia Zhang, Guangtao Zhai, Ying Wei, Xiaokang Yang, and Kede Ma. Blind image quality assessment via vision-language correspondence: A multitask learning perspective. In IEEE/CVF Conference on C"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[60] Hanwei Zhu, Haoning Wu, Yixuan Li, Zicheng Zhang, Baoliang Chen, Lingyu Zhu, Yuming Fang, Guangtao Zhai, Weisi Lin, and Shiqi Wang. Adaptive image quality assessment via teaching large multimodal"
+  },
+  {
+   "id": "b0146",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix"
+  },
+  {
+   "id": "b0147",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Generalization Probing via gMAD Competition"
+  },
+  {
+   "id": "b0148",
+   "t": "text",
+   "w": "p",
+   "en": "The group maximum differentiation (gMAD) competition [28] is a model comparison framework designed to evaluate the generalization capability of computational models, particularly in scenarios where exhaustive ground-truth labeling is impractical. In this framework, models take turns serving as the defender, while the remaining models act as attackers. The attackers aim to identify image pairs that the defender assigns similar quality scores to, but which they themselves rate very differently. These “adversarial” pairs are subsequently assessed by human observers, allowing for an efficient and targeted examination of model strengths and weaknesses."
+  },
+  {
+   "id": "b0149",
+   "t": "text",
+   "w": "p",
+   "en": "Applying gMAD to compare KADID-10K-trained VisualQuality-R1 and Q-Insight on KonIQ-10k [15] reveals a clear performance distinction. VisualQuality-R1 consistently uncovers perceptual inconsistencies in Q-Insight’s predictions. Conversely, when subjected to attacks, VisualQuality-R1 demonstrates strong robustness, aligning closely with human perception of image quality. This dual capability—high aggressiveness in exposing flaws and strong resistance to adversarial challenges—underscores VisualQuality-R1’s superior generalization, affirming its reliability for real-world IQA."
+  },
+  {
+   "id": "b0150",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Model Complexity Comparison"
+  },
+  {
+   "id": "b0151",
+   "t": "text",
+   "w": "p",
+   "en": "We present a quantitative comparison of model complexity across representative NR-IQA methods. As shown in Table 5, VisualQuality-R1 incurs higher inference costs than discriminative models such as MUSIQ [19] and MANIQA [54], as well as small-scale VLMs like LIQE [59]. This increased computational demand, however, reflects a deliberate design choice to support fine-grained quality reasoning and robust quality rating across diverse distortion scenarios."
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0153",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: gMAD competition results between VisualQuality-R1 and Q-Insight [21]. (a) Fixed Q-Insight at the low-quality level. (b) Fixed Q-Insight at the high-quality level. (c) Fixed VisualQuality-R1 at the low-quality level. (d) Fixed VisualQuality-R1 at the high-quality level."
+  },
+  {
+   "id": "b0154",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Model complexity comparison using a ⟦SLOT_71⟧ image as input."
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "table",
+   "en": "Method #Parameters Inference Time Inference Memory #TFLOPs UNIQUE [ 58 ] 22.32 M 0.02 s 1.62 G 0.029 MUSIQ [ 19 ] 27.13 M 0.05 s 1.69 G 0.026 MANIQA [ 54 ] 135.75 M 0.03 s 2.13 G 0.217 LIQE [ 59 ] 151"
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Visual reasoning samples from VisualQuality-R1 under the synthetic distortion scenario."
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0159",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Visual reasoning samples from VisualQuality-R1 under the realistic distortion scenario."
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Additional Visual Reasoning Examples"
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "p",
+   "en": "We provide additional visual reasoning examples to illustrate the perceptual alignment of VisualQuality-R1 under both synthetic and realistic distortion scenarios. It should be noted that VisualQuality-R1 occasionally assigns quality scores outside the prescribed range of ⟦SLOT_72⟧ (e.g., a score of ⟦SLOT_73⟧ for the second example in Fig. 6), which reflects a common limitation in LLMs. Nevertheless, these deviations have negligible impact on the overall quality prediction performance."
+  }
+ ]
+}

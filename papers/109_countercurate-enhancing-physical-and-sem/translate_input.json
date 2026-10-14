@@ -1,0 +1,1246 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "CounterCurate: Enhancing Physical and Semantic Visio-Linguistic Compositional Reasoning via Counterfactual Examples"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "We propose CounterCurate, a framework to comprehensively improve the visio-linguistic compositional reasoning capability for both contrastive and generative multimodal models. In particular, we identi"
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "We first spotlight the near-chance performance of multimodal models like CLIP and LLaVA in physically grounded compositional reasoning. We then apply simple data augmentation using the grounded image "
+  },
+  {
+   "id": "b0004",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "To facilitate future research, we release our code, dataset, benchmark, and checkpoints at https://countercurate.github.io/ ."
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0007",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Representative examples of GPT-4V failure cases. In both questions, GPT-4V correctly identifies all objects in question, but chooses the wrong answer because it fails to distinguish between either left and right (the left question) or up and down (the right question)."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Large language models such as ChatGPT OpenAI (2023a), GPT4 OpenAI (2023b), and LLaMA Touvron et al. (2023) have demonstrated remarkable knowledge and reasoning abilities. Recently, large multimodal models (LMMs) Radford et al. (2021); OpenAI (2023c) further leverage large-scale image-text pairs for improving visio-linguistic understanding capabilities. However, these models exhibit subpar performance in compositional reasoning Diwan et al. (2022); Hsieh et al. (2023), such as differentiating between semantic distractors like “white shirts and black pants” and “black shirts and white pants”. Current research either concentrates on curating evaluation benchmarks Diwan et al. (2022); Hsieh et al. (2023); Le et al. (2023) or enhancing compositional reasoning abilities by creating rule-based counterfactual fine-tuning data Yuksekgonul et al. (2023); Le et al. (2023)."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "Currently, the majority of research focuses on semantic compositional reasoning, leaving another fundamental problem, physically grounded compositional reasoning, under-explored. This involves tasks such as counting and distinguishing left/right and up/down positions between objects. For example, in Figure 1, GPT-4V OpenAI (2023c) made the wrong choice even though it identified all objects in question, demonstrating capable semantical yet weak physical compositional reasoning.11 1 We were able to reproduce our findings of GPT’s weakness in multiple fashions: the failure cases themselves were initially discovered via manual testing before the APIs were available; we were able to both use the 2023-07-01 Azure API and the website version of GPT4-V to recreate many of the failure cases as well."
+  },
+  {
+   "id": "b0011",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: The data curation pipeline of CounterCurate. Given a positive image-caption pair, we first generate the negative captions, based on which we curate the negative images using the most suitable approach. Specifically, (a) for Flickr30k-Positions (left/right), we flip the positional keyword before conducting the horizontal flip for the image; (b) for Flickr30k-Counting, we manipulate the digit before applying grounded image inpainting Li et al. (2023) as the negative image; (c) for Flickr30k-Attributes, we first leverage GPT-4V OpenAI (2023c) to generate reasonable hard negative captions for replacing the noun, replacing the adjective, and swapping the adjectives. Then we leverage DALLE-3 Betker et al. (2023) to generate coherent images."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "With such an observation, it is not surprising to find that both contrastive models like CLIP Radford et al. (2021) and generative models like LLaVA Liu et al. (2023b) deliver near random chance performance on our newly curated benchmarks. We hypothesize that modern LMMs are largely oblivious to positional differences. To address this, we generate counterfactual image-text pairs using simple methods, such as horizontal flipping for left/right distinctions, as well as by leveraging a grounded image generation model, GLIGEN Li et al. (2023), to accurately replace/remove objects of interest for up/down and counting tasks. Our approach shows significant improvements such as 33+% for CLIP and 37+% for LLaVA on our Flickr30k-Positions benchmark."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "Existing methods also do not fully utilize the capabilities of powerful generative models when creating semantic counterfactual fine-tuning data. We argue that the key to enhancing compositional reasoning capabilities lies in the careful curation of accurate and sufficiently challenging image and text counterfactuals. For example, augmented negative captions with linguistic rules used by recent fine-tuning approaches (Yuksekgonul et al., 2023; Le et al., 2023, e.g.,) can unintentionally follow unnatural language distributions, which are easily distinguishable by a text-only model without any image evidence (Lin et al., 2023)."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "To overcome this, we utilize high-performance text generation model GPT-4V OpenAI (2023c) and image generation model DALLE-3 Betker et al. (2023) to curate reasonably and sufficiently difficult negatives. Our method empirically demonstrates a significant performance boost by fine-tuning CLIP and LLaVA using our data generation pipeline on benchmarks such as SugarCrepe, where we surpass NegCLIP and GPT-4V."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "Our contributions are summarized as follows:"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "li",
+   "en": "• We systematically study physically grounded compositional reasoning, including positional understanding and counting, and highlight the near random performance of multimodal models, including CLIP and LLaVA, on our newly curated benchmarks."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "li",
+   "en": "• We significantly improve physical reasoning capabilities by utilizing simple data augmentation techniques and a grounded image generation model, GLIGEN, to generate counterfactual images and captions."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "li",
+   "en": "• We employ the most capable image and text generation models to generate semantically counterfactual image/text pairs, further enhancing performance over SOTA methods."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Large Multimodal Models"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Multimodal models aim at connecting multiple data modalities. For visio-linguistic tasks, multimodal models are constructed either as contrastive Radford et al. (2021); Jia et al. (2021) or generative OpenAI (2023b); Alayrac et al. (2022); Liu et al. (2023b). Recent large multimodal models are trained with large-scale pretraining data and billions of trainable parameters, allowing them to excel at generalization. Contrastive models such as CLIP Radford et al. (2021) connect images and texts by aligning two modality-specific encoders using contrastive loss. Generative models such as LLaVA Liu et al. (2023b); Liu et al. (2023a) embed images into a decoder-only language model as prefix tokens and utilize next-token prediction loss to align the two modalities. Though such models demonstrate impressive capabilities across various vision-language tasks such as retrieval and visual question answering, they perform less desirably over compositional reasoning Diwan et al. (2022); Hsieh et al. (2023)."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Compositional Reasoning"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "Compositional reasoning Diwan et al. (2022) in vision and language tasks involves evaluating models’ ability to understand and manipulate complex ideas by breaking them down into simpler, constituent components before recombining them in novel ways. A typical example can be distinguishing “blank pants and white shorts” versus “white pants and blank shorts”. Winoground Diwan et al. (2022) is the pioneering benchmark for compositional reasoning, composed of 400 items, each with two images and two corresponding captions. Given an image, multimodal models are asked to find the matching caption from the provided two options, and vice versa. SugarCrepe Hsieh et al. (2023) and SeeTrue Yarom et al. (2023) further scale the distractive captions by leveraging language models for automated generation."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "NegCLIP Yuksekgonul et al. (2023) attempts to improve compositional reasoning via fine-tuning CLIP with perturbed captions as the negative text samples in contrastive learning. However, such permuted captions can be easily detected by a text-only transformer Lin et al. (2023), demonstrating that a more effective approach is needed to further enhance compositional reasoning. DAC Doveh et al. (2024) leverages dense and aligned captions for better positive captions. SGVL Herzig et al. (2023) utilizes scene graphs to fine-tune the pretrained vision-language model. TSVLC Doveh et al. (2023) leverages language models to generate positive and negative captions. COCO-Counterfactual Le et al. (2023) further utilizes both negative images and negative captions to fine-tune CLIP via a rule-based data curation pipeline."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "Moreover, previous works mainly consider composition reasoning with semantically different concepts rather than physically grounded relationships such as object counting and distinguishing left/right and above/below. Though a recent work Paiss et al. (2023) improved CLIP’s counting capabilities, they neither addressed compositional reasoning nor leveraged negative images. In our paper, we systematically improve both semantic and physical compositional reasoning by leveraging the most capable generative models including GPT-4V OpenAI (2023c) and DALLE-3 Betker et al. (2023) to generate counterfactual image/text pairs."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "h3",
+   "en": "2.3 Counterfactual Reasoning"
+  },
+  {
+   "id": "b0028",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Fine-tuning different types of large multimodal models with CounterCurate. Our pipeline can enhance both contrastive learning models and generative models by augmenting vanilla image-caption pairs with curated negative images and captions. Specifically, our counterfactual image-caption pairs (a) provide auxiliary contrastive loss for models like CLIP, where positive contrastive units in the similarity matrix are colored as blue/red and negative ones are colored as white, and (b) can be naturally integrated into the original next-token prediction loss in text generation models such as LLaVA."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "Counterfactual reasoning Morgan and Winship (2015) refers to the process of imagining “what if” scenarios by modifying the input data. In the context of visio-linguistics scenarios, this involves curating negative images and captions by manipulating the original data and observing how it affects the outcome. This helps models understand cause and effect and predict outcomes in situations they’ve never seen before. The key to counterfactual reasoning is curating meaningful and hard enough examples. COCO-Counterfactual Le et al. (2023) explores simple linguistic rules to generate negative captions and uses an image editing model Prompt2Prompt Hertz et al. (2023) to produce negative images Hertz et al. (2023). Prompt2Prompt is less desirable in understanding complex language instructions, as the generated counterfactuals are less reliable and challenging."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we collect the very challenging negative image and text examples by leveraging the most capable language models GPT-4 OpenAI (2023b), text-to-image generation model DALLE-3 Betker et al. (2023), and GLIGEN Li et al. (2023), significantly improving our model’s reasoning. Utilizing these hard negatives, our models can better grasp the nuances of language and vision, enhancing their performance on tasks that require a sophisticated understanding of the world."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Approach"
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "In Sec. 3.1, we first explain our selection of the Flickr30k Entities dataset for both benchmarking and fine-tuning. Then in Sec. 3.2 and 3.3, we demonstrate the near-chance performance of multimodal models like CLIP and LLaVA on physically grounded compositional reasoning tasks, including positional understanding and counting, and improve their performance by generating negative image-text pairs via data augmentation and grounded image inpainting. Finally, we introduce using capable text and image generation models to improve models’ semantic compositional reasoning in Sec. 3.4."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Necessity of Grounded Image Captions"
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Previous approaches Yuksekgonul et al. (2023); Hsieh et al. (2023) adopt global image captioned datasets such as COCO-Captions Chen et al. (2015) and craft negative captions to either benchmark or improve compositional reasoning. This method, however, lacks regional information important for physically grounded reasoning, such as determining the relative position of two objects. Therefore, we leverage Flickr30k Entities Plummer et al. (2016), a grounded image captioning dataset to both curate negative image-caption pairs and benchmark models."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Improving Positional Understanding"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "Currently, there is no benchmark that directly evaluates the positional understanding of multimodal models. We build such a benchmark, Flickr30k-Positions as in Figure 2 (a), that is composed of positive and negative image-caption pairs describing the same objects in opposite positions."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "h4",
+   "en": "Generating negative captions."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "Specifically, we utilize the bounding boxes"
+  },
+  {
+   "id": "b0040",
+   "t": "keep",
+   "w": "table",
+   "en": "B = { B j = ( x j ​ 1 , y j ​ 1 , x j ​ 2 , y j ​ 2 ) ∣ ∀ j ∈ I } B=\\{B_{j}=(x_{j1},y_{j1},x_{j2},y_{j2})\\mid\\forall j\\in I\\}"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "in Flickr30k Entities Plummer et al. (2016) for each object ⟦SLOT_0⟧ in Image ⟦SLOT_1⟧, where box ⟦SLOT_2⟧’s upper-left and lower-right corners are at ⟦SLOT_3⟧ and ⟦SLOT_4⟧, respectively. In order to ensure non-ambiguity in relative position descriptions between categories (e.g., “the dog is to the left of the cat”), we only consider images where for each object category, there is only at most one instance of it in the image. For each pair of objects ⟦SLOT_5⟧, we identify the positional object pairs via the formula:"
+  },
+  {
+   "id": "b0042",
+   "t": "keep",
+   "w": "table",
+   "en": "{ x a ​ 2 ≤ x b ​ 1 ⟹ a is to the left of b x a ​ 1 ≥ x b ​ 2 ⟹ a is to the right of b y a ​ 2 ≤ y b ​ 1 ⟹ a is above b y a ​ 1 ≥ y b ​ 2 ⟹ a is below b \\begin{cases}x_{a2}\\leq x_{b1}\\implies\\text{ $a"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "With the formula, we generate positive and negative positional captions ⟦SLOT_6⟧ and ⟦SLOT_7⟧ such as ⟦SLOT_8⟧“a bike is to the left of a woman” vs. ⟦SLOT_9⟧“a bike is to the right of a women” and ⟦SLOT_10⟧“a table is above a towel” vs. ⟦SLOT_11⟧“a table is below a towel”."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "We also prompt text-only GPT4 OpenAI (2023b) to rewrite the vanilla negative prompt “⟦SLOT_12⟧ is above/below ⟦SLOT_13⟧” to better guide image generation models. For example, the caption “a street is above a young child\" is unnatural, while the GPT-expanded caption “the street stretches out above a young child, elevated by a bridge” is much better. For detailed prompt engineering, see Appendix B."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "h4",
+   "en": "Generating negative images."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "Furthermore, we include negative images in our dataset to curate Flickr30k-Positions. For the left-right pairs, we apply a simple data augmentation method: flip the original images horizontally. For the above-below pairs, however, flipping vertically in most cases would lead to unreasonable images. To address this issue, we utilize GLIGEN Li et al. (2023), an object-level text-to-image generation model that can ground text prompts with bounding boxes. In particular, for each above-below object pair ⟦SLOT_14⟧, we swap the centers of the bounding boxes ⟦SLOT_15⟧ while maintaining their widths and heights, ensuring that the generated images are natural while preserving the objects’ sizes and aspect-ratios as demonstrated in Figure 4. The new bounding boxes and prompts are fed to GLIGEN to generate the corresponding negative image ⟦SLOT_16⟧."
+  },
+  {
+   "id": "b0047",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: To generate the correct above-below negative image via GLIGEN with the original prompt \"the ball is below the sports outfit\", we recenter the bounding boxes of \"ball\" and \"sports outfit\" and feed them into GLIGEN together with an expanded prompt from GPT4."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Improving Object Counting"
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "We introduce Flickr30k-Counting to enhance LMMs’ object counting capabilities. We again curate counterfactual image-caption pairs as in Figure 2 (b). We count the number of bounding boxes for each object category in Flickr30k-Entities Plummer et al. (2016). For two distinct object categories ⟦SLOT_17⟧, we generate a positive caption ⟦SLOT_18⟧“there are ⟦SLOT_19⟧ ⟦SLOT_20⟧’s and ⟦SLOT_21⟧ ⟦SLOT_22⟧’s”, such as “there are three cats and four dogs” where category ⟦SLOT_23⟧ is “cat” and category ⟦SLOT_24⟧ is “dog”."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "h4",
+   "en": "Generating negative captions."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "If all instances of the two selected object categories do not spatially overlap with any other object in the image, we generate the corresponding negative caption by decrementing the one with more objects, ⟦SLOT_25⟧, and incrementing the one with fewer, ⟦SLOT_26⟧; for example, ⟦SLOT_27⟧“there are four cats and three dogs”. This enforces a hard counterfactual format as the numbers in the positives are reversed in the negatives."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "In most cases, however, objects in an image do overlap, and we cannot ascertain that the increment/decrement rule will still generate hard counterfactuals. For example, if a dog overlaps with a cat, and we re-use the rule above to remove one dog and add one cat, we end up with “three cats and three dogs”. In this case, we only remove either one of ⟦SLOT_28⟧ or one of ⟦SLOT_29⟧, for example, the dog, and all objects it overlaps with. An example of the resulting negative caption is ⟦SLOT_30⟧“there are two cats and three dogs.”"
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "h4",
+   "en": "Generating negative images."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "In the case where objects do not overlap, we simply leverage GLIGEN Li et al. (2023) to inpaint a new object of the incremented category ⟦SLOT_31⟧ at the bounding box of one of the objects from the decremented category ⟦SLOT_32⟧. Otherwise, we remove the target objects using GLIGEN to replace it with an object from a generic category. We simply use the plant category for replacement, as plants can appear in almost any natural setting, let it be outdoor or indoor, and we find that GLIGEN does well in generating it according to each image ⟦SLOT_33⟧’s background during inpainting for each corresponding negative image ⟦SLOT_34⟧. More details can be found in Appendix C."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "h3",
+   "en": "3.4 Improving Semantic Compositional Reasoning"
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "Existing works Yuksekgonul et al. (2023); Le et al. (2023) use a rule-based approach to generate negative images/captions for semantic compositional reasoning, resulting in less desirable negatives such as uncommon negative captions e.g., “A dog with blue fur\" from “A dog with black fur\". We introduce Flickr30k-Attributes as in Figure 2 (c), which utilizes GPT-4V OpenAI (2023c) to generate hard negative captions and leverages DALLE-3 Betker et al. (2023) for generating corresponding high-quality negative images. We extract the first and most detailed caption ⟦SLOT_35⟧ for each image ⟦SLOT_36⟧ from the original Flickr30k dataset Young et al. (2014)."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "h4",
+   "en": "Generating negative captions."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "To generate high-quality negative captions, we leverage GPT-4V and feed both positive images ⟦SLOT_37⟧ and captions ⟦SLOT_38⟧ to generate negative captions ⟦SLOT_39⟧. To let GPT-4V know the objects’ locations, we overlay bounding boxes ⟦SLOT_40⟧ onto the original positive image Cai et al. (2024) and also feed this annotated image into GPT-4V. We prompt GPT-4V to generate three kinds of captions, including (i) changing a noun, (ii) changing an adjective, and (iii) swapping any of the two phrases, nouns, or adjectives. For example, given the original caption ⟦SLOT_41⟧ “a man wearing a black shirt and blue jeans\", GPT-4V can generate the following negatives ⟦SLOT_42⟧: (i) “a man wearing a black jacket and blue jeans\", (ii) “a man wearing a black shirt and red jeans\", and (iii) “a man wearing a blue shirt and black jeans\". Detailed prompts to GPT-4V are shown in Appendix A."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "h4",
+   "en": "Generating negative images."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "p",
+   "en": "We simply feed the curated captions ⟦SLOT_43⟧ from GPT-4V directly into the currently most capable text-to-image generation model, DALLE-3 Betker et al. (2023), to generate high-quality negative images ⟦SLOT_44⟧."
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "h3",
+   "en": "3.5 Fine-tuning Methodology"
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "As demonstrated in Figure 3, CounterCurate can be used to fine-tune both contrastive Radford et al. (2021) and generative Liu et al. (2023b) multimodal models. To fine-tune a contrastive model like CLIP, we sample ⟦SLOT_45⟧ positive image-text pairs and the corresponding negative image-text pairs to form a batch ⟦SLOT_46⟧ as shown in Figure 3 (a). We refer to this method as Grouping, where the model is forced to distinguish the positive pairs from their corresponding negatives, which is demonstrated to be helpful in our experiments. We also conduct a detailed analysis of the effectiveness of this method in Section 4.5. The training loss is the same as the original, where cross-entropy loss is used to maximize the diagonal elements and minimize all other entries in the similarity matrix."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "For generative models like LLaVA Liu et al. (2023b); Liu et al. (2023a); Liu et al. (2024), we reformat our data into conversations and follow their exact training paradigm to fine-tune, as shown in Figure 3 (b). The training loss is the original next-token prediction loss."
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Experiments"
+  },
+  {
+   "id": "b0066",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Qualitative examples of models’ compositional reasoning capabilities before/after being finetuned via our approach CounterCurate. Wrong answers are marked in red. Our approach enhances both CLIP and LLaVA’s reasoning capabilities."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "We utilize the proposed three datasets, Flickr30k-Positions, Flickr30k-Counting, and Flickr30k-Attributes, created via CounterCurate, to fine-tune both contrastive and generative models. Specifically, we select two common multimodal models, ViT-B/32 from Ilharco et al. (2021) OpenCLIP pre-trained on LAION-2B Schuhmann et al. (2022) and LLaVA-1.5 Liu et al. (2023a) as base models. An overview of our results is shown in Figure 5."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Implementation Details"
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "When generating images for Flickr30k-Attributes, we provide DALLE-3 Betker et al. (2023) with hd quality and natural style. We train CLIP Radford et al. (2021); Ilharco et al. (2021) and LLaVA Liu et al. (2023a) on 1 and 4 NVIDIA A100 80GB GPUs, respectively. When fine-tuning CLIP, we set Adam optimizer’s ⟦SLOT_47⟧ and ⟦SLOT_48⟧ to be 0.9 and 0.98, and weight decay to be 0.2."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "For Flickr30k-Attributes, we train the CLIP model with a learning rate of 1e-5, batch size of 256, and mixed precision for 5 epochs. For LLaVA-1.5, we use a learning rate of 2e-6 and batch size of 16 for 1 epoch. For Flickr30k-Positions, we use a learning rate of 2.56e-5 and batch size of 1024 for CLIP, and train for 50 epochs without grouping and 15 epochs with grouping. For Flickr30k-Counting, we train CLIP with a learning rate of 5e-5. The LLaVA parameters for both Flickr30k-Positions and Flickr30k-Counting are identical, with a learning rate of 2.56e-5 and batch size of 16."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Evaluating Positional Understanding"
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "To the best of our knowledge, we are the first to comprehensively evaluate a multimodal model’s ability in understanding the left-and-right and/or above-and-below positioning relations between objects. We conduct a 4:1 train-test split on Flickr30k-Positions and use the test subset as the benchmark. We further separate this dataset into 3 subsets: left-and-right only, above-and-below only, and both. We evaluate our fine-tuned CLIP models by comparing the CLIP similarity scores between the four image-caption pairs, ⟦SLOT_49⟧ from each group of data in the dataset, where ⟦SLOT_50⟧ denotes the positive and negative image/caption, respectively. The model receives a score of 0.5 if ⟦SLOT_51⟧ and another score of 0.5 if ⟦SLOT_52⟧, where ⟦SLOT_53⟧ is the CLIP cosine-similarity score between caption ⟦SLOT_54⟧ and image ⟦SLOT_55⟧. For LLaVA-1.5, we simply query the model to choose between the positive and negative captions when presented with the ground truth image. The results are shown in Table 1."
+  },
+  {
+   "id": "b0074",
+   "t": "keep",
+   "w": "table",
+   "en": "Models LR AB Both Random 50.00 50.00 50.00 CLIP 50.55 52.80 51.56 + CounterCurate 75.88 91.52 84.90 LLaVA-1.5 61.84 56.69 59.17 + CounterCurate 95.72 96.21 96.00"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Performance of CLIP and LLaVA on Flickr30k-Positions’s test dataset. “LR” means left-and-right, and “AB” means above-and-below."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "p",
+   "en": "As we hypothesized, LMMs are indeed largely oblivious to the objects’ positioning in the image, which is especially manifested in the vanilla CLIP’s performance, which is only marginally better than random guessing. Vanilla LLaVA-1.5 shows only slightly better performance."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "After fine-tuning with the training split of Flickr30k-Positions, both models perform significantly better across all subsets. Specifically, for the mixed case, CLIP improves by 33% points, and LLaVA achieves a high accuracy of 96%. These results demonstrate that CounterCurate is highly effective across different kinds of multimodal models."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Evaluating Object Counting"
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "Here we show the counting capability of our models fine-tuned on Flickr30k-Counting. We select a different dataset, PointQA-LookTwice Mani et al. (2022), as the evaluation benchmark. Specifically, PointQA-LookTwice was designed to ask models the number ⟦SLOT_56⟧ of occurrences of an object category ⟦SLOT_57⟧ in an image ⟦SLOT_58⟧. We reformat this dataset such that for every ⟦SLOT_59⟧, we generate a positive caption ⟦SLOT_60⟧ “There are ⟦SLOT_61⟧ ⟦SLOT_62⟧’s” and a negative caption ⟦SLOT_63⟧ “There are ⟦SLOT_64⟧ ⟦SLOT_65⟧’s”. For example, given ⟦SLOT_66⟧ “there are 3 dogs”, ⟦SLOT_67⟧ is “there are 4 dogs”. Similar to what we did in Section 4.2, we mark that a model made a correct prediction if (i) CLIP shows ⟦SLOT_68⟧ and (ii) LLaVA-1.5 correctly chooses the option for ⟦SLOT_69⟧. The results are shown in Table 2."
+  },
+  {
+   "id": "b0080",
+   "t": "keep",
+   "w": "table",
+   "en": "CLIP LLaVA-1.5 Vanilla 57.50 44.87 + CounterCurate 68.51 50.74"
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Comparison between CLIP and LLaVA on the benchmark created out of PointQA-LookTwice."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "As CLIP performs slightly better than random guessing, it is surprising that LLaVA-1.5 performs worse than random. Nevertheless, fine-tuning with Flickr30k-Counting improves both models’ counting capability. This shows the effectiveness of using GLIGEN-generated negative images in CounterCurate to tackle the problem of counting. We conduct further ablation studies in Appendix F."
+  },
+  {
+   "id": "b0083",
+   "t": "keep",
+   "w": "table",
+   "en": "Categories CLIP NegCLIP + CounterCurate LLaVA-1.5 GPT-4V + CounterCurate Add 80.22 87.28 89.44 (+4.62) 86.02 91.63 97.13 (+11.11) Replace 82.40 85.36 87.10 (+4.70) 92.38 93.53 92.82 (+0.43) Swap 65.42"
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Comparison between performances of CLIP and LLaVA-1.5 on SugarCrepe before and after fine-tuning. We also add NegCLIP Yuksekgonul et al. (2023) and GPT-4V OpenAI (2023c) as strong baselines for contrastive and generative multimodal models. The best performances are bolded, and improvements against CLIP and LLaVA are measured in the parentheses. CounterCurate shows significant performance boost compared to both vanilla CLIP/LLaVA-1.5 model and advanced models such as GPT-4V."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "h3",
+   "en": "4.4 Evaluating Semantic Compositional Reasoning"
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "Similar to the setup in Sec 4.3, we fine-tune both CLIP and LLaVA-1.5 under our curated Flickr30k-Attributes. We use another common benchmark SugarCrepe Hsieh et al. (2023) to evaluate the model’s semantic compositional reasoning capabilities. SugarCrepe has three major categories depicted in Table 3. The evaluation protocol is also the same as Sec 4.3. We choose NegCLIP Yuksekgonul et al. (2023) and GPT-4V OpenAI (2023c) as the representative strong baselines for contrastive and generative models respectively."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "We observe significant improvements for both CLIP and LLaVA-1.5, both on average and categorically. Summarized results are shown in Table 3, where Appendix G contains more detailed scores."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "For example, CounterCurate fine-tuned CLIP surpasses NegCLIP on average as well as in two main categories. Note that the source of fine-tuning data, Flickr30k-Entities, contains much fewer image-caption pairs than COCO-Captions (around 100k image-caption pairs) where NegCLIP is trained. Furthermore, when prompting GPT-4V to generate the negative captions, we intentionally prompt GPT-4V to produce None when there is no feasible condition to conduct “swapping\". These two factors lead to our data curation pipeline resulting in much fewer negative samples for the “swap” category, which is around 2.5k. We argue that using our pipeline on other datasets that can generate more of the “swap” attribute should lead to larger improvements in performance."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "LLaVA-1.5 also performs better in all three categories after fine-tuning. It is also surprising that our fine-tuned model outperforms the SoTA LMM GPT-4V both on average and in two of the categories, most significantly for the “add” category. We observe improvements on other datasets Diwan et al. (2022) as well in Appendix E. The promising results of LLaVA, such as the score of 94.17% on SugarCrepe surpassing GPT-4V and a 10% improvement on Flickr30k-Position’s above-below subset compared to GPT-4V, showcases that CounterCurate effectively improves LLaVA’s semantic and physical reasoning capabilities, and we thus identify CounterCurate as a valid candidate towards improving SoTA LMMs such as GPT-4V as well."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "CounterCurate shows better performance compared to the prior rule-based methods or less desirable models that generates negatives. These significant improvements show that fine-tuning with accurate and hard negative samples is important, again demonstrating the effectiveness of our data curation and fine-tuning pipeline for both contrastive models and generative models for improving semantic counterfactual understanding."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "h3",
+   "en": "4.5 In-Depth Analysis"
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "h4",
+   "en": "Effectiveness of Negative Images, Negative Captions, and Grouping"
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "The core of CounterCurate is to (i) fine-tune models with both negative images and negative captions and (ii) use grouping to help the model better distinguish the positive pairs from the negatives. Here we conduct rigorous ablation studies to demonstrate the necessity of each component. We use the same training parameters and test with the same methods as we did for fine-tuning CLIP and evaluating it on Flickr30k-Positions."
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "table",
+   "en": "Negative Images Negative Captions Group -ing LR AB Both × \\times × \\times × \\times 50.55 52.80 51.56 × \\times ✓ \\checkmark × \\times 55.86 62.25 58.68 ✓ \\checkmark × \\times × \\times 54.35 56.79 54.95 ✓"
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Ablation study demonstrating the necessity of using (i) negative images, (ii) negative captions, and (iii) grouping strategies. Models are fine-tuned and evaluated on the Flickr30k-Positions dataset."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Table 4, even though using either the negative caption or the negative image can improve performance, the scores are significantly improved when using both elements to fine-tune. This demonstrates that CounterCurate, which incorporates both negative captions and negative images, is necessary to achieve desirable improvements. Grouping also delivers further improvements compared to not using this strategy."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "h4",
+   "en": "Correctness of DALLE-3 generated images"
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "We randomly sample 300 DALLE-3 images generated from the negative captions in Flickr30k-Attributes for human annotators to check whether the generated image is consistent (matches) with the negative captions. We obtain a consistency score of 84.67%, which demonstrates the high quality of the DALLE-3 generated images."
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "table",
+   "en": "MMBench MMBench_cn LLaVA_W POPE ScienceQA MM-Vet VizWiz MME LLaVA-1.5 67.7 63.6 70.7 85.9 71.6 35.4 53.6 1531 + CounterCurate 68.6 64.1 71.1 85.6 72.1 39.5 54.2 1510"
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Evaluating our fine-tuned LLaVA-1.5 on its original benchmarks."
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "table",
+   "en": "Scores CLIP + CounterCurate Image @1 39.44 37.81 Image @5 65.43 64.24 Text @1 56.48 56.96 Text @5 79.74 80.12 Average @1 47.96 47.39 Average @5 72.59 72.18"
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Comparison of image and text retrieval precision scores on the MSCOCO dataset between the original CLIP model and CounterCurate fine-tuned CLIP. The latter is able to maintain overall performance with minor improvements in text retrieval precision."
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "h4",
+   "en": "Performance on zero-shot vision-language tasks"
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate whether fine-tuning on the counterfactual data hurts the original zero-shot vision-language performance. For CLIP, we compare the image and text retrieval performance on MSCOCO Lin et al. (2014) of the original CLIP model and CounterCurate fine-tuned model on Flickr30k-Attributes. The results in Table 6 show that on average, the model fine-tuned via CounterCurate maintains performance with marginal difference compared to the original CLIP model. In Appendix I, we also show that fine-tuning with CounterCurate significantly improves CLIP’s performance on several common downstream tasks. For LLaVA, we mix Flickr30k-Attributes with LLaVA’s original training data before fine-tuning our model. Compared with vanilla LLaVA-1.5 in Table 5 on the same benchmarks from Liu et al. (2023a), the CounterCurate-finetuned LLaVA overall performs similarly (or even slightly better). From these studies, we see that improving LMMs’ semantical compositional reasoning with Flickr30k-Attributes does not hurt downstream performance of both contrastive and generative models."
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Conclusion"
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "p",
+   "en": "In conclusion, CounterCurate significantly enhances the visio-linguistic compositional reasoning capabilities of multimodal contrastive and generative models. This is achieved by addressing the neglect of physically grounded reasoning and exploiting the potential of using text and image generation models for semantic counterfactual fine-tuning. We believe our contributions can pave the way for further research in compositional reasoning."
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgement"
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "p",
+   "en": "This work was supported in part by NSF CAREER IIS2150012, Sony Focused Research award, and Institute of Information & communications Technology Planning & Evaluation(IITP) grants funded by the Korea government(MSIT) (No. 2022-0-00871, Development of AI Autonomy and Knowledge Enhancement for AI Agent Collaboration) and (No. RS2022-00187238, Development of Large Korean Language Model Technology for Efficient Pre-training), and Microsoft Accelerate Foundation Models Research Program."
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "p",
+   "en": "This research is funded in part by the University of Wisconsin–Madison L&S Honors Program through a Trewartha Senior Thesis Research Grant."
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "h2",
+   "en": "Limitations"
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "p",
+   "en": "We acknowledge that DALLE-3 and GPT4-V are closed-source models, which makes it difficult to systematically analyze their behavior."
+  },
+  {
+   "id": "b0112",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Alayrac et al. (2022) Jean-Baptiste Alayrac, Jeff Donahue, Pauline Luc, Antoine Miech, Iain Barr, Yana Hasson, Karel Lenc, Arthur Mensch, Katherine Millican, Malcolm Reynolds, et al. 2022. Flamingo: a"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Betker et al. (2023) James Betker, Gabriel Goh, Li Jing, Tim Brooks, Jianfeng Wang, Linjie Li, Long Ouyang, Juntang Zhuang, Joyce Lee, Yufei Guo, Wesam Manassra, Prafulla Dhariwal, Casey Chu, Yunxin J"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cai et al. (2024) Mu Cai, Haotian Liu, Siva Karthik Mustikovela, Gregory P. Meyer, Yuning Chai, Dennis Park, and Yong Jae Lee. 2024. Making large multimodal models understand arbitrary visual prompts."
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2023) Xi Chen, Xiao Wang, Soravit Changpinyo, AJ Piergiovanni, Piotr Padlewski, Daniel Salz, Sebastian Goodman, Adam Grycner, Basil Mustafa, Lucas Beyer, Alexander Kolesnikov, Joan Puigce"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2015) Xinlei Chen, Hao Fang, Tsung-Yi Lin, Ramakrishna Vedantam, Saurabh Gupta, Piotr Dollár, and C Lawrence Zitnick. 2015. Microsoft coco captions: Data collection and evaluation server."
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2020) Yen-Chun Chen, Linjie Li, Licheng Yu, Ahmed El Kholy, Faisal Ahmed, Zhe Gan, Yu Cheng, and Jingjing Liu. 2020. Uniter: Universal image-text representation learning. In ECCV 2020 , p"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Diwan et al. (2022) Anuj Diwan, Layne Berry, Eunsol Choi, David Harwath, and Kyle Mahowald. 2022. Why is winoground hard? investigating failures in visuolinguistic compositionality. In EMNLP 2023 ."
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Doveh et al. (2024) Sivan Doveh, Assaf Arbelle, Sivan Harary, Roei Herzig, Donghyun Kim, Paola Cascante-Bonilla, Amit Alfassy, Rameswar Panda, Raja Giryes, Rogerio Feris, et al. 2024. Dense and aligne"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Doveh et al. (2023) Sivan Doveh, Assaf Arbelle, Sivan Harary, Eli Schwartz, Roei Herzig, Raja Giryes, Rogerio Feris, Rameswar Panda, Shimon Ullman, and Leonid Karlinsky. 2023. Teaching structured visi"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Everingham et al. (2015) Mark Everingham, S M Ali Eslami, Luc Van Gool, Christopher K I Williams, John Winn, and Andrew Zisserman. 2015. The pascal visual object classes challenge: A retrospective. In"
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ginger et al. (2021) Andreas Ginger, Philip Lenz, and Raquel Urtasun. 2021. Are we ready for autonomous driving? In CVPR 2021 ."
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Helber et al. (2019) Patrick Helber, Benjamin Bischke, Andreas Dengel, and Damian Borth. 2019. EuroSAT: A novel dataset and deep learning benchmark for land use and land cover classification. IEEE J. "
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hendrycks et al. (2021) Dan Hendrycks, Kevin Zhao, Steven Basart, Jacob Steinhardt, and Dawn Song. 2021. Natural adversarial examples. In CVPR 2021 . IEEE."
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hertz et al. (2023) Amir Hertz, Ron Mokady, Jay Tenenbaum, Kfir Aberman, Yael Pritch, and Daniel Cohen-Or. 2023. Prompt-to-prompt image editing with cross attention control. ICLR 2023 ."
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Herzig et al. (2023) Roei Herzig, Alon Mendelson, Leonid Karlinsky, Assaf Arbelle, Rogerio Feris, Trevor Darrell, and Amir Globerson. 2023. Incorporating structured representations into pretrained vis"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hsieh et al. (2023) Cheng-Yu Hsieh, Jieyu Zhang, Zixian Ma, Aniruddha Kembhavi, and Ranjay Krishna. 2023. Sugarcrepe: Fixing hackable benchmarks for vision-language compositionality. In NeurIPS 2023 ."
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ilharco et al. (2021) Gabriel Ilharco, Mitchell Wortsman, Ross Wightman, Cade Gordon, Nicholas Carlini, Rohan Taori, Achal Dave, Vaishaal Shankar, Hongseok Namkoong, John Miller, Hannaneh Hajishirzi, "
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jia et al. (2021) Chao Jia, Yinfei Yang, Ye Xia, Yi-Ting Chen, Zarana Parekh, Hieu Pham, Quoc Le, Yun-Hsuan Sung, Zhen Li, and Tom Duerig. 2021. Scaling up visual and vision-language representation le"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Le et al. (2023) Tiep Le, Vasudev Lal, and Phillip Howard. 2023. Coco-counterfactuals: Automatically constructed counterfactual examples for image-text pairs. In NeurIPS 2023 ."
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023) Yuheng Li, Haotian Liu, Qingyang Wu, Fangzhou Mu, Jianwei Yang, Jianfeng Gao, Chunyuan Li, and Yong Jae Lee. 2023. Gligen: Open-set grounded text-to-image generation. In CVPR 2023 ."
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lin et al. (2014) Tsung-Yi Lin, Michael Maire, Serge Belongie, Lubomir Bourdev, Ross Girshick, James Hays, Pietro Perona, Deva Ramanan, C. Lawrence Zitnick, and Piotr Dollár. 2014. Microsoft coco: Com"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lin et al. (2023) Zhiqiu Lin, Xinyue Chen, Deepak Pathak, Pengchuan Zhang, and Deva Ramanan. 2023. Visualgptscore: Visio-linguistic reasoning with multimodal generative pre-training scores. arXiv prep"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023a) Haotian Liu, Chunyuan Li, Yuheng Li, and Yong Jae Lee. 2023a. Improved baselines with visual instruction tuning. In CVPR 2024 ."
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2024) Haotian Liu, Chunyuan Li, Yuheng Li, Bo Li, Yuanhan Zhang, Sheng Shen, and Yong Jae Lee. 2024. Llava-next: Improved reasoning, ocr, and world knowledge ."
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023b) Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. 2023b. Visual instruction tuning. NeurIPS 2023 ."
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Maji et al. (2013) Subhransu Maji, Esa Rahtu, Juho Kannala, Matthew Blaschko, and Andrea Vedaldi. 2013. Fine-grained visual classification of aircraft ."
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mani et al. (2022) Arjun Mani, Nobline Yoo, Will Hinthorn, and Olga Russakovsky. 2022. Point and ask: Incorporating pointing into visual question answering ."
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Morgan and Winship (2015) Stephen L Morgan and Christopher Winship. 2015. Counterfactuals and causal inference . Cambridge University Press."
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2023a) OpenAI. 2023a. Chatgpt. https://openai.com/blog/chatgpt/ ."
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2023b) OpenAI. 2023b. Gpt-4 technical report ."
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2023c) OpenAI. 2023c. Gpt-4v(ision) system card ."
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Paiss et al. (2023) Roni Paiss, Ariel Ephrat, Omer Tov, Shiran Zada, Inbar Mosseri, Michal Irani, and Tali Dekel. 2023. Teaching clip to count to ten. In ICCV 2023 ."
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Plummer et al. (2016) Bryan A. Plummer, Liwei Wang, Chris M. Cervantes, Juan C. Caicedo, Julia Hockenmaier, and Svetlana Lazebnik. 2016. Flickr30k entities: Collecting region-to-phrase correspondences"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Radford et al. (2021) Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, Gretchen Krueger, and Ilya Sut"
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Schuhmann et al. (2022) Christoph Schuhmann, Romain Beaumont, Richard Vencu, Cade Gordon, Ross Wightman, Mehdi Cherti, Theo Coombes, Aarush Katta, Clayton Mullis, Mitchell Wortsman, Patrick Schramowsk"
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Touvron et al. (2023) Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, et al. 2023. Llama"
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Veeling et al. (2018) Bastiaan S Veeling, Jasper Linmans, Jim Winkens, Taco Cohen, and Max Welling. 2018. Rotation equivariant CNNs for digital pathology ."
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yarom et al. (2023) Michal Yarom, Yonatan Bitton, Soravit Changpinyo, Roee Aharoni, Jonathan Herzig, Oran Lang, Eran Ofek, and Idan Szpektor. 2023. What you see is what you read? improving text-image "
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Young et al. (2014) Peter Young, Alice Lai, Micah Hodosh, and Julia Hockenmaier. 2014. From image descriptions to visual denotations: New similarity metrics for semantic inference over event descripti"
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yuksekgonul et al. (2023) Mert Yuksekgonul, Federico Bianchi, Pratyusha Kalluri, Dan Jurafsky, and James Zou. 2023. When and why vision-language models behave like bags-of-words, and what to do about "
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhai et al. (2019) Xiaohua Zhai, Joan Puigcerver, Alexander Kolesnikov, Pierre Ruyssen, Carlos Riquelme, Mario Lucic, Josip Djolonga, Andre Susano Pinto, Maxim Neumann, Alexey Dosovitskiy, Lucas Beyer"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2021) Pengchuan Zhang, Xiujun Li, Xiaowei Hu, Jianwei Yang, Lei Zhang, Lijuan Wang, Yejin Choi, and Jianfeng Gao. 2021. Vinvl: Revisiting visual representations in vision-language models"
+  },
+  {
+   "id": "b0155",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix"
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "table",
+   "en": "Categories CLIP NegCLIP + CounterCurate LLaVA-1.5 GPT-4V + CounterCurate Add Object 77.89 88.78 90.35 (+3.20) 87.83 91.59 97.82 (+9.99) Add Attribute 87.15 82.80 86.71 (+8.82) 80.64 91.76 95.09 (+14.4"
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Detailed version of Table 3: comparison of performance over each sub-category."
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Prompt guidance to GPT-4V for Flickr30k-Attributes"
+  },
+  {
+   "id": "b0159",
+   "t": "text",
+   "w": "p",
+   "en": "As a minor detail specific to the dataset itself, we extracted the objectified caption ⟦SLOT_70⟧ from the annotated Flickr30k-Entities dataset Plummer et al. (2016). The objectified captions have square brackets added to the original caption that allow us and the LMMs to refer to each phrase for the object ⟦SLOT_71⟧ in the caption with a unique ID ⟦SLOT_72⟧."
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "p",
+   "en": "The exact prompt guidance we provided to GPT-4V OpenAI (2023c) is as follows:"
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "p",
+   "en": "You are given an image, the same image but with bounding boxes, its corresponding caption and an enhanced form of the caption. Their format is as follows: Original Caption: A child in a pink dress is helping a baby in a blue dress climb up a set of stairs in an entry way. Enhanced Caption: [/EN#1/people A child] in [/EN#2/clothing a pink dress] helping [/EN#3/people a baby] in [/EN#4/clothing a blue dress] climb up [/EN#5/other a set of stairs] in [/EN#6/scene an entry way]. In the enhanced caption, there is no new data, but that each “entity” is marked by a pair of square brackets. Most entities each correspond to one or more bounding boxes, which will be specified. For example, entity 1 in the sentence is “A child”, which is marked by a tag [/EN#1/people …]. “people” states the type of the entity. If entity is “other”, then there are no restrictions applied."
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "p",
+   "en": "You are tasked to:"
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "p",
+   "en": "Generate a caption that changes the object being discussed in exactly one of the entities. You MUST ensure that the new object is the same type of entity as the original object as specified in the tag. For example: [/EN#1/people A child] => [/EN#1/people An adult] is allowed, but [/EN#1/people A child] => [/EN#1/people A cat] is not allowed because a cat is not “people”;"
+  },
+  {
+   "id": "b0164",
+   "t": "text",
+   "w": "p",
+   "en": "Generate a caption that changes the qualifier (such as an adjective of a quantifier) that describes the object in exactly one of the entities. For example: [/EN#2/clothing a pink dress] => [/EN#2/clothing a green dress]."
+  },
+  {
+   "id": "b0165",
+   "t": "text",
+   "w": "p",
+   "en": "Generate, if possible, a caption that reverses two of the entities or their qualifiers such that the original sentence structure is not changed, but produces a negative prompt. For example, given two entities “a green dress” and “a blue blouse”, you can either swap the two entities’ order or swap the adjectives and produce “a blue dress” and “a green blouse”. If you cannot generate one, report None."
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "p",
+   "en": "All in all, the new description must meet all of these requirements:"
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "p",
+   "en": "1. The change of attribute must be sufficiently different to make the new description inaccurate, but it should also be somewhat related to be challenging to an AI model."
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "p",
+   "en": "2. Compared to the original description, the new description must differ in only one attribute. All other details must be kept the same."
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "p",
+   "en": "3. The new description must mimic the sentence structure of the original description."
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "p",
+   "en": "4. The new description must be fluent, logical, and grammatically correct."
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "p",
+   "en": "5. Carefully look at the image, and give negative captions that are reasonable given the objects’ position, size, and relationship to the overall setting."
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "p",
+   "en": "6. Pose challenging(difficult enough) negative captions so that a large multimodal text generation model should struggle to distinguish the original caption v.s. negative caption."
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "p",
+   "en": "Here are some examples whose output format you should follow: Original Caption: A child in a pink dress is helping a baby in a blue dress climb up a set of stairs in an entry way. Enhanced Caption: [/EN#1/people A child] in [/EN#2/clothing a pink blouse] helping [/EN#3/people a baby] in [/EN#4/clothing a blue dress] climb up [/EN#5/other a set of stairs] in [/EN#6/scene an entry way]. Bounding Boxes: #1: purple Your answer: {“noun”: {“action”: (1, “a child”, “an adult”), “caption”: “An adult in a green dress is helping a baby in a blue dress climb up a set of stairs in an entry way.”]}, “adjective”: {“action”: (2, “a pink dress”, “a green dress”), “caption”: “A child in a green dress is helping a baby in a blue dress climb up a set of stairs in an entry way.”}, “reverse”: {“action”: (2, 4), “caption”: “A child in a blue blouse is helping a baby in a pink dress climb up a set of stairs in an entry way.”}}"
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Prompt guidance to GPT-4V for Flickr30k-Positions (above-and-below)"
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "p",
+   "en": "To generate high-quality counterfactual images for the above-and-below subset of Flickr30k-Positions, we use the re-writing technique to generate convincing and detailed captions for GLIGEN Li et al. (2023). Specifically, we leverage GPT-4V OpenAI (2023c) with the following prompt:"
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "p",
+   "en": "I will give you a caption in the format \"A is above B.\" You need to expand the sentence such that the meaning \"A is above B\" is preserved and your answer is reasonable for a human to understand what you’re describing. Do not make the answer too long; one long sentence is enough. For example, if i give you \"a man is under a dog\", a good answer would be \"there is a man resting on the ground, and there is a dog lying above him.\" One restriction: A and B do not overlap. This means that if I ask you to expand \"a hat is below water\", you must not assume that the hat is below water. Remember that you MUST include both A and B in your answer, like my example did."
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Object Removal vs Inpainting Plants"
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "p",
+   "en": "We explain here as for why we do not use object removal tools to curate our data for Flickr30k-Counting as we make one example in Figure 6. We used a tool from a public Github Repository https://github.com/treeebooor/object-remove and compared it with GLIGEN Li et al. (2023)’s inpainting results. We found a significant pattern that when object removal failed, most of GLIGEN’s inpainting succeeded."
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a) Original Image"
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(b) Object Removal"
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(c) GLIGEN Inpainted Plant"
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: We want to remove/cover the person on the right with their skateboard in image (a) completely. Object removal only achieves the goal partially and makes the image much less natural, while GLIGEN inpainted a plant perfectly into the image as it also preserved the rest of the information in the image."
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D Overfitting in Above-Below Subset?"
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "p",
+   "en": "In section 4.2, we observed that both models performed better on the above-and-below subset, with CLIP Radford et al. (2021); Ilharco et al. (2021) performing significantly better. However, we argue that this is not caused by overfitting because there is an even number of both \"A is above B\" captions vs. \"A is below B\" captions, and both captions are not always matched to a generated image by GLIGEN Li et al. (2023) or the original image from Flickr30k Young et al. (2014). Since the training and testing datasets are shuffled and separated from the same dataset, this ensures that neither model can find a pattern in, for example, recognizing the generated image apart from the original image and choosing an option on that basis. Another proof is that since LLaVA-1.5 Liu et al. (2023a) can perform equally well on both subsets after fine-tuning, the two subsets are shown to be at least as well-defined as the other. We also welcome others to use our dataset as a benchmark to test their model’s ability to understand object positioning in images."
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix E Results on the Winoground Dataset"
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluated our LLaVA-1.5 Liu et al. (2023a) on Winoground Diwan et al. (2022), a model specifically made to test a model’s limit of visio-linguistic capabilities via human-annoted difficult image-caption pairing questions. Our model, after fine-tuning on Flickr30k-Attributes, showed significant improvements on the text score of Winoground."
+  },
+  {
+   "id": "b0190",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Text Score CLIP (ViT-B/32) {}_{\\text{(ViT-B/32)}} Radford et al. (2021) 25.25 UNITER base {}_{\\text{base}} Chen et al. (2020) 32.25 UNITER large {}_{\\text{large}} Chen et al. (2020) 38.00 VinVL "
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8: Our fine-tuned model of LLaVA-1.5 with Flickr30k-Attributes shows significant improvements on the difficult visio-linguistic reasoning dataset Winoground."
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix F More Ablations on Flickr30k-Counting"
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "p",
+   "en": "We also test not using any of the generated negative image-caption pairs and not using grouping while fine-tuning CLIP with Flickr30k-Counting. Evaluation results on PointQA-LookTwice are shown in Table 9. Both ablations showed much less improvement, showcasing that using grouping and the negative image-caption pairs is more powerful in improving models’ counting abilities."
+  },
+  {
+   "id": "b0194",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Setting Accuracy Vanilla 57.50 + CounterCurate (No Neg) 60.85 + CounterCurate (No Group) 65.70 + CounterCurate 68.51"
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 9: More ablations on the CLIP model trained with Flickr30k-Counting. the score without any negatives and the score without grouping."
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix G More Results on SugarCrepe"
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "p",
+   "en": "Here we show the performance improvements for every sub-category of SugarCrepe in Table 7. Overall, CounterCurate shows clear performance gain over the two base models, CLIP Radford et al. (2021) and LLaVA Liu et al. (2023b). We also point out that the “swap object” category in SugarCrepe Hsieh et al. (2023) only has 246 items as compared to other categories’ 500+, 1000+ items; this means that the performance on this specific category could show more fluctuations caused by the training process."
+  },
+  {
+   "id": "b0198",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix H Ratio of Augmentation"
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "p",
+   "en": "We study the level of effectiveness our dataset Flickr30k-Attributes brings upon the models if we choose to reduce the amount of curated data used during fine-tuning. As we observe in Table 10 and especially Table 11, using 100% of our dataset yields the greatest amount of improvements in LLaVA and CLIP’s semantical compositional reasoning capabilities. This prompt us to further curate data using the same method in the future that shall bring forth even more competent models."
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "table",
+   "en": "Type LLaVA-1.5 + CounterCurate (50%) (25%) (10%) (5%) (2.5%) add_att 80.64 95.09 94.22 90.90 88.58 88.44 86.27 add_obj 87.83 97.82 97.58 95.44 94.67 93.79 90.45 replace_att 92.64 93.53 93.27 91.50 92."
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 10: Ratio of augmentation ablation study on fine-tuning LLaVA-1.5."
+  },
+  {
+   "id": "b0202",
+   "t": "keep",
+   "w": "table",
+   "en": "Type CLIP + CounterCurate (50%) (25%) (10%) (5%) (2.5%) add_att 87.14 90.34 89.23 88.11 86.85 87.09 87.05 add_obj 77.89 86.70 81.21 79.91 78.46 78.03 77.74 replace_att 82.61 87.94 84.77 82.99 83.37 82"
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 11: Ratio of augmentation ablation study on fine-tuning CLIP."
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix I More evaluation on CLIP downstream tasks"
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "p",
+   "en": "In Table 12, we compare vanilla CLIP with CounterCurate-finetuned CLIP on Flickr30k-Attributes on some common downstream tasks. The results show that CounterCurate generally improves performance."
+  },
+  {
+   "id": "b0206",
+   "t": "keep",
+   "w": "table",
+   "en": "Benchmark CounterCurate LAION-2b ImageNet-a Hendrycks et al. (2021) 26.8 26.25 kitti-closest-vehicle-distance Ginger et al. (2021) 30.1 26.16 eurosat Helber et al. (2019) 51.59 48.13 voc2007_multilabe"
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 12: Comparing our fine-tuned CLIP with LAION-2b pretrained CLIP on common downstream tasks."
+  }
+ ]
+}

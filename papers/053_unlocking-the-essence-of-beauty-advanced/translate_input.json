@@ -1,0 +1,1222 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Unlocking the Essence of Beauty: Advanced Aesthetic Reasoning with Relative-Absolute Policy Optimization"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Advancements in multimodal large language models (MLLMs) demonstrate strong potential across various domains, with expanding applications in human-centered Image Aesthetic Assessment (IAA) through hig"
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "table",
+   "en": ""
+  },
+  {
+   "id": "b0004",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: (a) Distributions of ground truth and predictions on the AVA test set. Aes-R1 achieves the closest alignment with the ground truth compared to baseline methods. (b) The case study shows that Aes-R1 surpasses other methods, which suffer from prediction errors and limited ordinal discernment, based on the relative-absolute reward design."
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "Recent advances in multimodal large language models (MLLMs) (Qwen et al., 2025; OpenAI et al., 2024; Team et al., 2025) have shown remarkable potential in image assessment (Xu et al., 2023; Wu et al., 2023b). To date, most efforts center on image quality assessment (IQA) (Wu et al., 2024; Wu et al., 2023a; You et al., 2025), which measures images’ sharpness and clarity. As the development of creative design and social media recommendations, there is an emerging demand for reliable metrics that go far beyond pixel-level fidelity and some researchers have paid attention to image aesthetic assessment (IAA) (Huang et al., 2024; Zhou et al., 2024), leveraging the cross-modal understanding capabilities of MLLMs to capture high-level features such as texture, color harmony and emotional impact, broadening vision tasks to the interpretable and human-centered aesthetic modeling."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "Current IAA methods generally adopt supervised fine-tuning (SFT) on score-based targets (Wu et al., 2023a; Cao et al., 2025). While such implicit reasoning restricts MLLMs from aligning visual elements with multidimensional aesthetic criteria and lacks explainability in practice (Wu et al., 2025; Li et al., 2025), some propose generating reasoning prior to the answer, supporting the integration of fine-grained descriptive feedback with aesthetic scores (Li et al., 2025). Nonetheless, existing resources (He et al., 2022; Yang et al., 2022) primarily consist of score-based data, and artist-level rationales necessitate expensive expert annotation. Moreover, as presented in Tab. 3, extensive SFT causes the model to learn bias and overfit on curated dataset, rapidly reducing entropy and hindering further optimization, making it costly and difficult to scale."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Reinforcement learning (RL) is an effective alternative and has shown strong efficiency and generalization in goal-driven tasks (Chu et al., 2025a; Chen et al., 2025a). However, in our pilot study, directly applying RL to IAA exposes several challenges. 1) Although achieving high performance (Tab. 3, SFT 0 epoch, RAPO), the end-to-end RL fails to activate aesthetic reasoning patterns in the backbone due to the absence of corresponding corpus pre-training (Gandhi et al., 2025; Ji et al., 2025), resulting in the poor explanatory rationales as shown in Fig. 5 (AesR1-Zero). 2) Modeling an appropriate reward proxy to evaluate aesthetic score is intricate since the absence of unified criteria for aesthetic preferences. We reproduce the related works on AVA (Murray et al., 2012) and find that, although VisualQuality-R1 (ii) (Li et al., 2025) successfully separates high- and low-quality images using the rank reward, it fails to calibrate scores, while Q-insight (iv) (Wu et al., 2025) suffers from peak mismatch when optimizing with a scalar reward, as presented in Fig. 1."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "Integrating aesthetic priors and an effective reward mechanism is crucial for IAA in RL optimization. Inspired by Deepseek-R1 (Guo et al., 2025a), we find that cold-start bootstrapping with thousands of high quality reasoning data effectively induces robust aesthetic analysis patterns (Gandhi et al., 2025; Shao et al., 2025). Following this, RL transforms IAA into a data efficient self-learning process, primarily guided by the reward signal. Building on the results in Fig. 1, we observe that human aesthetic judgment is inherently context-dependent besides absolute quality evaluation, as also noted by Immanuel Kant’s assertion that \"there can be no objective rule of taste which shall determine by means of concepts what is beautiful\" (Kant, 1790). Therefore, we argue the IAA reward should comprise two complementary facets: a relative dimension that ranks images by comparative appeal and an absolute dimension that assesses intrinsic aesthetic merit, thereby simultaneously enforces ordinal consistency and calibrates absolute aesthetic scores."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "Building on the above insights, we propose Aes-R1 framework. We first construct an automatic data pipeline AesCoT, which effectively generates high-quality aesthetic reasoning data along five dimensions based on original image-score pairs. Warming up on this data equips MLLMs with aesthetic cognitive behaviors that generating reliable explanations before the aesthetic scores. We then utilize Relative-Absolute Policy Optimization (RAPO), a novel RL algorithm that optimizes both absolute and relative aesthetic preferences. Specifically, the model’s gradient updates are simultaneously steered by the absolute-error reward, calibrating aesthetic score constraints and relative-rank reward, aligning pairwise ranking consistency, which greatly improves effectiveness and stability in the exploration and exploitation process. Empirically, trained with only 15K data, Aes-R1 surpasses the state-of-the-art baselines of comparable size with the improvements on backbones by 47.9%/34.8% PLCC/SRCC. The distribution alignment experiment (see Fig. 1, a) and reward ablations (see Sec. 4.3) demonstrate the effectiveness of our RAPO as well as generalization in the OOD setting (see Sec. 4.2). We further analyze the training recipe of SFT and RL from the entropy perspective (Cui et al., 2025b) (see Sec. 4.3)."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "In summary, our main contributions can be summarized as follows:"
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "li",
+   "en": "❶ We construct the effective and automatic data pipeline, AesCoT, which builds high-quality aesthetic reasoning data along five dimensions based on original image-score pairs, significantly reducing labor cost. We will release AesCoT-3K and AesCoT-10K to facilitate future IAA research."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "li",
+   "en": "❷ We develop a two-stage training pipeline, Aes-R1, based on Relative-Absolute Policy Optimization (RAPO) that jointly optimizes absolute score regression and relative ranking, enabling balanced modeling of intrinsic merit and comparative preference in IAA."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "li",
+   "en": "❸ We conducted extensive experiments to demonstrate the performance, robustness and generalization of Aes-R1, which achieves state-of-the-art performance across multiple IAA benchmarks with only 15K training samples. We also analyze the reward design and training recipe for SFT and RL, offering valuable insights."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h4",
+   "en": "Score-Based Image Aesthetic Assessment."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "Research on Image Aesthetic Assessment (IAA) has progressed from rule-based and handcrafted pipelines (Bhattacharya et al., 2010; Mavridaki & Mezaris, 2015; Mittal et al., 2013; Mittal et al., 2012) to deep models supervised by human-annotated mean opinion scores (MOSs). Deep learning IAA models (Talebi & Milanfar, 2018; Ke et al., 2021; Ghosal & Smolic, 2022; He et al., 2022; Behrad et al., 2025) became dominant after large-scale aesthetic datasets (Murray et al., 2012; He et al., 2022; Ren et al., 2017; Yang et al., 2022; Kong et al., 2016) enabled direct pixel-level representation learning via powerful networks. More recently, pretrained MLLMs have demonstrated remarkable cross-modal aesthetic perception and evaluation through visual-language pretraining (Ke et al., 2023), prompt engineering (Zhu et al., 2024; Sheng et al., 2025), and supervised fine-tuning (Zhang et al., 2023; Cao et al., 2025; Liao et al., 2025; Zhou et al., 2024). Nevertheless, score-only supervision without explicit linguistic rationales limits aesthetic understanding, weakens generalization and requires redundant dataset-specific training."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "h4",
+   "en": "Reinforcement Learning-Enhanced Model-as-a-Judge."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "Model-as-a-Judge approach serves as a novel and broadly applicable paradigm for addressing open-ended evaluation problems in the era of Large Models (Gu et al., 2025). Prior works on Model-as-a-Judge (Zheng et al., 2023; Zhu et al., 2025; Chen et al., 2024; Lee et al., 2024) as well as the Generative Reward Models (GRMs) (Mahan et al., 2024) highlight that reasoning step-by-step before verdict improves the stability and consistency (Kim et al., 2024; Saha et al., 2025). Capitalizing on recent advances in post-training (Liu et al., 2025; Yu et al., 2025), various large reasoning judge models have emerged (Liu et al., 2025; Chen et al., 2025b; Whitehouse et al., 2025) and have become popular fro automated assessment. Extending to image evaluation, researchers move beyond scalar scoring (Wu et al., 2023a; You et al., 2025; Zhou et al., 2024) by applying reinforcement learning to image quality assessment via step-by-step reasoning (Li et al., 2025; Wu et al., 2025). However, these methods are confined to either binary outcome supervision or rank supervision and have yet to be extended to aesthetic assessment, which demands finer-grained perceptual and semantic understanding capability."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Methodology"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "There is indeed an absence of a principled visual reasoning framework for IAA, which contributes to the scarcity of high-quality aesthetic reasoning data and the misalignment of single-objective optimization with nuanced human preferences. To address this, we propose our Aes-R1 framework. Specifically, we introduce (i) AesCoT, an aesthetic reasoning data construction pipeline that automatically curates diverse, reliable annotations with multi-dimensional aesthetic rationales. (ii) A two-stage training pipeline based on Relative-Absolute Policy Optimization (RAPO) that jointly optimizes pairwise preferences and calibrated absolute scores under a unified objective."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Problem Formulation"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "Given an image dataset that contains ⟦SLOT_0⟧ image-score pairs ⟦SLOT_1⟧, considering a pretrained MLLM with parameter ⟦SLOT_2⟧ and policy ⟦SLOT_3⟧, we aim to fine-tune the model for ideal aesthetic reasoning that provides the comprehensive explanation ⟦SLOT_4⟧ and an overall aesthetic score ⟦SLOT_5⟧ for every image in dataset ⟦SLOT_6⟧ under prompt ⟦SLOT_7⟧:"
+  },
+  {
+   "id": "b0025",
+   "t": "keep",
+   "w": "table",
+   "en": "τ = ( c , s ) ∼ π θ ( ⋅ | ℐ , 𝒫 ) \\tau=(c,s)\\sim\\pi_{\\theta}(\\cdot|\\mathcal{I},\\mathcal{P}) (1)"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "We utilize policy gradient methods (Sutton et al., 1999) to optimize the MLLM by maximizing the expected cumulative reward ⟦SLOT_8⟧ on sampled aesthetic reasoning trajectories ⟦SLOT_9⟧: ⟦SLOT_10⟧. By performing gradient ascent on ⟦SLOT_11⟧:"
+  },
+  {
+   "id": "b0027",
+   "t": "keep",
+   "w": "table",
+   "en": "∇ θ 𝒥 ( θ ) = 𝔼 τ ∼ π θ ( ⋅ | ℐ , 𝒫 ) [ R ( τ ) ∑ t = 1 T ∇ θ log π θ ( a t ∣ s t ) ] , \\nabla_{\\theta}\\mathcal{J}(\\theta)=\\mathbb{E}_{\\tau\\sim\\pi_{\\theta}(\\cdot|\\mathcal{I},\\mathcal{P})}\\left[R(\\tau)"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_12⟧ is selected from the vocabulary space ⟦SLOT_13⟧ and ⟦SLOT_14⟧ is the state at time step ⟦SLOT_15⟧."
+  },
+  {
+   "id": "b0029",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Overview of AesCoT construction pipeline. Starting from original image-score pairs, we mask the continuous aesthetic score and prompt experts to produce CoT critiques along five aesthetic dimensions. Automated checks and human audits then remove any score leakage, reasoning–score mismatch, or factual errors, yielding high-quality, interpretable multimodal aesthetic reasoning data."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 AesCoT"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "Most existing datasets (e.g., AVA (Murray et al., 2012)) annotate image aesthetics using direct Mean Opinion Scores (MOSs). Chain-of-Thought (CoT) (Wei et al., 2022) has been shown to substantially enhance the performance and interpretability by breaking down the reasoning process into intermediate steps (Bi et al., 2025). However, high-quality aesthetic reasoning trajectories require artist-level curation and iterative refinement, making such data rare and costly to scale. Distillation from a strong model is an efficient and scalable approach (Guo et al., 2025a) and was validated in domains from math reasoning (Jie et al., 2023) to visual question answering (Shao et al., 2024a). Based on these, we propose AesCoT, to our knowledge, the first automatic pipeline for aesthetics reasoning data construction."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "We display the construction pipeline of AesCoT (see Fig. 2). For every collected original image-score pair ⟦SLOT_16⟧ in ⟦SLOT_17⟧, we first intentionally conceal the continuous score from outputs and enable the powerful close-sourced MLLM to give aesthetic analysis over five aesthetic dimensions (see Tab. 5) (light and shadow, mood and narrative, composition, color, exposure) that match the aesthetic levels, which are divided into bad (0-0.4), fair (0.4-0.7) and good (0.7-1.0) to emphasize aesthetic differences. Then we concatenate the aesthetic analysis with the ground truth score, obtaining ⟦SLOT_18⟧ where ⟦SLOT_19⟧ is the reasoning trajectory towards ⟦SLOT_20⟧. Finally, we carefully filter the outputs to eliminate score leakage, reasoning inconsistencies, and other factual errors through automated checks and human audits, generating a reliable aesthetic reasoning dataset ⟦SLOT_21⟧, where ⟦SLOT_22⟧ is the data filter process and ⟦SLOT_23⟧ represent different error types. Dataset details can be found in Appendix E."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Relative-Absolute Policy Optimization (RAPO)"
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Aesthetic evaluation is inherently subjective, shaped by individual preferences, cultural experience, and contextual cues. In real-world settings, human judgments are typically expressed through comparative assessments, in addition to direct absolute scores, with judgments manifesting along two complementary axes: relative preference (which image is favored) and absolute magnitude (by how much). In view of this, we introduce Relative Absolute Policy Optimization (RAPO), a novel reinforcement learning algorithm that integrates relative assessment learning with absolute numerical optimization to better align model predictions with human aesthetic preferences."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "Fig. 3 describes the training pipeline of RAPO. For a mini training batch ⟦SLOT_24⟧, where the training size is ⟦SLOT_25⟧, we follow GRPO (Shao et al., 2024b) to sample a group of ⟦SLOT_26⟧ outputs ⟦SLOT_27⟧ for every prompt-image input ⟦SLOT_28⟧ from the old policy ⟦SLOT_29⟧."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "A robust and reliable reward signal is significant for aligning MLLMs with human aesthetic preferences. To this end, RAPO jointly optimizes the relative rank preference as well as the absolute score regression error."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "h4",
+   "en": "Relative Rank Reward."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "Learning to rank is a crucial paradigm for modeling human preference (Burges et al., 2005; Xia et al., 2008), and has proven effective for perceptual quality and aesthetic assessment (Liu et al., 2017; Talebi & Milanfar, 2018). Following (Tsai et al., 2007; Sun et al., 2024; Wu et al., 2025; Zhang et al., 2023; You et al., 2025), our relative rank reward based on FRank is bounded, continuous, differentiable, and aligns directly with pairwise ranking consistency, and thus provides stable, precise signals for optimizing pairwise image aesthetic preference."
+  },
+  {
+   "id": "b0040",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: The training pipeline of Relative Absolute Policy Optimization (RAPO). Given a batch of training images, the policy model generates multiple outputs for aesthetic rating questions. RAPO computes both pairwise ranking based relative reward and score regression error based absolute reward for each output, then optimizes the policy model to align with human aesthetic preferences."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "Specifically, we assume that the aesthetic score of an image follows the Gaussian distribution ⟦SLOT_30⟧. Consequently, the score difference ⟦SLOT_31⟧ follows ⟦SLOT_32⟧. Let ⟦SLOT_33⟧ denote the ⟦SLOT_34⟧-th predicted score for image ⟦SLOT_35⟧, the pairwise comparison probability against image ⟦SLOT_36⟧ should be"
+  },
+  {
+   "id": "b0043",
+   "t": "keep",
+   "w": "table",
+   "en": "p i ​ k ​ ( ℐ i , ℐ j ) = Φ ⁡ ( o i ​ k − μ j σ i 2 + σ j 2 + γ ) , i ≠ j , p_{ik}(\\mathcal{I}_{i},\\mathcal{I}_{j})=\\Phi(\\frac{o_{ik}-\\mu_{j}}{\\sqrt{\\sigma_{i}^{2}+\\sigma_{j}^{2}+\\gamma}}),i\\neq j, (3"
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_37⟧ denotes the standard normal cumulative distribution function. We estimate ⟦SLOT_38⟧ as the mean of ⟦SLOT_39⟧ predicted scores of image ⟦SLOT_40⟧, and set a small positive constant ⟦SLOT_41⟧ to avoid division-by-zero."
+  },
+  {
+   "id": "b0045",
+   "t": "keep",
+   "w": "table",
+   "en": "r r ​ a ​ n ​ k ​ ( o i ​ k ) = 1 N − 1 ​ ∑ j ≠ i p c ​ ( ℐ i , ℐ j ) ​ p i ​ k ​ ( ℐ i , ℐ j ) + ( 1 − p c ​ ( ℐ i , ℐ j ) ) ​ ( 1 − p i ​ k ​ ( ℐ i , ℐ j ) ) , \\displaystyle r_{rank}(o_{ik})=\\frac{1"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_42⟧ is a binary preference label based on ground-truth MOSs of two images"
+  },
+  {
+   "id": "b0047",
+   "t": "keep",
+   "w": "table",
+   "en": "p c ( ℐ i , ℐ j ) = { 1 , s i ≥ s j 0 , s i < s j . p_{c}\\,(\\mathcal{I}_{i},\\mathcal{I}_{j})=\\left\\{\\begin{aligned} 1&,&&s_{i}\\geq s_{j}\\\\ 0&,&&s_{i}<s_{j}\\\\ \\end{aligned}\\right.. (5)"
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "h4",
+   "en": "Absolute Error Reward."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "Although the rank reward reinforces the model to order images correctly, it leaves the calibrated scoring underconstrained. To fix this, we incorporate a continuous absolute-error reward that explicitly calibrates predicted scores toward the ground-truth MOSs, where ⟦SLOT_43⟧ is a hyperparameter and ⟦SLOT_44⟧ is a small positive constant to avoid reward being zero."
+  },
+  {
+   "id": "b0050",
+   "t": "keep",
+   "w": "table",
+   "en": "r a ​ b ​ s ​ ( o i ​ k ) = e ​ x ​ p ​ ( − 1 2 ​ ( | o i ​ k − s i | σ ) 2 ) + ϵ . r_{abs}(o_{ik})=exp\\,\\left(-\\frac{1}{2}\\left(\\frac{|o_{ik}-s_{i}|}{\\sigma}\\right)^{2}\\right)+\\epsilon. (6)"
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "The total reward function of RAPO is combined with relative rank reward and absolute error reward"
+  },
+  {
+   "id": "b0052",
+   "t": "keep",
+   "w": "table",
+   "en": "r = r r ​ a ​ n ​ k + r a ​ b ​ s . r=r_{rank}+r_{abs}. (7)"
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "h4",
+   "en": "Training Aes-R1 for Aesthetic Reasoning."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "To fully inspire the aesthetic reasoning capability of the MLLM, we first leverage the constructed AesCoT dataset to fine tune the model as a cold start stage, optimizing the negative log-likelihood of the aesthetic reasoning trajectory and the final score"
+  },
+  {
+   "id": "b0055",
+   "t": "keep",
+   "w": "table",
+   "en": "ℒ s ​ f ​ t ( θ ) = 𝔼 ( 𝒫 , ℐ , c , s ) ∼ 𝒟 C ​ o ​ T [ − log π θ ( c , s | 𝒫 , ℐ ) ] . \\mathcal{L}_{sft}(\\theta)=\\mathbb{E}_{(\\mathcal{P},\\mathcal{I},c,s)\\sim\\mathcal{D}_{CoT}}\\left[-\\log\\pi_{\\theta}"
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "For the prompt-image pair ⟦SLOT_45⟧, we calculate the rewards of all sampled outputs, yielding rewards ⟦SLOT_46⟧. The advantage ⟦SLOT_47⟧ for each token time step ⟦SLOT_48⟧ in the ⟦SLOT_49⟧-th output is given by subtracting the group average and dividing by the standard deviation"
+  },
+  {
+   "id": "b0057",
+   "t": "keep",
+   "w": "table",
+   "en": "A ^ k , t = r k − μ ⁡ ( R i ) σ ⁡ ( R i ) . \\hat{A}_{k,t}=\\frac{r_{k}-\\mu(R_{i})}{\\sigma(R_{i})}. (9)"
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "Following DAPO (Yu et al., 2025), we adopt a higher clipping threshold and reduce the KL penalty terms. RAPO optimizes the policy by maximizing the following objective"
+  },
+  {
+   "id": "b0059",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒥 RAPO ( θ ) = 𝔼 ( 𝒫 , ℐ ) ∼ Q , o i ∼ π old θ ( ⋅ ∣ 𝒫 , ℐ ) \\displaystyle\\mathcal{J}_{\\mathrm{RAPO}}(\\theta)=\\mathbb{E}_{(\\mathcal{P},\\mathcal{I})\\sim Q,\\;o_{i}\\sim\\pi^{\\mathrm{old}}_{\\theta}(\\cdot\\m"
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_50⟧ denotes the reference policy of pretrained model, and the probability ratio is defined as"
+  },
+  {
+   "id": "b0061",
+   "t": "keep",
+   "w": "table",
+   "en": "r k , t = π θ ​ ( o k , t | 𝒫 , ℐ , o k , < t ) π θ o ​ l ​ d ​ ( o k , t | 𝒫 , ℐ , o k , < t ) , r_{k,t}=\\frac{\\pi_{\\theta}(o_{k,t}|\\mathcal{P,I},o_{k,<t})}{\\pi^{old}_{\\theta}(o_{k,t}|\\mathcal{P,I},o"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "and the KL penalty is approximated by"
+  },
+  {
+   "id": "b0063",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒟 KL ( π θ ∥ π ref ) = π ref ​ ( o k , t | 𝒫 , ℐ , o k , < t ) π θ ​ ( o k , t | 𝒫 , ℐ , o k , < t ) − log π ref ​ ( o k , t | 𝒫 , ℐ , o k , < t ) π θ ​ ( o k , t | 𝒫 , ℐ , o k , < t ) − 1 . \\mathcal{"
+  },
+  {
+   "id": "b0064",
+   "t": "keep",
+   "w": "table",
+   "en": "Model TAD66K AVA FLICKR PARA AADB Average PLCC SRCC PLCC SRCC PLCC SRCC PLCC SRCC PLCC SRCC PLCC SRCC Vanilla MLLM Qwen2.5-VL-7B 0.2282 0.2242 0.3518 0.3684 0.5179 0.5696 0.5966 0.6252 0.4480 0.5076 0"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: PLCC and SRCC results compared to vanilla MLLM, hand-crafted, deep-learning based and MLLM based methods. *Results are retrained in our 15K combined train set. (DeQA-Score is trained on AVA and Flickr-aes in combination, owing to the absence of per-image standard deviation data in TAD66K). The best results are highlighted in bold, and the runner-ups are underlined."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Experiment"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Experiment Setup"
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "h4",
+   "en": "Dataset and Metrics."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "We adopt five open-source general image aesthetic assessment datasets: TAD66K (He et al., 2022), AVA (Murray et al., 2012), FLICKR-AES (Ren et al., 2017), PARA (Yang et al., 2022), and AADB (Kong et al., 2016). The model is trained on TAD66K, AVA, and Flickr-aes, with PARA and AADB serving as out-of-distribution (OOD) datasets. Mean Opinion Scores (MOSs) across these datasets are normalized into the range ⟦SLOT_51⟧. For evaluation, model performance is quantified using the Pearson linear correlation coefficient (PLCC) and the Spearman rank-order correlation coefficient (SRCC) between predicted scores and ground-truth annotations. The implementation details can be found in Appendix C."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "h4",
+   "en": "Baselines and Implementation."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "We compare our method with : (1) popular LLMs with various sizes, capacities and reasoning modes, including Qwen-2.5-VL series (Qwen et al., 2025) , Seed-1.5-VL-thinking (Guo et al., 2025b), GPT4o (OpenAI et al., 2024) and GPT4.1 (OpenAI, 2025); (2) HandCrafted methods like NIQE (Mittal et al., 2013) and BRISQUE (Mittal et al., 2012); (3) Deep Learning based methods including MUSIQ (Ke et al., 2021) and NIMA (Talebi & Milanfar, 2018); (4) MLLM based methods including VILA (Ke et al., 2023), Laion-Aes (Schuhmann et al., 2022), Q-Align (Wu et al., 2023a), ArtiMuse (Cao et al., 2025), DeQA-Score (You et al., 2025), Q-Insight (Li et al., 2025) and VisualQuality-R1 (Wu et al., 2025). The implementation details is in Appendix C."
+  },
+  {
+   "id": "b0072",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: PLCC and SRCC results of models trained only on AVA dataset to compare the generalization ability. Aes-R1 is able to achieve performance comparable to models such as ArtiMuse (Cao et al., 2025), which is pretrained on large-scale human-annotated corpus."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Quantitative Result"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "h4",
+   "en": "Main Results."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "p",
+   "en": "We adopt a combined training set of 15K samples randomly collected from the official train set of AVA, TAD66K and FLICKR-AES in a 2:2:1 ratio. Tab. 1 indicates several findings: 1) Aes-R1 significantly outperforms all baseline methods on in-domain datasets, achieving the highest average PLCC (0.6337) and SRCC (0.6186) scores across five benchmarks, with improvements of over 0.2 in both PLCC and SRCC compared to the backbone. 2) Compared to SFT-based methods, the efficient and scalable RL-based methods demonstrate superior performance, highlighting the promise of our Aes-R1 framework in IAA. 3) Although VisualQuality-R1, trained on the same data, successfully separates high- and low-quality images using rank reward (as shown in Fig. 1) and achieves a high SRCC (0.5825), it fails to calibrate scores to the empirical distribution (PLCC 0.4429). This highlights the rationale behind Aes-R1’s relative-absolute reward design, which achieves the closest alignment with the ground-truth distribution, featuring a well-matched peak and reduced tail deviation. We further conduct reward ablations in Sec. 4.3."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "h4",
+   "en": "Generalization Ability."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "In Tab. 1, Aes-R1 attains strong OOD performance on PARA and AADB trained on combined datasets compared to MLLM based baselines. We further validate Aes-R1’s generalization in single dataset setting by training Qwen-2.5-VL Instruct on the AVA train set and compare it with the official baseline checkpoints on the test set. As shown in Fig. 4, Aes-R1 achieves the highest SRCC and the second-highest PLCC on average. Note that ArtiMuse is pretrained on a large-scale human-annotated corpus. The results indicate RL with appropriate feedback can achieve strong cross-task generalization without the need for manually annotated data. Detailed results can be found in Sec. D.1."
+  },
+  {
+   "id": "b0079",
+   "t": "keep",
+   "w": "table",
+   "en": "Binary reward Error reward Rank reward TAD66K AVA FLICKR PARA AADB Average PLCC SRCC PLCC SRCC PLCC SRCC PLCC SRCC PLCC SRCC PLCC SRCC ✓ \\checkmark × \\times × \\times 0.2286 0.2414 0.3872 0.4120 0.5020"
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Ablation studies of different reward combinations. Our RAPO proposed error-rank reward significantly outperforms others."
+  },
+  {
+   "id": "b0081",
+   "t": "keep",
+   "w": "table",
+   "en": "SFT(epoch) RL Average Entropy TAD66K AVA FLICKR PARA AADB Average PLCC SRCC PLCC SRCC PLCC SRCC PLCC SRCC PLCC SRCC PLCC SRCC 0 N/A 0.921 0.2282 0.2242 0.3518 0.3684 0.5179 0.5696 0.5966 0.6252 0.4480"
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: The performance when RAPO is initialized from SFT checkpoints (0, 1, 2, 10 epochs), together with the average token entropy of the starting policy. Moderate SFT maximizes downstream performance, while excessive SFT declines entropy and RL gains, hindering OOD performance."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Ablation Study"
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "h4",
+   "en": "Reward Function Analysis."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "p",
+   "en": "We conduct ablation studies on the reward function design, the key module of our RAPO algorithm. We investigate three kinds of reward designs: binary reward, relative rank reward (Eq. 4) and absolute error reward (Eq. 6). The binary reward was used in (Li et al., 2025), which only supervises the outcome as"
+  },
+  {
+   "id": "b0086",
+   "t": "keep",
+   "w": "table",
+   "en": "r b ​ i ​ n ​ a ​ r ​ y = { 1 , | s p ​ r ​ e ​ d − s g ​ t | < ϵ 0 , otherwise . r_{binary}=\\left\\{\\begin{aligned} 1&,&&|s_{pred}-s_{gt}|<\\epsilon\\\\ 0&,&&\\text{otherwise}\\\\ \\end{aligned}\\right.. (13)"
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "We train the backbone on the 15K combined dataset via direct reinforcement learning without the cold-start stage to analyze the reward configurations. As summarized in Tab. 2, single-objective rewards exhibit distinct behaviors. The error reward markedly outperforms the binary reward, as it provides a continuous and precise reward signal that aligns with the score distribution. Additionally, the rank-only reward optimizes relative ordering effectively, yielding high SRCC but depressed PLCC, which matches the results in Tab. 1, reflecting the imbalance in predicting aesthetic scores."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "Compared with single-objective rewards, the combining objectives improves the generalization capability, resulting in stronger performance in the out-of-distribution (OOD) datasets. Notably, the Aes-R1 configuration (Error- Rank) achieves best average PLCC and SRCC across all benchmarks."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "h4",
+   "en": "Analysis of SFT and RL."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "We first attempt RAPO training without SFT on the AesCoT dataset (Aes-R1-Zero) Guo et al. (2025a). As illustrated in Fig. 5, Aes-R1-Zero achieves reasonable scoring accuracy but generates superficial and generic explanations, posing potential reward-hacking risks (Gao et al., 2023). This indicates the model lacks sufficient aesthetic prior, while recent studies (Chu et al., 2025b) highlight the importance of SFT in providing a strong prior and stabilizing output formats. Consequently, Aes-R1 framework consists of two training stages, SFT and RL. To find the reasonable allocation between them, we conduct initialization experiments. As shown in Tab. 3, the average PLCC/SRCC increased significantly from 0.4097/0.4084 to 0.4847/0.4903 while the average token entropy decreased from 1.609 to 0.716 after 1 epoch, 2 epochs and 10 epochs SFT. We then train RAPO based on above SFT checkpoints."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "p",
+   "en": "On the RL side, maintaining appropriately high entropy can foster exploration, stabilize training and mitigate entropy collapse (Cui et al., 2025a; Wang et al., 2025a; Cheng et al., 2025), which is consistent with the RAPO results, where checkpoints with lower performance but higher entropy exhibit significant improvements. Excessive SFT leads to overfitting on the data and narrows the policy exploration, resulting in only marginal gains after RL. Therefore, in this paper, we set 1 epoch cold-start, which achieves the best scoring performance of 0.6337/0.6186 during reinforcement learning, as well as expert-level aesthetic analysis (Aes-R1 in Fig. 5)."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "In contrast, extending SFT training to 2 or up to 10 epochs leads to depressed entropy and limited exploration, and initializing RAPO results in worse performance and poorer generalization capability. Finally, we choose to train Aes-R1 with only 1 epoch cold-start to cultivate aesthetic reasoning patterns, followed by RAPO training that inspires effective self-exploration. Compared with methods that rely on large volumes of constructed data, our Aes-R1 training pipeline achieves strong results while overcoming the prohibitive cost of data collection and curation. Detailed analysis of entropy can be found in Sec. D.2."
+  },
+  {
+   "id": "b0093",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Beyond over-appraisal: in comparison with existing models, Aes-R1 excels through balanced and multi-dimensional aesthetic assessments"
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "h3",
+   "en": "4.4 Case Study"
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "To further illustrate the advantages of Aes-R1, we conduct a case study on an image of a chick emerging from an egg with a ground-truth aesthetic score of ⟦SLOT_52⟧. As shown in Fig. 5, previous methods (e.g., GPT4.1, Qwen 2.5-7B-VL, Q-insight, and VisualQuality-R1) consistently assign inflated scores (⟦SLOT_53⟧–⟦SLOT_54⟧). They focus on surface-level attributes such as color vibrancy, balance, and soft lighting, while neglecting constructive critique. For instance, GPT4.1 commends the composition and texture, yet briefly mentions that the focus could be clearer. Similarly, Qwen and VisualQuality-R1 describe the image as ‘well-balanced’ and ‘appealing’, without highlighting any significant weaknesses. This pattern reflects a lack of nuanced, multidimensional judgment. In contrast, Aes-R1 provides a more balanced assessment, producing a score (⟦SLOT_55⟧) closer to the ground truth, and offering both positive feedback and constructive criticism. Aes-R1 highlights although the image is technically competent, it lacks a strong emotional impact or creative innovation. Furthermore, compared to Aes-R1-Zero, Aes-R1 further exhibits deeper explanatory capabilities and improved calibration, underscoring the effectiveness of cold-start bootstrapping. This case study highlights Aes-R1’s closer alignment with human judgment and richer critique-aware explanations."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Conclusion"
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we introduce Aes-R1, an advanced framework for aesthetic assessment that combines quantitative evaluation with qualitative critique. Unlike existing approaches, which primarily focus on numerical prediction, Aes-R1 captures multidimensional aesthetic judgments, incorporating affirmative and critical perspectives. Extensive experiments across diverse datasets demonstrate that Aes-R1 achieves superior performance in numerical assessment and provides interpretable, critique-aware evaluations. This dual capability highlights its potential as a foundation for future aesthetics judgment research, bridging the gap between objective metrics and human-like aesthetic reasoning."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Behrad et al. (2025) Fatemeh Behrad, Tinne Tuytelaars, and Johan Wagemans. Charm: The missing piece in vit fine-tuning for image aesthetic assessment. In Proceedings of the IEEE/CVF Conference on Comp"
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bhattacharya et al. (2010) Subhabrata Bhattacharya, Rahul Sukthankar, and Mubarak Shah. A framework for photo-quality assessment and enhancement based on visual aesthetics. In Proceedings of the 18th "
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bi et al. (2025) Jing Bi, Susan Liang, Xiaofei Zhou, Pinxin Liu, Junjia Guo, Yunlong Tang, Luchuan Song, Chao Huang, Guangyu Sun, Jinxi He, et al. Why reasoning matters? a survey of advancements in mu"
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Burges et al. (2005) Chris Burges, Tal Shaked, Erin Renshaw, Ari Lazier, Matt Deeds, Nicole Hamilton, and Greg Hullender. Learning to rank using gradient descent. In Proceedings of the 22nd Internatio"
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cao et al. (2025) Shuo Cao, Nan Ma, Jiayang Li, Xiaohui Li, Lihao Shao, Kaiwen Zhu, Yu Zhou, Yuandong Pu, Jiarui Wu, Jiaquan Wang, Bo Qu, Wenhai Wang, Yu Qiao, Dajuin Yao, and Yihao Liu. Artimuse: Fin"
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024) Dongping Chen, Ruoxi Chen, Shilin Zhang, Yaochen Wang, Yinuo Liu, Huichi Zhou, Qihui Zhang, Yao Wan, Pan Zhou, and Lichao Sun. Mllm-as-a-judge: assessing multimodal llm-as-a-judge w"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2025a) Hardy Chen, Haoqin Tu, Fali Wang, Hui Liu, Xianfeng Tang, Xinya Du, Yuyin Zhou, and Cihang Xie. Sft or rl? an early investigation into training r1-like reasoning large vision-langu"
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2025b) Nuo Chen, Zhiyuan Hu, Qingyun Zou, Jiaying Wu, Qian Wang, Bryan Hooi, and Bingsheng He. Judgelrm: Large reasoning models as a judge. arXiv preprint arXiv:2504.00050 , 2025b."
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cheng et al. (2025) Daixuan Cheng, Shaohan Huang, Xuekai Zhu, Bo Dai, Wayne Xin Zhao, Zhenliang Zhang, and Furu Wei. Reasoning with exploration: An entropy perspective on reinforcement learning for ll"
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chu et al. (2025a) Tianzhe Chu, Yuexiang Zhai, Jihan Yang, Shengbang Tong, Saining Xie, Dale Schuurmans, Quoc V Le, Sergey Levine, and Yi Ma. Sft memorizes, rl generalizes: A comparative study of foun"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chu et al. (2025b) Tianzhe Chu, Yuexiang Zhai, Jihan Yang, Shengbang Tong, Saining Xie, Dale Schuurmans, Quoc V. Le, Sergey Levine, and Yi Ma. Sft memorizes, rl generalizes: A comparative study of fou"
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cui et al. (2025a) Ganqu Cui, Yuchen Zhang, Jiacheng Chen, Lifan Yuan, Zhi Wang, Yuxin Zuo, Haozhan Li, Yuchen Fan, Huayu Chen, Weize Chen, Zhiyuan Liu, Hao Peng, Lei Bai, Wanli Ouyang, Yu Cheng, Bowe"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cui et al. (2025b) Ganqu Cui, Yuchen Zhang, Jiacheng Chen, Lifan Yuan, Zhi Wang, Yuxin Zuo, Haozhan Li, Yuchen Fan, Huayu Chen, Weize Chen, et al. The entropy mechanism of reinforcement learning for r"
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gandhi et al. (2025) Kanishk Gandhi, Ayush Chakravarthy, Anikait Singh, Nathan Lile, and Noah D Goodman. Cognitive behaviors that enable self-improving reasoners, or, four habits of highly effective s"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gao et al. (2023) Leo Gao, John Schulman, and Jacob Hilton. Scaling laws for reward model overoptimization. In International Conference on Machine Learning , pp. 10835–10866. PMLR, 2023."
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ghosal & Smolic (2022) Koustav Ghosal and Aljosa Smolic. Image Aesthetics Assessment Using Graph Attention Network . In 2022 26th International Conference on Pattern Recognition (ICPR) , pp. 3160–3167"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gu et al. (2025) Jiawei Gu, Xuhui Jiang, Zhichao Shi, Hexiang Tan, Xuehao Zhai, Chengjin Xu, Wei Li, Yinghan Shen, Shengjie Ma, Honghao Liu, Saizhuo Wang, Kun Zhang, Yuanzhuo Wang, Wen Gao, Lionel Ni,"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Guo et al. (2025a) Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Peiyi Wang, Qihao Zhu, Runxin Xu, Ruoyu Zhang, Shirong Ma, Xiao Bi, Xiaokang Zhang, Xingkai Yu, Yu Wu, Z. F. Wu, Zhibin Gou, Zhiho"
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Guo et al. (2025b) Dong Guo, Faming Wu, Feida Zhu, Fuxing Leng, Guang Shi, Haobin Chen, Haoqi Fan, Jian Wang, Jianyu Jiang, Jiawei Wang, Jingji Chen, Jingjia Huang, Kang Lei, Liping Yuan, Lishu Luo, P"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "He et al. (2022) Shuai He, Yongchang Zhang, Rui Xie, Dongxiang Jiang, and Anlong Ming. Rethinking image aesthetics assessment: Models, datasets and benchmarks. IJCAI , 2022."
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024) Yipo Huang, Xiangfei Sheng, Zhichao Yang, Quan Yuan, Zhichao Duan, Pengfei Chen, Leida Li, Weisi Lin, and Guangming Shi. Aesexpert: Towards multi-modality foundation model for imag"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ji et al. (2025) Miaomiao Ji, Yanqiu Wu, Zhibin Wu, Shoujin Wang, Jian Yang, Mark Dras, and Usman Naseem. A survey on progress in llm alignment from the perspective of reward design. arXiv preprint ar"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jie et al. (2023) Zhanming Jie, Trung Quoc Luong, Xinbo Zhang, Xiaoran Jin, and Hang Li. Design of chain-of-thought in math problem solving. arXiv preprint arXiv:2309.11054 , 2023."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kant (1790) Immanuel Kant. Critique of judgment , volume 10. Minerva Heritage Press, 1790."
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ke et al. (2021) Junjie Ke, Qifei Wang, Yilin Wang, Peyman Milanfar, and Feng Yang. Musiq: Multi-scale image quality transformer. In 2021 IEEE/CVF International Conference on Computer Vision (ICCV) , "
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ke et al. (2023) Junjie Ke, Keren Ye, Jiahui Yu, Yonghui Wu, Peyman Milanfar, and Feng Yang. Vila: Learning image aesthetics from user comments with vision-language pretraining. arXiv preprint arXiv:2"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kim et al. (2024) Seungone Kim, Juyoung Suk, Shayne Longpre, Bill Yuchen Lin, Jamin Shin, Sean Welleck, Graham Neubig, Moontae Lee, Kyungjae Lee, and Minjoon Seo. Prometheus 2: An open source language"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kong et al. (2016) Shu Kong, Xiaohui Shen, Zhe Lin, Radomir Mech, and Charless Fowlkes. Photo aesthetics ranking network with attributes and content adaptation. arXiv preprint arXiv:1606.01621 , 2016."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lee et al. (2024) Seongyun Lee, Seungone Kim, Sue Park, Geewook Kim, and Minjoon Seo. Prometheus-vision: Vision-language model as a judge for fine-grained evaluation. In Findings of the association fo"
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2025) Weiqi Li, Xuanyu Zhang, Shijie Zhao, Yabin Zhang, Junlin Li, Li Zhang, and Jian Zhang. Q-insight: Understanding image quality via visual reinforcement learning. arXiv preprint arXiv:2"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liao et al. (2025) Zhichao Liao, Xiaokun Liu, Wenyu Qin, Qingyu Li, Qiulin Wang, Pengfei Wan, Di Zhang, Long Zeng, and Pingfa Feng. Humanaesexpert: Advancing a multi-modality foundation model for huma"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2017) Xialei Liu, Joost Van De Weijer, and Andrew D. Bagdanov. Rankiqa: Learning from rankings for no-reference image quality assessment. In 2017 IEEE International Conference on Computer "
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2025) Zijun Liu, Peiyi Wang, Runxin Xu, Shirong Ma, Chong Ruan, Peng Li, Yang Liu, and Yu Wu. Inference-time scaling for generalist reward modeling. arXiv preprint arXiv:2504.02495 , 2025."
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mahan et al. (2024) Dakota Mahan, Duy Van Phung, Rafael Rafailov, Chase Blagden, Nathan Lile, Louis Castricato, Jan-Philipp Fränken, Chelsea Finn, and Alon Albalak. Generative reward models. arXiv pre"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mavridaki & Mezaris (2015) Eftichia Mavridaki and Vasileios Mezaris. A comprehensive aesthetic quality assessment method for natural images using basic rules of photography. In 2015 IEEE International"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mittal et al. (2012) Anish Mittal, Anush Krishna Moorthy, and Alan Conrad Bovik. No-reference image quality assessment in the spatial domain. IEEE Transactions on Image Processing , 21(12):4695–4708, "
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mittal et al. (2013) Anish Mittal, Rajiv Soundararajan, and Alan C. Bovik. Making a “completely blind” image quality analyzer. IEEE Signal Processing Letters , 20(3):209–212, 2013. doi: 10.1109/LSP.20"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Murray et al. (2012) Naila Murray, Luca Marchesotti, and Florent Perronnin. Ava: A large-scale database for aesthetic visual analysis. In 2012 IEEE Conference on Computer Vision and Pattern Recognitio"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2025) OpenAI. Introducing GPT-4.1 in the api, April 2025. URL https://openai.com/index/gpt-4-1/ ."
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI et al. (2024) OpenAI, :, Aaron Hurst, Adam Lerer, Adam P. Goucher, Adam Perelman, Aditya Ramesh, Aidan Clark, AJ Ostrow, Akila Welihinda, Alan Hayes, Alec Radford, Aleksander Mądry, Alex Baker-"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qwen et al. (2025) Qwen, :, An Yang, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chengyuan Li, Dayiheng Liu, Fei Huang, Haoran Wei, Huan Lin, Jian Yang, Jianhong Tu, Jianwei Zhang, J"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ren et al. (2017) Jian Ren, Xiaohui Shen, Zhe Lin, Radomir Mech, and David J. Foran. Personalized image aesthetics. In The IEEE International Conference on Computer Vision (ICCV) , Oct 2017."
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Saha et al. (2025) Swarnadeep Saha, Xian Li, Marjan Ghazvininejad, Jason E Weston, and Tianlu Wang. Learning to plan & reason for evaluation with thinking-LLM-as-a-judge. In Forty-second International"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Schuhmann et al. (2022) Christoph Schuhmann, Romain Beaumont, Richard Vencu, Cade Gordon, Ross Wightman, Mehdi Cherti, Theo Coombes, Aarush Katta, Clayton Mullis, Mitchell Wortsman, Patrick Schramowsk"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Shao et al. (2024a) Hao Shao, Shengju Qian, Han Xiao, Guanglu Song, Zhuofan Zong, Letian Wang, Yu Liu, and Hongsheng Li. Visual cot: Advancing multi-modal language models with a comprehensive dataset "
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Shao et al. (2025) Rulin Shao, Shuyue Stella Li, Rui Xin, Scott Geng, Yiping Wang, Sewoong Oh, Simon Shaolei Du, Nathan Lambert, Sewon Min, Ranjay Krishna, et al. Spurious rewards: Rethinking training"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Shao et al. (2024b) Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, Y. K. Li, Y. Wu, and Daya Guo. Deepseekmath: Pushing the limits of mathematica"
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sheng et al. (2025) Xiangfei Sheng, Leida Li, Pengfei Chen, Li Cai, and Giuseppe Valenzise. AesPrompt: Zero-shot Image Aesthetics Assessment with Multi-Granularity Aesthetic Prompt Learning. working p"
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sun et al. (2024) Wei Sun, Weixia Zhang, Yuqin Cao, Linhan Cao, Jun Jia, Zijian Chen, Zicheng Zhang, Xiongkuo Min, and Guangtao Zhai. Assessing uhd image quality from aesthetics, distortions, and sali"
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sutton et al. (1999) Richard S Sutton, David McAllester, Satinder Singh, and Yishay Mansour. Policy gradient methods for reinforcement learning with function approximation. In S. Solla, T. Leen, and K"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Talebi & Milanfar (2018) Hossein Talebi and Peyman Milanfar. Nima: Neural image assessment. IEEE Transactions on Image Processing , 27(8):3998–4011, August 2018. ISSN 1941-0042. doi: 10.1109/tip.2018."
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Team et al. (2025) Kimi Team, Angang Du, Bohong Yin, Bowei Xing, Bowen Qu, Bowen Wang, Cheng Chen, Chenlin Zhang, Chenzhuang Du, Chu Wei, Congcong Wang, Dehao Zhang, Dikang Du, Dongliang Wang, Enming "
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tsai et al. (2007) Ming-Feng Tsai, Tie-Yan Liu, Tao Qin, Hsin-Hsi Chen, and Wei-Ying Ma. Frank: a ranking method with fidelity loss. In Proceedings of the 30th Annual International ACM SIGIR Conferenc"
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2025a) Shenzhi Wang, Le Yu, Chang Gao, Chujie Zheng, Shixuan Liu, Rui Lu, Kai Dang, Xionghui Chen, Jianxin Yang, Zhenru Zhang, Yuqiong Liu, An Yang, Andrew Zhao, Yang Yue, Shiji Song, Bow"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2025b) Weiyun Wang, Zhangwei Gao, Lixin Gu, Hengjun Pu, Long Cui, Xingguang Wei, Zhaoyang Liu, Linglin Jing, Shenglong Ye, Jie Shao, Zhaokai Wang, Zhe Chen, Hongjie Zhang, Ganlin Yang, Ha"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wei et al. (2022) Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed H. Chi, Quoc V. Le, and Denny Zhou. Chain-of-thought prompting elicits reasoning in large language m"
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Whitehouse et al. (2025) Chenxi Whitehouse, Tianlu Wang, Ping Yu, Xian Li, Jason Weston, Ilia Kulikov, and Swarnadeep Saha. J1: Incentivizing thinking in llm-as-a-judge via reinforcement learning. arX"
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2023a) Haoning Wu, Zicheng Zhang, Weixia Zhang, Chaofeng Chen, Liang Liao, Chunyi Li, Yixuan Gao, Annan Wang, Erli Zhang, Wenxiu Sun, Qiong Yan, Xiongkuo Min, Guangtao Zhai, and Weisi Lin. "
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2024) Haoning Wu, Zicheng Zhang, Erli Zhang, Chaofeng Chen, Liang Liao, Annan Wang, Kaixin Xu, Chunyi Li, Jingwen Hou, Guangtao Zhai, Geng Xue, Wenxiu Sun, Qiong Yan, and Weisi Lin. Q-instr"
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2025) Tianhe Wu, Jian Zou, Jie Liang, Lei Zhang, and Kede Ma. Visualquality-r1: Reasoning-induced image quality assessment via reinforcement learning to rank. arXiv preprint arXiv:2505.1446"
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2023b) Xiaoshi Wu, Yiming Hao, Keqiang Sun, Yixiong Chen, Feng Zhu, Rui Zhao, and Hongsheng Li. Human preference score v2: A solid benchmark for evaluating human preferences of text-to-imag"
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xia et al. (2008) Fen Xia, Tie-Yan Liu, Jue Wang, Wensheng Zhang, and Hang Li. Listwise approach to learning to rank: theory and algorithm. In Proceedings of the 25th International Conference on Machi"
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xu et al. (2023) Jiazheng Xu, Xiao Liu, Yuchen Wu, Yuxuan Tong, Qinkai Li, Ming Ding, Jie Tang, and Yuxiao Dong. Imagereward: learning and evaluating human preferences for text-to-image generation. In"
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2022) Yuzhe Yang, Liwu Xu, Leida Li, Nan Qie, Yaqian Li, Peng Zhang, and Yandong Guo. Personalized image aesthetics assessment with rich attributes. arXiv preprint arXiv:2203.16754 , 2022"
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "You et al. (2025) Zhiyuan You, Xin Cai, Jinjin Gu, Tianfan Xue, and Chao Dong. Teaching large language models to regress accurate image quality scores using score distribution. arXiv preprint arXiv:25"
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yu et al. (2025) Qiying Yu, Zheng Zhang, Ruofei Zhu, Yufeng Yuan, Xiaochen Zuo, Yu Yue, Weinan Dai, Tiantian Fan, Gaohong Liu, Lingjun Liu, Xin Liu, Haibin Lin, Zhiqi Lin, Bole Ma, Guangming Sheng, Yu"
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2023) Weixia Zhang, Guangtao Zhai, Ying Wei, Xiaokang Yang, and Kede Ma. Blind Image Quality Assessment via Vision-Language Correspondence: A Multitask Learning Perspective . In 2023 IEE"
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zheng et al. (2023) Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric P. Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica. "
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhou et al. (2024) Zhaokun Zhou, Qiulin Wang, Bin Lin, Yiwei Su, Rui Chen, Xin Tao, Amin Zheng, Li Yuan, Pengfei Wan, and Di Zhang. Uniaa: A unified multi-modal image aesthetic assessment baseline and"
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2024) Hancheng Zhu, Ju Shi, Zhiwen Shao, Rui Yao, Yong Zhou, Jiaqi Zhao, and Leida Li. Attribute-driven multimodal hierarchical prompts for image aesthetic quality assessment. In Proceedin"
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2025) Lianghui Zhu, Xinggang Wang, and Xinlong Wang. JudgeLM: Fine-tuned large language models are scalable judges. In The Thirteenth International Conference on Learning Representations ,"
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A The Use of Large Language Models (LLMs)"
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "p",
+   "en": "We used Large Language Models (LLMs) as auxiliary tools to assist with the writing process. They were used solely to polish the language and improve readability, with no influence over the research design, experimental implementation or analysis. We conceived and executed all methodological contributions, experiments, and conclusions independently."
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Prompt Template"
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Implementation Details"
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "h4",
+   "en": "Dataset splits."
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "p",
+   "en": "We follow the official test splits for TAD66K, AVA, and PARA; for datasets lacking official splits, we randomly partition the data into train and test sets in a 9:1 ratio using a fixed seed to ensure reproducibility."
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "h4",
+   "en": "Hyperparameters."
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "p",
+   "en": "We use Qwen2.5-VL-7B-Instruct (Qwen et al., 2025) as our backbone MLLM. In RAPO algorithm, the generation number ⟦SLOT_56⟧ is set to 4 and the error reward hyperparameter ⟦SLOT_57⟧ is set to 0.1, while KL penalty coefficient ⟦SLOT_58⟧ and ⟦SLOT_59⟧ are set to 0.01 and 0.28, respectively. We first fine tune the backbone model on AesCoT for only 1 epoch with a global batch size of 64 and an initial learning rate of ⟦SLOT_60⟧ , and then implement RAPO training on SFT model for another 10 epochs with an initial learning rate of ⟦SLOT_61⟧ that linearly decay and a mini-batch size of 32. We set the max completion length as 1024. All the training runs on NVIDIA A100 GPU using Deepspeed Zero 3 and Flash-Attention 2."
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D More Results"
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "h3",
+   "en": "D.1 Results of Generalization Ability"
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "table",
+   "en": "Models TAD66K AVA FLICKR PARA AADB Average PLCC SRCC PLCC SRCC PLCC SRCC PLCC SRCC PLCC SRCC PLCC SRCC LAION ( 2022 ) 0.3936 0.3775 0.6782 0.6678 0.5827 0.5504 0.6727 0.6197 0.4013 0.4018 0.5457 0.523"
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Results of models trained only on AVA dataset"
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "h3",
+   "en": "D.2 Analysis of Entropy in RAPO"
+  },
+  {
+   "id": "b0186",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Comparison of Average entropy in SFT and RL training. (a) Entropy peaks after a single SFT epoch and then declines in continuous training. (b) Under RAPO, entropy remains stable without collapse."
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "p",
+   "en": "To analyze the entropy of our training pipeline, we conduct ablations on our backbone as well as on InternVL3.5-8B (Wang et al., 2025b) and Kimi-VL-A3B-Instruct (Team et al., 2025) , spanning heterogeneous model families, scales, and pretraining corpora. As shown in Fig. 6(a), within AesCoT the average token entropy peaks after a single SFT epoch and then decreases with further SFT. We then initialize RAPO from multiple SFT checkpoints of the backbone and report results in Tab. 3. The comparison shows that moderate SFT improves performance, and starting RL from the high-entropy checkpoint yields the best results. Moreover, the slight entropy fluctuations observed in Fig. 6(b) demonstrate the stability and robustness of our RAPO algorithm, with no evidence of entropy collapse."
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix E AesCoT Dataset Details"
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "h3",
+   "en": "E.1 Aesthetic Dimensions"
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "p",
+   "en": "In this study, we selecte five key aesthetic dimensions—Light and Shadow, Mood and Narrative, Composition, Color, and Exposure—and guide the external experts to generate systematic analysis of images based on these criteria. We believe these dimensions comprehensively cover the core elements of visual aesthetics: the Light and Shadow dimension assesses tonal contrast and atmosphere; the Mood and Narrative dimension evaluates thematic expression and emotional resonance; the Composition dimension examines spatial arrangement and visual guidance; the Color dimension focuses on chromatic coordination and harmony; and the Exposure dimension measures brightness control and detail clarity."
+  },
+  {
+   "id": "b0192",
+   "t": "keep",
+   "w": "table",
+   "en": "Dimension Aesthetic explanation Light and Shadow Light and shadow establish volume, spatial depth, and visual focus. Directionality and contrast model form and texture; side/backlighting and cast shad"
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Details of aesthetic dimensions"
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "h3",
+   "en": "E.2 Data Collection Details"
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "p",
+   "en": "We release two versions of our dataset: AesCoT-3K and AesCoT-10K. Initially, image–score pairs are aggregated from publicly available sources. The state-of-the-art vision–language model GPT-4.1 (OpenAI, 2025) serves as an external expert. To ensure the model effectively distinguishes aesthetic quality during supervised fine-tuning, balanced sampling is applied across three rating intervals: bad (0.0–0.4), fair (0.4–0.7), and good (0.7–1.0). For consistency in our multi-dataset training experiments, sampling is restricted to images drawn from in-distribution benchmarks: AVA (Murray et al., 2012), TAD66K (He et al., 2022), and FLICKR-AES (Ren et al., 2017)."
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "p",
+   "en": "Moreover, we carefully filter the expert trajectories mainly from three aspects: score leakage, reasoning inconsistencies, and other factual errors. Score leakage occurs when the critique reverse its analysis direction from the score result to its aesthetic attributes. Reasoning inconsistencies arise when the logical steps in the critique conflict with the given score. While other factual errors refer to cases where the critique describes elements that do not exist or misinterprets features in the image, thereby undermining its explanatory validity."
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "p",
+   "en": "The filter process is completed with both automatic check like model judgments and nuanced human audits to avoid any leakage. Specifically, we prompt the models to deal with the inconsistencies between the critique and the aesthetic score and to identify the factual error in the given description. Human audits and programmatic filters are used to identify score leakage. The final composition of AesCoT is displayed in Tab. 6."
+  },
+  {
+   "id": "b0198",
+   "t": "keep",
+   "w": "table",
+   "en": "Image Aesthetic Level Image Count Bad (0-0.4) 1000 Fair (0.4-0.7) 1000 Good (0.7-1.0) 1000 All 3000"
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a) AesCoT-3K"
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "table",
+   "en": "Image Aesthetic Level Image Count Bad (0-0.4) 2928 Fair (0.4-0.7) 3312 Good (0.7-1.0) 3660 All 9900"
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(b) AesCoT-10K"
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Composition of AesCoT-3K and AesCoT-10K"
+  }
+ ]
+}

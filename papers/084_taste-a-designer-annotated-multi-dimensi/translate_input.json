@@ -1,0 +1,1090 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "text",
+   "w": "p",
+   "en": "TASTE: Designer-Annotated Preference for AI Design"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "TASTE: A Designer-Annotated Multi-Dimensional Preference Dataset for AI-Generated Graphic Design Thanks: ∗ Equal contribution. † Corresponding author."
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Text-to-image models now generate graphic design at production scale, yet their supervision still comes primarily from photo-style preference datasets with a single overall verdict per comparison. Des"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Text-to-image (T2I) models have crossed from research artifact to deployed design tool. Current systems generate UI mockups, posters, ad creatives, and typographic compositions end-to-end and ship them to end users in production design pipelines; a recent survey of AI-driven graphic design [Survey2025DesignAI] catalogues the scope of this shift. Yet these systems are still largely evaluated and optimized using preference signals derived from photographic generation. This creates a misalignment between what models are rewarded for and what downstream design users actually value, potentially favoring photorealistic plausibility over typography, hierarchy, or structural fidelity."
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "The public preference datasets that drive evaluation, reward modeling and preference optimization are collected on photo-style generation rather than on design. HPSv2 and HPSv3 [Wu2023HPSv2, Ma2025HPSv3], Pick-a-Pic [Kirstain2023PickaPic], ImageReward [Xu2023ImageReward], RichHF-18K [Liang2024RichHF], MHP/MPS [Zhang2024MPS], and VisionReward [Xu2026VisionReward] all collect preferences over photo-style outputs. Survey work [Survey2025DesignAI] confirms the gap, and DesignPref [Peng2025DesignPref] describes a UI-design pairwise dataset whose data has not yet been released. A complementary line of recent work targets the structural and task-level side of design: LICA [Hirsch2026LICA] provides 1.55M layered design compositions with structural metadata, and Graphic-Design-Bench [Deganutti2026GDB] evaluates current models on 50 design tasks across layout, typography, infographics, template semantics, and animation. These resources test what models can do; neither records what designers prefer."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "Sub-dimensional preference remains a missing piece. Photo-style preference is dominated by a small set of objective cues such as anatomical plausibility and prompt alignment, so a single “which is better” label captures most of the signal. Graphic design splits along several partly independent axes including typography rules, visual hierarchy, color harmony, mood and tone, spatial layout fidelity, and description-fidelity criteria of the form does the color requested in the prompt actually appear in the output. A single overall label averages over these axes and loses the per-axis signal. A layout may preserve spatial structure while violating color intent; another may satisfy prompt semantics but break typographic hierarchy. Both could receive the same overall preference label despite failing for different reasons. Work on visual importance and saliency in graphic design supports treating these axes as distinct cognitive processes [Bylinskii2017VisualImportance, Fosco2020Predimportance], and multi-axis benchmarking is standard practice in adjacent modalities, for example VBench and VBench-2.0 in video [Huang2024VBench, Huang2025VBench2]."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "Building a design-preference dataset is not sufficient on its own: the ratings must encode stable, learnable signal rather than arbitrary ratings. Similar aggregate disagreement can reflect random ratings, a weak shared preference with rater-specific noise, or designer groups with internally consistent but incompatible tastes. We propose a three-part diagnostic for separating these cases: graded agreement (per-prompt Kendall’s ⟦SLOT_0⟧), majority decisiveness (majority-vote probability ⟦SLOT_1⟧), and triadic intransitivity (Condorcet cycle existence). Tested against exact null distributions at ⟦SLOT_2⟧, every TASTE criterion rejects the random-rater null on at least two of the three statistics. Three subsampled reference datasets at the same shape (Sushi [Kamishima2003Sushi], MovieLens [Harper2015MovieLens], and the HPSv2 test data [Wu2023HPSv2]) place designer agreement on graphic design between food and movie preferences and below photo-style image-quality preference. Signal level varies across criteria, with typography and spatial accuracy carrying roughly twice the signal of color harmony. Beyond TASTE, we argue that this kind of analysis should be standard practice on any new preference dataset before model training begins, since it answers the prior question of whether learnable signal is present."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Off-the-shelf systems do not yet read this signal. Across six open-weight VLM judges spanning four families and three dedicated T2I-preference scorers (HPSv2.1, PickScore-v1, LAION-Aesthetic-V2), no pre-trained system exceeds ⟦SLOT_3⟧ macro agreement with the 5-designer majority on TASTE under a position-bias-corrected protocol [Zheng2023MTBench]. Within the VLM slate, position-bias rate and content sensitivity trade off (Spearman ⟦SLOT_4⟧), so scaling moves the operating point along this frontier rather than to a better one."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "TASTE is designed not only as a benchmark, but as a decision layer for design generation systems. Its criterion-level structure enables fine-grained evaluation of model strengths and weaknesses, allowing practitioners to select or route among generators based on task-specific priorities (e.g., typography fidelity, spatial accuracy, or color control) rather than relying on a single aggregate preference score. This same structure provides supervision for training preference judges, reward models, and alignment objectives that optimize for specific design dimensions, enabling more controllable and designer-aligned generation."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "Hence, our work makes the following contributions:"
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "li",
+   "en": "1. We release TASTE11 1 Code: https://github.com/purvanshi-lica/taste. Data: https://huggingface.co/datasets/purvanshi/TASTE. (Typography, Aesthetics, Spatial, Tone, Etc.), a designer-annotated preference dataset for AI-generated graphic design recording one rating per criterion across nine criteria, with ten professional designers ranking outputs from four current T2I models (1,600 ratings per criterion, plus hallucination flags on overall-preference cohorts). Both pairwise comparisons and derived 4-way rankings are released."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "li",
+   "en": "2. We introduce a criterion-agnostic diagnostic framework for validating preference-signal quality in new datasets, based on graded agreement, majority decisiveness, and triadic intransitivity. Applied with cross-domain anchors from Sushi, MovieLens, and HPSv2-test at the same shape, every TASTE criterion rejects the random-rater null and designer agreement on graphic design sits between subjective-taste and photo-quality regimes."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "li",
+   "en": "3. We benchmark preference models on TASTE. Nine pre-trained systems, three dedicated T2I-preference scorers (HPSv2.1, PickScore-v1, LAION-Aesthetic-V2) and six open-weight VLMs prompted as judges across four families and an order-of-magnitude range in active parameter count, all fall below ⟦SLOT_5⟧ macro agreement with the 5-designer majority, and scaling within the VLM slate does not close the gap. A small MLP head trained directly on TASTE reaches ⟦SLOT_6⟧ pairwise accuracy, approaching the ⟦SLOT_7⟧ single-rater ceiling and setting a baseline for future TASTE-trained preference models."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related work"
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "h4",
+   "en": "Graphic-design ecosystem."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "LICA [Hirsch2026LICA] releases 1.55M layered design compositions with structural metadata covering text, image, vector, and group elements. Graphic-Design-Bench [Deganutti2026GDB] builds on LICA to evaluate current models on 50 understanding-and-generation tasks across layout, typography, infographics, template semantics, and animation. These two resources cover the structural and task sides of graphic-design AI but record no human preferences. A recent survey [Survey2025DesignAI] maps the broader landscape and flags multi-rater design preference data as missing. Other works [Bylinskii2017VisualImportance, Fosco2020Predimportance] provide foundational work on visual-importance prediction across graphic design types and motivate sub-dimensional analysis of design quality. TASTE positions on top of this stack as the human-preference layer."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h4",
+   "en": "Design-domain preference."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "DesignPref [Peng2025DesignPref] is the closest in spirit to TASTE. It collects 12k pairwise UI design comparisons from 20 designers with identity-linked annotations and reports Krippendorff ⟦SLOT_8⟧ on a single overall preference label. TASTE differs along three concrete axes: it covers nine sub-dimensional criteria rather than a single overall label, it is collected over four current text-to-image generators rather than a UI-only context, and the data is publicly released (DesignPref’s data has not been released publicly at submission time). TASTE is therefore complementary to DesignPref rather than substitutive: a researcher interested in the broad design domain, with sub-dimensional generation preference, would use TASTE, and one interested in single-label personalised UI preference would use DesignPref once it releases."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "h4",
+   "en": "Photo-realistic T2I preference data."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "HPSv2 and HPSv3 [Wu2023HPSv2, Ma2025HPSv3] use pairwise preference on photo-realistic generation, with one annotator per pairwise comparison in the training split and a small multi-rater test split. Pick-a-Pic [Kirstain2023PickaPic] collects pairwise preferences from real users in the wild. ImageReward [Xu2023ImageReward] extends to per-prompt ⟦SLOT_9⟧-way rankings with ⟦SLOT_10⟧ between ⟦SLOT_11⟧ and ⟦SLOT_12⟧ but does not preserve per-rater identity in the public release. GenAI-Bench [Lin2024GenAIBench] provides Likert ratings from three annotators per item across six T2I models. ImagenWorld [Sun2026ImagenWorld] stress-tests image generation with explainable human evaluation on real-world tasks."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "h4",
+   "en": "Multi-dimensional T2I preference."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "RichHF-18K [Liang2024RichHF] adds per-image scores for plausibility, alignment, and aesthetics on Pick-a-Pic outputs. MHP/MPS [Zhang2024MPS] collect approximately 918k pairwise judgments on four orthogonal dimensions. VisionReward [Xu2026VisionReward] extends this to a binary checklist of around 63 sub-dimensional questions. In an adjacent modality, VBench [Huang2024VBench] and VBench-2.0 [Huang2025VBench2] establish multi-axis decomposition as the standard evaluation pattern for video generation, and motivate the same pattern in still imagery. All five target photo-realistic or generic content rather than design. E-commerce poster evaluation is closer to design but evaluates AI judges rather than collecting designer preferences [Ecomiq2026]."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h4",
+   "en": "AIGC quality assessment."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "AGIQA-3K [Li2023AGIQA3K], AIGIQA 20K [Li2024AIGIQA20K], and AGIN [Chen2024AGIN] collect Mean Opinion Scores on AI-generated images. These target perceptual quality and naturalness rather than design preference, and their public releases either aggregate per-image scores or use a different statistical shape, preventing direct overlay on our histograms."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h4",
+   "en": "Classical preference data and statistical machinery."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "Sushi [Kamishima2003Sushi] and MovieLens [Harper2015MovieLens] are canonical multi-rater preference datasets in the food and movie domains. Both can be subsampled to a ⟦SLOT_13⟧ shape and bracket subjective taste-based agreement. Our statistical pipeline builds on Mallows permutation models [Mallows1957], the Bradley–Terry [BradleyTerry1952] and Plackett–Luce [Plackett1975, Luce1959] parametric formulations, Kendall’s ⟦SLOT_14⟧ [Kendall1938], and Krippendorff’s ⟦SLOT_15⟧ [Krippendorff2004alpha, Krippendorff2018]."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "h2",
+   "en": "3 The TASTE dataset"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Generators, designers, prompts"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate four current text-to-image models: FLUX.2 max [BlackForest2024Flux], GPT Image 1.5 [OpenAI2024DALLE], Nano Banana 2 [Google2024Imagen], and Seedream 5.0 Lite [Bytedance2024Seedream]. Generators are presented to evaluators behind blind code-names. The mapping from code-name to model is recorded but not shown to the rater, which prevents brand-anchoring effects."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "We recruited two disjoint cohorts of professional designers, an Aesthetics cohort of 5 designers and a Descriptions cohort of 5 different designers. We refer to evaluators within each cohort as Designer A through Designer E to preserve anonymity in the analyses that follow. Each evaluator within a cohort sees every prompt batch in that cohort, so per-rater identity carries across the cohort’s sub-dimensions. We paid designers hourly market rates and did not disclose the statistical analyses applied to their judgments."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Sub-dimensional decomposition"
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "Nine ranking sub-dimensions are collected, organised into the two cohorts (Table 1). The criteria were not chosen by the authors but surfaced from pilot interviews with the same pool of professional designers who later annotated the data; the exact interview format is documented in §3.4. The Aesthetics cohort covers an overall preference (intent-grounded) and four sub-criteria the designers consistently flagged as separate cognitive processes (mood and tone, visual hierarchy, color harmony, typography). The Descriptions cohort covers overall preference and three description-fidelity sub-criteria that designers identified as verifiable against the prompt (color accuracy, spatial accuracy, typography). The two typography criteria are distinct: Aesthetics Typography rates the typographic craft of the rendered design (font selection, spacing, sizing hierarchy, alignment), while Descriptions Typography rates whether the text demanded by the prompt is rendered correctly (presence, spelling, fit to the brief’s directions). Each sub-dimension was rated on a separate, disjoint set of 80 prompts. This design isolates per-dimension signal at the cost of preventing within-rater within-prompt cross-dimensional comparison."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "For each prompt the rater performs the ⟦SLOT_16⟧ pairwise comparisons of the four generator outputs, presented blind side by side. The 6 pairwise judgments per (prompt, evaluator) tuple are then aggregated into a strict 4-way ranking by the collection pipeline; the exact aggregation procedure is documented in §3.4. Each (prompt, evaluator) cell of the released data is therefore both a set of 6 pairwise comparisons and a derived 4-way rank, and the analyses in §6 use the derived rank."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Hallucination flags"
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "For the two overall-preference cohorts (Aesthetic Preference and Descriptions Preference, ⟦SLOT_17⟧ prompts in total), each evaluator additionally flags every generator’s image as No, Minor, or Major hallucination, encoded as ⟦SLOT_18⟧. This yields ⟦SLOT_19⟧ ordinal flags per cohort, distributed across three classes rather than a low-prevalence binary: roughly ⟦SLOT_20⟧ No, ⟦SLOT_21⟧ Minor, and ⟦SLOT_22⟧ Major in both cohorts. Inter-rater agreement is modest. Krippendorff’s ⟦SLOT_23⟧ with an ordinal distance metric reaches ⟦SLOT_24⟧ on Aesthetics and ⟦SLOT_25⟧ on Descriptions, slightly below the ⟦SLOT_26⟧ measured on the same cohorts’ rankings. The disagreement is concentrated rather than diffuse: on ⟦SLOT_27⟧ of Aesthetics items and ⟦SLOT_28⟧ of Descriptions items, raters split only between No and Minor, while only ⟦SLOT_29⟧ split solely between Minor and Major. Per-evaluator Major rates span ⟦SLOT_30⟧ to ⟦SLOT_31⟧, reflecting per-rater calibration drift rather than disagreement on which items count as severe failures. We use these flags only as a documented dataset feature in this paper and do not filter the ranking data with them. Tightening the No–Minor rubric, possibly through automated VQA-style probes in the spirit of recent T2I hallucination evaluation work [Lim2025IHallA, Liu2025HallucinationSurvey], is a natural follow-on for the next collection round."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "h3",
+   "en": "3.4 Curation details"
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "We hereby describe the data curation and annotation protocol."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "h4",
+   "en": "Recruitment platform and screening."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "Designers were recruited through Contra, a professional network of 1.5M creative professionals. Participants comprised experienced graphic designers spanning brand identity, visual systems, web and product design, illustration, and marketing design, with substantial commercial portfolios including work for established technology companies, global brands, and high-growth startups. Designers were eligible for participation based on previous engagement with Contra Labs research studies or by passing the Contra Labs Network eligibility screener, a component of the Contra Labs application completed by all new members. From this pool, selected participants had demonstrated professional graphic design experience through their Contra profiles and prior client work."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "h4",
+   "en": "Designer demographics."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "The 10 participants in this study were located in the US, Portugal, Italy, France, Spain, Pakistan, Armenia, and Jordan. The primary working language of all participants is English. Self-reported specialties, aside from graphic design, include brand design, art direction, advertising design, and AI visual art, with years of experience ranging from 4–10 years."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "h4",
+   "en": "Pilot interviews."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "A series of small-scale pilot studies was conducted to refine the questionnaire, study parameters, and evaluated sub-dimensions. The final cohort structure was developed collaboratively between LICA and Contra Labs, informed by prior findings from the Contra Labs Human Creativity Benchmark (HCB) research and successive pilot evaluations. Once the methodology was finalized, the study was conducted at scale."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "h4",
+   "en": "Prompt sourcing."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "All prompts represented in this study were tied to real marketplace outcomes, tied to common deliverables for the creative professional community on Contra. This study focused on prompts from the following subcategories, all sourced from the LICA Dataset [Hirsch2026LICA]: Presentations, flyers, instagram posts, social media, print products, cards & invitations, posters, art & design, and logo. A single set of prompts were randomly selected from these categories, proportional to their representation in the LICA dataset."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "Each prompt in the LICA dataset has three portions. First, User Intent, a description of the purpose and audience of the output. The second portion was Description, a literal description of the layout and elements of the output. The third portion was Aesthetics, a description of the stylistic qualities and elements of the output. The User Intent and Description portions were taken to make one prompt set for the Description cohort. The same User Intent and corresponding Aesthetics portion was taken to make the second prompt set for the Aesthetics cohort. The participants were randomly divided across these two categories, with 5 designers participating per run."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "h4",
+   "en": "Image-generation parameters."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "The model versions used for these evaluations were: Nano Banana 2 (released February 26, 2026), Flux.2 [max] (released December 16, 2025), GPT Image 1.5 (released December 16, 2025), and Seedream 5.0 Lite (released February 13, 2026). All outputs were generated within the Contra evaluation environment using fal.ai and checked to ensure the generation did not fail and the aspect ratio was consistent before presenting to designers."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "h4",
+   "en": "Annotation interface."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "The pairwise comparison was conducted in Contra’s evaluation environment. For each set of one prompt and the corresponding four outputs, participants were shown the prompt first with a twenty-second countdown to keep them on the prompt screen. After twenty seconds, or when participants finished reading, they were able to click “I’m Ready”, which moved them to the pairwise comparison screen. On this screen, they saw the prompt and two images at a time, which they were able to click and zoom into if needed. For selection, they clicked one of two options, which read “I prefer left” or “I prefer right”, and then the next pair of images in the set was presented. They continued this selection until their ranking was settled. There was no timer associated with the selection, but participants were advised to take approximately 2 minutes per evaluation, after reading the prompt. The opening context paragraph shown to designers at the start of every session is reproduced verbatim in Appendix C."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "h4",
+   "en": "Pairwise-to-rank aggregation."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "For each (prompt, evaluator) tuple, we collapsed the 6 binary pairwise judgments into a strict 4-way ranking by fitting a Bradley-Terry model and ordering responses by descending estimated strength. We observed no intransitive triples in the released data."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "h4",
+   "en": "Hallucination rubric."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "Designers were advised to complete the hallucination flag with major hallucinations counting as anything outside the scope of the prompt request and unrelated to the prompt. Minor hallucinations counted as elements that were changed or different from intention but still related, and no hallucinations meant that all elements in the design were logically derived from the prompt."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "h4",
+   "en": "Compensation, consent, and ethics."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "Designers were paid a flat project fee that averaged approximately $90 per hour. Designers in the Description cohort completed 4 evaluations, totalling about 13 hours each (task familiarization and evaluation time) spread over a week-long period. Designers in the Aesthetics cohort completed 5 evaluations, totalling 16 hours each over the same period. All designers gave informed consent through a project contract that documented the use of the collected data for research and product purposes, including external release. The study was conducted as paid market research under Contra Labs’ standard research consent procedure and does not fall under the scope of an academic IRB; designers were free to withdraw at any point without penalty."
+  },
+  {
+   "id": "b0058",
+   "t": "keep",
+   "w": "table",
+   "en": "Cohort Sub-dimension Designers # prompts Aesthetics UI+Ad Preference (holistic) 5 (cohort A) 80 Aesthetics Mood and Tone Match 5 (cohort A) 80 Aesthetics Visual Hierarchy 5 (cohort A) 80 Aesthetics Co"
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Cohort structure and per-sub-dimension prompt counts. The two cohorts use disjoint pools of professional designers and disjoint 80-prompt batches per sub-dimension. Each (prompt, evaluator) cell is a strict 4-way ranking over the four generator outputs, giving ⟦SLOT_32⟧ ratings per sub-dimension."
+  },
+  {
+   "id": "b0060",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Per-prompt ⟦SLOT_33⟧ distribution (the mean pairwise Kendall ⟦SLOT_34⟧ across the 10 evaluator pairs) for each TASTE sub-dimension, with horizontal lines showing the median ⟦SLOT_35⟧ of the three cross-domain reference anchors. Aesthetics sub-dimensions are shown in blue and Descriptions in green. All nine sub-dimensions sit close to the Sushi (food) and MovieLens (movies) medians, well below the median of HPSv2-test restricted to its top-4 generative models, which places design preference in the subjective-taste regime rather than the image-quality regime."
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Testing for preference signal"
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "Before treating TASTE as training data for a preference model, we test whether the ratings carry meaningful preference signal. A dataset of random rankings has the same shape as TASTE and would survive any conventional descriptive report; the relevant test is whether the observed agreement exceeds what independent uniform raters would produce. We adopt three complementary signal tests, each addressing a different mode of disagreement. Formal definitions, support sets, and null PMFs are tabulated in Appendix A; the body uses each statistic intuitively."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "Kendall’s ⟦SLOT_36⟧ summarises rank correlation between rater pairs. For a single prompt with ⟦SLOT_37⟧ raters we compute one Kendall ⟦SLOT_38⟧ per rater pair and report the per-prompt mean ⟦SLOT_39⟧. ⟦SLOT_40⟧ if all raters agree exactly, ⟦SLOT_41⟧ under random ranking, and ⟦SLOT_42⟧ if raters systematically disagree. At ⟦SLOT_43⟧ the support of ⟦SLOT_44⟧ is finite and its iid-uniform null PMF has a closed form, which lets us test the full histogram of per-prompt ⟦SLOT_45⟧ values against the null rather than only its mean."
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "Majority-vote probability ⟦SLOT_46⟧ asks how often a clear winner emerges between two items. For each pair of generator outputs ⟦SLOT_47⟧ we count how many of the ⟦SLOT_48⟧ raters place ⟦SLOT_49⟧ above ⟦SLOT_50⟧, call this count ⟦SLOT_51⟧, and report ⟦SLOT_52⟧. At ⟦SLOT_53⟧ this takes values in ⟦SLOT_54⟧. Larger ⟦SLOT_55⟧ means a sharper majority on a given pair. Under iid-uniform raters, ⟦SLOT_56⟧ follows the symmetric-folded ⟦SLOT_57⟧ distribution."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "The Condorcet cycle indicator distinguishes shared-ordering disagreement from factional disagreement. For each prompt we ask whether the majority pairwise preferences across the four generator outputs contain an intransitive triple (⟦SLOT_58⟧, ⟦SLOT_59⟧, ⟦SLOT_60⟧). A single weak shared preference order with rater-specific noise on top suppresses cycles below the iid rate; a mixture of factions with internally consistent but mutually orthogonal preferences elevates cycles above the iid rate. At ⟦SLOT_61⟧ the iid-uniform cycle rate is ⟦SLOT_62⟧ by Monte Carlo, and we test observed cycle counts against this rate with a binomial test."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "Why the three statistics together. Kendall’s ⟦SLOT_63⟧ alone does not separate shared-ordering noise from factional disagreement, because both can produce similar mean ⟦SLOT_64⟧. ⟦SLOT_65⟧ alone cannot diagnose triadic intransitivity. The cycle indicator alone gives no information about graded agreement. Together the three test the same null (iid-uniform raters) along three independent axes; rejection on any one is evidence of preference signal, and the pattern of rejection across the three discriminates between the three competing stories about what causes the observed disagreement (§1). We argue this signal-check procedure should be standard practice for any new preference dataset before training begins."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Cross-domain reference anchors"
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "To position TASTE against existing preference data we construct three reference anchors at the same ⟦SLOT_66⟧ shape. Each anchor is a larger ranking dataset, and for each synthetic prompt we draw ⟦SLOT_67⟧ items and ⟦SLOT_68⟧ raters at random and re-rank to ⟦SLOT_69⟧ per rater on the selected subset. The resulting ⟦SLOT_70⟧ rank matrix is processed by the same pipeline. Pooling many such synthetic prompts gives a reference distribution at the same support as TASTE."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "Sushi [Kamishima2003Sushi] contains preference rankings of ⟦SLOT_71⟧ sushi items by approximately 5,000 users. We draw 50 bootstrap iterations of ⟦SLOT_72⟧ panels with ⟦SLOT_73⟧ random 4-item subsets per panel, totalling 20,000 samples."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "MovieLens [Harper2015MovieLens] contains ⟦SLOT_74⟧-to-⟦SLOT_75⟧ ratings of films by tens of thousands of users. We restrict to the top-100 most-rated movies, draw users with sufficient overlap, and emit 50 bootstrap iterations of ⟦SLOT_76⟧ samples each."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "The HPSv2 test split [Wu2023HPSv2] contains 400 prompts with 10 fixed annotators per prompt and 9 generative-model images per prompt, plus a COCO real image on 100 of the prompts. To make a fair generated-only comparison at ⟦SLOT_77⟧ we exclude the COCO real image and identify the top-4 generative models by mean aggregated rank across the 400 prompts. Indices ⟦SLOT_78⟧ form a clean cluster with mean ranks of ⟦SLOT_79⟧ to ⟦SLOT_80⟧, separated by a gap of more than two ranks from the next-best (index 0, mean rank ⟦SLOT_81⟧). We hold these four model indices fixed across all prompts and bootstrap 50 random 5-of-10 rater subsets, giving ⟦SLOT_82⟧ samples at the matching shape."
+  },
+  {
+   "id": "b0073",
+   "t": "keep",
+   "w": "table",
+   "en": "Anchor ( n total n_{\\text{total}} ) median T T mean pair- τ \\tau mean p max p_{\\max} cycle rate Sushi (20,000) + 0.133 +0.133 + 0.144 +0.144 0.739 0.739 0.107 0.107 MovieLens (24,000) + 0.200 +0.200 +"
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Reference anchor descriptive statistics at ⟦SLOT_83⟧. All three anchors lie above the iid-uniform null on every statistic. HPSv2-test (image quality) shows the strongest agreement signal once weak generators are excluded, while Sushi and MovieLens bracket the subjective-taste regime."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Results"
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h3",
+   "en": "6.1 Every criterion carries preference signal"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "The signal check from §4 asks the prior question of whether TASTE carries preference signal. Chi-squared GOF tests on the per-prompt ⟦SLOT_84⟧ histogram and the ⟦SLOT_85⟧ histogram against the exact iid-uniform null reject in every TASTE criterion at ⟦SLOT_86⟧ on at least one of the two statistics, and in most criteria on both. These rejections survive any reasonable multiple-comparison correction (Bonferroni across ⟦SLOT_87⟧ tests requires ⟦SLOT_88⟧, comfortably exceeded by the observed magnitudes). The cycle indicator adds a third axis on which agreement is detectable; we treat it separately in §6.3 because it discriminates between two kinds of structured agreement rather than between agreement and noise. Per-criterion summary statistics appear in Table 3."
+  },
+  {
+   "id": "b0078",
+   "t": "keep",
+   "w": "table",
+   "en": "Cohort Sub-dim median T T mean pair- τ \\tau mean p max p_{\\max} cycle rate Aesthetics UI+Ad Preference + 0.133 +0.133 + 0.159 +0.159 0.744 0.744 0.150 0.150 Aesthetics Mood and Tone + 0.133 +0.133 + 0"
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Per-sub-dimension descriptive statistics (⟦SLOT_89⟧ prompts each). Every dimension rejects the iid-uniform null on ⟦SLOT_90⟧, pair-⟦SLOT_91⟧, and ⟦SLOT_92⟧ at ⟦SLOT_93⟧. Cycle-rate tests vary by dimension. Description-fidelity sub-dimensions (Spatial Accuracy, Typography) show the strongest agreement signal."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "h3",
+   "en": "6.2 Where designer agreement sits across domains"
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "The first signal-test statistic, Kendall’s ⟦SLOT_94⟧ aggregated as per-prompt ⟦SLOT_95⟧, places TASTE against the three reference datasets. Figure 1 overlays the per-prompt ⟦SLOT_96⟧ distribution of every TASTE criterion on the median ⟦SLOT_97⟧ of the three anchors. All nine criteria have median ⟦SLOT_98⟧ between ⟦SLOT_99⟧ (Color Harmony) and ⟦SLOT_100⟧ (Spatial Accuracy and Descriptions Typography), and the band ⟦SLOT_101⟧ sits inside the Sushi–MovieLens band ⟦SLOT_102⟧. HPSv2-test on its top-4 generators sits at median ⟦SLOT_103⟧, above even TASTE’s strongest criterion. Designers ranking graphic design therefore agree at roughly the rate users agree on movies, and below the rate crowdworkers agree when ranking photo-style image quality. A reward model trained on photo-style preferences is unlikely to fit TASTE zero-shot, and soft labels or per-criterion fits are needed."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "h3",
+   "en": "6.3 Cycle rates rule out factional disagreement"
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "The third signal-test statistic, the Condorcet cycle indicator, discriminates between two structured-agreement stories that ⟦SLOT_104⟧ and ⟦SLOT_105⟧ alone cannot tell apart. A factional model predicts cycle rates above the iid-uniform rate; a weak shared ordering predicts cycle rates below it. For each criterion we test the observed cycle count against the binomial null ⟦SLOT_106⟧ with a two-sided test. All nine observed rates lie at or below the null rate of ⟦SLOT_107⟧ (Figure 2). Four criteria reject the null at ⟦SLOT_108⟧, in each case with the rate significantly below it (Aesthetics Visual Hierarchy at ⟦SLOT_109⟧, Aesthetics Typography at ⟦SLOT_110⟧, Descriptions Color Accuracy at ⟦SLOT_111⟧, Descriptions Typography at ⟦SLOT_112⟧). The remaining five criteria do not reject the null individually at ⟦SLOT_113⟧, but the joint pattern across all nine is strongly one-sided; no criterion shows the elevated-cycle signature that a factional model would generate. Combined with the left-shifted ⟦SLOT_114⟧ histogram from §6.2, this rules out the random-rater and factional hypotheses for every criterion. A weak shared preference order with rater-specific noise is the residual explanation. An aggregate model with agreement-weighted soft labels (such as Bradley–Terry or an HPS-style cosine model) should therefore work better than a mixture-of-experts setup on TASTE, since the mixture has no factional structure to recover."
+  },
+  {
+   "id": "b0084",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Per-sub-dimension Condorcet cycle rate. All nine sub-dimensions sit at or below the iid-uniform null rate (red dashed at ⟦SLOT_115⟧), the qualitative signature of a Mallows weak common ordering rather than a mixture-of-orderings. Horizontal dotted lines show reference cycle rates for Sushi, MovieLens, and HPSv2-test top-4."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "h3",
+   "en": "6.4 Signal level varies markedly across criteria"
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "The signal level itself, measured by mean pairwise ⟦SLOT_116⟧, varies within TASTE by a factor of roughly ⟦SLOT_117⟧ across criteria (Figure 3). Aesthetics Color Harmony sits lowest at ⟦SLOT_118⟧; Descriptions Typography sits highest at ⟦SLOT_119⟧. The four description-fidelity criteria (Descriptions Typography, Spatial Accuracy, Preference, Color Accuracy) all sit at or above the Sushi anchor; the five aesthetic criteria cluster below it, with Color Harmony at the bottom. This ordering is consistent with the observation that typography rules and spatial layout constraints are more crisply codified than color harmony or mood, giving them sharper inter-rater agreement. For a downstream modeller, description-fidelity criteria are the natural starting point for criterion specialists, and aesthetic criteria are better treated as soft preferences."
+  },
+  {
+   "id": "b0088",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Per-sub-dimension mean pairwise ⟦SLOT_120⟧, sorted descending, color-coded by cohort. Description-fidelity sub-dimensions (green) dominate the top of the ordering; aesthetic sub-dimensions (blue) dominate the bottom. Reference anchor ⟦SLOT_121⟧’s are shown as dashed lines."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "h3",
+   "en": "6.5 Per-evaluator agreement structure"
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "p",
+   "en": "We compute the ⟦SLOT_122⟧ per-pair mean ⟦SLOT_123⟧ matrix for each sub-dimension and identify the most-disagreeing pair per dimension. In the Aesthetics cohort, one designer (the least-agreeing designer, re-labelled Designer A in Figure 4) participates in the most-disagreeing pair for all five sub-dimensions and never in the most-agreeing pair. The Descriptions cohort shows the same pattern for the analogous designer, who participates in the most-disagreeing pair for three of four sub-dimensions. This pattern is not an artefact of a single dimension and emerges robustly across the sub-dimensions of each cohort, identifying these designers as candidates for agreement-weighted training or a second annotation pass rather than exclusion. The finding is consistent with the cycle-rate result: a single per-cohort low-agreement rater raises the disagreement floor of every dimension uniformly without producing the structured factional disagreement that would push cycle rates above the null."
+  },
+  {
+   "id": "b0092",
+   "t": "keep",
+   "w": "table",
+   "en": ""
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Per-evaluator agreeableness on the Aesthetics (left) and Descriptions (right) cohorts. Each cell of the heatmap reports the mean pairwise ⟦SLOT_124⟧ between an evaluator and the other four in the same cohort, averaged over the 80 prompts of one sub-dimension. Bar plots show the per-evaluator overall mean. Within each cohort evaluators are ordered by ascending overall mean ⟦SLOT_125⟧ and re-labelled Designer A through Designer E. Designer A is the consistent outlier in both cohorts; Designer E is the most agreeable. The original designer identities are anonymised for double-blind review."
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "h3",
+   "en": "6.6 Pre-trained preference models and VLM judges"
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "p",
+   "en": "We benchmark two classes of pre-trained models on TASTE. The first class is dedicated preference and aesthetic scorers trained on AI-image preferences: HPSv2.1 [Wu2023HPSv2], PickScore-v1 [Kirstain2023PickaPic], and LAION-Aesthetic-V2. The second class is vision-language models prompted with the brief and both candidate images to pick the better one, the dominant evaluation mode in recent text-to-image judging benchmarks. Our open-weight VLM slate matches the closest comparable benchmark [Goyal2026DistortBench] and covers Qwen3-VL-Instruct at ⟦SLOT_126⟧B, ⟦SLOT_127⟧B, and ⟦SLOT_128⟧B parameters, Gemma-3-27B-it, Kimi-VL-A3B-Instruct, and InternVL3.5-14B, six models across four families with a ⟦SLOT_129⟧ active-parameter range and both dense and MoE architectures."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "The metric is agreement with the 5-designer majority on the ⟦SLOT_130⟧ ranking pairs per prompt, with human-tie pairs excluded from the denominator, so chance is ⟦SLOT_131⟧. The VLM judges follow the field-standard pairwise protocol with three components. Inline Image A: and Image B: labels are placed immediately before each image [Tian2025MultiImageBias]. The model is asked for a structured JSON answer [Goyal2026DistortBench]. Position bias is corrected via MT-Bench S1 [Zheng2023MTBench], in which each pair is judged in both image orders and order-inconsistent verdicts are counted as ties at ⟦SLOT_132⟧. Each VLM produces ⟦SLOT_133⟧ inferences (4,320 pairs ⟦SLOT_134⟧ two orders). Methodological details, including eight question paraphrases per criterion and the exact prompt template, are in Appendix B. The dedicated scorers are deterministic given (image, brief), so order correction does not apply."
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Family Active Macro acc. Open-weight VLM judges (six models) Qwen3-VL-4B-Instruct Qwen 4 B 0.530 Qwen3-VL-8B-Instruct Qwen 8 B 0.539 Qwen3-VL-32B-Instruct Qwen 33 B 0.536 Gemma-3-27B-it Google 2"
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Agreement with the 5-designer majority winner, averaged over the nine TASTE criteria (⟦SLOT_135⟧ pairs each). Chance is ⟦SLOT_136⟧."
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "table",
+   "en": "Criterion Q-4B Q-8B Q-32B G-27B K-3B I-14B HPSv2.1 PickScore LAION aesthetics_color_harmony 0.506 0.523 0.531 0.525 0.502 0.527 0.571 0.566 0.545 aesthetics_mood 0.525 0.554 0.557 0.550 0.523 0.541 0."
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Per-criterion agreement with the designer majority for all nine systems. Columns: Q ⟦SLOT_137⟧ Qwen3-VL, G ⟦SLOT_138⟧ Gemma-3, K ⟦SLOT_139⟧ Kimi-VL-A3B, I ⟦SLOT_140⟧ InternVL3.5. ⟦SLOT_141⟧ pairs per criterion."
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "h4",
+   "en": "The accuracy ceiling is class-independent."
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "p",
+   "en": "Table 4 shows all nine systems lie within a 4.4-point band, from ⟦SLOT_142⟧ (LAION-Aesthetic-V2) to ⟦SLOT_143⟧ (HPSv2.1), at most 4.3 points above chance, and none reaches ⟦SLOT_144⟧. The ceiling holds across model classes, within-family scaling (Qwen3-VL at three sizes), across families, and across architectures (dense and MoE). HPSv2.1, trained on over 640K human pairwise comparisons of AI-generated images, is the best system in the table and reaches only ⟦SLOT_145⟧. The T2I-preference signals these models were trained on do not transfer cleanly to designer judgment on TASTE. This is the strongest version of the cross-domain claim from §5."
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "h4",
+   "en": "Per-criterion accuracy reveals model-class specialisation."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "p",
+   "en": "Table 5 breaks the macro down by criterion. LAION-Aesthetic-V2, an image-only scorer with no text conditioning, falls to ⟦SLOT_146⟧ on descriptions_typography, the only sub-chance value in the slate, while reaching ⟦SLOT_147⟧ on aesthetics_visual_hier. This is the signature of an aesthetic-only model failing on text-fidelity tasks, which the macro number hides. PickScore-v1 shows a milder version of the same effect. HPSv2.1 is balanced across cohorts."
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "h4",
+   "en": "Position bias and content perception trade off; net accuracy is flat."
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "p",
+   "en": "For the VLM judges, the position-bias rate is the fraction of pairs whose verdict is unchanged when image order is flipped, and it ranges from ⟦SLOT_148⟧ (Gemma-27B) to ⟦SLOT_149⟧ (Kimi-VL-A3B) across the slate. Restricting to the order-consistent fraction of each model’s verdicts, agreement with the designer majority rises to ⟦SLOT_150⟧. Across the six VLMs, position-bias rate and this conditional accuracy are strongly positively correlated (Spearman ⟦SLOT_151⟧, ⟦SLOT_152⟧): models with more conservative answer policies default to position A more often and show stronger perception when they do commit. The two effects cancel and pin net agreement into the ⟦SLOT_153⟧ band regardless of scale, family, or architecture. Within Qwen, scaling reduces position bias monotonically (⟦SLOT_154⟧ at ⟦SLOT_155⟧B, ⟦SLOT_156⟧B, ⟦SLOT_157⟧B), and at the largest dense scale we test the operating point is ⟦SLOT_158⟧ for both flagship-dense families (Qwen-32B and Gemma-27B), but the macro accuracy does not improve. Scaling moves the slate along a bias-versus-perception frontier without moving overall accuracy. Per-criterion position-bias rates and the full diagnostic table are in Appendix B."
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "p",
+   "en": "These results establish a baseline on the dataset. Designer preference is not solved by current off-the-shelf systems regardless of model class, training data scale, or architecture family. The bottleneck is calibration rather than perception in the narrow sense: order-consistent VLM verdicts agree with designers above ⟦SLOT_159⟧ on the better models, but positional priors absorb the remaining accuracy budget, and neither prompt engineering, within-family scaling, nor cross-family substitution closes this gap. These numbers are the off-the-shelf baseline against which §7 reports what a small model trained directly on TASTE achieves."
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "h2",
+   "en": "7 Preference-model analysis"
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "p",
+   "en": "Given the preference data, we turn to two model-side questions: what is the right ceiling for a model trained to imitate the panel, and how close can a small, modular preference head reach when trained on that data alone. Both depart from standard classification practice for non-trivial reasons. Labels are aggregated from a small panel of raters with measurable disagreement, and roughly half of all pairwise comparisons sit in a 3-2 split where even a perfect predictor cannot distinguish a true preference from a coin flip. Reporting a single val-accuracy number against such labels is uninterpretable without a calibrated upper bound, and is misleading without a per-bucket breakdown."
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "p",
+   "en": "We separate these two concerns. §7.1 gives the calibrated ceilings against which any model trained on this data should be reported; §7.2 describes the modular head we trained, the architectural choice that lifted accuracy beyond a flat regularization sweep, and the four downstream uses the model unlocks."
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "h3",
+   "en": "7.1 Evaluation diagnostics and the leave-one-out ceiling"
+  },
+  {
+   "id": "b0112",
+   "t": "text",
+   "w": "p",
+   "en": "Ceiling 1: leave-one-out human imitation. A model trained on the preference data is by construction trying to predict the modal vote of the five-rater panel. The natural upper bound is therefore the accuracy of a single rater against the majority of the other four. With ⟦SLOT_160⟧ raters this leave-one-out (LOO) quantity for a pair ⟦SLOT_161⟧ with vote counts ⟦SLOT_162⟧ is"
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "table",
+   "en": "loo p = max ⁡ ( v a , v b ) / R , \\textsc{loo}_{p}\\;=\\;\\max(v_{a},v_{b})\\,/\\,R,"
+  },
+  {
+   "id": "b0114",
+   "t": "text",
+   "w": "p",
+   "en": "which is exactly the agreement statistic of §4 and, averaged over pairs, gives the expected accuracy of a randomly chosen rater on the panel’s task. Across all nine ranking criteria, ⟦SLOT_163⟧ (range ⟦SLOT_164⟧; D+typography is highest, A+color-harmony lowest). A model that hits 0.741 has matched an annotator on average; a model that exceeds 0.741 commits more confidently on the cases where the average annotator would waffle."
+  },
+  {
+   "id": "b0115",
+   "t": "text",
+   "w": "p",
+   "en": "Ceiling 2: oracle on decisive, chance on ambiguous. A second, criterion-agnostic upper bound assumes oracle behavior on every pair where a strict 4-1 or 5-0 majority exists and chance behavior on 3-2 splits. With bucket fractions ⟦SLOT_165⟧ this gives"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "table",
+   "en": "cap = f unanim + f majority + 0.5 ​ f split = 0.767 . \\textsc{cap}\\;=\\;f_{\\text{unanim}}+f_{\\text{majority}}+0.5\\,f_{\\text{split}}\\;=\\;0.767."
+  },
+  {
+   "id": "b0117",
+   "t": "text",
+   "w": "p",
+   "en": "The two ceilings are close because LOO and cap measure the same scarce signal from different sides; the gap ⟦SLOT_166⟧ is the amount by which a disciplined predictor that commits on ambiguous pairs can beat a single-rater imitator."
+  },
+  {
+   "id": "b0118",
+   "t": "text",
+   "w": "p",
+   "en": "Practical implication. Any val accuracy on that data should be reported alongside (i) the bucket-stratified accuracy breakdown, (ii) ⟦SLOT_167⟧ for the criteria in scope, and (iii) cap. Absolute accuracy on its own is misleading: on this data, any pairwise-prediction accuracy above 0.78 is suspect (very likely val leakage or a misaligned ground truth), and any number below 0.55 sits at the random-rater floor."
+  },
+  {
+   "id": "b0119",
+   "t": "text",
+   "w": "h3",
+   "en": "7.2 Model training, results, and use"
+  },
+  {
+   "id": "b0120",
+   "t": "text",
+   "w": "h4",
+   "en": "Architecture."
+  },
+  {
+   "id": "b0121",
+   "t": "text",
+   "w": "p",
+   "en": "We train a modular preference head on top of a frozen vision-language encoder (Qwen3-VL-Embedding-2B [qwen3vlembedding]), keeping the encoder out of the optimization budget. The architecture is one small MLP per ranking dimension, dispatched at training time by the row’s criterion slug, plus one binary head for the hallucination labels. All heads consume the same fused ⟦SLOT_168⟧ representation of the ⟦SLOT_169⟧-normalized text (⟦SLOT_170⟧) and image (⟦SLOT_171⟧) embeddings, where ⟦SLOT_172⟧ is the element-wise product; concatenating the unimodal vectors with explicit alignment (⟦SLOT_173⟧) and disagreement (⟦SLOT_174⟧) terms avoids forcing the MLP to learn these cross-modal interactions from scratch."
+  },
+  {
+   "id": "b0122",
+   "t": "text",
+   "w": "h4",
+   "en": "Training objectives."
+  },
+  {
+   "id": "b0123",
+   "t": "text",
+   "w": "p",
+   "en": "The per-dimension scoring heads are trained with an agreement-weighted Bradley-Terry (BT) loss [bradley1952rank]. The BT model treats each pairwise comparison as a Bernoulli trial whose success probability is ⟦SLOT_175⟧, where ⟦SLOT_176⟧ is the logistic function, ⟦SLOT_177⟧ and ⟦SLOT_178⟧ are the head’s scalar scores for the two images, and ⟦SLOT_179⟧ is a single learnable temperature.22 2 The learnable temperature rescales the potentially small score differences produced by the frozen-backbone scoring head, allowing the Bradley–Terry model to convert relative rankings into calibrated preference probabilities with sharper discrimination. The per-pair loss is the binary cross-entropy of this probability against the empirical win-rate of ⟦SLOT_180⟧ across raters, weighted by the panel’s per-pair agreement so unanimous and near-unanimous cases contribute more. The hallucination head is trained with binary cross-entropy against the per-asset positive-vote share. Both losses are minimized jointly with the two batch streams alternated. Training uses per-evaluator rows (one labeled pair per annotator) rather than aggregated soft labels, which gives the BT loss ⟦SLOT_181⟧ more independent gradient signal per pair without losing the consensus cases."
+  },
+  {
+   "id": "b0124",
+   "t": "text",
+   "w": "h4",
+   "en": "Architectural choices."
+  },
+  {
+   "id": "b0125",
+   "t": "text",
+   "w": "p",
+   "en": "A baseline sweep varying head width (⟦SLOT_182⟧), dropout (⟦SLOT_183⟧), weight decay (⟦SLOT_184⟧), and label form (hard vs. soft) is essentially flat at val accuracy ⟦SLOT_185⟧, so none of the standard regularization knobs produces a change above the noise floor. This points to a structural ceiling rather than a capacity one. In the architecture described above, each image is scored independently by a shared head ⟦SLOT_186⟧ before the comparison happens, so the BT logit is forced into the form"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "table",
+   "en": "τ ⋅ ( f ⁡ ( t , i a ) − f ⁡ ( t , i b ) ) . \\tau\\cdot\\bigl(f(t,i_{a})-f(t,i_{b})\\bigr)."
+  },
+  {
+   "id": "b0127",
+   "t": "text",
+   "w": "p",
+   "en": "Any decision rule that requires joint attention to features of ⟦SLOT_187⟧ and ⟦SLOT_188⟧, for example, ”⟦SLOT_189⟧ wins because it renders text legibly while ⟦SLOT_190⟧ does not, given the prompt asks for typography”, cannot be expressed as a difference of two prompt-conditioned per-image scalars, no matter how wide ⟦SLOT_191⟧ is. We lift this restriction with a pairwise-difference scoring head that computes ⟦SLOT_192⟧ directly. The head consumes"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "table",
+   "en": "[ t , i a , i b , i a − i b , | i a − i b | , t ⊙ ( i a − i b ) ] , [t,\\,i_{a},\\,i_{b},\\,i_{a}-i_{b},\\,|i_{a}-i_{b}|,\\,t\\odot(i_{a}-i_{b})],"
+  },
+  {
+   "id": "b0129",
+   "t": "text",
+   "w": "p",
+   "en": "where the cross-term ⟦SLOT_193⟧ gives explicit access to the linear directions in embedding space along which the prompt rewards a difference between the two images. The hallucination head, which operates on a single image, retains the original 4-chunk fusion."
+  },
+  {
+   "id": "b0130",
+   "t": "text",
+   "w": "h4",
+   "en": "Results."
+  },
+  {
+   "id": "b0131",
+   "t": "text",
+   "w": "p",
+   "en": "We report two views of accuracy: the overall val accuracy aggregated across all ranking dimensions, and the per-bucket val accuracy that separates the easy 5-0 cases from the inherently ambiguous 3-2 splits. The pairwise-difference head reaches ⟦SLOT_194⟧ overall, ⟦SLOT_195⟧ absolute over the best frozen-backbone scalar baseline, and the first configuration in our sweep to clear the noise floor. Anchored against the diagnostic ceilings of §7.1 (Table 6), the model still sits ⟦SLOT_196⟧ absolute points below the single-rater LOO ceiling ⟦SLOT_197⟧, so substantial headroom remains against the human-imitation target; versus the random-rater baseline of ⟦SLOT_198⟧ it has captured roughly half of the available signal."
+  },
+  {
+   "id": "b0132",
+   "t": "text",
+   "w": "p",
+   "en": "The per-bucket breakdown locates this signal precisely. On unanimous (5-0) pairs the model scores ⟦SLOT_199⟧, well below the trivial LOO ceiling of ⟦SLOT_200⟧; on 4-1 majority pairs it scores ⟦SLOT_201⟧ against a per-bucket LOO ceiling of ⟦SLOT_202⟧; on 3-2 splits it scores ⟦SLOT_203⟧, within noise of the per-bucket LOO ceiling of ⟦SLOT_204⟧. The model’s gap to the LOO ceiling thus shrinks monotonically as the panel becomes more ambiguous (⟦SLOT_205⟧), and on the ambiguous half of the dataset the head is already as accurate as a randomly chosen human annotator at predicting the panel’s modal vote. The scalar baseline, by contrast, sits at ⟦SLOT_206⟧ on splits, roughly the midpoint between chance and the LOO ceiling. The ⟦SLOT_207⟧ overall gain is therefore driven almost entirely by the split bucket (⟦SLOT_208⟧), with a small regression on unanimous (⟦SLOT_209⟧). This is the opposite of what we expected (unanimous pairs ought to be easy), and is consistent with the head learning a sharper, more confident decision rule that occasionally overshoots on already-clean cases. Averaged across the seven ranking dimensions the model’s Kendall ⟦SLOT_210⟧ against the modal annotator is ⟦SLOT_211⟧, broadly consistent with the per-criterion signal-strength."
+  },
+  {
+   "id": "b0133",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Preference-model val accuracy by panel agreement bucket. LOO ceilings follow ⟦SLOT_212⟧ with ⟦SLOT_213⟧. ”Best scalar baseline” is the sweep winner (though all candidates were flat in ⟦SLOT_214⟧ across four scalar configurations); rows 2–4 vary only the head input. CCP = criterion-conditioned prompt; ”pairwise” replaces ⟦SLOT_215⟧ with the joint head ⟦SLOT_216⟧ of §7.2. Bold = best model per column."
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "table",
+   "en": "Overall Unanim (5-0) Major. (4-1) Split (3-2) Reference points Random rater 0.500 0.500 0.500 0.500 Single-rater LOO ceiling 0.741 1.000 0.800 0.600 Frozen-backbone scoring head (ours) Best scalar bas"
+  },
+  {
+   "id": "b0135",
+   "t": "text",
+   "w": "p",
+   "en": "The bottom four rows of Table 6 hold capacity and training pipeline fixed and vary only the head input. The criterion-conditioned prompt is a wash on its own (⟦SLOT_217⟧ val), which indicates that the criterion information was already accessible to the encoder and the gain from the pairwise head is not a downstream effect of better criterion conditioning. Combining the criterion-conditioned prompt with the pairwise head regresses to ⟦SLOT_218⟧ (vs. ⟦SLOT_219⟧ for pairwise alone), so the prompt change actively interferes with the pairwise mechanism rather than complementing it; the architectural lever and the prompt lever are not independent and should not be stacked."
+  },
+  {
+   "id": "b0136",
+   "t": "text",
+   "w": "h4",
+   "en": "Scope and ablations."
+  },
+  {
+   "id": "b0137",
+   "t": "text",
+   "w": "p",
+   "en": "The pairwise-head gain is obtained with the encoder frozen. A LoRA-adaptation experiment on the encoder yielded val accuracy ⟦SLOT_220⟧, below the frozen-MLP baseline of ⟦SLOT_221⟧, so we have no evidence that fine-tuning the encoder improves preference accuracy on this data. Augmenting the text input with criterion-specific prefixes did not help in a controlled comparison (⟦SLOT_222⟧ val change vs. baseline) and actively interfered with the pairwise mechanism when combined; the relevant criterion information is already accessible to the encoder, and the bottleneck is on the head side rather than the prompt side."
+  },
+  {
+   "id": "b0138",
+   "t": "text",
+   "w": "h4",
+   "en": "Use cases."
+  },
+  {
+   "id": "b0139",
+   "t": "text",
+   "w": "p",
+   "en": "A preference model supports four downstream uses. (i) Best-of-⟦SLOT_223⟧ selection: given ⟦SLOT_224⟧ candidate generations for a prompt, pick the highest-scoring image under the weighted sum of per-dimension scores most relevant to the deployment (e.g. uniform for general use, typography-weighted for poster generation). (ii) Reward modeling for DPO [Rafailov2023DPO] or RLHF-style fine-tuning of design-oriented T2I models: the per-dimension heads provide a multi-objective reward instead of the single scalar typical of HPSv2 / HPSv3 reward heads [Wu2023HPSv2, Ma2025HPSv3], so the optimiser can trade off, e.g. typography accuracy against color harmony explicitly. (iii) Designer-anchored evaluation of new T2I models on a held-out data subset: per-dimension Kendall ⟦SLOT_225⟧ against the modal annotator gives a quality report that complements task-level benchmarks such as GDB [Deganutti2026GDB] and generic preference scores by reporting where, axis-wise, the model diverges from designer preference. (iv) The hallucination head functions as a stand-alone filter for production pipelines, with lower precision and higher recall than human inspection but cheap enough to run on every generation as a first-pass quality gate."
+  },
+  {
+   "id": "b0140",
+   "t": "text",
+   "w": "h2",
+   "en": "8 Discussion"
+  },
+  {
+   "id": "b0141",
+   "t": "text",
+   "w": "p",
+   "en": "TASTE records designer preference along nine sub-dimensions of design quality on outputs from four current text-to-image models, in a form that complements LICA’s structural data and Graphic-Design-Bench’s task suite. The three-statistic signal check confirms that the data carries learnable preference signal at every criterion, and the cross-domain anchors locate that signal between subjective taste tasks and photo-style image quality."
+  },
+  {
+   "id": "b0142",
+   "t": "text",
+   "w": "p",
+   "en": "The agreement structure also drives concrete modeling choices. Cycle rates below the iid-uniform null (§6.3) rule out a factional regime, so an aggregate reward model with agreement-weighted soft labels is the natural baseline and a mixture-of-experts approach has no factional structure to recover. Signal-level heterogeneity across criteria (§6.4) points to specialist heads or per-criterion loss terms on description-fidelity axes and broad soft preferences on aesthetic axes. Per-evaluator outliers (§6.5) admit standard outlier-aware re-weighting."
+  },
+  {
+   "id": "b0143",
+   "t": "text",
+   "w": "p",
+   "en": "Signal checks before training. The check we apply to TASTE (Kendall’s ⟦SLOT_226⟧, ⟦SLOT_227⟧, cycle indicator, all against exact ⟦SLOT_228⟧ nulls and three subsampled reference distributions) is generic. It can be applied to any new preference dataset whose ranking shape can be subsampled to a small ⟦SLOT_229⟧ panel, and answers the prior question of whether the data carries learnable signal. We recommend it as a routine prior step to model training rather than as a TASTE-specific contribution."
+  },
+  {
+   "id": "b0144",
+   "t": "text",
+   "w": "p",
+   "en": "Limitations. Five raters per prompt is the smallest ⟦SLOT_230⟧ at which ⟦SLOT_231⟧ pair-⟦SLOT_232⟧ values produce a usable histogram; larger ⟦SLOT_233⟧ would tighten the binomial ⟦SLOT_234⟧ null and lift power on individual prompts. Each criterion is rated on a disjoint 80-prompt batch, which forecloses within-rater within-prompt cross-criterion analysis but bounds the annotation cost. Designers come from a single platform and prompts are sourced in English, so cross-cultural and cross-lingual preference variation is not captured. Several criteria that designers care about in practice are not part of the present collection, including accessibility (WCAG-style contrast and legibility), brand consistency, motion and animation (covered structurally by LICA [Hirsch2026LICA]), and audience-appropriateness; future collection rounds should extend the criterion set in those directions."
+  },
+  {
+   "id": "b0145",
+   "t": "text",
+   "w": "p",
+   "en": "Release plan. The 1,600 ratings per criterion (both the ⟦SLOT_235⟧ pairwise judgments and the derived 4-way rankings), the 1,600 ordinal hallucination flags per overall-preference cohort, the analysis pipeline, the per-criterion distribution-test reports, and the appendix’s exact null PMFs will be released under a permissive licence on a public dataset host upon acceptance, alongside an evaluation script that runs the three-statistic signal check on a user-supplied ranking dataset of arbitrary ⟦SLOT_236⟧ shape."
+  },
+  {
+   "id": "b0146",
+   "t": "text",
+   "w": "h2",
+   "en": "9 Conclusion"
+  },
+  {
+   "id": "b0147",
+   "t": "text",
+   "w": "p",
+   "en": "We release TASTE, a designer-annotated multi-dimensional preference dataset for AI-generated graphic design covering nine criteria across two disjoint cohorts of professional designers on outputs from four current text-to-image models. Together with LICA and Graphic-Design-Bench, TASTE adds the missing designer-side preference layer to the graphic-design generation stack. We complement the dataset with a three-statistic signal check (Kendall’s ⟦SLOT_237⟧, majority-vote probability ⟦SLOT_238⟧, and Condorcet cycle existence) against exact null distributions at ⟦SLOT_239⟧, confirming that learnable signal is present in every criterion, placing designer agreement between subjective taste tasks and photo-style image quality, and ruling out a factional cluster-of-tastes regime."
+  },
+  {
+   "id": "b0148",
+   "t": "text",
+   "w": "p",
+   "en": "Beyond validating the dataset itself, TASTE establishes a benchmark for criterion-level evaluation of design generation systems. Its multidimensional structure enables more precise comparison of model capabilities, supports routing and orchestration decisions based on task-specific design requirements, and provides supervision for preference judges, reward models, and alignment objectives for graphic-design generation. The data are available at https://huggingface.co/datasets/purvanshi/TASTE and the analysis pipeline at https://github.com/purvanshi-lica/taste; we recommend applying the same signal-validation protocol to future preference datasets before model training begins."
+  },
+  {
+   "id": "b0149",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0150",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Statistical definitions"
+  },
+  {
+   "id": "b0151",
+   "t": "text",
+   "w": "p",
+   "en": "This appendix collects the formal definitions, support sets, and null PMFs of the three signal-test statistics introduced in §4. Notation: a sample is one prompt rated by ⟦SLOT_240⟧ evaluators on ⟦SLOT_241⟧ items. Each evaluator ⟦SLOT_242⟧ produces a strict ranking ⟦SLOT_243⟧. Let ⟦SLOT_244⟧ (⟦SLOT_245⟧) enumerate item pairs with ⟦SLOT_246⟧."
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "table",
+   "en": "Statistic Formula Null support / PMF at ( p = 4 , R = 5 ) (p=4,R=5) Pairwise Kendall τ \\tau τ ⁡ ( π r , π s ) = C r ​ s − D r ​ s ( p 2 ) \\tau(\\pi_{r},\\pi_{s})=\\dfrac{C_{rs}-D_{rs}}{\\binom{p}{2}} Maho"
+  },
+  {
+   "id": "b0153",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Signal-test statistics. ⟦SLOT_247⟧ and ⟦SLOT_248⟧ count concordant and discordant item-pairs between rankings ⟦SLOT_249⟧ and ⟦SLOT_250⟧. ⟦SLOT_251⟧ counts raters placing item ⟦SLOT_252⟧ above item ⟦SLOT_253⟧ for a given pair. The ⟦SLOT_254⟧ null is the Mahonian distribution; the ⟦SLOT_255⟧ null is its finite-mixture analogue; the ⟦SLOT_256⟧ null is symmetric-folded ⟦SLOT_257⟧; the cycle null is computed by Monte Carlo on ⟦SLOT_258⟧ samples."
+  },
+  {
+   "id": "b0154",
+   "t": "text",
+   "w": "p",
+   "en": "Goodness-of-fit tests. For each TASTE sub-dimension we test the empirical histograms of ⟦SLOT_259⟧ and ⟦SLOT_260⟧ against their null PMFs using a chi-squared GOF test with low-count bin pooling (adjacent bins are merged when expected count is below ⟦SLOT_261⟧). The cycle rate is tested with a one-sample binomial test against the Monte-Carlo null rate of ⟦SLOT_262⟧."
+  },
+  {
+   "id": "b0155",
+   "t": "text",
+   "w": "p",
+   "en": "Subsampling reference anchors to ⟦SLOT_263⟧. Sushi has ⟦SLOT_264⟧ items and ⟦SLOT_265⟧ users; MovieLens uses ⟦SLOT_266⟧-to-⟦SLOT_267⟧ scalar ratings on a large movie pool; the HPSv2 test split uses ⟦SLOT_268⟧ images (9 generative + 1 COCO real) per prompt with ⟦SLOT_269⟧ fixed annotators. For each anchor we draw items and raters at random to match TASTE’s shape (excluding the COCO real image and restricting to the four strongest generators in the HPSv2 case as described in §5), feed the resulting ⟦SLOT_270⟧ rank matrix through the same statistic computations, and pool many such draws to form a reference distribution."
+  },
+  {
+   "id": "b0156",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B VLM-judge supplementary tables and methodology"
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "p",
+   "en": "This appendix supplements §6.6: per-VLM diagnostic metrics, per-criterion position-bias rates, cross-VLM correlations, and full protocol details."
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "h3",
+   "en": "B.1 VLM diagnostics: position-bias, conditional accuracy, and paraphrase stability"
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Macro acc. Pos-bias Cond. acc. Para σ \\sigma Qwen3-VL-4B-Instruct 0.530 0.775 0.630 0.055 Qwen3-VL-8B-Instruct 0.539 0.679 0.613 0.060 Qwen3-VL-32B-Instruct 0.536 0.463 0.567 0.064 Gemma-3-27B-i"
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8: VLM-only diagnostics for Table 4. Pos-bias is the fraction of pairs whose verdict is unchanged when image order is flipped (i.e, determined by position rather than content). Cond. acc. is agreement with the designer majority on the order-consistent fraction of pairs only. Para ⟦SLOT_271⟧ is the standard deviation of per-criterion accuracy across the eight question paraphrases."
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "h3",
+   "en": "B.2 Per-criterion position-bias rate"
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "table",
+   "en": "Criterion Q-4B Q-8B Q-32B G-27B K-3B I-14B aesthetics_color_harmony 0.900 0.779 0.463 0.367 0.910 0.581 aesthetics_mood 0.825 0.708 0.398 0.346 0.875 0.493 aesthetics_preference 0.529 0.585 0.281 0.31"
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 9: Per-criterion position-bias rate for the six VLM judges. Aesthetics-side criteria that demand more abstract judgment (color harmony, visual hierarchy, mood) consistently show the highest position bias for every model; preference criteria show the lowest."
+  },
+  {
+   "id": "b0164",
+   "t": "text",
+   "w": "h3",
+   "en": "B.3 Cross-VLM correlation statistics"
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "table",
+   "en": "Variable pair ρ \\rho p p Pos-bias vs Cond. acc. + 0.94 +0.94 0.005 0.005 Pos-bias vs Macro acc. − 0.26 -0.26 0.62 0.62 ( n.s. ) Cond. acc. vs Macro acc. − 0.09 -0.09 0.87 0.87 ( n.s. )"
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 10: Spearman correlations across the six open-weight VLMs in the slate. Position-bias rate covaries with conditional accuracy (rank-correlated ⟦SLOT_272⟧, ⟦SLOT_273⟧); neither separately predicts macro accuracy."
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "h3",
+   "en": "B.4 Protocol details"
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "p",
+   "en": "Each VLM is queried with greedy (argmax) decoding to obtain a single deterministic verdict per query. Each VLM is run twice on every pair, in both image orders (⟦SLOT_274⟧ inferences per model), and a verdict is scored under MT-Bench S1 [Zheng2023MTBench]: weight ⟦SLOT_275⟧ if it agrees with the designer majority and is consistent across both orderings, weight ⟦SLOT_276⟧ if it disagrees and is consistent, and weight ⟦SLOT_277⟧ if it is order-inconsistent."
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "p",
+   "en": "The text prompt has four parts: (i) the brief shown to designers, verbatim; (ii) the criterion name; (iii) a one-paragraph rubric that summarises the criterion (a one-sentence rephrasing of the guidance designers received during pilot interviews); and (iv) a question. The brief portion is byte-identical to the text shown to designers in the annotation interface, so the VLM and the designers see the same description of the design task. To control for phrasing sensitivity, the question is drawn from a pool of eight per-criterion paraphrases, deterministically assigned per ⟦SLOT_278⟧ tuple by hash; the per-paraphrase accuracy standard deviation is reported as “Para ⟦SLOT_279⟧” in Table 8. A worked example for the descriptions-typography criterion is below; the bracketed ellipsis stands for the brief paragraphs."
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "blockquote",
+   "en": "You are a professional graphic designer evaluating two AI-generated images for the same brief. BRIEF: [User Intent + Description, verbatim from the designer view] CRITERION: Typography (Descriptions) RUBRIC: Whether any text demanded by the prompt is rendered correctly. Consider whether the requested words appear, whether they are spelled correctly, and whether typography choices fit the brief’s directions. Image A: [image A] Image B: [image B] Which image more accurately renders the text demanded by the prompt? Reply with a JSON code block containing the answer letter."
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "p",
+   "en": "The dedicated scorers are evaluated once per pair with only the User Intent paragraph as the text input, matching the noun-phrase distribution of the prompts they were trained on. All inputs and verdicts are released alongside the dataset."
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Designer evaluation instructions (excerpt)"
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "p",
+   "en": "For reference, the following is the opening context paragraph shown to designers at the start of every annotation session. It defines the task framing, the input and output structure, and the standard designers were asked to apply. This text is reproduced verbatim from the live annotation interface."
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "blockquote",
+   "en": "This evaluation focuses on AI-generated graphic design assets. You will be reviewing outputs from multiple AI models, each generating designs like logos, posters, flyers, social media graphics, and print materials from the same text prompt. Input: Each task will include a prompt that combines the user’s intent with either a detailed description of the layout or an aesthetic direction. You will see one prompt per task and will be assigned an equal number of each prompt type. You will never see both prompts from the same layout. Output: Each AI model generates a single design asset based on that prompt. These outputs serve a clear creative purpose: they need to function as real, usable design work. These should be the kind of asset a brand would actually post, print, or ship. As a professional designer, you already know what separates a layout that communicates from one that just fills space. You know when type hierarchy works, when visual style matches the brief, and when something looks “close” but still feels off. That eye is exactly what this evaluation needs."
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D Annotator Profiles"
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "p",
+   "en": "TASTE was annotated by ten professional graphic designers recruited through Contra, a professional network of creative practitioners. Annotators were selected based on demonstrated commercial design experience, portfolio quality, and prior screening through the Contra Labs Network. Collectively, the cohort spans brand identity design, visual systems, web and product design, performance marketing creative, illustration, print design, and presentation design."
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "p",
+   "en": "The annotators represent a broad cross-section of contemporary design practice, including specialists in brand systems, Framer-based web design and development, conversion-oriented advertising creative, and editorial / illustrative design. Several participants had extensive commercial track records on Contra (ranging from 20+ to 120+ paid projects), while others were selected based on strong portfolio quality despite shorter platform histories. Across the cohort, designers reported experience delivering work for enterprise clients, venture-backed startups, consumer brands, and nonprofit organizations."
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "p",
+   "en": "Table 11 summarizes the professional backgrounds of the annotator cohort."
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "table",
+   "en": "Primary Skill Secondary Skill(s) Professional Background Brand Identity Design Design Systems, Visual Design High-volume brand identity practice with 80+ commercial projects spanning productized brand"
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 11: Professional backgrounds of the ten TASTE annotators."
+  }
+ ]
+}

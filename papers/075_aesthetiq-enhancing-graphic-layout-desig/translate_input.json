@@ -1,0 +1,1144 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "AesthetiQ : Enhancing Graphic Layout Design via Aesthetic-Aware Preference Alignment of Multi-modal Large Language Models"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Visual layouts are essential in graphic design fields such as advertising, posters, and web interfaces. The application of generative models for content-aware layout generation has recently gained tra"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Existing cross-entropy loss based methods penalize element misalignment heavily while preferential tuning via AAPA better capture aesthetic nuances in layouts"
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "The arrangement of visual elements for a graphic layout significantly impacts how users perceive and interact with digital content [24]. The growing demand for automated design solutions demonstrates broad impact across multiple domains, including poster design [51, 20], user interface design [11, 21], document layouts [56, 51], and presentation slides [14]. Designers expect layouts to achieve dual-level harmony, creating a seamless blend of fine-grained design elements - color, font, and layout - while ensuring they work cohesively with different types of elements in the overall design [18]. These fine-grained components must maintain aesthetic integrity and enhance the design’s collective harmony. For instance, when examining basic design elements, colors must strike a delicate balance between contrast and cooperation, delivering visual style."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "As digital content creation accelerates, the field of automated layout generation has evolved across multiple directions. Research has progressed from unconditional generation [2, 16, 21, 27, 51] to more sophisticated approaches, including conditional generation based on user inputs (such as element types [22, 23, 24], sizes [23, 27], or relationships [22, 24]), conditional refinement using coarse attributes [42], and conditional completion with partially available elements [16]. Recently, Multi-modal Large Language Models (MLLMs) have demonstrated remarkable capabilities in spatial reasoning and visual-semantic understanding [9, 31, 37]. Their ability to process both textual and visual information enables them to capture complex spatial relationships and translate challenging language concepts into coherent layout arrangements. Current approaches [44, 52, 46] primarily reduce the complex design problem to a numeric representation, where each design element is simplified to a tuple ⟦SLOT_0⟧ encoding its center coordinates, width, and height. While both autoregressive models and diffusion models [55, 1, 7] approach layout generation differently-the former through sequential prediction and the latter through denoising-they share a fundamental limitation: both treat layouting as an optimization problem over position representations. As illustrated in Fig.1, when multiple layouts are aesthetically pleasing, optimizing based on the absolute numerical position through cross-entropy-based loss incorrectly penalizes other alternative layouts predicted by the model, thus enforcing incorrect understanding. Moreover, reducing visual elements to numerical values strips away critical design attributes, hierarchical relationships, and semantic context that human designers naturally consider. This reductionist approach fails to capture the aesthetics or visual appeal of the rendered layouts, particularly when dealing with complex layouts that require subtle aesthetic considerations and contextual awareness."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "To this end, we pose a fundamental research question: “Can we utilize aesthetic preferences to guide the training of MLLMs, thereby enhancing the visual impact of generated layouts?” While MLLMs demonstrate strong visual-semantic alignment capabilities, these are often underutilized when trained solely with supervised position loss per element, which enforces a single layout variation for each input. Although incorporating aesthetic awareness through rendered layouts and an aesthetic discriminator seems intuitive, creating a differentiable layout renderer and the discriminator is non-intuitive. Instead, we propose learning aesthetics by proxy through preference learning between multiple layouts, hypothesizing that this approach enables MLLMs to develop a deeper contextual and aesthetic understanding of design principles."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we introduce Aesthetic-Aware Preference Alignment (AAPA), a novel algorithm that extends Direct Preference Optimization (DPO) [41] for aesthetic-aware layout generation. AAPA creates multiple layout candidates and leverages an MLLM as a judge to rank them based on their aesthetics, thereby developing robust aesthetic preferences. To ensure reliable training, we implement a rigorous data filtering protocol using alignment and overlap metrics, guaranteeing the model learns preferences only from well-formed layouts. Additionally, we present a novel evaluation framework using MLLMs as aesthetic scorers, introducing the % win rate metric that measures how often model-generated layouts outperform ground-truth layouts aesthetically. This approach offers more direct quality assessment than traditional metrics like Intersection over Union (IoU) or Boundary Displacement Error (BDE) [26], which fail to capture subtle aesthetic considerations. Our main contributions can be summarized as follows:"
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "li",
+   "en": "• We demonstrate that VLMs can effectively utilize their real-world knowledge and visual-semantic alignment capabilities to enhance layout prediction tasks."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "li",
+   "en": "• We propose Aesthetic-Aware Preference Alignment, a novel method to improve aesthetics of generated layouts through preference-based learning."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "li",
+   "en": "• We highlight the importance of data filtering based on quality heuristics through alignment and overlap heuristics, ensuring robust training on high-quality samples."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "li",
+   "en": "• We develop a novel evaluation framework that assess layout aesthetics via MLLMs, providing more meaningful quality measurements than traditional metrics."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "li",
+   "en": "• We conduct extensive qualitative and quantitative analyses of each proposed component using two challenging benchmark datasets, Crello and WebUI, demonstrating the effectiveness of our approach across diverse settings."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "li",
+   "en": "• We showcase the versatility and effectiveness of our approach across MLLMs of varying scales and families, and perform several ablation studies to provide deeper insights into the contributions of each component."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related works"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "Graphic Layout Generation: As digital content creation continues to grow rapidly, the automated generation of visually appealing layouts that meet users’ needs has emerged as an important research problem. Early works employed rule-based [39] and energy optimization [36, 24] techniques to structure graphic layouts, providing a solid foundation but offering limited flexibility. GAN-based approaches [28, 22, 57] introduced frameworks for unconditional layout generation by capturing geometric relationships across elements and leveraging differentiable rendering in the image-space, while transformer models such as LayoutTransformer [16], VTN [1], and BLT [23] used autoregressive and bidirectional transformers to improve layout quality. With advancements in NLP, masking strategies, language models, and encoder-decoder architectures have been applied to layout generation. Approaches like CanvasVAE [51], FlexDM [20], and ICVT [5] integrate images and text to enhance content relevance, enabling conditional generation through multi-modal features extracted via transformer-based architectures [48, 12, 25]. However, these methods still face challenges in adaptability to diverse content and impose constraints that limit their practical usability in real-world design applications."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "Constraint-aware Layout Prediction: Recent works have leveraged diffusion models to improve layout generation quality across various conditions. PLay [10] uses a latent diffusion model conditioned on guidelines to align elements, while LayoutDM [7] and LDGM [19] employ the discrete diffusion framework [3] to build unified models without guidelines, using attribute-specific corruption strategies [15] to restrict variables of different attributes to their respective sample spaces. LDGM further applies discretized Gaussian noise to enable gradual coordinate changes. Following a similar design, LayoutDiffusion [55] and LACE [8] enhance visual quality by scaling up the transformer backbone and improving alignment and overlap metrics. However, these methods lack contextual understanding and fail to capture semantic relationships across elements, leading to designs that may be geometrically accurate but aesthetically incoherent. Other diffusion-based methods [17, 6] attempt to generate layouts in continuous space but still rely on quantized geometric attributes or conditional generation based on categorical attributes, limiting their flexibility. Training diffusion models with masked and unmasked layouts [49] has shown potential for unifying various tasks but still lacks the contextual understanding."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "LLMs Assisted Layout Generation: Recent works have explored large language models (LLMs) for layout generation, treating layouts as structured data formats like XML or JSON. LayoutNUWA [46] fine-tunes LLaMa [47] and CodeLLaMa [43] for content-agnostic layout generation, achieving state-of-the-art results across multiple datasets. LayoutPrompter [29] introduces a training-free approach by leveraging RAG (Retrieval-Augmented Generation) to enhance in-context learning in GPT [4], though it is limited to open-domain generation. These methods, however, translate visual domain features into hard tokens, potentially leading to significant information loss. To address this, recent works propose multi-modal techniques such as visual instruction tuning [32] with aligned visual adaptation heads, allowing models to process visual information directly. While these approaches show promise, they rely on cross-entropy loss for optimization, which penalizes aesthetically good layouts along with poor ones (as depicted in Fig.1), neglecting aesthetic preferences and leading to suboptimal design outcomes. This cross-entropy loss-based optimization fails to capture nuanced aesthetic considerations essential for high-quality layouts."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Methodology"
+  },
+  {
+   "id": "b0022",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: The training for the aesthetic layout prediction task consists of the following steps: 1) Vision Encoder: Design elements (images and text) are processed to generate image and text embeddings. 2) AesthetiQ Model Prediction: Embeddings are passed to the AesthetiQ model, which predicts layout coordinates. 3) Training with Cross-Entropy Loss: The predicted layout is compared with the ground truth and trained using cross-entropy loss. 4) Sampling for Comparison: Multiple layout predictions are generated using AesthetiQ inference. 5) Pair Selection and Quality Filtering: We filter the data based on quality heuristics to ensure layout quality in samples. 6) Judging by ViLA: The ViLA model compares layout pairs and selects the better one based on aesthetic preferences. 7) Aesthetic Preference Optimization (AAPA): Feedback from ViLA is used to fine-tune the AesthetiQ model for aesthetic optimization."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "Our approach to layout prediction focuses on generating aesthetically aligned designs, with a Multi-modal Large Language Model (MLLM) serving as an evaluator for layout quality. We want to capture design aesthetics in layout configurations by using another MLLM (judge). To address the challenges given by subjective design preferences, limited datasets, and high-dimensional variability, we use an Aesthetic-Aware Preference Alignment (AAPA) technique, which aligns our model’s output with aesthetic evaluations from the judge MLLM. We begin by formalizing the layout prediction task, discussing the input and output representations, and the fine-tuning approach. We then introduce AAPA, which drives aesthetic sensitivity in layout generation (Fig 2). Finally, we present additional insights gained from scaling and pretraining on a large dataset of templates."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Layout Prediction Task"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "The goal of layout prediction involves placing design elements over a blank canvas to generate an aesthetically pleasing graphic template. Formally, consider a set of ⟦SLOT_1⟧ design elements ⟦SLOT_2⟧ that need to be placed over a canvas of width ⟦SLOT_3⟧ and height ⟦SLOT_4⟧ to obtain a graphic layout ⟦SLOT_5⟧. We define the placement of an element ⟦SLOT_6⟧ through bounding box attributes ⟦SLOT_7⟧ that represent the graphic element’s center coordinates, width, and height of the bounding box. Given the type of each element denoted by ⟦SLOT_8⟧, where ⟦SLOT_9⟧, we verbalise the input through a prompt template denoted by ⟦SLOT_10⟧ (Eq.1)."
+  },
+  {
+   "id": "b0027",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒫 H c , W c E = ⋃ i = 1 n { ImageTokens ​ ( e i ) if ​ T ​ ( e i ) ∈ 𝒯 − { text } TextTokens ​ ( e i ) if ​ T ​ ( e i ) = text \\mathcal{P}^{E}_{H_{c},W_{c}}=\\bigcup_{i=1}^{n}\\begin{cases}\\text{ImageTo"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "Consider the layout MLLM ⟦SLOT_11⟧ with three components: a vision encoder ⟦SLOT_12⟧, a text encoder ⟦SLOT_13⟧, and a large language model ⟦SLOT_14⟧. ⟦SLOT_15⟧ takes as input the verbalized prompt, ⟦SLOT_16⟧, by encoding each token in the prompt using either a vision encoder or a text encoder, depending on the type of the corresponding design element. For each token representing an element ⟦SLOT_17⟧ where ⟦SLOT_18⟧, the vision encoder ⟦SLOT_19⟧ produces an embedding ⟦SLOT_20⟧. For tokens representing elements where ⟦SLOT_21⟧, the text encoder ⟦SLOT_22⟧ produces an embedding ⟦SLOT_23⟧. The final multi-modal embedding ⟦SLOT_24⟧ for ⟦SLOT_25⟧ is then represented as the union of all encoded tokens, combining vision and text embeddings based on each token’s type (Eq.2)."
+  },
+  {
+   "id": "b0029",
+   "t": "keep",
+   "w": "table",
+   "en": "Z = ⋃ i = 1 N { z i vision if ​ T ​ ( e i ) ∈ 𝒯 − { text } z i text if ​ T ​ ( e i ) = text Z=\\bigcup_{i=1}^{N}\\begin{cases}z_{i}^{\\text{vision}}&\\text{if }T(e_{i})\\in\\mathcal{T}-\\{\\text{text}\\}\\\\ z_{"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "Once the multi-modal embedding ⟦SLOT_26⟧ is constructed, it is fed into the large language model component ⟦SLOT_27⟧ of ⟦SLOT_28⟧ to predict the position of each design element."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Position-Aware Layout Instruction Tuning"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "To facilitate accurate layout prediction, we discretize the bounding box coordinates ⟦SLOT_29⟧. These continuous attributes are mapped into discrete bins based on the width ⟦SLOT_30⟧ and height ⟦SLOT_31⟧ of the canvas. The binning function ⟦SLOT_32⟧ depicted by Eq. 3 maps each continuous attribute into one of ⟦SLOT_33⟧ bins, where ⟦SLOT_34⟧ is the number of bins:"
+  },
+  {
+   "id": "b0033",
+   "t": "keep",
+   "w": "table",
+   "en": "B ⁡ ( a i ) = ⌊ a i D × K ⌋ with D = { W c if ​ a i ∈ { x i , w i } H c if ​ a i ∈ { y i , h i } B(a_{i})=\\left\\lfloor\\frac{a_{i}}{D}\\times K\\right\\rfloor\\quad\\text{with}\\quad D=\\begin{cases}W_{c}&\\te"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "For each of these binned values, we introduce position tokens ⟦SLOT_35⟧, where ⟦SLOT_36⟧. Thus, each attribute ⟦SLOT_37⟧ is assigned the tokens ⟦SLOT_38⟧, ⟦SLOT_39⟧, ⟦SLOT_40⟧, and ⟦SLOT_41⟧ respectively. This discretization reduces the continuous spatial attributes to a fixed set of discrete position tokens, simplifying the layout prediction task. By quantizing the position, the model can more effectively learn the spatial relationships across design elements. Once the position tokens are integrated into the multi-modal embedding, the language model component ⟦SLOT_42⟧ predicts the layout by outputting the corresponding position tokens for each element, which are mapped back to approximate spatial coordinates using the function ⟦SLOT_43⟧."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Let ⟦SLOT_44⟧ represent the ground truth sequence of position tokens corresponding to the predicted bounding box attributes of the design elements, where each ⟦SLOT_45⟧, and ⟦SLOT_46⟧ is the number of output tokens. ⟦SLOT_47⟧ outputs policy ⟦SLOT_48⟧, a sequence of logits ⟦SLOT_49⟧, where ⟦SLOT_50⟧ represents the predicted probabilities for each position token of each design element ⟦SLOT_51⟧. We train ⟦SLOT_52⟧ through the cross-entropy loss (Eq. 4)"
+  },
+  {
+   "id": "b0036",
+   "t": "keep",
+   "w": "table",
+   "en": "ℒ CE = − 1 S ∑ i = 1 S ∑ j = 1 M ∑ k = 0 K 𝕀 ( y j = pos k ) log y ^ j , k \\mathcal{L}_{\\text{CE}}=-\\frac{1}{S}\\sum_{i=1}^{S}\\sum_{j=1}^{M}\\sum_{k=0}^{K}\\mathbb{I}(y_{j}=\\text{pos}_{k})\\log\\hat{y}_{j,"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_53⟧ is the indicator function and ⟦SLOT_54⟧ is the predicted probability (logit) for the ⟦SLOT_55⟧-th position token of the ⟦SLOT_56⟧-th element, and S is the size the dataset. Thus, during instruction tuning, the ⟦SLOT_57⟧ learns the correct spatial placement of each element through the alignment of the predicted position tokens with the ground truth tokens. However, cross-entropy loss is suboptimal as it requires an exact match (Fig 1). Additionally, if the ground-truth position token is ⟦SLOT_58⟧ and the model predicts ⟦SLOT_59⟧, the cross-entropy loss penalizes this heavily despite the minimal difference between the two positions."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Aesthetic-Aware Preference Alignment"
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "A significant challenge in layout prediction arises from the non-differentiable nature of rendering individual elements on a canvas, which prevents the model from directly “seeing” the rendered template for aesthetic evaluation. To address this, we introduce a judge model ⟦SLOT_60⟧ that performs a pairwise comparison of two graphic layouts to determine which one is aesthetically superior. Given two graphic layouts, rendered on a canvas using a renderer ⟦SLOT_61⟧, denoted as ⟦SLOT_62⟧, ⟦SLOT_63⟧, the goal of ⟦SLOT_64⟧ is to decide which layout is better based on aesthetic criteria. ⟦SLOT_65⟧ takes as input a judge prompt ⟦SLOT_66⟧, which verbalizes the evaluation criteria for comparing the two layouts, and the two graphic layouts ⟦SLOT_67⟧ and ⟦SLOT_68⟧, to produce a binary decision about which layout is better. Formally,"
+  },
+  {
+   "id": "b0040",
+   "t": "keep",
+   "w": "table",
+   "en": "d = ℳ judge ​ ( 𝒫 judge , G 1 , G 2 ) d=\\mathcal{M}_{\\text{judge}}(\\mathcal{P}_{\\text{judge}},G^{1},G^{2}) (5)"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_69⟧ represents the decision of the ⟦SLOT_70⟧. If ⟦SLOT_71⟧, then graphic layout ⟦SLOT_72⟧ is considered better than graphic layout ⟦SLOT_73⟧, and vice versa. Thus, we define"
+  },
+  {
+   "id": "b0042",
+   "t": "keep",
+   "w": "table",
+   "en": "G w = { G 1 if ​ d = 1 G 2 if ​ d = 2 , G r = { G 2 if ​ d = 1 G 1 if ​ d = 2 G^{\\text{w}}=\\begin{cases}G^{1}&\\text{if }d=1\\\\ G^{2}&\\text{if }d=2\\end{cases},\\quad G^{\\text{r}}=\\begin{cases}G^{2}&\\text"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "Through this pairwise comparison, the judging model ⟦SLOT_74⟧ selects the best (⟦SLOT_75⟧) and worst (⟦SLOT_76⟧) graphic layouts based on aesthetic quality without computing any explicit scores. Scoring individual layouts was found to be challenging, as MLLMs often assign similar scores across a range of layouts due to their limited exposure to the design space. Once we obtain the preferential data from ⟦SLOT_77⟧, ⟦SLOT_78⟧ is tuned further to prefer the better layout compared to the worse layout evaluated based on aesthetics. For this, we apply Aesthetic-Aware Preference Alignment (AAPA) to train the layout model ⟦SLOT_79⟧ using AAPA loss (Eq. 7)"
+  },
+  {
+   "id": "b0044",
+   "t": "keep",
+   "w": "table",
+   "en": "ℒ AAPA = − log ⁡ σ ⁡ ( β ⁡ ( log ⁡ π ℳ ​ ( 𝒫 H c , W c E w ) π ℳ ^ ​ ( 𝒫 H c , W c E w ) − log ⁡ π ℳ ​ ( 𝒫 H c , W c E r ) π ℳ ^ ​ ( 𝒫 H c , W c E r ) ) ) \\mathcal{L}_{\\text{AAPA}}=-\\log\\sigma\\Bigg(\\b"
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_80⟧ and ⟦SLOT_81⟧ are the policies of layout prediction and reference model respectively, and ⟦SLOT_82⟧ is a hyper-parameter to control divergence from the reference model. We initialize the reference model ⟦SLOT_83⟧ to be the same as the layout prediction model ⟦SLOT_84⟧ at the start of the training."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "Quality Metrics-based Layout Filtering: To ensure high quality layouts are used to train ⟦SLOT_85⟧ through AAPA, we enforce a data filtration process based on quality metrics that evaluate the alignment and overlap of the predicted bounding boxes. The goal is to maximize alignment between design elements while minimizing overlap, ensuring that the selected layouts are aesthetically pleasing and well-structured. For each design element ⟦SLOT_86⟧, let ⟦SLOT_87⟧ represents the top-left (⟦SLOT_88⟧), center (⟦SLOT_89⟧), and bottom-right (⟦SLOT_90⟧) coordinates of the bounding box. We compute the minimum distance between the key coordinates of element ⟦SLOT_91⟧ and all of those other elements ⟦SLOT_92⟧ (⟦SLOT_93⟧), to find the adjacent element with respect to the key coordinates and compute alignment quality metric ⟦SLOT_94⟧, depicted by Eq.8."
+  },
+  {
+   "id": "b0047",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒬 align ​ ( G ) = 1 N ​ ∑ i = 1 N min ⁡ ( f ⁡ ( Δ ​ x i ∗ ) , f ⁡ ( Δ ​ y i ∗ ) ) − 1 e − 1 \\mathcal{Q}_{\\text{align}}(G)=\\frac{1}{N}\\sum_{i=1}^{N}\\frac{\\min(f(\\Delta x_{i}^{*}),f(\\Delta y_{i}^{*}))-1"
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_95⟧, ⟦SLOT_96⟧ and ⟦SLOT_97⟧. The horizontal and vertical distances are computed as ⟦SLOT_98⟧, and ⟦SLOT_99⟧ respectively. Similarly, we compute the average overlap of an element ⟦SLOT_100⟧ with all other elements ⟦SLOT_101⟧ and define ⟦SLOT_102⟧ using Eq. 9."
+  },
+  {
+   "id": "b0049",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒬 overlap ​ ( G ) = 1 N ​ ∑ i = 1 N ∑ j ≠ i ( 1 − Area ​ ( e i ∩ e j ) Area ​ ( e i ) ) \\mathcal{Q}_{\\text{overlap}}(G)=\\frac{1}{N}\\sum_{i=1}^{N}\\sum_{j\\neq i}\\Big(1-\\frac{\\text{Area}(e_{i}\\cap e_{j})"
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "where, ⟦SLOT_103⟧ denotes the area of intersection between element ⟦SLOT_104⟧ and ⟦SLOT_105⟧ and ⟦SLOT_106⟧ denotes the area of element ⟦SLOT_107⟧. Ideally, we want overlap to be less, and therefore higher ⟦SLOT_108⟧ denotes lesser overlap. We compute the overall quality metric ⟦SLOT_109⟧ for a graphic layout ⟦SLOT_110⟧ by taking the average of the alignment score ⟦SLOT_111⟧ and the overlap score ⟦SLOT_112⟧. For a given layout ⟦SLOT_113⟧, if its quality metric satisfies ⟦SLOT_114⟧, i.e., the quality metric exceeds one standard deviation below the mean quality metric across the entire dataset, we classify it as a higher-quality layout. By applying this data filtration process, we enhance the overall quality of the training data, which in turn helps to effectively train the layout model ⟦SLOT_115⟧."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "Aesthetic-Aware Layout Evaluation: To evaluate the aesthetic quality of predicted layouts, we employ the judge model ⟦SLOT_116⟧ to perform pairwise comparisons between predicted layouts and their corresponding ground truth layouts. For a test dataset ⟦SLOT_117⟧ containing ⟦SLOT_118⟧ samples, let ⟦SLOT_119⟧ be the predicted layout and ⟦SLOT_120⟧ be the ground truth layout for the ⟦SLOT_121⟧-th sample. The win rate ⟦SLOT_122⟧ is computed as:"
+  },
+  {
+   "id": "b0052",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒲 = 1 S ∑ i = 1 S 𝕀 { ℳ judge ( 𝒫 judge , G p i , G g i ) = 1 } \\mathcal{W}=\\frac{1}{S}\\sum_{i=1}^{S}\\mathbb{I}\\Big\\{\\mathcal{M}_{\\text{judge}}(\\mathcal{P}_{\\text{judge}},G_{p}^{i},G_{g}^{i})=1\\Big\\} "
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_123⟧ is the indicator function that returns 1 if the predicted layout wins over the ground truth layout in the aesthetic comparison, and 0 otherwise. A higher win rate indicates that the layout model ⟦SLOT_124⟧ generates layouts that are aesthetically superior to the ground truth layouts."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "h3",
+   "en": "3.4 Pre-training to Enhance Layout Understanding"
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "To further explore the role of data size for pretraining data hungry MLLM’s, we trained our model on an 80,000 template dataset collected from an online design creation platform. This pretraining phase aims to imbue the model with foundational design principles, such as minimizing element overlap, enhancing alignment, and prioritizing salient regions for important elements. Our experiments reveal that pretraining before position-aware layout instruction tuning significantly boosts the model’s aesthetic sensitivity, as evidenced by improvements in alignment with design principles when compared to models trained without pretraining."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Experimental Details"
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "Datasets: We evaluate AesthetiQ on two benchmark graphic layout datasets: Crello [51] and WebUI [50], both posing unique challenges. Crello dataset contains 23,302 vector-based design templates across various formats (e.g., social media posts, banners), split into 19,479 training, 1,852 validation, and 1,971 test samples. Its primary challenge lies in handling diverse canvas sizes and aspect ratios while maintaining design consistency. WebUI dataset comprises 70k web page UIs, including visual screenshots and metadata. WebUI’s challenges stem from variability in web page structures across domains. Both datasets test the model’s ability to manage complex layouts and ensure semantic coherence across diverse design structures."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "Implementation Details: For our layout prediction model ⟦SLOT_125⟧, we use InternVL [9] as the backbone, given its robust spatial understanding and visual reasoning capabilities across diverse tasks like DocVQA [35], TextVQA [45], MME [13], MMMU [54], and MMVET [53]. InternVL’s multi-image training aligns well with layout prediction, where interpreting contextual relationships between multiple elements is crucial. For judging layouts based on aesthetics, we leverage VILA-7B [30] as ⟦SLOT_126⟧. We train AesthetiQ for 20 epochs on an effective batch size of 128 using 8 80GB A100 GPUs. Position coordinates are discretized with ⟦SLOT_127⟧ tokens, and ⟦SLOT_128⟧ is optimized using a learning rate of ⟦SLOT_129⟧, weight decay of ⟦SLOT_130⟧, and Cosine Annealing [33] with warmup ratio ⟦SLOT_131⟧ through the AdamW optimizer [34]. Layout preferences for AAPA are obtained by randomly choosing between comparing two model-predicted layouts or comparing a model-predicted layout with the ground truth."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluation Protocol: To assess the effectiveness of AAPA, including pre-training and quality-metric-based filtering, we evaluate two key metrics: Mean Intersection over Union (mIoU) and ⟦SLOT_132⟧ win rate. The mIoU is computed across three different inference settings: All (predicting the position of all elements), Single (predicting the position of a single text element), and Multiple (predicting the position of all text elements). This allows us to evaluate the model’s ability to accurately predict layout configurations under varying levels of complexity. The ⟦SLOT_133⟧ win rate is calculated in the All inference mode and evaluates the aesthetic quality of generated layouts by comparing them against ground truth using ⟦SLOT_134⟧. This dual-metric evaluation ensures a comprehensive assessment of both spatial accuracy and subjective visual appeal."
+  },
+  {
+   "id": "b0060",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Mean IoU (%) ℳ judge \\mathcal{M}_{\\text{judge}} All Single Multiple Win Rate (%) SmartText+ - 4.7 2.3 - Typography LMM - 40.2 17.2 - FlexDM 12.71 35.5 10.3 0.93 LACE 23.18 41.96 21.49 3.51 Post"
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Comparison of layout generation methods based on Mean IoU (%) and Judge Win Rate (%) on Crello Dataset. AesthetiQ models outperform baselines, achieving higher IoU and Judge Win Rate, with AesthetiQ-8B showing the best overall performance."
+  },
+  {
+   "id": "b0062",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Mean IoU (%) ℳ judge \\mathcal{M}_{\\text{judge}} Win Rate (%) Desigen 15.36 4.81 LACE 17.88 5.27 PosterLLaVa 30.19 14.73 LayoutNUWA 32.16 15.28 AesthetiQ-1B 38.47 19.29 AesthetiQ-8B 48.29 24.48"
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Comparison of AesthetiQ with baseline methods based on Mean IoU (%) and Judge Win Rate (%) on WebUI Dataset, showcasing significantly superior performance of AesthetiQ."
+  },
+  {
+   "id": "b0064",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Qualitative comparison of our model, AesthetiQ, against recent methods FlexDM, LACE, and LayoutNUWA. Despite the challenge of arranging numerous elements, AesthetiQ consistently achieves superior layout quality. In row (a), AesthetiQ effectively places text within salient regions, maintaining clear hierarchy and avoiding overlaps, which enhances readability and aesthetic appeal. In row (b), it achieves precise alignment across elements and optimally positions diverse shapes, preserving a cohesive visual structure. Row (c) showcases AesthetiQ’s advanced semantic understanding, generating a visually balanced and aesthetically pleasing layout. Overall, AesthetiQ consistently outperforms competitors in creating coherent, well-structured designs that align with human aesthetic preferences."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Results and Analysis"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "Comparison of AesthetiQ with baselines: Table 1 compares layout generation methods on the Crello dataset, showcasing the superior performance of our AesthetiQ models across multiple metrics. AesthetiQ-8B achieves the highest Mean IoU scores, with 42.83% in the All setting, 52.67% in the Single setting, and 40.64% in the Multiple setting, significantly surpassing baselines like LACE [8] (23.18% in All) and LayoutNUWA [46] (25.74% in All). Additionally, AesthetiQ-8B achieves the best ⟦SLOT_135⟧ win rate of 17.19%, highlighting its ability to produce layouts that are both geometrically precise and aesthetically appealing. These consistent improvements in mIoU and judge win rate reflect AesthetiQ’s capacity to model intricate design structures while integrating aesthetic constraints, resulting in layouts that better align with judge preferences compared to other methods like FlexDM [20] and SmartText+ [26], which perform poorly across both metrics. Moreover, multi-modal LLM-based methods such as PosterLLaVa [52] and LayoutNUWA also fall short of AesthetiQ-8B, underscoring the robustness of our approach in handling diverse layout configurations while maintaining high visual quality."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "Table 3 further demonstrates that AesthetiQ models significantly outperform all baselines on the WebUI dataset across both metrics. For instance, AesthetiQ-8B achieves a remarkable Mean IoU of 48.29% and a judge win rate of 24.48%, well above LayoutNUWA, the top-performing baseline, which scores 32.16% in Mean IoU and 15.28% in win rate. Even smaller variants, like AesthetiQ-1B, exhibit strong performance with a Mean IoU of 38.47% and a judge win rate of 19.29%. In contrast, previous methods such as Desigen [50] (15.36% IoU, 4.81% win rate) and LACE (17.88% IoU, 5.27% win rate) perform significantly worse. These results highlight AesthetiQ’s strength in producing layouts that are not only more accurate but also more aesthetically pleasing."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "Qualitative Results: Figure 3 presents a qualitative comparison of AesthetiQ against strong baselines. In row (a), AesthetiQ skillfully places text in prominent areas, establishing a clear hierarchy and avoiding overlaps, which improves readability and visual appeal. Row (b) highlights AesthetiQ’s precise alignment of elements and optimal positioning of various shapes, resulting in a unified visual layout. In row (c), AesthetiQ demonstrates its advanced semantic understanding, producing a balanced and aesthetically pleasing design. Overall, AesthetiQ consistently surpasses baselines by generating coherent, well-structured layouts that align with human aesthetic preferences. A user study, detailed in the Appendix, reveals that AesthetiQ was consistently the top choice for predicted layouts when compared to FlexDM, LACE, LayoutNUWA, and human preferences correlate well with the preference distribution of judge model ⟦SLOT_136⟧."
+  },
+  {
+   "id": "b0070",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Performance improvement across scale (1B–8B parameters) for layout generation, showing effects of pretraining, quality filtering, and Aesthetic-Aware Preference Alignment (AAPA). Left: IoU progression under different training configurations. Middle: ⟦SLOT_137⟧ Win Rate improvements, emphasizing the impact of AAPA and pretraining. Right: Configuration table indicating settings for each experiment. The results underscore the impact of each design component in AesthetiQ, emphasizing their role in tackling layout generation challenges."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "Larger Models Capture Aesthetics Better: Scaling up model size significantly improves layout generation performance. As seen in Fig 4, larger models outperform smaller ones in the metrics All, Single, Multiple IoU, and Judge Win Rate. For example, moving from 1B to 8B parameters boosts the Judge Win Rate from 2.43% to 17.19%, suggesting larger models better capture aesthetic nuances and complex spatial relationships. This trend indicates a strong alignment between model scale and the ability to reflect aesthetic preferences, making larger models more suited for aesthetic-aware layout generation. Further, this also showcases the difficulty of the layout generation task."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "Pre-training Enhances Layout Understanding: Pretraining with a large dataset of 80,000 templates enhances the model’s grasp of layout structuring, providing a strong foundation for fine-tuning and AAPA. Models pretrained on this dataset show improvements across metrics. For instance, pretraining raises the 8B model’s IoU from 37.64% to 40.81%. This phase equips models with essential layout generation and understanding capabilities, which AAPA further refines to achieve aesthetic alignment."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "Quality-metrics Based Layout Filtering Improves AAPA Training: Quality filtering, guided by alignment maximization and overlap minimization heuristics, enhances model performance by selecting high-quality layouts for training. Without filtering, aesthetic quality and layout coherence decline, as suboptimal samples impact learning. AAPA’s performance drops without filtering, with decreases in IoU across scales. Quality filtering boosts the 4B model’s IoU by 4.97% and Judge Win Rate by 2.56%, highlighting its importance in maintaining aesthetic standards."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "p",
+   "en": "Effect of AAPA on Performance: AAPA considerably enhances the aesthetic quality of generated layouts by aligning them with preferences derived from Multi-modal Large Language Models (VLMs). This preference-based alignment improves the Judge Win Rate, guiding the model towards aesthetically pleasing layouts rather than exact ground truth matches. AesthetiQ-1B model shows limited gains, as it faces challenges in producing high-quality layouts during sampling, limiting the effectiveness of preference optimization. However, AAPA-trained larger models demonstrate superior performance on Crello and WebUI benchmarks across metrics, underscoring the value of preference-based training in aesthetic-sensitive tasks."
+  },
+  {
+   "id": "b0076",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Capability of AesthetiQ to generate templates in various aspect ratios by changing the canvas height and width"
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "Generating Layouts with Different Aspect Ratios: Layouts must adapt to various aspect ratios across platforms. Our model maintains stable performance across common aspect ratios like 4:3, 16:9, and square formats, effectively rearranging elements to fit different dimensions. As shown in Fig 5, the model consistently produces visually balanced layouts for diverse aspect ratios, demonstrating its flexibility and robustness in generating aesthetically coherent layouts across various screen requirements."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Conclusion"
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we introduced Aesthetic-Aware Preference Alignment (AAPA), a novel approach for training Multi-modal Large Language Models (MLLMs) in the task of aesthetic-driven layout prediction. By leveraging aesthetic preferences directly through a preference optimization mechanism, AAPA addresses critical limitations of existing generative models that lack contextual aesthetic understanding and alignment with human-like preferences. Our proposed data filtering protocol, based on layout-quality heuristics, ensures that only high-quality layouts contribute to training, further enhancing model performance. Additionally, we introduced a novel evaluation metric to assess the aesthetic superiority of generated layouts against ground-truth designs, supporting a more holistic evaluation of layout quality."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0082",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] Diego Martín Arroyo, Janis Postels, and Federico Tombari. Variational transformer networks for layout generation. 2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pages"
+  },
+  {
+   "id": "b0083",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] Diego Martin Arroyo, Janis Postels, and Federico Tombari. Variational transformer networks for layout generation. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recogniti"
+  },
+  {
+   "id": "b0084",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] Jacob Austin, Daniel D. Johnson, Jonathan Ho, Daniel Tarlow, and Rianne van den Berg. Structured denoising diffusion models in discrete state-spaces. In Advances in Neural Information Processing S"
+  },
+  {
+   "id": "b0085",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] Tom B. Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, Sandhini Agarwal, Ariel Herbert-Voss, Gre"
+  },
+  {
+   "id": "b0086",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] Yunning Cao, Ye Ma, Min Zhou, Chuanbin Liu, Hongtao Xie, Tiezheng Ge, and Yuning Jiang. Geometry aligned variational transformer for image-conditioned layout generation. In Proceedings of the 30th"
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] Shang Chai, Liansheng Zhuang, and Fengying Yan. LayoutDM: Transformer-based Diffusion Model for Layout Generation . In 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , "
+  },
+  {
+   "id": "b0088",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] Shang Chai, Liansheng Zhuang, and Fengying Yan. Layoutdm: Transformer-based diffusion model for layout generation. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognit"
+  },
+  {
+   "id": "b0089",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] Jian Chen, Ruiyi Zhang, Yufan Zhou, and Changyou Chen. Towards aligned layout generation via diffusion model with aesthetic constraints. In The Twelfth International Conference on Learning Represe"
+  },
+  {
+   "id": "b0090",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] Zhe Chen, Jiannan Wu, Wenhai Wang, Weijie Su, Guo Chen, Sen Xing, Zhong Muyan, Qinglong Zhang, Xizhou Zhu, Lewei Lu, Bin Li, Ping Luo, Tong Lu, Yu Qiao, and Jifeng Dai. Intern vl: Scaling up visio"
+  },
+  {
+   "id": "b0091",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] Chin-Yi Cheng, Forrest Huang, Gang Li, and Yang Li. Play: parametrically conditioned layout generation using latent diffusion. In Proceedings of the 40th International Conference on Machine Learn"
+  },
+  {
+   "id": "b0092",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] Biplab Deka, Zifeng Huang, Chad Franzen, Joshua Hibschman, Daniel Afergan, Yang Li, Jeffrey Nichols, and Ranjitha Kumar. Rico: A mobile app dataset for building data-driven design applications. I"
+  },
+  {
+   "id": "b0093",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. Bert: Pre-training of deep bidirectional transformers for language understanding. In North American Chapter of the Association fo"
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] Chaoyou Fu, Peixian Chen, Yunhang Shen, Yulei Qin, Mengdan Zhang, Xu Lin, Zhenyu Qiu, Wei Lin, Jinrui Yang, Xiawu Zheng, Ke Li, Xing Sun, and Rongrong Ji. Mme: A comprehensive evaluation benchmar"
+  },
+  {
+   "id": "b0095",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] Tsu-Jui Fu, William Yang Wang, Daniel J. McDuff, and Yale Song. Doc2ppt: Automatic presentation slides generation from scientific documents. In AAAI Conference on Artificial Intelligence , 2021."
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] Shuyang Gu, Dong Chen, Jianmin Bao, Fang Wen, Bo Zhang, Dongdong Chen, Lu Yuan, and Baining Guo. Vector quantized diffusion model for text-to-image synthesis. In 2022 IEEE/CVF Conference on Compu"
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] Kamal Gupta, Justin Lazarow, Alessandro Achille, Larry S. Davis, Vijay Mahadevan, and Abhinav Shrivastava. Layouttransformer: Layout generation and completion with self-attention. 2021 IEEE/CVF I"
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] Liu He, Yijuan Lu, John Corring, Dinei Florencio, and Cha Zhang. Diffusion-based document layout generation. In Document Analysis and Recognition - ICDAR 2023: 17th International Conference, San "
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] Danqing Huang, Jiaqi Guo, Shizhao Sun, Hanling Tian, Jieru Lin, Zheng Hu, Chin-Yew Lin, Jian-Guang Lou, and Dongmei Zhang. A survey for graphic design intelligence, 2023."
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] Mude Hui, Zhizheng Zhang, Xiaoyi Zhang, Wenxuan Xie, Yuwang Wang, and Yan Lu. Unifying layout generation with a decoupled diffusion model. 2023 IEEE/CVF Conference on Computer Vision and Pattern "
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] Naoto Inoue, Kotaro Kikuchi, Edgar Simo-Serra, Mayu Otani, and Kota Yamaguchi. Towards Flexible Multi-modal Document Models. In Proceedings of the IEEE/CVF Conference on Computer Vision and Patte"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] Zhaoyun Jiang, Shizhao Sun, Jihua Zhu, Jian-Guang Lou, and Dongmei Zhang. Coarse-to-fine generative modeling for graphic layouts. Proceedings of the AAAI Conference on Artificial Intelligence , 3"
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] Kotaro Kikuchi, Edgar Simo-Serra, Mayu Otani, and Kota Yamaguchi. Constrained graphic layout generation via latent optimization. In Proceedings of the 29th ACM International Conference on Multime"
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] Xiang Kong, Lu Jiang, Huiwen Chang, Han Zhang, Yuan Hao, Haifeng Gong, and Irfan Essa. Blt: Bidirectional layout transformer for controllable layout generation. In Computer Vision – ECCV 2022 , p"
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] Hsin-Ying Lee, Lu Jiang, Irfan Essa, Phuong B. Le, Haifeng Gong, Ming-Hsuan Yang, and Weilong Yang. Neural design network: Graphic layout generation with constraints. In Computer Vision – ECCV 20"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] Mike Lewis, Yinhan Liu, Naman Goyal, Marjan Ghazvininejad, Abdelrahman Mohamed, Omer Levy, Veselin Stoyanov, and Luke Zettlemoyer. BART: Denoising sequence-to-sequence pre-training for natural la"
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] Chenhui Li, Peiying Zhang, and Changbo Wang. Harmonious textual layout generation over natural images via deep aesthetics learning. IEEE Transactions on Multimedia , 24:3416–3428, 2022."
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] Jianan Li, Tingfa Xu, Jianming Zhang, Aaron Hertzmann, and Jimei Yang. LayoutGAN: Generating graphic layouts with wireframe discriminator. In International Conference on Learning Representations "
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] Jianan Li, Jimei Yang, Jianming Zhang, Chang Liu, Christina Wang, and Tingfa Xu. Attribute-conditioned layout gan for automatic graphic design. IEEE Transactions on Visualization and Computer Gra"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] Jiawei Lin, Jiaqi Guo, Shizhao Sun, Zijiang James Yang, Jian-Guang Lou, and Dongmei Zhang. Layoutprompter: awaken the design ability of large language models. In Proceedings of the 37th Internati"
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] Ji Lin, Hongxu Yin, Wei Ping, Pavlo Molchanov, Mohammad Shoeybi, and Song Han. VILA: On Pre-training for Visual Language Models . In 2024 IEEE/CVF Conference on Computer Vision and Pattern Recogn"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. Visual instruction tuning. ArXiv , abs/2304.08485, 2023a."
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. Visual instruction tuning. In Thirty-seventh Conference on Neural Information Processing Systems , 2023b."
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] Ilya Loshchilov and Frank Hutter. SGDR: Stochastic gradient descent with warm restarts. In International Conference on Learning Representations , 2017."
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] Ilya Loshchilov and Frank Hutter. Decoupled weight decay regularization. In International Conference on Learning Representations , 2019."
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] Minesh Mathew, Dimosthenis Karatzas, and C. V. Jawahar. Docvqa: A dataset for vqa on document images. In 2021 IEEE Winter Conference on Applications of Computer Vision (WACV) , pages 2199–2208, 2"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] Peter O’Donovan, Aseem Agarwala, and Aaron Hertzmann. Designscape: Design with interactive layout suggestions. In Proceedings of the 33rd Annual ACM Conference on Human Factors in Computing Syste"
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] OpenAI, Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia Leoni Aleman, Diogo Almeida, Janko Altenschmidt, Sam Altman, and many more. Gpt-4 technical report, 2024."
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] Long Ouyang, Jeffrey Wu, Xu Jiang, Diogo Almeida, Carroll Wainwright, Pamela Mishkin, Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, John Schulman, Jacob Hilton, Fraser Kelton, Luke Mil"
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] Peter O’Donovan, Aseem Agarwala, and Aaron Hertzmann. Learning layouts for single-pagegraphic designs. IEEE Transactions on Visualization and Computer Graphics , 20(8):1200–1213, 2014."
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] Rafael Rafailov, Archit Sharma, Eric Mitchell, Christopher D Manning, Stefano Ermon, and Chelsea Finn. Direct preference optimization: Your language model is secretly a reward model. In Advances "
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] Rafael Rafailov, Archit Sharma, Eric Mitchell, Christopher D Manning, Stefano Ermon, and Chelsea Finn. Direct preference optimization: Your language model is secretly a reward model. In Thirty-se"
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[42] Soliha Rahman, Vinoth Pandian Sermuga Pandian, and Matthias Jarke. Ruite: Refining ui layout aesthetics using transformer encoder. In Companion Proceedings of the 26th International Conference on"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[43] Baptiste Rozière, Jonas Gehring, Fabian Gloeckle, Sten Sootla, Itai Gat, Xiaoqing Tan, Yossi Adi, Jingyu Liu, Tal Remez, Jérémy Rapin, Artyom Kozhevnikov, I. Evtimov, Joanna Bitton, Manish P Bhat"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[44] Jaejung Seol, Seojun Kim, and Jaejun Yoo. Posterllama: Bridging design ability of language model to content-aware layout generation. In Computer Vision – ECCV 2024 , pages 451–468, Cham, 2025. Sp"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[45] Amanpreet Singh, Vivek Natarajan, Meet Shah, Yu Jiang, Xinlei Chen, Dhruv Batra, Devi Parikh, and Marcus Rohrbach. Towards vqa models that can read. In 2019 IEEE/CVF Conference on Computer Vision"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[46] Zecheng Tang, Chenfei Wu, Juntao Li, and Nan Duan. LayoutNUWA: Revealing the hidden layout expertise of large language models. In The Twelfth International Conference on Learning Representations "
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[47] Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, Aurelien Rodriguez, Armand Joulin, "
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[48] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Łukasz Kaiser, and Illia Polosukhin. Attention is all you need. In Proceedings of the 31st International C"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[49] Chen Wei, Karttikeya Mangalam, Po-Yao (Bernie) Huang, Yanghao Li, Haoqi Fan, Hu Xu, Huiyu Wang, Cihang Xie, Alan Loddon Yuille, and Christoph Feichtenhofer. Diffusion models as masked autoencoder"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[50] Haohan Weng, Danqing Huang, Yu Qiao, Zheng Hu, Chin-Yew Lin, Tong Zhang, and C. L. Philip Chen. Desigen: A Pipeline for Controllable Design Template Generation . In 2024 IEEE/CVF Conference on Co"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[51] Kota Yamaguchi. Canvasvae: Learning to generate vector graphic documents. 2021 IEEE/CVF International Conference on Computer Vision (ICCV) , pages 5461–5469, 2021."
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[52] Tao Yang, Yingmin Luo, Zhongang Qi, Yang Wu, Ying Shan, and Chang Wen Chen. Posterllava: Constructing a unified multi-modal layout generator with llm, 2024."
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[53] Weihao Yu, Zhengyuan Yang, Linjie Li, Jianfeng Wang, Kevin Lin, Zicheng Liu, Xinchao Wang, and Lijuan Wang. Mm-vet: Evaluating large multimodal models for integrated capabilities. In Internationa"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[54] Xiang Yue, Yuansheng Ni, Kai Zhang, Tianyu Zheng, Ruoqi Liu, Ge Zhang, Samuel Stevens, Dongfu Jiang, Weiming Ren, Yuxuan Sun, Cong Wei, Botao Yu, Ruibin Yuan, Renliang Sun, Ming Yin, Boyuan Zheng"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[55] Junyi Zhang, Jiaqi Guo, Shizhao Sun, Jian-Guang Lou, and D. Zhang. Layoutdiffusion: Improving graphic layout generation by discrete diffusion probabilistic models. 2023 IEEE/CVF International Con"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[56] Xinru Zheng, Xiaotian Qiao, Ying Cao, and Rynson W. H. Lau. Content-aware generative modeling of graphic design layouts. ACM Trans. Graph. , 38(4), 2019."
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[57] Min Zhou, Chenchen Xu, Ye Ma, Tiezheng Ge, Yuning Jiang, and Weiwei Xu. Composition-aware graphic layout gan for visual-textual presentation designs. ArXiv , abs/2205.00303, 2022."
+  },
+  {
+   "id": "b0139",
+   "t": "text",
+   "w": "p",
+   "en": "Supplementary Material"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0141",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Comparison of results from two user studies evaluating layout aesthetics. The bar plot (left) shows the preference of layout predictions across four methods: AesthetiQ, LayoutNUWA, LACE, and FlexDM, with AesthetiQ significantly outperforming others. The pie chart (right) evaluates alignment between human preferences and the VILA model, achieving a substantial agreement rate of 78.8%. Together, these results highlight the superiority of AesthetiQ in generating aesthetically pleasing layouts and the reliability of VILA as an evaluator."
+  },
+  {
+   "id": "b0142",
+   "t": "text",
+   "w": "h2",
+   "en": "7 User Study"
+  },
+  {
+   "id": "b0143",
+   "t": "text",
+   "w": "p",
+   "en": "To evaluate the aesthetic quality of layouts generated by various methods and validate the alignment of human preferences with our approach, we conducted two user studies involving 22 diverse volunteers. The participants were selected to represent a broad spectrum of demographics, including variations in age, gender, occupation, and religion, ensuring a well-rounded and inclusive evaluation. Each participant was presented with a total of 30 questions, designed to capture their aesthetic preferences and opinions on the generated layouts."
+  },
+  {
+   "id": "b0144",
+   "t": "text",
+   "w": "h4",
+   "en": "User Study 1:"
+  },
+  {
+   "id": "b0145",
+   "t": "text",
+   "w": "p",
+   "en": "Participants were shown layout predictions from four methods: AesthetiQ, LayoutNUWA, LACE, and FlexDM. They were instructed to select the better layout based on aesthetics, alignment and overlap between text and images, and whether the text in the layout made sense. The results are as follows:"
+  },
+  {
+   "id": "b0146",
+   "t": "text",
+   "w": "li",
+   "en": "• AesthetiQ: 78.41%"
+  },
+  {
+   "id": "b0147",
+   "t": "text",
+   "w": "li",
+   "en": "• LayoutNUWA [46]: 19.37%"
+  },
+  {
+   "id": "b0148",
+   "t": "text",
+   "w": "li",
+   "en": "• LACE [8]: 2.22%"
+  },
+  {
+   "id": "b0149",
+   "t": "text",
+   "w": "li",
+   "en": "• FlexDM [20]: 0.00%"
+  },
+  {
+   "id": "b0150",
+   "t": "text",
+   "w": "p",
+   "en": "These results highlight the significant preference for layouts generated by AesthetiQ compared to the baselines, underscoring its ability to produce more visually appealing and coherent designs."
+  },
+  {
+   "id": "b0151",
+   "t": "text",
+   "w": "h4",
+   "en": "User Study 2:"
+  },
+  {
+   "id": "b0152",
+   "t": "text",
+   "w": "p",
+   "en": "Participants were shown pairs of model-generated layouts and asked to select the better one using the same instructions as in the first study. The same layouts were also evaluated by VILA, a Vision-Language Model (VLM) judge. We measured the agreement between human preferences and VILA’s outputs, which yielded an alignment score of 78.8%."
+  },
+  {
+   "id": "b0153",
+   "t": "text",
+   "w": "p",
+   "en": "This result demonstrates that VILA’s aesthetic judgment aligns well with human preferences, further validating its use as an aesthetic evaluator in our framework."
+  },
+  {
+   "id": "b0154",
+   "t": "text",
+   "w": "h2",
+   "en": "8 Complete Results on WebUI"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Mean IoU (%) ℳ judge \\mathcal{M}_{\\text{judge}} Win Rate (%) Desigen [ 50 ] 15.36 4.81 LACE [ 8 ] 17.88 5.27 PosterLLaVa [ 52 ] 30.19 14.73 LayoutNUWA [ 46 ] 32.16 15.28 AesthetiQ-1B 38.47 19.2"
+  },
+  {
+   "id": "b0156",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Comparison of AesthetiQ with baseline methods on the WebUI dataset, evaluated using Mean IoU (%) and ⟦SLOT_138⟧ Win Rate (%). The results demonstrate the superior performance of AesthetiQ across all model scales, with notable gains in aesthetic and structural alignment metrics."
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "p",
+   "en": "Table 3 provides a detailed comparison of our approach, AesthetiQ, against baseline methods, including Desigen, LACE, PosterLLaVa, and LayoutNUWA. While previous methods like PosterLLaVa and LayoutNUWA achieve decent performance, they fall short in terms of both structural coherence and aesthetic alignment. In contrast, AesthetiQ shows consistent improvements across all metrics, achieving the highest Mean IoU and ⟦SLOT_139⟧ Win Rate."
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "p",
+   "en": "We observe a clear trend of performance scaling with model size. The Mean IoU improves progressively from 38.47% for the 1B model to 48.29% for the 8B model. Similarly, the Judge Win Rate increases from 19.29% to 24.48%, showcasing the model’s alignment with human aesthetic preferences as the scale grows. In the main paper, due to space constraints, we presented results for only the 1B and 8B variants of AesthetiQ. Here, we include results for the 2B and 4B variants to offer a comprehensive analysis of our model’s performance across different scales. The full results underscore the scalability and effectiveness of our approach, particularly in leveraging aesthetic preferences to optimize layout quality.These findings highlight the robustness of AesthetiQ in addressing the challenges of layout generation, establishing a new benchmark for performance on the WebUI dataset."
+  },
+  {
+   "id": "b0159",
+   "t": "text",
+   "w": "p",
+   "en": "In the paper, we primarily focus on showcasing qualitative results on the Crello dataset, as it contains individual elements, allowing for detailed analysis and visualization. In contrast, the WebUI dataset only includes category labels and their positions, making it impossible to generate the final rendered templates. For the AAPA evaluation, we render the bounding boxes of the predicted elements on a background, similar to the approach used in Desigen [50]. These renderings are then evaluated by the judge VLM, which selects the layout it deems superior between the two."
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "table",
+   "en": "AAPA 𝒜 judge \\mathcal{A}_{\\text{judge}} Mean IoU (%) ↑ \\uparrow Eval ℳ judge \\mathcal{M}_{\\text{judge}} ℳ judge \\mathcal{M}_{\\text{judge}} Win Rate (%) ↑ \\uparrow All Single Multiple VILA (Paper) 42.8"
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Comparison of AesthetiQ-8B with different training (⟦SLOT_140⟧) & eval (⟦SLOT_141⟧) judges. mIoU is independent of ⟦SLOT_142⟧."
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "h2",
+   "en": "9 Stronger MLLM training"
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "p",
+   "en": "We chose VILA-7B as the judge for its open-source, license-friendly nature. Training and evaluation with GPT-4o (Tab 4) improved all metrics with consistent trends in ⟦SLOT_143⟧ win rate across ablations (Paper Fig. 4)."
+  },
+  {
+   "id": "b0164",
+   "t": "text",
+   "w": "h4",
+   "en": "Justification for MLLM as judge:"
+  },
+  {
+   "id": "b0165",
+   "t": "text",
+   "w": "p",
+   "en": "We conduct a user study to measure VILA’s correlation with human aesthetic preferences, finding 78.8% agreement. GPT-4o achieves 88.6% correlation, & AesthetiQ-8B performs better with a stronger judge (Tab 4)."
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "h2",
+   "en": "10 Detailed Experimental Results"
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "p",
+   "en": "This section provides the complete experimental results referenced in the main paper, presented in Table 5. The table details the performance of our models across various configurations, highlighting the effects of scaling, pretraining, VILA alignment, and quality filtering on layout generation tasks. Metrics include All IoU, Single Text IoU, Multiple Text IoU, and Judge Win Rate. These results support the analysis presented in Section 5 of the main paper, showcasing the effectiveness of Aesthetic-Aware Preference Alignment (AAPA) and other components in enhancing the quality and alignment of generated layouts."
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "table",
+   "en": "Method LLM Pretraining VILA Alignment Data Filtering Mean IoU ℳ judge \\mathcal{M}_{\\text{judge}} Win Rate (%) All Single Multiple AesthetiQ -1B Qwen-0.5b No No No 22.06 40.14 24.88 2.18 AesthetiQ -1B "
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Performance of AesthetiQ across scales (1B, 2B, 4B, 8B) on the Crello dataset, evaluating the effects of pretraining, VILA alignment, and data filtering on IoU metrics and judge win rates. The results demonstrate the scalability and effectiveness of the aesthetic-aware preference alignment method."
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "h2",
+   "en": "11 Direct Preference Optimization"
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "p",
+   "en": "Direct Preference Optimisation (DPO) [40] emerged as an alternative approach to Reinforcement Learning using Human Feedback (RLHF) [38], eliminating the requirement of training a reward model. While RLHF relies on a reward model to evaluate LLM outputs for fine-tuning through reinforcement learning to achieve human preference alignment, DPO takes a different approach. It converts the reward-function loss into a loss over the LLM policy, enabling implicit reward optimization through policy loss optimization. This is achieved using human preference data that pairs two LLM-generated outputs, where one is designated as the winner candidate - ⟦SLOT_144⟧ and the other as the loser candidate - ⟦SLOT_145⟧. Using a static dataset structured as ⟦SLOT_146⟧, where x represents the input, the loss is formulated as:"
+  },
+  {
+   "id": "b0172",
+   "t": "keep",
+   "w": "table",
+   "en": "ℒ R = − l ​ o ​ g ​ [ σ ⁡ ( r ⁡ ( x , y w ) − r ⁡ ( x , y l ) ) ] \\displaystyle\\mathcal{L}_{R}=-log[\\sigma(r(x,y_{w})-r(x,y_{l}))] (11) r ⁡ ( x , y ) = β ​ l ​ o ​ g ​ ( π θ ​ ( y | x ) π r ​ e ​ f ​ "
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "p",
+   "en": "Here, ⟦SLOT_147⟧ denotes the probability of generating ⟦SLOT_148⟧ given input ⟦SLOT_149⟧ for model ⟦SLOT_150⟧, where ⟦SLOT_151⟧ typically represents the instruction fine-tuned model for LLMs to maintain policy proximity to the initial model, and ⟦SLOT_152⟧ represents the LLM policy being optimized through DPO. Additionally, ⟦SLOT_153⟧ represents the sigmoid activation, and ⟦SLOT_154⟧ is a parameter controlling the deviation extent from the reference model. In essence, this algorithm trains the LLM to develop output preferences among candidates without explicitly modeling rewards. Our algorithm Aesthetic-Aware Preference Alignment (AAPA) draws motivation from DPO and carries out preferential training across different layout configurations. For a more comprehensive understanding on DPO, readers are directed to the original publication [40]."
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "h2",
+   "en": "12 Prompt Templates for Layout and Judge VLMs"
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "p",
+   "en": "The following prompt template was used as input to our layout generation model ⟦SLOT_155⟧ to guide the generation of aesthetic poster layouts. The template specifies the canvas dimensions and provides a structured description of the elements to be placed, including their type (e.g., text or image), content, and category. This format allows the model to interpret the spatial constraints and semantic attributes of each element effectively, enabling systematic exploration of layout generation. The <image> token in the prompt is replaced with a sequence of image embeddings corresponding to the input images, ensuring that the model processes visual information in a compact and meaningful way. By explicitly defining these attributes, the template facilitates reproducibility and evaluation of layout designs. The prompt template is shown below:"
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "p",
+   "en": "Consider the image <image> with height and width of {canvas_height} and {canvas_width}. The following elements need to be placed on the image to obtain an aesthetic poster layout."
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "p",
+   "en": "Element 1: Text: LOREM IPSUM Category: text"
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "p",
+   "en": "Element 2: Image: <image> Category: image"
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "p",
+   "en": "..."
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "p",
+   "en": "This structured input format ensures that the model can accurately process both visual and textual elements while adhering to aesthetic principles, making it particularly suitable for tasks in computer vision and graphics."
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "p",
+   "en": "The following prompt is used as input to the judge visual language model ⟦SLOT_156⟧ to evaluate and compare two visual templates based on predefined criteria: aesthetics, clarity, usability, creativity, and consistency. The model processes these criteria to determine which template is superior and outputs the result in a structured JSON format: {\"better_layout\": \"answer\"}, where the answer specifies the preferred template (image_1 or image_2). This structured approach ensures objective and standardized evaluation of visual designs. The prompt is shown below:"
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "p",
+   "en": "You are a visual language model designed to evaluate and rate visual templates. You are presented with 2 visual templates, and your task is to choose the better template between these 2 based on the following criteria:"
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "p",
+   "en": "Aesthetics: How visually appealing is the template, Clarity: How clear and easy to understand is the template, Usability: How practical and user-friendly is the template, Creativity: How unique and innovative is the design, Consistency: How consistent is the template with design principles and standards."
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "p",
+   "en": "Please provide your answer in the following JSON format and do not include any other details:"
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "p",
+   "en": "{\"better_layout\": \"answer\"}"
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "p",
+   "en": "where answer could either be image_1 or image_2."
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "h2",
+   "en": "13 Qualitative results"
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "p",
+   "en": "Due to limited space, we included only a few examples of comparison in the main paper. In the following pages, we show more examples for a more comprehensive comparison."
+  },
+  {
+   "id": "b0189",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Qualitative comparison of various baselines for layout prediction"
+  }
+ ]
+}

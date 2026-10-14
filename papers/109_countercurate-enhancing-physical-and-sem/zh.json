@@ -1,0 +1,418 @@
+{
+ "blocks": {
+  "b0006": {
+   "zh": "1 引言"
+  },
+  "b0008": {
+   "zh": "图 1：GPT-4V 失败案例的代表性示例。两个问题中，GPT-4V 都正确识别了所问的全部物体，却选错了答案，因为它未能区分左右（左图问题）或上下（右图问题）。"
+  },
+  "b0009": {
+   "zh": "ChatGPT OpenAI (2023a)、GPT4 OpenAI (2023b) 与 LLaMA Touvron et al. (2023) 等大语言模型展现出可观的知识与推理能力。近来，大型多模态模型（LMM）Radford et al. (2021); OpenAI (2023c) 进一步利用大规模图文对来提升视觉语言理解能力。然而，这些模型在组合推理上表现欠佳 Diwan et al. (2022); Hsieh et al. (2023)，例如难以区分「white shirts and black pants」与「black shirts and white pants」这类语义干扰项。现有研究要么专注于策划评测基准 Diwan et al. (2022); Hsieh et al. (2023); Le et al. (2023)，要么通过构造基于规则的反事实微调数据来增强组合推理能力 Yuksekgonul et al. (2023); Le et al. (2023)。"
+  },
+  "b0010": {
+   "zh": "当前多数研究聚焦于语义层面的组合推理，而把另一个基础性问题——物理定位的组合推理——留作未被充分探索的空白。它涉及计数、区分物体之间的左右与上下位置等任务。例如在图 1 中，GPT-4V OpenAI (2023c) 即便识别出了所问的全部物体，仍做出了错误选择，表现出语义能力强而物理组合推理弱的特点。11 1 我们以多种方式复现了关于 GPT 这一弱点的发现：失败案例本身最初是在 API 开放前通过人工测试发现的；我们也用 2023-07-01 的 Azure API 与 GPT4-V 网页版重现了许多失败案例。"
+  },
+  "b0012": {
+   "zh": "图 2：CounterCurate 的数据策划流程。给定一个正样本图像-字幕对，我们先生成负样本字幕，再据此用最合适的方式策划负样本图像。具体地，（a）对 Flickr30k-Positions（左/右），我们先翻转位置关键词，再对图像做水平翻转；（b）对 Flickr30k-Counting，我们先改动数字，再施加定位图像修复 Li et al. (2023) 得到负样本图像；（c）对 Flickr30k-Attributes，我们先用 GPT-4V OpenAI (2023c) 生成合理的难负样本字幕，用于替换名词、替换形容词以及交换形容词，然后用 DALLE-3 Betker et al. (2023) 生成连贯的图像。"
+  },
+  "b0013": {
+   "zh": "有了这一观察，CLIP Radford et al. (2021) 这类对比式模型与 LLaVA Liu et al. (2023b) 这类生成式模型在我们新策划的基准上给出接近随机的表现，也就不足为奇。我们假设现代 LMM 在很大程度上对位置差异不敏感。为此，我们用简单方法生成反事实图文对，例如用水平翻转来区分左右；同时借助定位图像生成模型 GLIGEN Li et al. (2023) 精确替换/移除目标物体，以处理上下与计数任务。我们的方法取得了显著改进：在 Flickr30k-Positions 基准上，CLIP 提升 33%+，LLaVA 提升 37%+。"
+  },
+  "b0014": {
+   "zh": "现有方法在构造语义反事实微调数据时，也没有充分利用强大生成模型的能力。我们认为，提升组合推理能力的关键在于精心策划准确且足够有挑战性的图像与文本反事实。例如，近期微调方法（Yuksekgonul et al., 2023; Le et al., 2023，例如）用语言规则增补出的负样本字幕，可能不经意地遵循不自然的语言分布，而这类分布仅凭纯文本模型、无需任何图像证据就能被轻易分辨（Lin et al., 2023）。"
+  },
+  "b0015": {
+   "zh": "为克服这一点，我们利用高性能文本生成模型 GPT-4V OpenAI (2023c) 与图像生成模型 DALLE-3 Betker et al. (2023) 来策划合理且足够难的负样本。实验表明，用我们的数据生成流程微调 CLIP 与 LLaVA 后，模型在 SugarCrepe 等基准上的性能显著提升，超过了 NegCLIP 与 GPT-4V。"
+  },
+  "b0016": {
+   "zh": "我们的贡献概括如下："
+  },
+  "b0017": {
+   "zh": "• 我们系统研究了物理定位的组合推理，包括位置理解与计数，并揭示了包括 CLIP 与 LLaVA 在内的多模态模型在我们新策划的基准上接近随机的表现。"
+  },
+  "b0018": {
+   "zh": "• 我们利用简单的数据增强技术与定位图像生成模型 GLIGEN 生成反事实图像与字幕，显著提升了模型的物理推理能力。"
+  },
+  "b0019": {
+   "zh": "• 我们采用当前最强的图像与文本生成模型来生成语义上反事实的图像/文本对，性能进一步超越 SOTA 方法。"
+  },
+  "b0020": {
+   "zh": "2 相关工作"
+  },
+  "b0021": {
+   "zh": "2.1 大型多模态模型"
+  },
+  "b0022": {
+   "zh": "多模态模型旨在连接多种数据模态。就视觉语言任务而言，多模态模型要么构建为对比式 Radford et al. (2021); Jia et al. (2021)，要么构建为生成式 OpenAI (2023b); Alayrac et al. (2022); Liu et al. (2023b)。近期的大型多模态模型用大规模预训练数据与数十亿可训练参数训练，因而擅长泛化。CLIP Radford et al. (2021) 等对比式模型通过对比损失对齐两个模态专属的编码器来连接图像与文本。LLaVA Liu et al. (2023b); Liu et al. (2023a) 等生成式模型把图像作为前缀词元嵌入仅解码器的语言模型，并用下一词元预测损失对齐两个模态。尽管这类模型在检索、视觉问答等多种视觉语言任务上表现亮眼，在组合推理上却不尽如人意 Diwan et al. (2022); Hsieh et al. (2023)。"
+  },
+  "b0023": {
+   "zh": "2.2 组合推理"
+  },
+  "b0024": {
+   "zh": "视觉与语言任务中的组合推理 Diwan et al. (2022) 评估模型理解并操纵复杂概念的能力：先把它们拆解为更简单的组成成分，再以新颖的方式重新组合。一个典型例子是区分「blank pants and white shorts」与「white pants and blank shorts」。Winoground Diwan et al. (2022) 是组合推理的开创性基准，包含 400 个条目，每个条目配两张图像与两条对应字幕。给定一张图像，多模态模型需从所给的两个选项中找出匹配的字幕，反之亦然。SugarCrepe Hsieh et al. (2023) 与 SeeTrue Yarom et al. (2023) 借助语言模型自动生成，进一步扩大了干扰字幕的规模。"
+  },
+  "b0025": {
+   "zh": "NegCLIP Yuksekgonul et al. (2023) 尝试通过在对比学习中加入扰动字幕作为负样本文本、微调 CLIP 来改善组合推理。然而这类置换字幕很容易被纯文本 Transformer 察觉 Lin et al. (2023)，说明要进一步增强组合推理还需要更有效的做法。DAC Doveh et al. (2024) 利用密集且对齐的字幕以获得更好的正样本字幕。SGVL Herzig et al. (2023) 用场景图微调预训练的视觉语言模型。TSVLC Doveh et al. (2023) 借助语言模型生成正样本与负样本字幕。COCO-Counterfactual Le et al. (2023) 进一步同时使用负样本图像与负样本字幕，通过基于规则的数据策划流程微调 CLIP。"
+  },
+  "b0026": {
+   "zh": "此外，先前工作主要考虑语义上不同概念之间的组合推理，而非物体计数、区分左右与上下这类物理定位关系。尽管近期一项工作 Paiss et al. (2023) 提升了 CLIP 的计数能力，但它既没有处理组合推理，也没有利用负样本图像。本文借助最强的一批生成模型（包括 GPT-4V OpenAI (2023c) 与 DALLE-3 Betker et al. (2023)）生成反事实图像/文本对，系统地同时改进语义与物理组合推理。"
+  },
+  "b0027": {
+   "zh": "2.3 反事实推理"
+  },
+  "b0029": {
+   "zh": "图 3：用 CounterCurate 微调不同类型的大型多模态模型。我们的流程通过在原始图像-字幕对上增补策划好的负样本图像与字幕，可以同时增强对比式学习模型与生成式模型。具体地，我们的反事实图像-字幕对（a）为 CLIP 这类模型提供辅助对比损失，其中相似矩阵里的正对比单元以蓝/红着色、负的以白色着色；并且（b）可以自然地融入 LLaVA 等文本生成模型原有的下一词元预测损失。"
+  },
+  "b0030": {
+   "zh": "反事实推理 Morgan and Winship (2015) 指通过修改输入数据来想象「如果……会怎样」情景的过程。在视觉语言场景中，这涉及通过操纵原始数据来策划负样本图像与字幕，并观察其对结果的影响。这有助于模型理解因果关系，并在从未见过的情形中预测结果。反事实推理的关键在于策划有意义且足够难的样本。COCO-Counterfactual Le et al. (2023) 探索用简单语言规则生成负样本字幕，并用图像编辑模型 Prompt2Prompt Hertz et al. (2023) 生成负样本图像 Hertz et al. (2023)。Prompt2Prompt 在理解复杂语言指令方面不够理想，其生成的反事实样本在可靠性与挑战性上都有所欠缺。"
+  },
+  "b0031": {
+   "zh": "本文借助最强的语言模型 GPT-4 OpenAI (2023b)、文本到图像生成模型 DALLE-3 Betker et al. (2023) 与 GLIGEN Li et al. (2023)，收集极具挑战性的负样本图像与文本，显著改善了模型的推理能力。利用这些难负样本，我们的模型能更好地把握语言与视觉的细微之处，从而在需要对世界有精细理解的任务上表现更佳。"
+  },
+  "b0032": {
+   "zh": "3 方法"
+  },
+  "b0033": {
+   "zh": "在第 3.1 节，我们首先说明为何选择 Flickr30k Entities 数据集同时用于基准评测与微调。随后在第 3.2 与 3.3 节，我们展示 CLIP 与 LLaVA 等多模态模型在物理定位的组合推理任务（包括位置理解与计数）上接近随机的表现，并通过数据增强与定位图像修复生成负样本图文对来改善其性能。最后在第 3.4 节，我们介绍如何用能力强大的文本与图像生成模型改进模型的语义组合推理。"
+  },
+  "b0034": {
+   "zh": "3.1 定位图像字幕的必要性"
+  },
+  "b0035": {
+   "zh": "先前方法 Yuksekgonul et al. (2023); Hsieh et al. (2023) 采用 COCO-Captions Chen et al. (2015) 这类全局图像字幕数据集，并构造负样本字幕来做基准评测或改进组合推理。然而这种方法缺少对物理定位推理至关重要的区域信息，例如确定两个物体的相对位置。因此我们采用 Flickr30k Entities Plummer et al. (2016)——一个带定位的图像字幕数据集——来同时策划负样本图像-字幕对并对模型做基准评测。"
+  },
+  "b0036": {
+   "zh": "3.2 改进位置理解"
+  },
+  "b0037": {
+   "zh": "目前还没有直接评测多模态模型位置理解能力的基准。我们构建了这样一个基准——Flickr30k-Positions（如图 2(a) 所示），它由描述相同物体处于相反位置的正样本与负样本图像-字幕对组成。"
+  },
+  "b0038": {
+   "zh": "生成负样本字幕。"
+  },
+  "b0039": {
+   "zh": "具体地，我们利用 Flickr30k Entities Plummer et al. (2016) 中提供的边界框"
+  },
+  "b0041": {
+   "zh": "来自 Flickr30k Entities Plummer et al. (2016)，其中物体 ⟦SLOT_0⟧ 在图像 ⟦SLOT_1⟧ 中的边界框为 ⟦SLOT_2⟧，其左上角与右下角分别位于 ⟦SLOT_3⟧ 与 ⟦SLOT_4⟧。为保证类别之间相对位置描述的无歧义性（例如「狗在猫的左边」），我们只保留满足如下条件的图像：每个物体类别在图像中至多出现一个实例。对于每对物体 ⟦SLOT_5⟧，我们通过下式识别位置物体对："
+  },
+  "b0043": {
+   "zh": "借助这一公式，我们生成正样本与负样本位置字幕 ⟦SLOT_6⟧ 与 ⟦SLOT_7⟧，例如 ⟦SLOT_8⟧「a bike is to the left of a woman」（一辆自行车在一位女士的左边）与 ⟦SLOT_9⟧「a bike is to the right of a women」（一辆自行车在一位女士的右边），以及 ⟦SLOT_10⟧「a table is above a towel」（一张桌子在一条毛巾上方）与 ⟦SLOT_11⟧「a table is below a towel」（一张桌子在一条毛巾下方）。"
+  },
+  "b0044": {
+   "zh": "我们还提示纯文本的 GPT4 OpenAI (2023b) 改写原始负样本提示「⟦SLOT_12⟧ is above/below ⟦SLOT_13⟧」，以更好地引导图像生成模型。例如，字幕「a street is above a young child」很不自然，而 GPT 扩展后的字幕「the street stretches out above a young child, elevated by a bridge」要好得多。详细的提示工程见附录 B。"
+  },
+  "b0045": {
+   "zh": "生成负样本图像。"
+  },
+  "b0046": {
+   "zh": "此外，我们在数据集中加入负样本图像以策划 Flickr30k-Positions。对左右配对，我们采用简单的数据增强方法：水平翻转原始图像。而对上下配对，竖直翻转在多数情况下会产生不合理的图像。为解决这一问题，我们使用 GLIGEN Li et al. (2023)——一个可以用边界框为文本提示做定位的物体级文本到图像生成模型。具体地，对每个上下物体对 ⟦SLOT_14⟧，我们交换边界框 ⟦SLOT_15⟧ 的中心，同时保持其宽高不变，从而保证生成的图像自然，并如图 4 所示保留物体的尺寸与长宽比。新的边界框与提示被送入 GLIGEN，生成相应的负样本图像 ⟦SLOT_16⟧。"
+  },
+  "b0048": {
+   "zh": "图 4：为了用 GLIGEN 依据原始提示「the ball is below the sports outfit」生成正确的上下负样本图像，我们对「ball」与「sports outfit」的边界框重新定心，并把它们连同 GPT4 扩展后的提示一起送入 GLIGEN。"
+  },
+  "b0049": {
+   "zh": "3.3 改进物体计数"
+  },
+  "b0050": {
+   "zh": "我们提出 Flickr30k-Counting 来增强 LMM 的物体计数能力。我们同样按图 2(b) 所示策划反事实图像-字幕对。我们统计 Flickr30k-Entities Plummer et al. (2016) 中每个物体类别的边界框数量。对于两个不同的物体类别 ⟦SLOT_17⟧，我们生成正样本字幕 ⟦SLOT_18⟧「there are ⟦SLOT_19⟧ ⟦SLOT_20⟧'s and ⟦SLOT_21⟧ ⟦SLOT_22⟧'s」，例如「there are three cats and four dogs」，其中类别 ⟦SLOT_23⟧ 是「cat」，类别 ⟦SLOT_24⟧ 是「dog」。"
+  },
+  "b0051": {
+   "zh": "生成负样本字幕。"
+  },
+  "b0052": {
+   "zh": "若所选两个物体类别的所有实例在图像中都不与其他任何物体空间重叠，我们通过对物体较多的一类 ⟦SLOT_25⟧ 减一、对物体较少的一类 ⟦SLOT_26⟧ 加一来生成相应的负样本字幕，例如 ⟦SLOT_27⟧「there are four cats and three dogs」。这强制了一种困难的反事实形式：正样本中的数字在负样本中被反转。"
+  },
+  "b0053": {
+   "zh": "然而在多数情况下，图像中的物体会相互重叠，我们无法保证增减规则仍能生成难反事实。例如，若一只狗与一只猫重叠，我们沿用上述规则去掉一只狗、增加一只猫，最终会得到「three cats and three dogs」。在这种情况下，我们只移除 ⟦SLOT_28⟧ 中的一个或 ⟦SLOT_29⟧ 中的一个（例如狗）以及与之重叠的所有物体。由此得到的负样本字幕例如为 ⟦SLOT_30⟧「there are two cats and three dogs.」"
+  },
+  "b0054": {
+   "zh": "生成负样本图像。"
+  },
+  "b0055": {
+   "zh": "在物体不重叠的情形下，我们直接让 GLIGEN Li et al. (2023) 在被加类别 ⟦SLOT_31⟧ 中修复出一个新物体，位置放在被减类别 ⟦SLOT_32⟧ 中某个物体的边界框处。否则，我们用 GLIGEN 移除目标物体，并以某个通用类别的物体替换。我们选用「植物」这一类别做替换，因为植物几乎可以出现在任何自然场景中，无论室外还是室内；我们发现 GLIGEN 在为每张图像 ⟦SLOT_33⟧ 的背景做修复、生成对应负样本图像 ⟦SLOT_34⟧ 时表现良好。更多细节见附录 C。"
+  },
+  "b0056": {
+   "zh": "3.4 改进语义组合推理"
+  },
+  "b0057": {
+   "zh": "现有工作 Yuksekgonul et al. (2023); Le et al. (2023) 用基于规则的方法为语义组合推理生成负样本图像/字幕，得到的负样本不够理想，例如由「A dog with black fur」产生「A dog with blue fur」这类不常见的负样本字幕。我们提出 Flickr30k-Attributes（如图 2(c) 所示），它用 GPT-4V OpenAI (2023c) 生成难负样本字幕，并用 DALLE-3 Betker et al. (2023) 生成对应的高质量负样本图像。我们从原始 Flickr30k 数据集 Young et al. (2014) 中抽取每条最详细的首条字幕 ⟦SLOT_35⟧，其对应图像为 ⟦SLOT_36⟧。"
+  },
+  "b0058": {
+   "zh": "生成负样本字幕。"
+  },
+  "b0059": {
+   "zh": "为生成高质量负样本字幕，我们借助 GPT-4V，同时输入正样本图像 ⟦SLOT_37⟧ 与字幕 ⟦SLOT_38⟧ 来生成负样本字幕 ⟦SLOT_39⟧。为了让 GPT-4V 知道物体的位置，我们把边界框 ⟦SLOT_40⟧ 叠加到原始正样本图像上 Cai et al. (2024)，并把这张标注过的图像也一并送入 GPT-4V。我们提示 GPT-4V 生成三类字幕，包括（i）替换名词、（ii）替换形容词、（iii）交换任意两个短语、名词或形容词。例如，给定原始字幕 ⟦SLOT_41⟧「a man wearing a black shirt and blue jeans」，GPT-4V 可以生成如下负样本 ⟦SLOT_42⟧：（i）「a man wearing a black jacket and blue jeans」、（ii）「a man wearing a black shirt and red jeans」、（iii）「a man wearing a blue shirt and black jeans」。给 GPT-4V 的详细提示见附录 A。"
+  },
+  "b0060": {
+   "zh": "生成负样本图像。"
+  },
+  "b0061": {
+   "zh": "我们直接把 GPT-4V 策划好的字幕 ⟦SLOT_43⟧ 送入当前最强的文本到图像生成模型 DALLE-3 Betker et al. (2023)，生成高质量负样本图像 ⟦SLOT_44⟧。"
+  },
+  "b0062": {
+   "zh": "3.5 微调方法"
+  },
+  "b0063": {
+   "zh": "如图 3 所示，CounterCurate 可用于微调对比式 Radford et al. (2021) 与生成式 Liu et al. (2023b) 多模态模型。为微调 CLIP 这类对比式模型，我们采样 ⟦SLOT_45⟧ 个正样本图文对及其对应的负样本图文对，构成一个批次 ⟦SLOT_46⟧，如图 3(a) 所示。我们把这一方法称为分组（Grouping），它迫使模型把正样本对与对应的负样本区分开，实验中证明颇为有效。我们还在第 4.5 节对这一方法的有效性做了详细分析。训练损失与原始相同，即用交叉熵损失最大化相似矩阵的对角元素、最小化所有其他元素。"
+  },
+  "b0064": {
+   "zh": "对 LLaVA Liu et al. (2023b); Liu et al. (2023a); Liu et al. (2024) 这类生成式模型，我们把数据重格式化为对话形式，并沿用其原有的训练范式做微调，如图 3(b) 所示。训练损失为原始的下一词元预测损失。"
+  },
+  "b0065": {
+   "zh": "4 实验"
+  },
+  "b0067": {
+   "zh": "图 5：模型在用本方法 CounterCurate 微调前后的组合推理能力定性示例。错误答案以红色标出。本方法同时增强了 CLIP 与 LLaVA 的推理能力。"
+  },
+  "b0068": {
+   "zh": "我们用 CounterCurate 构建的三个数据集——Flickr30k-Positions、Flickr30k-Counting 与 Flickr30k-Attributes——来微调对比式与生成式模型。具体地，我们选取两个常见的多模态模型作为基座：在 LAION-2B Schuhmann et al. (2022) 上预训练的 OpenCLIP 中的 ViT-B/32（Ilharco et al. (2021)），以及 LLaVA-1.5 Liu et al. (2023a)。结果的概览见图 5。"
+  },
+  "b0069": {
+   "zh": "4.1 实现细节"
+  },
+  "b0070": {
+   "zh": "在为 Flickr30k-Attributes 生成图像时，我们为 DALLE-3 Betker et al. (2023) 指定 hd 质量与 natural 风格。我们分别在 1 块与 4 块 NVIDIA A100 80GB GPU 上训练 CLIP Radford et al. (2021); Ilharco et al. (2021) 与 LLaVA Liu et al. (2023a)。微调 CLIP 时，我们把 Adam 优化器的 ⟦SLOT_47⟧ 与 ⟦SLOT_48⟧ 设为 0.9 与 0.98，权重衰减设为 0.2。"
+  },
+  "b0071": {
+   "zh": "对 Flickr30k-Attributes，我们以 1e-5 的学习率、256 的批大小与混合精度训练 CLIP 模型 5 个轮次。对 LLaVA-1.5，我们用 2e-6 的学习率与 16 的批大小训练 1 个轮次。对 Flickr30k-Positions，CLIP 使用 2.56e-5 的学习率与 1024 的批大小，在不分组时训练 50 个轮次、分组时训练 15 个轮次。对 Flickr30k-Counting，CLIP 以 5e-5 的学习率训练。Flickr30k-Positions 与 Flickr30k-Counting 的 LLaVA 参数相同，学习率为 2.56e-5，批大小为 16。"
+  },
+  "b0072": {
+   "zh": "4.2 位置理解评测"
+  },
+  "b0073": {
+   "zh": "据我们所知，我们是首个全面评测多模态模型理解物体之间左右和/或上下位置关系能力的工作。我们在 Flickr30k-Positions 上做 4:1 的训练-测试划分，并用测试子集作为基准。我们进一步把该数据集分成三个子集：仅左右、仅上下，以及两者兼有。我们通过比较数据集中每组数据的四个图像-字幕对 ⟦SLOT_49⟧ 之间的 CLIP 相似度分数来评测微调后的 CLIP 模型，其中 ⟦SLOT_50⟧ 分别表示正样本与负样本的图像/字幕。若 ⟦SLOT_51⟧，模型得 0.5 分；若 ⟦SLOT_52⟧，再得 0.5 分，其中 ⟦SLOT_53⟧ 是字幕 ⟦SLOT_54⟧ 与图像 ⟦SLOT_55⟧ 之间的 CLIP 余弦相似度分数。对 LLaVA-1.5，我们简单地向模型查询，让它在给定真值图像时于正样本与负样本字幕之间做出选择。结果见表 1。"
+  },
+  "b0075": {
+   "zh": "表 1：CLIP 与 LLaVA 在 Flickr30k-Positions 测试数据集上的性能。「LR」表示左右，「AB」表示上下。"
+  },
+  "b0076": {
+   "zh": "正如我们所假设的，LMM 确实在很大程度上对图像中物体的位置不敏感，这在原始 CLIP 的表现上尤为明显——它只比随机猜测略好。原始 LLaVA-1.5 的表现也只是稍好一些。"
+  },
+  "b0077": {
+   "zh": "在用 Flickr30k-Positions 的训练划分微调之后，两个模型在所有子集上的表现都显著变好。具体地，在混合情形下 CLIP 提升 33 个百分点，LLaVA 则达到 96% 的高准确率。这些结果表明，CounterCurate 对不同类型的多模态模型都很有效。"
+  },
+  "b0078": {
+   "zh": "4.3 物体计数评测"
+  },
+  "b0079": {
+   "zh": "这里我们展示在 Flickr30k-Counting 上微调后模型的计数能力。我们选取另一个数据集——PointQA-LookTwice Mani et al. (2022)——作为评测基准。具体地，PointQA-LookTwice 的设计目的是向模型询问一个数量 ⟦SLOT_56⟧：即物体类别 ⟦SLOT_57⟧ 在图像 ⟦SLOT_58⟧ 中的出现次数。我们对这一数据集做重格式化：对每个 ⟦SLOT_59⟧，我们生成正样本字幕 ⟦SLOT_60⟧「There are ⟦SLOT_61⟧ ⟦SLOT_62⟧'s」与负样本字幕 ⟦SLOT_63⟧「There are ⟦SLOT_64⟧ ⟦SLOT_65⟧'s」。例如，给定 ⟦SLOT_66⟧「there are 3 dogs」，⟦SLOT_67⟧ 就是「there are 4 dogs」。与第 4.2 节类似，我们按如下标准判定模型预测正确：（i）CLIP 呈现 ⟦SLOT_68⟧；（ii）LLaVA-1.5 正确选择了 ⟦SLOT_69⟧ 对应的选项。结果见表 2。"
+  },
+  "b0081": {
+   "zh": "表 2：CLIP 与 LLaVA 在由 PointQA-LookTwice 构建的基准上的比较。"
+  },
+  "b0082": {
+   "zh": "CLIP 的表现略好于随机猜测，而 LLaVA-1.5 竟然比随机还差，这颇出人意料。尽管如此，用 Flickr30k-Counting 微调仍提升了两个模型的计数能力。这说明在 CounterCurate 中使用 GLIGEN 生成的负样本图像来应对计数问题是有效的。我们在附录 F 中做了进一步的消融研究。"
+  },
+  "b0084": {
+   "zh": "表 3：CLIP 与 LLaVA-1.5 在 SugarCrepe 上微调前后的性能比较。我们还加入 NegCLIP Yuksekgonul et al. (2023) 与 GPT-4V OpenAI (2023c) 作为对比式与生成式多模态模型的强基线。最佳性能以粗体标出，括号内为相对 CLIP 与 LLaVA 的提升幅度。相比原始 CLIP/LLaVA-1.5 模型以及 GPT-4V 等先进模型，CounterCurate 都带来了显著的性能提升。"
+  },
+  "b0085": {
+   "zh": "4.4 语义组合推理评测"
+  },
+  "b0086": {
+   "zh": "与第 4.3 节的设置类似，我们在策划好的 Flickr30k-Attributes 上同时微调 CLIP 与 LLaVA-1.5。我们用另一个常用基准 SugarCrepe Hsieh et al. (2023) 来评测模型的语义组合推理能力。SugarCrepe 有三大类别，见表 3。评测协议也与第 4.3 节相同。我们选取 NegCLIP Yuksekgonul et al. (2023) 与 GPT-4V OpenAI (2023c) 分别作为对比式与生成式模型的代表性强基线。"
+  },
+  "b0087": {
+   "zh": "我们观察到 CLIP 与 LLaVA-1.5 在平均意义与分类别意义上都有显著改进。汇总结果见表 3，附录 G 给出更详细的分数。"
+  },
+  "b0088": {
+   "zh": "例如，经 CounterCurate 微调的 CLIP 在平均意义上以及两个主要类别上都超过了 NegCLIP。需要指出的是，微调数据的来源 Flickr30k-Entities 所含的图文对远少于 NegCLIP 训练所用的 COCO-Captions（约 10 万图文对）。此外，在提示 GPT-4V 生成负样本字幕时，我们有意让它在不存在可行「交换」条件时输出 None。这两个因素使我们的数据策划流程为「swap」类别产出的负样本少得多，约为 2.5k。我们认为，把本流程应用于能生成更多「swap」属性的其他数据集，应当能带来更大的性能提升。"
+  },
+  "b0089": {
+   "zh": "LLaVA-1.5 在微调后于三个类别上也都有更好的表现。同样出人意料的是，我们微调后的模型在平均意义上以及其中两个类别上都超过了 SOTA LMM GPT-4V，其中「add」类别的提升最为显著。我们还在附录 E 中观察到在其他数据集 Diwan et al. (2022) 上的改进。LLaVA 的这些可观结果——例如在 SugarCrepe 上取得 94.17% 的分数超过 GPT-4V，以及在 Flickr30k-Positions 的上下子集上相对 GPT-4V 提升 10%——说明 CounterCurate 有效提升了 LLaVA 的语义与物理推理能力，因此我们认为 CounterCurate 也是改进 GPT-4V 这类 SOTA LMM 的一个可行候选方案。"
+  },
+  "b0090": {
+   "zh": "与先前的基于规则方法或较弱的负样本生成模型相比，CounterCurate 表现更优。这些显著改进说明，用准确且困难的负样本做微调十分重要，也再次证明了我们的数据策划与微调流程在提升对比式与生成式模型的语义反事实理解上的有效性。"
+  },
+  "b0091": {
+   "zh": "4.5 深入分析"
+  },
+  "b0092": {
+   "zh": "负样本图像、负样本字幕与分组的有效性"
+  },
+  "b0093": {
+   "zh": "CounterCurate 的核心是：（i）同时用负样本图像与负样本字幕微调模型；（ii）用分组帮助模型更好地区分正样本对与负样本。这里我们做严格的消融研究来证明每个组件的必要性。我们使用与微调 CLIP 并在 Flickr30k-Positions 上评测时相同的训练参数与测试方法。"
+  },
+  "b0095": {
+   "zh": "表 4：证明使用（i）负样本图像、（ii）负样本字幕与（iii）分组策略之必要性的消融研究。模型在 Flickr30k-Positions 数据集上微调并评测。"
+  },
+  "b0096": {
+   "zh": "如表 4 所示，尽管单独使用负样本字幕或负样本图像都能改善性能，但同时用两者做微调时分数提升显著。这说明同时使用负样本字幕与负样本图像的 CounterCurate 是取得理想提升所必需的。相比不使用该策略，分组也带来了进一步提升。"
+  },
+  "b0097": {
+   "zh": "DALLE-3 生成图像的正确性"
+  },
+  "b0098": {
+   "zh": "我们从 Flickr30k-Attributes 的负样本字幕所生成的 DALLE-3 图像中随机抽取 300 张，请人工标注者检查生成的图像是否与负样本字幕一致（匹配）。我们得到 84.67% 的一致性分数，说明 DALLE-3 生成的图像质量很高。"
+  },
+  "b0100": {
+   "zh": "表 5：在原始基准上评测我们微调后的 LLaVA-1.5。"
+  },
+  "b0102": {
+   "zh": "表 6：原始 CLIP 模型与 CounterCurate 微调后的 CLIP 在 MSCOCO 数据集上图文检索精确率的比较。后者在保持整体性能的同时，文本检索精确率略有提升。"
+  },
+  "b0103": {
+   "zh": "零样本视觉语言任务上的性能"
+  },
+  "b0104": {
+   "zh": "我们评测在反事实数据上微调是否会损害原有的零样本视觉语言性能。对 CLIP，我们在 MSCOCO Lin et al. (2014) 上比较了原始 CLIP 模型与在 Flickr30k-Attributes 上经过 CounterCurate 微调的模型在图像与文本检索上的表现。表 6 的结果显示，平均来看，经 CounterCurate 微调的模型与原始 CLIP 模型相比性能基本持平，仅有细微差异。在附录 I 中，我们还展示了用 CounterCurate 微调能显著提升 CLIP 在若干常见下游任务上的性能。对 LLaVA，我们先把 Flickr30k-Attributes 与 LLaVA 原有的训练数据混合，再微调模型。在 Liu et al. (2023a) 所用的相同基准上与原始 LLaVA-1.5 比较（表 5），CounterCurate 微调后的 LLaVA 整体表现相当（甚至略好）。从这些研究可以看出，用 Flickr30k-Attributes 提升 LMM 的语义组合推理，并不会损害对比式与生成式模型的下游性能。"
+  },
+  "b0105": {
+   "zh": "5 结论"
+  },
+  "b0106": {
+   "zh": "总而言之，CounterCurate 显著增强了多模态对比式与生成式模型的视觉语言组合推理能力。这一成果源于两方面的改进：一是弥补了物理定位推理被忽视的空白，二是挖掘了用文本与图像生成模型做语义反事实微调的潜力。我们相信这些贡献能为组合推理的后续研究铺平道路。"
+  },
+  "b0107": {
+   "zh": "致谢"
+  },
+  "b0108": {
+   "zh": "本工作部分受 NSF CAREER IIS2150012、Sony Focused Research award，以及由韩国政府（MSIT）资助的信息通信技术规划与评估研究所（IITP）项目（No. 2022-0-00871，面向 AI 智能体协作的 AI 自主性与知识增强技术开发；No. RS2022-00187238，面向高效预训练的韩语大语言模型技术开发）与 Microsoft Accelerate Foundation Models Research Program 支持。"
+  },
+  "b0109": {
+   "zh": "本研究部分由威斯康星大学麦迪逊分校文理学院荣誉项目通过 Trewartha 高级学位论文研究基金资助。"
+  },
+  "b0110": {
+   "zh": "局限性"
+  },
+  "b0111": {
+   "zh": "我们承认 DALLE-3 与 GPT4-V 是闭源模型，这使得系统分析其行为变得困难。"
+  },
+  "b0112": {
+   "zh": "参考文献"
+  },
+  "b0155": {
+   "zh": "附录"
+  },
+  "b0157": {
+   "zh": "表 7：表 3 的详细版本：各子类别上的性能比较。"
+  },
+  "b0158": {
+   "zh": "附录 A 面向 GPT-4V 的 Flickr30k-Attributes 提示指引"
+  },
+  "b0159": {
+   "zh": "作为数据集本身的一个细节，我们从带标注的 Flickr30k-Entities 数据集 Plummer et al. (2016) 中抽取了实体化字幕 ⟦SLOT_70⟧。实体化字幕在原始字幕上添加了方括号，使我们与 LMM 都能指代字幕中物体 ⟦SLOT_71⟧ 的每个短语，每个短语对应唯一 ID ⟦SLOT_72⟧。"
+  },
+  "b0160": {
+   "zh": "我们提供给 GPT-4V OpenAI (2023c) 的确切提示指引如下："
+  },
+  "b0161": {
+   "zh": "给你一张图像、同一张带边界框的图像、它对应的字幕，以及该字幕的增强形式。它们的格式如下：原始字幕：A child in a pink dress is helping a baby in a blue dress climb up a set of stairs in an entry way. 增强字幕：[/EN#1/people A child] in [/EN#2/clothing a pink dress] helping [/EN#3/people a baby] in [/EN#4/clothing a blue dress] climb up [/EN#5/other a set of stairs] in [/EN#6/scene an entry way]. 在增强字幕中并没有新信息，只是每个「实体」都由一对方括号标出。多数实体各自对应一个或多个边界框，这些边界框会被指定。例如，句子中的实体 1 是「A child」，以标签 [/EN#1/people …] 标出。「people」说明该实体的类型。若实体为「other」，则不施加任何限制。"
+  },
+  "b0162": {
+   "zh": "你的任务是："
+  },
+  "b0163": {
+   "zh": "生成一条字幕，改变恰好一个实体中所讨论的物体。你必须保证新物体与标签中指定的原物体属于同一实体类型。例如：[/EN#1/people A child] => [/EN#1/people An adult] 是允许的，但 [/EN#1/people A child] => [/EN#1/people A cat] 是不允许的，因为猫不属于「people」；"
+  },
+  "b0164": {
+   "zh": "生成一条字幕，改变恰好一个实体中描述该物体的限定成分（如形容词或量词）。例如：[/EN#2/clothing a pink dress] => [/EN#2/clothing a green dress]。"
+  },
+  "b0165": {
+   "zh": "如有可能，生成一条字幕，反转其中两个实体或它们的限定成分，使得原句结构不变，却产出一条负向提示。例如，给定两个实体「a green dress」与「a blue blouse」，你可以交换两个实体的顺序，或交换形容词，得到「a blue dress」与「a green blouse」。若无法生成，则报告 None。"
+  },
+  "b0166": {
+   "zh": "总之，新描述必须满足以下全部要求："
+  },
+  "b0167": {
+   "zh": "1. 属性的改变必须差异足够大，使新描述不准确；但它也应有一定相关性，从而对 AI 模型构成挑战。"
+  },
+  "b0168": {
+   "zh": "2. 与原始描述相比，新描述只能在一种属性上有所不同。所有其他细节都必须保持不变。"
+  },
+  "b0169": {
+   "zh": "3. 新描述必须模仿原始描述的句子结构。"
+  },
+  "b0170": {
+   "zh": "4. 新描述必须流畅、合乎逻辑且语法正确。"
+  },
+  "b0171": {
+   "zh": "5. 仔细查看图像，给出在物体位置、尺寸及其与整体场景的关系上都合理的负样本字幕。"
+  },
+  "b0172": {
+   "zh": "6. 提出有挑战性的（足够困难的）负样本字幕，使大型多模态文本生成模型难以区分原始字幕与负样本字幕。"
+  },
+  "b0173": {
+   "zh": "以下是一些示例，你应遵循其输出格式：原始字幕：A child in a pink dress is helping a baby in a blue dress climb up a set of stairs in an entry way. 增强字幕：[/EN#1/people A child] in [/EN#2/clothing a pink blouse] helping [/EN#3/people a baby] in [/EN#4/clothing a blue dress] climb up [/EN#5/other a set of stairs] in [/EN#6/scene an entry way]. 边界框：#1: purple 你的回答：{“noun”: {“action”: (1, “a child”, “an adult”), “caption”: “An adult in a green dress is helping a baby in a blue dress climb up a set of stairs in an entry way.”}}, “adjective”: {“action”: (2, “a pink dress”, “a green dress”), “caption”: “A child in a green dress is helping a baby in a blue dress climb up a set of stairs in an entry way.”}}, “reverse”: {“action”: (2, 4), “caption”: “A child in a blue blouse is helping a baby in a pink dress climb up a set of stairs in an entry way.”}}"
+  },
+  "b0174": {
+   "zh": "附录 B 面向 GPT-4V 的 Flickr30k-Positions（上下）提示指引"
+  },
+  "b0175": {
+   "zh": "为给 Flickr30k-Positions 的上下子集生成高质量反事实图像，我们使用改写技术为 GLIGEN Li et al. (2023) 生成可信且细致的字幕。具体地，我们用如下提示调用 GPT-4V OpenAI (2023c)："
+  },
+  "b0176": {
+   "zh": "我会给你一条格式为「A is above B.」的字幕。你需要把句子扩展，使得「A is above B」的含义得以保留，并且你的回答对人类理解你所描述的内容而言是合理的。不要让回答太长；一个长句就够了。例如，如果我给你「a man is under a dog」，一个好的回答是「there is a man resting on the ground, and there is a dog lying above him.」一个限制条件：A 与 B 不重叠。这意味着，如果我让你扩展「a hat is below water」，你不能假定帽子在水下。记住，你的回答中必须同时包含 A 与 B，就像我的示例那样。"
+  },
+  "b0177": {
+   "zh": "附录 C 物体移除与植物修复的对比"
+  },
+  "b0178": {
+   "zh": "这里我们解释为何在为 Flickr30k-Counting 策划数据时不使用物体移除工具，并在图 6 中给出一个例子。我们使用了一个公开 Github 仓库 https://github.com/treeebooor/object-remove 中的工具，并与 GLIGEN Li et al. (2023) 的修复结果做对比。我们发现一个明显的规律：当物体移除失败时，GLIGEN 的修复大多能成功。"
+  },
+  "b0180": {
+   "zh": "（a）原始图像"
+  },
+  "b0182": {
+   "zh": "（b）物体移除"
+  },
+  "b0184": {
+   "zh": "（c）GLIGEN 修复出的植物"
+  },
+  "b0185": {
+   "zh": "图 6：我们希望完整移除/遮盖图像（a）右侧那个带着滑板的人。物体移除只部分达成了目标，并使图像变得很不自然；而 GLIGEN 把一株植物完美地修复进图像，同时保留了图像中的其余信息。"
+  },
+  "b0186": {
+   "zh": "附录 D 上下子集是否存在过拟合？"
+  },
+  "b0187": {
+   "zh": "在第 4.2 节，我们观察到两个模型在上下子集上表现更好，其中 CLIP Radford et al. (2021); Ilharco et al. (2021) 的提升尤为显著。然而我们认为这并非由过拟合导致，因为「A is above B」字幕与「A is below B」字幕的数量相等，且两种字幕并不总是分别对应 GLIGEN Li et al. (2023) 生成的图像或 Flickr30k Young et al. (2014) 的原始图像。由于训练集与测试集是在同一数据集上打乱后划分的，这保证了两个模型都无法从中找到某种规律，例如靠识别生成图像与原始图像来据此选择答案。另一项证据是，LLaVA-1.5 Liu et al. (2023a) 在微调后能在两个子集上表现相当，说明这两个子集的定义至少与其他子集一样明确。我们也欢迎其他人使用我们的数据集作为基准，测试其模型理解图像中物体位置的能力。"
+  },
+  "b0188": {
+   "zh": "附录 E Winoground 数据集上的结果"
+  },
+  "b0189": {
+   "zh": "我们在 Winoground Diwan et al. (2022) 上评测了我们的 LLaVA-1.5 Liu et al. (2023a)。Winoground 专门通过人工标注的困难图文配对问题来检验模型视觉语言能力的上限。我们的模型在用 Flickr30k-Attributes 微调之后，在 Winoground 的文本分数上取得了显著改进。"
+  },
+  "b0191": {
+   "zh": "表 8：我们用 Flickr30k-Attributes 微调后的 LLaVA-1.5 模型，在困难的视觉语言推理数据集 Winoground 上取得显著改进。"
+  },
+  "b0192": {
+   "zh": "附录 F Flickr30k-Counting 上的更多消融"
+  },
+  "b0193": {
+   "zh": "我们还测试了在用 Flickr30k-Counting 微调 CLIP 时不使用任何生成的负样本图文对、以及不使用分组的情形。在 PointQA-LookTwice 上的评测结果见表 9。两种消融带来的改进都小得多，说明使用分组与负样本图文对在提升模型计数能力上更为有效。"
+  },
+  "b0195": {
+   "zh": "表 9：在用 Flickr30k-Counting 训练的 CLIP 模型上的更多消融。给出不使用任何负样本的分数与不使用分组的分数。"
+  },
+  "b0196": {
+   "zh": "附录 G SugarCrepe 上的更多结果"
+  },
+  "b0197": {
+   "zh": "表 7 给出了 SugarCrepe 每个子类别上的性能改进。总体而言，CounterCurate 相对两个基座模型 CLIP Radford et al. (2021) 与 LLaVA Liu et al. (2023b) 都有明显增益。我们还指出，SugarCrepe Hsieh et al. (2023) 中的「swap object」类别只有 246 个条目，而其他类别有 500+、1000+ 个条目；这意味着该类别上的性能可能因训练过程而出现更大波动。"
+  },
+  "b0198": {
+   "zh": "附录 H 增补比例"
+  },
+  "b0199": {
+   "zh": "我们研究若在微调时减少所用策划数据的量，我们的 Flickr30k-Attributes 数据集能给模型带来多大效果。正如我们在表 10、尤其是表 11 中观察到的，使用 100% 的数据集能为 LLaVA 与 CLIP 的语义组合推理能力带来最大的提升。这促使我们未来用同样的方法策划更多数据，从而得到更强的模型。"
+  },
+  "b0201": {
+   "zh": "表 10：在微调 LLaVA-1.5 上的增补比例消融研究。"
+  },
+  "b0203": {
+   "zh": "表 11：在微调 CLIP 上的增补比例消融研究。"
+  },
+  "b0204": {
+   "zh": "附录 I CLIP 下游任务的更多评测"
+  },
+  "b0205": {
+   "zh": "表 12 在若干常见下游任务上比较了原始 CLIP 与在 Flickr30k-Attributes 上经 CounterCurate 微调的 CLIP。结果显示 CounterCurate 总体上提升了性能。"
+  },
+  "b0207": {
+   "zh": "表 12：我们微调后的 CLIP 与 LAION-2b 预训练 CLIP 在常见下游任务上的比较。"
+  }
+ }
+}

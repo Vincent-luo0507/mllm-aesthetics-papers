@@ -1,0 +1,1984 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Flow-GRPO: Training Flow Matching Models via Online RL"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "We propose Flow-GRPO, the first method to integrate online policy gradient reinforcement learning (RL) into flow matching models. Our approach uses two key strategies: (1) an ODE-to-SDE conversion tha"
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: (a) GenEval performance rises steadily throughout Flow-GRPO’s training and outperforms GPT-4o. (b) Image quality metrics on DrawBench [1] remain essentially unchanged. (c) Human Preference Scores on DrawBench improves after training. Results show that Flow-GRPO enhances the desired capability while preserving image quality and exhibiting minimal reward-hacking."
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "Flow matching [2, 3] models have become dominant in image generation [4, 5] due to their solid theoretical foundations and strong performance in producing high quality images. However, they often struggle with composing complex scenes involving multiple objects, attributes, and relationships [6, 7], as well as text rendering [8]. At the same time, online reinforcement learning (RL) [9] has proven highly effective in enhancing the reasoning capabilities of large language models (LLMs) [10, 11]. While previous research has mainly focused on applying RL to early diffusion-based generative models [12] and offline RL techniques like direct preference optimization [13] for flow-based generative models [14, 15], the potential of online RL in advancing flow matching generative models remains largely unexplored. In this study, we explore how online RL can be leveraged to effectively improve flow matching models."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "Training flow models with RL presents several critical challenges: (1) Flow models rely on a deterministic generative process based on ODEs [3], meaning they cannot sample stochastically during inference. In contrast, RL relies on stochastic sampling to explore the environment, learning by trying different actions and improving based on rewards. This need for stochasticity in RL conflicts with the deterministic nature of flow matching models. (2) Online RL depends on efficient sampling to collect training data, but flow models typically require many iterative steps to generate each sample, limiting efficiency. This issue is more pronounced with large models [5, 4]. To make RL practical for tasks like image or video generation, improving sampling efficiency is essential."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "To address these challenges, we propose Flow-GRPO, which integrates GRPO [16] into flow matching models for text-to-image (T2I) generation, using two key strategies. First, we adopt the ODE-to-SDE strategy to overcome the deterministic nature of the original flow model. By converting the ODE-based flow into an equivalent Stochastic Differential Equation (SDE) framework, we introduce randomness while preserving the original marginal distributions. Second, to improve sampling efficiency in online RL, we apply the Denoising Reduction strategy, which reduces denoising steps during training while keeping the full schedule during inference. Our experiments show that using fewer steps maintains performance while significantly reducing data generation costs."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate Flow-GRPO on T2I tasks with various reward types. (1) Verifiable rewards, using the GenEval [17] benchmark and visual text rendering task. GenEval includes compositional image generation tasks (e.g., generating specific object counts, colors, and spatial relationships), which can be automatically assessed with object detection methods. Flow-GRPO improves the accuracy of Stable Diffusion 3.5 Medium (SD3.5-M) [4] from 63% to 95% on GenEval, outperforming the state-of-the-art GPT-4o [18] model. For visual text rendering, SD3.5-M’s accuracy increases from 59% to 92%, greatly enhancing its text generation ability. (2) Model-based rewards, such as the human preference Pickscore [19] reward. These results show that our framework is task independent, demonstrating its generalizability and robustness. Importantly, all improvements are achieved with very little reward hacking, as demonstrated in Figure 1."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "To summarize, the contributions of Flow-GRPO are as follows:"
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "li",
+   "en": "• We are the first to introduce GRPO to flow matching models by converting deterministic ODE sampling into SDE sampling, showing the effectiveness of online RL for T2I tasks. Flow-GRPO improves SD3.5-M accuracy from 63% to 95% without noticeably compromising image quality."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "li",
+   "en": "• We find that online RL for flow matching models does not require the standard long timesteps for training sample collection. By using fewer denoising steps during training and retaining the original steps during testing, we can significantly accelerate the training process."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "li",
+   "en": "• We show that the Kullback-Leibler (KL) constraint effectively prevents reward hacking, where reward increases at the cost of image quality or diversity. KL regularization is not empirically equivalent to early stopping. With a proper KL term, we can match the high reward of the KL-free version while preserving image quality, albeit with longer training."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "h4",
+   "en": "RL for LLM."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "Online RL has effectively improved the reasoning abilities of LLMs, such as DeepSeek-R1 [10] and OpenAI-o1 [11], using policy gradient methods like PPO [20] or value-free GRPO [16]. GRPO is more memory efficient by removing the need for a value network, so we adopt it in this work. PPO can also be applied to flow matching in a similar way."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h4",
+   "en": "Diffusion and Flow Matching."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "Diffusion models [21, 22, 23] add Gaussian noise to data and train a neural network to reverse the process. Sampling uses discrete DDPM steps or probability flow SDE solvers to generate high-fidelity outputs. Flow matching [2, 3] learns a continuous-time normalizing flow by directly matching the velocity field, allowing efficient deterministic sampling with only a few ODE steps. It achieves competitive FID with far fewer denoising steps than diffusion, making it the dominant choice in recent image [4, 5] and video [24, 25, 26, 27] generation models. Recent work [28, 29] unifies diffusion and flow models under an SDE/ODE framework. Our work builds on their theoretical foundations and introduces GRPO to flow-based models."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "h4",
+   "en": "Alignment for T2I."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "Recent efforts to align pretrained T2I models with human preferences follow five main directions: (1) direct fine-tuning with differentiable rewards [30, 31, 32, 33]; (2) Reward Weighted Regression (RWR) [34, 35, 36, 37]; (3) Direct Preference Optimization (DPO) and variants [38, 39, 14, 40, 41, 42, 43, 44, 45, 46]; (4) PPO-style policy gradients [47, 48, 49, 50, 51, 52]; (5) training-free alignment methods [53, 54, 55]. These methods have successfully aligned T2I models with human preferences, improving aesthetics and semantic consistency. Building on this progress, we introduce GRPO for flow matching models, the backbone of today’s state-of-the-art T2I systems. Concurrent work [56] applies GRPO to text-to-speech flow models, but instead of converting the ODE to an SDE to inject stochasticity, they reformulate velocity prediction by estimating a Gaussian distribution (predicting both the mean and variance of velocity), which requires retraining the pre-trained model. Another study [57] also explores SDE-based stochasticity but focuses on inference-time scaling."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Preliminaries"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we introduce the mathematical formulation of flow matching and describe how the denoising process can be mapped as a multi-step MDP."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "h4",
+   "en": "Flow Matching."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "Let ⟦SLOT_0⟧ be a data sample from the true distribution, and ⟦SLOT_1⟧ denote a noise sample. Recent advanced image-generation models (e.g., [4, 5]) and video-generation models (e.g., [24, 26, 25, 27]) adopt the Rectified Flow [3] framework, which defines the “noised” data ⟦SLOT_2⟧ as"
+  },
+  {
+   "id": "b0025",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒙 t = ( 1 − t ) ​ 𝒙 0 + t ​ 𝒙 1 , {\\bm{x}}_{t}=(1-t)\\,{\\bm{x}}_{0}\\;+\\;t\\,{\\bm{x}}_{1}, (1)"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "for ⟦SLOT_3⟧. Then a transformer model are trained to directly regress the velocity field ⟦SLOT_4⟧ by minimizing the Flow Matching objective [2, 3]:"
+  },
+  {
+   "id": "b0027",
+   "t": "keep",
+   "w": "table",
+   "en": "ℒ ⁡ ( θ ) = 𝔼 t , 𝒙 0 ∼ X 0 , 𝒙 1 ∼ X 1 ​ [ ‖ 𝒗 − 𝒗 θ ​ ( 𝒙 t , t ) ‖ 2 ] , \\mathcal{L}(\\theta)=\\mathbb{E}_{t,\\;{\\bm{x}}_{0}\\sim X_{0},\\;{\\bm{x}}_{1}\\sim X_{1}}\\bigl[\\;\\|{\\bm{v}}\\;-\\;{\\bm{v}}_{\\theta}"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "where the target velocity field is ⟦SLOT_5⟧."
+  },
+  {
+   "id": "b0029",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Overview of Flow-GRPO. Given a prompt set, we introduce an ODE-to-SDE strategy to enable stochastic sampling for online RL. With Denoising Reduction (only T = 10 steps), we efficiently gather low-quality but still informative trajectories. Rewards from these trajectories feed the GRPO loss, which updates the model online and yields an aligned policy."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "h4",
+   "en": "Denoising as an MDP."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in [12], the iterative denoising process in flow matching models can be formulated as a Markov Decision Process (MDP) ⟦SLOT_6⟧. The state at step ⟦SLOT_7⟧ is ⟦SLOT_8⟧, the action is the denoised sample ⟦SLOT_9⟧ predicted by the model, and the policy is ⟦SLOT_10⟧. The transition is deterministic: ⟦SLOT_11⟧, and the initial state distribution is ⟦SLOT_12⟧, where ⟦SLOT_13⟧ is the Dirac delta distribution centered at ⟦SLOT_14⟧. The reward is only given at the final step: ⟦SLOT_15⟧ if ⟦SLOT_16⟧, and 0 otherwise."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Flow-GRPO"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we present Flow-GRPO, which enhances flow models using online RL. We begin by revisiting the core idea of GRPO [16] and adapting it to flow matching. We then show how to convert the deterministic ODE sampler into a SDE sampler with the same marginal distribution, introducing the stochasticity needed for applying GRPO. Finally, we introduce Denoise Reduction, a practical sampling strategy that significantly speeds up training without sacrificing performance."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "h4",
+   "en": "GRPO on Flow Matching."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "RL aims to learn a policy that maximizes the expected cumulative reward. This is often formulated as optimizing a policy ⟦SLOT_17⟧ with a regularized objective:"
+  },
+  {
+   "id": "b0037",
+   "t": "keep",
+   "w": "table",
+   "en": "max θ 𝔼 ( 𝒔 0 , 𝒂 0 , … , 𝒔 T , 𝒂 T ) ∼ π θ [ ∑ t = 0 T ( R ( 𝒔 t , 𝒂 t ) − β D KL ( π θ ( ⋅ ∣ 𝒔 t ) | | π ref ( ⋅ ∣ 𝒔 t ) ) ) ] . \\max_{\\theta}\\mathbb{E}_{({\\bm{s}}_{0},{\\bm{a}}_{0},\\dots,{\\bm{s}}_{T"
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "Unlike other policy based methods like PPO [20], GRPO [16] provides a lightweight alternative, which introduces a group relative formulation to estimate the advantage."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "Recall that the denoising process can be formulated as an MDP, as shown in Section 3. Given a prompt ⟦SLOT_18⟧, the flow model ⟦SLOT_19⟧ samples a group of ⟦SLOT_20⟧ individual images ⟦SLOT_21⟧ and the corresponding reverse-time trajectories ⟦SLOT_22⟧. Then, the advantage of the ⟦SLOT_23⟧-th image is calculated by normalizing the group-level rewards as follows:"
+  },
+  {
+   "id": "b0040",
+   "t": "keep",
+   "w": "table",
+   "en": "A ^ t i = R ⁡ ( 𝒙 0 i , 𝒄 ) − mean ​ ( { R ⁡ ( 𝒙 0 i , 𝒄 ) } i = 1 G ) std ​ ( { R ⁡ ( 𝒙 0 i , 𝒄 ) } i = 1 G ) . \\hat{A}^{i}_{t}=\\frac{R({\\bm{x}}^{i}_{0},{\\bm{c}})-\\text{mean}(\\{R({\\bm{x}}^{i}_{0},{\\b"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "GRPO optimizes the policy model by maximizing the following objective:"
+  },
+  {
+   "id": "b0042",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒥 Flow-GRPO ( θ ) = 𝔼 𝒄 ∼ 𝒞 , { 𝒙 i } i = 1 G ∼ π θ old ( ⋅ ∣ 𝒄 ) f ( r , A ^ , θ , ε , β ) , \\mathcal{J}_{\\text{Flow-GRPO}}(\\theta)=\\mathbb{E}_{{\\bm{c}}\\sim\\mathcal{C},\\{{\\bm{x}}^{i}\\}_{i=1}^{G}\\sim\\"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "where"
+  },
+  {
+   "id": "b0044",
+   "t": "keep",
+   "w": "table",
+   "en": "f ⁡ ( r , A ^ , θ , ε , β ) \\displaystyle f(r,\\hat{A},\\theta,\\varepsilon,\\beta) = 1 G ∑ i = 1 G 1 T ∑ t = 0 T − 1 ( min ( r t i ( θ ) A ^ t i , clip ( r t i ( θ ) , 1 − ε , 1 + ε ) A ^ t i ) − β D KL "
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "h4",
+   "en": "From ODE to SDE."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "GRPO relies on stochastic sampling in Eq. 4 and Eq. 5 to generate diverse trajectories for advantage estimation and exploration. Diffusion models naturally support this: the forward process adds Gaussian noise step by step, and the reverse process approximates a score-based SDE solver via a Markov chain with decreasing variance. In contrast, flow matching models use a deterministic ODE for the forward process:"
+  },
+  {
+   "id": "b0047",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝒙 t = 𝒗 t ​ d ​ t , \\mathrm{d}{\\bm{x}}_{t}={\\bm{v}}_{t}\\mathrm{d}t, (6)"
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_24⟧ is learned via the flow matching objective in Eq. 2. A common sampling method is to discretize this ODE, yielding a one-to-one mapping between successive time steps."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "This deterministic approach fails to meet the GRPO policy update requirements in two key ways: (1) ⟦SLOT_25⟧ in Eq. 5 requires computing ⟦SLOT_26⟧, which becomes computationally expensive under deterministic dynamics due to divergence estimation. (2) More importantly, RL depends on exploration. As shown in Section 5.3, reduced randomness greatly lowers training efficiency. Deterministic sampling, with no randomness beyond the initial seed, is especially problematic."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "To address this limitation, we convert the deterministic Flow-ODE from Eq. 6 into an equivalent SDE that matches the original model’s marginal probability density function at all timesteps. We outline the key process here. A detailed proof is provided in Appendix A. Following [23, 28, 29], we construct a reverse-time SDE formulation that preserves the marginal distribution:"
+  },
+  {
+   "id": "b0051",
+   "t": "keep",
+   "w": "table",
+   "en": "d 𝒙 t = ( 𝒗 t ( 𝒙 t ) − σ t 2 2 ∇ log p t ( 𝒙 t ) ) d t + σ t d 𝒘 , \\mathrm{d}{\\bm{x}}_{t}=\\left({\\bm{v}}_{t}({\\bm{x}}_{t})-\\frac{\\sigma_{t}^{2}}{2}\\nabla\\log p_{t}({\\bm{x}}_{t})\\right)\\mathrm{d}t+\\si"
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_27⟧ denotes Wiener process increments and ⟦SLOT_28⟧ control the level of stachasticity during generation. For rectified flow, Eq. 7 is specified as:"
+  },
+  {
+   "id": "b0053",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝒙 t = [ 𝒗 t ​ ( 𝒙 t ) + σ t 2 2 ​ t ​ ( 𝒙 t + ( 1 − t ) ​ 𝒗 t ​ ( 𝒙 t ) ) ] ​ d ​ t + σ t ​ d ​ 𝒘 . \\mathrm{d}{\\bm{x}}_{t}=\\left[{\\bm{v}}_{t}({\\bm{x}}_{t})+\\frac{\\sigma_{t}^{2}}{2t}\\left({\\bm{x}}_"
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "Applying Euler-Maruyama discretization yields the final update rule:"
+  },
+  {
+   "id": "b0055",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒙 t + Δ ​ t = 𝒙 t + [ 𝒗 θ ​ ( 𝒙 t , t ) + σ t 2 2 ​ t ​ ( 𝒙 t + ( 1 − t ) ​ 𝒗 θ ​ ( 𝒙 t , t ) ) ] ​ Δ ​ t + σ t ​ Δ ​ t ​ ϵ \\displaystyle{\\bm{x}}_{t+\\Delta t}={\\bm{x}}_{t}+\\left[{\\bm{v}}_{\\theta}({\\bm"
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_29⟧ injects stochasticity. We use ⟦SLOT_30⟧ in this paper, where ⟦SLOT_31⟧ is a scalar hyper-parameter that controls the noise level (See Section 5.3 for its impact on performance)."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "Eq. 9 reveals that the policy ⟦SLOT_32⟧ is an isotropic Gaussian distribution. We can easily compute the KL divergence between ⟦SLOT_33⟧ and the reference policy ⟦SLOT_34⟧ in Eq. 5 as a closed form:"
+  },
+  {
+   "id": "b0058",
+   "t": "keep",
+   "w": "table",
+   "en": "D KL ( π θ | | π ref ) = ‖ 𝒙 ¯ t + Δ ​ t , θ − 𝒙 ¯ t + Δ ​ t , ref ‖ 2 2 ​ σ t 2 ​ Δ ​ t = Δ ​ t 2 ( σ t ​ ( 1 − t ) 2 ​ t + 1 σ t ) 2 ∥ 𝒗 θ ( 𝒙 t , t ) − 𝒗 ref ( 𝒙 t , t ) ∥ 2 D_{\\text{KL}}(\\pi_{\\the"
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "h4",
+   "en": "Denoising Reduction."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "To produce high-quality images, flow models typically require many denoising steps, making data collection costly for online RL. However, we find that large timesteps are unnecessary during online RL training. We can use significantly fewer denoising steps during sample generation, while retaining the original denoising steps during inference to get high-quality samples. Note that we set the timestep ⟦SLOT_35⟧ as ⟦SLOT_36⟧ in training, while the inference timestep ⟦SLOT_37⟧ is set as the original default setting (⟦SLOT_38⟧) for SD3.5-M. Our experiments reveals that this approach enables fast training without sacrificing image quality at test time."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Experiments"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "This section empirically evaluates Flow-GRPO’s ability to improve flow matching models on three tasks. (1) Composition Image Generation: This task requires precise object arrangement and attribute control. We report the results on GenEval. (2) Visual Text Rendering: a rule-based task that evaluates the accurate rendering of the text specified in the prompt. (3) Human Preference Alignment: This task aims to align T2I models with human preferences."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 Experimental Setup"
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "We introduce three tasks, detailing their respective prompts and reward definitions. For hyperparameter details and compute resource specifications, please refer to Appendix B.3 and Appendix B.4."
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "h4",
+   "en": "Compositional Image Generation."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "GenEval [17] assesses T2I models on complex compositional prompts—like object counting, spatial relations, and attribute binding—across six difficult compositional image generation tasks. We use its official evaluation pipeline, which detects object bounding boxes and colors, then infers their spatial relations. Training prompts are generated using official GenEval scripts, which apply templates and random combinations to construct the prompt dataset. The test set is strictly deduplicated: prompts differing only in object order (e.g., \"a photo of A and B\" vs. \"a photo of B and A\") are treated as identical, and these variants are removed from the training set. Based on the base model’s initial accuracy across the six tasks, we set the prompt ratio as ⟦SLOT_39⟧. Rewards are rule-based: (1) Counting: ⟦SLOT_40⟧; (2) Position / Color: If the object count is correct, a partial reward is assigned; the remainder is granted when the predicted position or color is also correct."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "h4",
+   "en": "Visual Text Rendering [8]."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "Text is common in images such as posters, book covers, and memes, so the ability to place accurate and coherent text inside the generated images is crucial for T2I models. In our settings, we define an text rendering task, where each prompt follows the template ‘‘A sign that says ‘‘text’’. Specifically, the placeholder ‘‘text’’ is the exact string that should appear in the image. We use GPT4o to produce 20K training prompts and 1K test prompts. Following [58], we measure text fidelity with the reward ⟦SLOT_41⟧ where ⟦SLOT_42⟧ is the minimum edit distance between the rendered text and the target text and ⟦SLOT_43⟧ is the number of characters inside the quotation marks in the prompt. This reward also serves as our metric of text accuracy."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "h4",
+   "en": "Human Preference Alignment [19]."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "This task aims to align T2I models with human preferences. We use PickScore [19] as our reward model, which is based on large-scale human annotated pairwise comparisons of images generated from the same prompt. For each image and prompt pair, PickScore provides an overall score that evaluates multiple criteria, such as the alignment of the image with the prompt and its visual quality."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "h4",
+   "en": "Image Quality Evaluation Metric."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "Since the T2I model is trained to maximize a predefined reward, it is vulnerable to reward hacking, where the reward increases but image quality or diversity declines. This study aims to make online RL effective for T2I generation without noticeably compromising quality or diversity. To detect reward hacking beyond task-specific accuracy, we evaluate four automatic image quality metrics: Aesthetic Score [59], DeQA [60], ImageReward [32], and UnifiedReward [61] (see Appendix B.1 for details). All metrics are computed on DrawBench [1], a comprehensive benchmark with diverse prompts for T2I models."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: GenEval Result. Best scores are in blue, second-best in green. Results for models other than SD3.5-M are from [7] or their original papers. Obj.: Object; Attr.: Attribution."
+  },
+  {
+   "id": "b0074",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Overall Single Obj. Two Obj. Counting Colors Position Attr. Binding Diffusion Models LDM [ 62 ] 0.37 0.92 0.29 0.23 0.70 0.02 0.05 SD1.5 [ 62 ] 0.43 0.97 0.38 0.35 0.76 0.04 0.06 SD2.1 [ 62 ] 0."
+  },
+  {
+   "id": "b0075",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Qualitative Comparison on the GenEval Benchmark. Our approach demonstrates superior performance in Counting, Colors, Attribute Binding, and Position."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Performance on Compositional Image Generation, Visual Text Rendering, and Human Preference benchmarks, evaluated by task performance on test prompts, and by image quality and preference scores on DrawBench prompts. ImgRwd: ImageReward; UniRwd: UnifiedReward."
+  },
+  {
+   "id": "b0078",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Task Metric Image Quality Preference Score GenEval OCR Acc. PickScore Aesthetic DeQA ImgRwd PickScore UniRwd SD3.5-M 0.63 0.59 21.72 5.39 4.07 0.87 22.34 3.33 Compositional Image Generation Flow"
+  },
+  {
+   "id": "b0079",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Comparison with Other Alignment Methods on the Compositional Generation Task."
+  },
+  {
+   "id": "b0081",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Ablation Studies on Different Group Size ⟦SLOT_44⟧. Higher group size performs better."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2 Main Results"
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 1 and Table 1 show Flow-GRPO’s GenEval performance steadily improving during training, ultimately outperforming GPT-4o. This occurs while maintaining both image quality metrics and preference scores on DrawBench, a benchmark with diverse and comprehensive prompts for evaluating general model capabilities. Figure 3 offers qualitative comparisons. Beyond Compositional Image Generation, Table 2 details evaluations on Visual Text Rendering and Human Preference tasks. Flow-GRPO improved text rendering ability, again without decreasing image quality metrics and preference scores on DrawBench. See Figures 13, 14 & 15 in Appendix C.6 for related qualitative examples. For the Human Preference task, image quality did not decrease without KL regularization. However, we found that omitting KL caused a collapse in visual diversity, a form of reward hacking discussed further in Section 5.3. These results demonstrate that Flow-GRPO boosts desired capabilities while causing very little degradation to image quality or visual diversity."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "h4",
+   "en": "Flow-GRPO vs. Other Alignment Methods."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "We compare Flow-GRPO with several alignment methods: supervised fine-tuning (SFT), Flow-DPO [14, 39], and their online variants. Flow-GRPO consistently outperforms all baselines by a significant margin. At each step, we generate a group of images using the same group size as in Flow-GRPO. The only difference lies in the update rule:"
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "li",
+   "en": "• SFT: Select the highest-reward image in each group and fine-tune on it."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "li",
+   "en": "• Flow-DPO: Use the highest-reward image in each group as the chosen sample and the lowest as the rejected, then apply the DPO loss."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "Offline variants use a fixed pretrained model for data collection, while online variants update their data collection models every 40 steps. As shown in Figure 5, Flow-GRPO outperforms all baselines. Online DPO also surpasses its offline counterpart, consistent with [15]. For the second-best online DPO, a hyperparameter search on its key parameter ⟦SLOT_45⟧ revealed that smaller values are not always optimal; excessively small ⟦SLOT_46⟧ values can cause training collapse. Appendix C presents more comprehensive comparisons covering additional methods and tasks."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "h3",
+   "en": "5.3 Analysis"
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "p",
+   "en": "This section presents several analyses to better understand the behavior and robustness of Flow-GRPO. We examine issues such as reward hacking, the impact of denoising reduction and noise levels, the effect of group size, and the model’s generalization ability. We provide additional analyses in the Appendix C."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "h4",
+   "en": "Reward Hacking."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "We use KL regularization to mitigate reward hacking by tuning the KL coefficient to keep the divergence small and nearly constant during training, keeping the model close to its pretrained weights. This allows task-specific reward optimization without harming overall performance. As shown in Table 2, removing the KL constraint for Compositional Image Generation and Visual Text Rendering significantly reduces image quality and preference scores on DrawBench. In contrast, a properly tuned KL preserves quality while achieving similar gains on task-specific metrics. In the Human Preference Alignment task, removing KL does not affect image quality, likely due to overlap between PickScore and evaluation metrics, but causes a collapse in visual diversity. Outputs converge to a single style, with different seeds producing nearly identical results. KL regularization prevents this collapse and maintains diversity. See Figure 12 in Appendix C.5 for training curves and Figure 6 for more examples."
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Effect of KL Regularization. The KL penalty effectively suppresses reward hacking, preventing Quality Degradation (for GenEval and OCR) and Diversity Decline (for PickScore)."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "h4",
+   "en": "Effect of Denoising Reduction."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 7 (a) highlights Denoising Reduction’s significant impact on accelerating training. To explore how different timesteps affect optimization, these experiments are conducted without the KL constraint. Reducing data collection timesteps from ⟦SLOT_47⟧ to ⟦SLOT_48⟧ achieves over a ⟦SLOT_49⟧ speedup across all three tasks, without impacting final reward. Further reducing to ⟦SLOT_50⟧ does not consistently improve speed and sometimes slows training, so we choose ⟦SLOT_51⟧ timesteps for later experiments. For the other two tasks, learning curves of reward versus training time are presented in Figure 9 in the Appendix C.2."
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "h4",
+   "en": "Effect of Noise Level."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "p",
+   "en": "Higher ⟦SLOT_52⟧ in the SDE boosts image diversity and exploration, vital for RL training. We control this exploration with a noise level ⟦SLOT_53⟧ (Eq. 9). Figure 7 (b) shows the impact of ⟦SLOT_54⟧ on performance. A small ⟦SLOT_55⟧ (e.g., 0.1) limits exploration and slows reward improvement. Increasing ⟦SLOT_56⟧ (up to 0.7) boosts exploration and speeds up reward gains. Beyond this point (e.g., from 0.7 to 1.0), further increases provide no additional benefit, as exploration is already sufficient. We also observe that injecting too much noise by further increasing ⟦SLOT_57⟧ degrades image quality, resulting in zero reward and failed training."
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a). Effect of Denoising Reduction on GenEval"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(b). Effect of Noise Level Ablation on the OCR"
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Ablation studies on our critical design choices. (a) Denoising Reduction: Fewer denoising steps accelerate convergence and yield similar performance. (b) Noise Level: Moderate noise level (⟦SLOT_58⟧) maximises OCR accuracy, while too little noise hampers exploration."
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "h4",
+   "en": "Effect of Group Size."
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 5 shows the effect of group size ⟦SLOT_59⟧ using PickScore as the reward function. When the group size was reduced to ⟦SLOT_60⟧ and ⟦SLOT_61⟧, training became unstable and eventually collapsed, whereas ⟦SLOT_62⟧ remained stable throughout the process. We observe that smaller group sizes produce inaccurate advantage estimates, increasing variance and leading to training collapse, a phenomenon also reported in [71, 72]."
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "h4",
+   "en": "Generalization Analysis."
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "p",
+   "en": "Flow-GRPO demonstrates strong generalization on unseen scenarios from GenEval (Table 4). Specifically, it captures object number, color, and spatial relations, generalizing well to unseen object classes. It also effectively controls object count, generalizing from training on ⟦SLOT_63⟧ objects to generate ⟦SLOT_64⟧ or ⟦SLOT_65⟧ objects. Furthermore, Table 3 shows Flow-GRPO achieves significant gains on T2I-CompBench++ [6, 73]. This comprehensive benchmark for open-world compositional T2I generation features object classes and relationships substantially different from our model’s GenEval-style training data."
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: T2I-CompBench++ Result. This evaluation uses the same model presented in Table 1, which was trained on the GenEval-generated dataset. The best score is in blue."
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Color Shape Texture 2D-Spatial 3D-Spatial Numeracy Non-Spatial Janus-Pro-7B [ 69 ] 0.5145 0.3323 0.4069 0.1566 0.2753 0.4406 0.3137 EMU3 [ 67 ] 0.7913 0.5846 0.7422 — — — — FLUX.1 Dev [ 5 ] 0.74"
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Flow-GRPO demonstrates strong generalization. Unseen Objects: Trained on 60 object classes, evaluated on 20 unseen classes. Unseen Counting: Trained to render 2, 3, or 4 objects, and evaluated in two settings: rendering 5 or 6 objects, and rendering 12 objects."
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Unseen Objects Unseen Counting Overall Single Obj. Two Obj. Counting Colors Position Attr. Binding 5 − - 6 Objects 12 Objects SD3.5-M 0.64 0.96 0.73 0.53 0.87 0.26 0.47 0.13 0.02 SD3.5-M+Flow-G"
+  },
+  {
+   "id": "b0113",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Conclusion"
+  },
+  {
+   "id": "b0114",
+   "t": "text",
+   "w": "p",
+   "en": "We have presented Flow-GRPO, the first method to integrate online policy gradient RL into flow matching models. By converting deterministic ODEs to SDEs and reducing denoising steps during training, Flow-GRPO enables efficient RL-based optimization without noticeably compromising image quality or diversity. Our method significantly improves performance on compositional generation, text rendering, and human preference alignment, with minimal reward hacking. Flow-GRPO offers a simple and general framework for applying online RL to flow-based generative models."
+  },
+  {
+   "id": "b0115",
+   "t": "text",
+   "w": "h4",
+   "en": "Limitations & Future Work."
+  },
+  {
+   "id": "b0116",
+   "t": "text",
+   "w": "p",
+   "en": "Although this work focuses on T2I tasks, Flow-GRPO has potential for video generation [25, 27], raising several future directions: (1) Reward Design: Simple heuristics, such as using object detectors or trackers as rule-based rewards, can encourage physical realism and temporal consistency, but more advanced reward models are needed. (2) Balancing Multiple Rewards: Video generation requires optimizing multiple objectives, including realism, smoothness, and coherence. Balancing these competing goals remains challenging and demands careful tuning. (3) Scalability: Video generation is far more resource-intensive than T2I, so applying Flow-GRPO at scale requires more efficient data collection and training pipelines. Additionally, better methods for preventing reward hacking are worth exploring. While KL regularization helps significantly, it requires longer training and occasional reward hacking occurs for certain prompts."
+  },
+  {
+   "id": "b0117",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgements"
+  },
+  {
+   "id": "b0118",
+   "t": "text",
+   "w": "p",
+   "en": "This work was partially supported by the JC STEM Lab of AI for Science and Engineering, funded by The Hong Kong Jockey Club Charities Trust, the Research Grants Council of Hong Kong (Project No. CUHK14213224). We gratefully acknowledge Mingwu Zheng for his insightful discussions on the proof and Zhanhui Zhou for his valuable comments that improved the clarity of this paper."
+  },
+  {
+   "id": "b0119",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] Chitwan Saharia, William Chan, Saurabh Saxena, Lala Li, Jay Whang, Emily L Denton, Kamyar Ghasemipour, Raphael Gontijo Lopes, Burcu Karagol Ayan, Tim Salimans, et al. Photorealistic text-to-image "
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] Yaron Lipman, Ricky TQ Chen, Heli Ben-Hamu, Maximilian Nickel, and Matt Le. Flow matching for generative modeling. arXiv preprint arXiv:2210.02747 , 2022."
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] Xingchao Liu, Chengyue Gong, and Qiang Liu. Flow straight and fast: Learning to generate and transfer data with rectified flow. arXiv preprint arXiv:2209.03003 , 2022."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] Patrick Esser, Sumith Kulal, Andreas Blattmann, Rahim Entezari, Jonas Müller, Harry Saini, Yam Levi, Dominik Lorenz, Axel Sauer, Frederic Boesel, et al. Scaling rectified flow transformers for hig"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] Black Forest Labs. Flux. https://github.com/black-forest-labs/flux , 2024."
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] Kaiyi Huang, Kaiyue Sun, Enze Xie, Zhenguo Li, and Xihui Liu. T2i-compbench: A comprehensive benchmark for open-world compositional text-to-image generation. Advances in Neural Information Process"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] Zhiyuan Yan, Junyan Ye, Weijia Li, Zilong Huang, Shenghai Yuan, Xiangyang He, Kaiqing Lin, Jun He, Conghui He, and Li Yuan. Gpt-imgeval: A comprehensive benchmark for diagnosing gpt4o in image gen"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] Jingye Chen, Yupan Huang, Tengchao Lv, Lei Cui, Qifeng Chen, and Furu Wei. Textdiffuser: Diffusion models as text painters. Advances in Neural Information Processing Systems , 36:9353–9387, 2023."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] Richard S Sutton, Andrew G Barto, et al. Reinforcement learning: An introduction , volume 1. MIT press Cambridge, 1998."
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin Xu, Qihao Zhu, Shirong Ma, Peiyi Wang, Xiao Bi, et al. Deepseek-r1: Incentivizing reasoning capability in llms via reinforce"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] Aaron Jaech, Adam Kalai, Adam Lerer, Adam Richardson, Ahmed El-Kishky, Aiden Low, Alec Helyar, Aleksander Madry, Alex Beutel, Alex Carney, et al. Openai o1 system card. arXiv preprint arXiv:2412."
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] Kevin Black, Michael Janner, Yilun Du, Ilya Kostrikov, and Sergey Levine. Training diffusion models with reinforcement learning. arXiv preprint arXiv:2305.13301 , 2023."
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] Rafael Rafailov, Archit Sharma, Eric Mitchell, Christopher D Manning, Stefano Ermon, and Chelsea Finn. Direct preference optimization: Your language model is secretly a reward model. Advances in "
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] Jie Liu, Gongye Liu, Jiajun Liang, Ziyang Yuan, Xiaokun Liu, Mingwu Zheng, Xiele Wu, Qiulin Wang, Wenyu Qin, Menghan Xia, et al. Improving video generation with human feedback. arXiv preprint arX"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] Guibin Chen, Dixuan Lin, Jiangping Yang, Chunze Lin, Juncheng Zhu, Mingyuan Fan, Hao Zhang, Sheng Chen, Zheng Chen, Chengchen Ma, et al. Skyreels-v2: Infinite-length film generative model. arXiv "
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK Li, Y Wu, et al. Deepseekmath: Pushing the limits of mathematical reasoning in open langua"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] Dhruba Ghosh, Hannaneh Hajishirzi, and Ludwig Schmidt. Geneval: An object-focused framework for evaluating text-to-image alignment. Advances in Neural Information Processing Systems , 36:52132–52"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] Aaron Hurst, Adam Lerer, Adam P Goucher, Adam Perelman, Aditya Ramesh, Aidan Clark, AJ Ostrow, Akila Welihinda, Alan Hayes, Alec Radford, et al. Gpt-4o system card. arXiv preprint arXiv:2410.2127"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] Yuval Kirstain, Adam Polyak, Uriel Singer, Shahbuland Matiana, Joe Penna, and Omer Levy. Pick-a-pic: An open dataset of user preferences for text-to-image generation. Advances in Neural Informati"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347 , 2017."
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising diffusion probabilistic models. Advances in neural information processing systems , 33:6840–6851, 2020."
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] Jiaming Song, Chenlin Meng, and Stefano Ermon. Denoising diffusion implicit models. arXiv preprint arXiv:2010.02502 , 2020."
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] Yang Song, Jascha Sohl-Dickstein, Diederik P Kingma, Abhishek Kumar, Stefano Ermon, and Ben Poole. Score-based generative modeling through stochastic differential equations. arXiv preprint arXiv:"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] Kuaishou. Kling ai. https://klingai.kuaishou.com/ , 2024."
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] Ang Wang, Baole Ai, Bin Wen, Chaojie Mao, Chen-Wei Xie, Di Chen, Feiwu Yu, Haiming Zhao, Jianxiao Yang, Jianyuan Zeng, et al. Wan: Open and advanced large-scale video generative models. arXiv pre"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] Tim Brooks, Bill Peebles, Connor Holmes, Will DePue, Yufei Guo, Li Jing, David Schnurr, Joe Taylor, Troy Luhman, Eric Luhman, et al. Video generation models as world simulators. OpenAI Blog , 1:8"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] Weijie Kong, Qi Tian, Zijian Zhang, Rox Min, Zuozhuo Dai, Jin Zhou, Jiangfeng Xiong, Xin Li, Bo Wu, Jianwei Zhang, et al. Hunyuanvideo: A systematic framework for large video generative models. a"
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] Michael S Albergo, Nicholas M Boffi, and Eric Vanden-Eijnden. Stochastic interpolants: A unifying framework for flows and diffusions. arXiv preprint arXiv:2303.08797 , 2023."
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] Carles Domingo-Enrich, Michal Drozdzal, Brian Karrer, and Ricky TQ Chen. Adjoint matching: Fine-tuning flow and diffusion generative models with memoryless stochastic optimal control. arXiv prepr"
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] Mihir Prabhudesai, Anirudh Goyal, Deepak Pathak, and Katerina Fragkiadaki. Aligning text-to-image diffusion models with reward backpropagation. arXiv preprint arXiv:2310.03739 , 2023."
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] Kevin Clark, Paul Vicol, Kevin Swersky, and David J Fleet. Directly fine-tuning diffusion models on differentiable rewards. arXiv preprint arXiv:2309.17400 , 2023."
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] Jiazheng Xu, Xiao Liu, Yuchen Wu, Yuxuan Tong, Qinkai Li, Ming Ding, Jie Tang, and Yuxiao Dong. Imagereward: Learning and evaluating human preferences for text-to-image generation. Advances in Ne"
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] Mihir Prabhudesai, Russell Mendonca, Zheyang Qin, Katerina Fragkiadaki, and Deepak Pathak. Video diffusion alignment via reward gradients. arXiv preprint arXiv:2407.08737 , 2024."
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] Xue Bin Peng, Aviral Kumar, Grace Zhang, and Sergey Levine. Advantage-weighted regression: Simple and scalable off-policy reinforcement learning. arXiv preprint arXiv:1910.00177 , 2019."
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] Jiajun Fan, Shuaike Shen, Chaoran Cheng, Yuxin Chen, Chumeng Liang, and Ge Liu. Online reward-weighted fine-tuning of flow matching with wasserstein regularization. In The Thirteenth Internationa"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] Kimin Lee, Hao Liu, Moonkyung Ryu, Olivia Watkins, Yuqing Du, Craig Boutilier, Pieter Abbeel, Mohammad Ghavamzadeh, and Shixiang Shane Gu. Aligning text-to-image models using human feedback. arXi"
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] Hanze Dong, Wei Xiong, Deepanshu Goyal, Yihan Zhang, Winnie Chow, Rui Pan, Shizhe Diao, Jipeng Zhang, Kashun Shum, and Tong Zhang. Raft: Reward ranked finetuning for generative foundation model a"
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] Rafael Rafailov, Archit Sharma, Eric Mitchell, Christopher D Manning, Stefano Ermon, and Chelsea Finn. Direct preference optimization: Your language model is secretly a reward model. Advances in "
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] Bram Wallace, Meihua Dang, Rafael Rafailov, Linqi Zhou, Aaron Lou, Senthil Purushwalkam, Stefano Ermon, Caiming Xiong, Shafiq Joty, and Nikhil Naik. Diffusion model alignment using direct prefere"
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] Kai Yang, Jian Tao, Jiafei Lyu, Chunjiang Ge, Jiaxin Chen, Weihan Shen, Xiaolong Zhu, and Xiu Li. Using human feedback to fine-tune diffusion models without any reward model. In Proceedings of th"
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] Zhanhao Liang, Yuhui Yuan, Shuyang Gu, Bohan Chen, Tiankai Hang, Ji Li, and Liang Zheng. Step-aware preference optimization: Aligning preference with denoising performance at each step. arXiv pre"
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[42] Huizhuo Yuan, Zixiang Chen, Kaixuan Ji, and Quanquan Gu. Self-play fine-tuning of diffusion models for text-to-image generation. arXiv preprint arXiv:2402.10210 , 2024."
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[43] Runtao Liu, Haoyu Wu, Zheng Ziqiang, Chen Wei, Yingqing He, Renjie Pi, and Qifeng Chen. Videodpo: Omni-preference alignment for video diffusion generation. arXiv preprint arXiv:2412.14167 , 2024."
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[44] Jiacheng Zhang, Jie Wu, Weifeng Chen, Yatai Ji, Xuefeng Xiao, Weilin Huang, and Kai Han. Onlinevpo: Align video diffusion model with online video-centric preference optimization. arXiv preprint a"
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[45] Hiroki Furuta, Heiga Zen, Dale Schuurmans, Aleksandra Faust, Yutaka Matsuo, Percy Liang, and Sherry Yang. Improving dynamic object interactions in text-to-video generation with ai feedback. arXiv"
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[46] Zhanhao Liang, Yuhui Yuan, Shuyang Gu, Bohan Chen, Tiankai Hang, Mingxi Cheng, Ji Li, and Liang Zheng. Aesthetic post-training diffusion models from generic preferences with step-by-step preferen"
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[47] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347 , 2017."
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[48] Kevin Black, Michael Janner, Yilun Du, Ilya Kostrikov, and Sergey Levine. Training diffusion models with reinforcement learning. arXiv preprint arXiv:2305.13301 , 2023."
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[49] Ying Fan, Olivia Watkins, Yuqing Du, Hao Liu, Moonkyung Ryu, Craig Boutilier, Pieter Abbeel, Mohammad Ghavamzadeh, Kangwook Lee, and Kimin Lee. Reinforcement learning for fine-tuning text-to-imag"
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[50] Shashank Gupta, Chaitanya Ahuja, Tsung-Yu Lin, Sreya Dutta Roy, Harrie Oosterhuis, Maarten de Rijke, and Satya Narayan Shukla. A simple and effective reinforcement learning method for text-to-ima"
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[51] Zichen Miao, Jiang Wang, Ze Wang, Zhengyuan Yang, Lijuan Wang, Qiang Qiu, and Zicheng Liu. Training diffusion models towards diverse image generation with reinforcement learning. In Proceedings o"
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[52] Hanyang Zhao, Haoxian Chen, Ji Zhang, David D Yao, and Wenpin Tang. Score as action: Fine-tuning diffusion generative models by continuous-time reinforcement learning. arXiv preprint arXiv:2502.0"
+  },
+  {
+   "id": "b0172",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[53] Po-Hung Yeh, Kuang-Huei Lee, and Jun-Cheng Chen. Training-free diffusion model alignment with sampling demons. arXiv preprint arXiv:2410.05760 , 2024."
+  },
+  {
+   "id": "b0173",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[54] Zhiwei Tang, Jiangweizhi Peng, Jiasheng Tang, Mingyi Hong, Fan Wang, and Tsung-Hui Chang. Tuning-free alignment of diffusion models with direct noise optimization. arXiv preprint arXiv:2405.18881"
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[55] Jiaming Song, Qinsheng Zhang, Hongxu Yin, Morteza Mardani, Ming-Yu Liu, Jan Kautz, Yongxin Chen, and Arash Vahdat. Loss-guided diffusion models for plug-and-play controllable generation. In Inter"
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[56] Xiaohui Sun, Ruitong Xiao, Jianye Mo, Bowen Wu, Qun Yu, and Baoxun Wang. F5r-tts: Improving flow matching based text-to-speech with group relative policy optimization. arXiv preprint arXiv:2504.0"
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[57] Jaihoon Kim, Taehoon Yoon, Jisung Hwang, and Minhyuk Sung. Inference-time scaling for flow models via stochastic generation and rollover budget forcing. arXiv preprint arXiv:2503.19385 , 2025."
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[58] Lixue Gong, Xiaoxia Hou, Fanshi Li, Liang Li, Xiaochen Lian, Fei Liu, Liyang Liu, Wei Liu, Wei Lu, Yichun Shi, et al. Seedream 2.0: A native chinese-english bilingual image generation foundation "
+  },
+  {
+   "id": "b0178",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[59] Chrisoph Schuhmann. Laion aesthetics, Aug 2022."
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[60] Zhiyuan You, Xin Cai, Jinjin Gu, Tianfan Xue, and Chao Dong. Teaching large language models to regress accurate image quality scores using score distribution. arXiv preprint arXiv:2501.11561 , 20"
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[61] Yibin Wang, Yuhang Zang, Hao Li, Cheng Jin, and Jiaqi Wang. Unified reward model for multimodal understanding and generation. arXiv preprint arXiv:2503.05236 , 2025."
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[62] Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn Ommer. High-resolution image synthesis with latent diffusion models. In Proceedings of the IEEE/CVF conference on comput"
+  },
+  {
+   "id": "b0182",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[63] Dustin Podell, Zion English, Kyle Lacey, Andreas Blattmann, Tim Dockhorn, Jonas Müller, Joe Penna, and Robin Rombach. Sdxl: Improving latent diffusion models for high-resolution image synthesis. "
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[64] Aditya Ramesh, Prafulla Dhariwal, Alex Nichol, Casey Chu, and Mark Chen. Hierarchical text-conditional image generation with clip latents. arXiv preprint arXiv:2204.06125 , 1(2):3, 2022."
+  },
+  {
+   "id": "b0184",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[65] James Betker, Gabriel Goh, Li Jing, Tim Brooks, Jianfeng Wang, Linjie Li, Long Ouyang, Juntang Zhuang, Joyce Lee, Yufei Guo, et al. Improving image generation with better captions. Computer Scien"
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[66] Jinheng Xie, Weijia Mao, Zechen Bai, David Junhao Zhang, Weihao Wang, Kevin Qinghong Lin, Yuchao Gu, Zhijie Chen, Zhenheng Yang, and Mike Zheng Shou. Show-o: One single transformer to unify multi"
+  },
+  {
+   "id": "b0186",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[67] Xinlong Wang, Xiaosong Zhang, Zhengxiong Luo, Quan Sun, Yufeng Cui, Jinsheng Wang, Fan Zhang, Yueze Wang, Zhen Li, Qiying Yu, et al. Emu3: Next-token prediction is all you need. arXiv preprint ar"
+  },
+  {
+   "id": "b0187",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[68] Yiyang Ma, Xingchao Liu, Xiaokang Chen, Wen Liu, Chengyue Wu, Zhiyu Wu, Zizheng Pan, Zhenda Xie, Haowei Zhang, Liang Zhao, et al. Janusflow: Harmonizing autoregression and rectified flow for unif"
+  },
+  {
+   "id": "b0188",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[69] Xiaokang Chen, Zhiyu Wu, Xingchao Liu, Zizheng Pan, Wen Liu, Zhenda Xie, Xingkai Yu, and Chong Ruan. Janus-pro: Unified multimodal understanding and generation with data and model scaling. arXiv "
+  },
+  {
+   "id": "b0189",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[70] Enze Xie, Junsong Chen, Yuyang Zhao, Jincheng Yu, Ligeng Zhu, Yujun Lin, Zhekai Zhang, Muyang Li, Junyu Chen, Han Cai, et al. Sana 1.5: Efficient scaling of training-time and inference-time compu"
+  },
+  {
+   "id": "b0190",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[71] Mingjie Liu, Shizhe Diao, Ximing Lu, Jian Hu, Xin Dong, Yejin Choi, Jan Kautz, and Yi Dong. Prorl: Prolonged reinforcement learning expands reasoning boundaries in large language models. arXiv pr"
+  },
+  {
+   "id": "b0191",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[72] Yang Chen, Zhuolin Yang, Zihan Liu, Chankyu Lee, Peng Xu, Mohammad Shoeybi, Bryan Catanzaro, and Wei Ping. Acereason-nemotron: Advancing math and code reasoning through reinforcement learning. ar"
+  },
+  {
+   "id": "b0192",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[73] Kaiyi Huang, Chengqi Duan, Kaiyue Sun, Enze Xie, Zhenguo Li, and Xihui Liu. T2i-compbench++: An enhanced and comprehensive benchmark for compositional text-to-image generation. IEEE Transactions "
+  },
+  {
+   "id": "b0193",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[74] Bernt Øksendal and Bernt Øksendal. Stochastic differential equations . Springer, 2003."
+  },
+  {
+   "id": "b0194",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[75] Brian DO Anderson. Reverse-time diffusion equation models. Stochastic Processes and their Applications , 12(3):313–326, 1982."
+  },
+  {
+   "id": "b0195",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[76] Xue Bin Peng, Aviral Kumar, Grace Zhang, and Sergey Levine. Advantage-weighted regression: Simple and scalable off-policy reinforcement learning. arXiv preprint arXiv:1910.00177 , 2019."
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "p",
+   "en": "Our Appendix consists of 4 sections. Readers can click on each section number to navigate to the corresponding section:"
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "li",
+   "en": "• Section A provides detailed derivations of stochastic sampling in flow matching models."
+  },
+  {
+   "id": "b0198",
+   "t": "text",
+   "w": "li",
+   "en": "• Section B presents details about our experimental setup."
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "li",
+   "en": "• Section C offers some additional experimental results, including 1) the comparison with other alignment methods, 2) ablation of denoising reduction on OCR accuracy and pickscore, 3) ablation of initial noise, 4) additional results on FLUX.1-Dev, 5) the learning curves of Flow-GRPO on three tasks, 6) additional qualitative results, and 7) evolution of evaluation images during training."
+  },
+  {
+   "id": "b0200",
+   "t": "text",
+   "w": "li",
+   "en": "• Section D provides a visualization of training samples under the denoising reduction strategy."
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "p",
+   "en": "In addition to this Appendix, we also provide more visualization results, see this website. We encourage the readers to consult this HTML page for a more intuitive assessment of the improvements brought by Flow-GRPO."
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Mathematical Derivations for Stochastic Sampling using Flow Models"
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "p",
+   "en": "We present a detailed proof here. To compute ⟦SLOT_66⟧ in Equation 5 during forward sampling, we adapt flow models to a stochastic differential equation (SDE). While flow models normally follow a deterministic ODE:"
+  },
+  {
+   "id": "b0204",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝒙 t = 𝒗 t ​ d ​ t \\mathrm{d}{\\bm{x}}_{t}={\\bm{v}}_{t}\\mathrm{d}t (10)"
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "p",
+   "en": "We consider its stochastic counterpart. Inspired by the derivation from SDE to its probability flow ODE in SGMs [23], we aim to construct a forward SDE with specific drift and diffusion coefficients so that its marginal distribution matches that of Eq. 10. We begin with the generic form of SDE:"
+  },
+  {
+   "id": "b0206",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝒙 t = f SDE ​ ( 𝒙 t , t ) ​ d ​ t + σ t ​ d ​ 𝒘 , \\mathrm{d}{\\bm{x}}_{t}=f_{\\text{SDE}}({\\bm{x}}_{t},t)\\mathrm{d}t+\\sigma_{t}\\mathrm{d}{\\bm{w}}, (11)"
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "p",
+   "en": "Its marginal probability density ⟦SLOT_67⟧ evolves according to the Fokker–Planck equation [74], i.e.,"
+  },
+  {
+   "id": "b0208",
+   "t": "keep",
+   "w": "table",
+   "en": "∂ t p t ( x ) = − ∇ ⋅ [ f SDE ( 𝒙 t , t ) p t ( 𝒙 ) ] + 1 2 ∇ 2 [ σ t 2 p t ( 𝒙 ) ] \\partial_{t}p_{t}(x)=-\\nabla\\cdot[f_{\\text{SDE}}({\\bm{x}}_{t},t)p_{t}({\\bm{x}})]+\\frac{1}{2}\\nabla^{2}[\\sigma_{t}^{2"
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "Similarly, the marginal probability density associated with Eq. 10 evolves:"
+  },
+  {
+   "id": "b0210",
+   "t": "keep",
+   "w": "table",
+   "en": "∂ t p t ​ ( 𝒙 ) \\displaystyle\\partial_{t}p_{t}({\\bm{x}}) = − ∇ ⋅ [ 𝒗 t ( 𝒙 t , t ) p t ( 𝒙 ) ] \\displaystyle=-\\nabla\\cdot[{\\bm{v}}_{t}({\\bm{x}}_{t},t)p_{t}({\\bm{x}})] (13)"
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "p",
+   "en": "To ensure that the stochastic process shares the same marginal distribution as the ODE, we impose:"
+  },
+  {
+   "id": "b0212",
+   "t": "keep",
+   "w": "table",
+   "en": "− ∇ ⋅ [ f SDE p t ( 𝒙 ) ] + 1 2 ∇ 2 [ σ t 2 p t ( 𝒙 ) ] = − ∇ ⋅ [ 𝒗 t ( 𝒙 t , t ) p t ( 𝒙 ) ] -\\nabla\\cdot[f_{\\text{SDE}}\\,p_{t}({\\bm{x}})]+\\frac{1}{2}\\nabla^{2}[\\sigma_{t}^{2}p_{t}({\\bm{x}})]=-\\nabla"
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "p",
+   "en": "Observing that"
+  },
+  {
+   "id": "b0214",
+   "t": "keep",
+   "w": "table",
+   "en": "∇ 2 [ σ t 2 ​ p t ​ ( 𝒙 ) ] \\displaystyle\\nabla^{2}[\\sigma_{t}^{2}p_{t}({\\bm{x}})] = σ t 2 ​ ∇ 2 p t ​ ( 𝒙 ) \\displaystyle=\\sigma_{t}^{2}\\nabla^{2}p_{t}({\\bm{x}}) (15) = σ t 2 ∇ ⋅ ( ∇ p t ( 𝒙 ) ) \\dis"
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "p",
+   "en": "Substituting Eq. 15 to Eq. 14, we arrive at the drift coefficients of the target forward SDE:"
+  },
+  {
+   "id": "b0216",
+   "t": "keep",
+   "w": "table",
+   "en": "f SDE = 𝒗 t ( 𝒙 t , t ) + σ t 2 2 ∇ log p t ( 𝒙 ) \\displaystyle f_{\\text{SDE}}={\\bm{v}}_{t}({\\bm{x}}_{t},t)+\\frac{\\sigma_{t}^{2}}{2}\\nabla\\log p_{t}({\\bm{x}}) (16)"
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "p",
+   "en": "Hence, we can rewrite the forward SDE in Eq. 11 as:"
+  },
+  {
+   "id": "b0218",
+   "t": "keep",
+   "w": "table",
+   "en": "d 𝒙 t = ( 𝒗 t ( 𝒙 t ) + σ t 2 2 ∇ log p t ( 𝒙 t ) ) d t + σ t d 𝒘 , \\displaystyle\\mathrm{d}{\\bm{x}}_{t}=\\left({\\bm{v}}_{t}({\\bm{x}}_{t})+\\frac{\\sigma_{t}^{2}}{2}\\nabla\\log p_{t}({\\bm{x}}_{t})\\right)\\m"
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_68⟧ denotes Wiener process increments, and ⟦SLOT_69⟧ is the diffusion coefficient controlling the level of stochasticity during sampling."
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "p",
+   "en": "The relationship between forward and reverse-time SDEs has been established in [75, 23]. Specifically, if the forward SDE takes the form"
+  },
+  {
+   "id": "b0221",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝒙 t = f ⁡ ( 𝒙 t , t ) ​ d ​ t + g ⁡ ( t ) ​ d ​ 𝒘 , \\displaystyle\\mathrm{d}{\\bm{x}}_{t}=f({\\bm{x}}_{t},t)\\,\\mathrm{d}t+g(t)\\,\\mathrm{d}{\\bm{w}}, (18)"
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "p",
+   "en": "then the corresponding reverse-time SDE is"
+  },
+  {
+   "id": "b0223",
+   "t": "keep",
+   "w": "table",
+   "en": "d 𝒙 t = [ f ( 𝒙 t , t ) − g 2 ( t ) ∇ log p t ( 𝒙 t ) ] d t + g ( t ) d 𝒘 ¯ . \\displaystyle\\mathrm{d}{\\bm{x}}_{t}=\\left[f({\\bm{x}}_{t},t)-g^{2}(t)\\nabla\\log p_{t}({\\bm{x}}_{t})\\right]\\,\\mathrm{d}t+g(t"
+  },
+  {
+   "id": "b0224",
+   "t": "text",
+   "w": "p",
+   "en": "Setting ⟦SLOT_70⟧, we obtain the reverse-time SDE corresponding to Eq. 17 as"
+  },
+  {
+   "id": "b0225",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝒙 t \\displaystyle\\mathrm{d}{\\bm{x}}_{t} = [ 𝒗 t ( 𝒙 t ) + σ t 2 2 ∇ log p t ( 𝒙 t ) − σ t 2 ∇ log p t ( 𝒙 t ) ] d t + σ t d 𝒘 ¯ . \\displaystyle=\\left[{\\bm{v}}_{t}({\\bm{x}}_{t})+\\frac{\\sigma_{t}^{2"
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "p",
+   "en": "We thus arrive at the final form of the reverse-time SDE:"
+  },
+  {
+   "id": "b0227",
+   "t": "keep",
+   "w": "table",
+   "en": "d 𝒙 t = ( 𝒗 t ( 𝒙 t ) − σ t 2 2 ∇ log p t ( 𝒙 t ) ) d t + σ t d 𝒘 , \\displaystyle\\mathrm{d}{\\bm{x}}_{t}=\\left({\\bm{v}}_{t}({\\bm{x}}_{t})-\\frac{\\sigma_{t}^{2}}{2}\\nabla\\log p_{t}({\\bm{x}}_{t})\\right)\\m"
+  },
+  {
+   "id": "b0228",
+   "t": "text",
+   "w": "p",
+   "en": "Once the score function ⟦SLOT_71⟧ is available, the process can be simulated directly. For flow matching, this score is implicitly linked to the velocity field ⟦SLOT_72⟧."
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "p",
+   "en": "Specifically, let ⟦SLOT_73⟧. All expectations are over ⟦SLOT_74⟧ and ⟦SLOT_75⟧, where ⟦SLOT_76⟧ is the data distribution."
+  },
+  {
+   "id": "b0230",
+   "t": "text",
+   "w": "p",
+   "en": "For the linear interpolation ⟦SLOT_77⟧, we have:"
+  },
+  {
+   "id": "b0231",
+   "t": "keep",
+   "w": "table",
+   "en": "p t | 0 ​ ( 𝒙 t | 𝒙 0 ) = 𝒩 ⁡ ( 𝒙 t ∣ α t ​ 𝒙 0 , β t 2 ​ 𝑰 ) , p_{t|0}({\\bm{x}}_{t}|{\\bm{x}}_{0})=\\mathcal{N}\\left({\\bm{x}}_{t}\\mid\\alpha_{t}{\\bm{x}}_{0},\\beta_{t}^{2}{\\bm{I}}\\right), (22)"
+  },
+  {
+   "id": "b0232",
+   "t": "text",
+   "w": "p",
+   "en": "yielding the conditional score:"
+  },
+  {
+   "id": "b0233",
+   "t": "keep",
+   "w": "table",
+   "en": "∇ log ⁡ p t | 0 ​ ( 𝒙 t | 𝒙 0 ) = − 𝒙 t − α t ​ 𝒙 0 β t 2 = − 𝒙 1 β t . \\nabla\\log p_{t|0}({\\bm{x}}_{t}|{\\bm{x}}_{0})=-\\frac{{\\bm{x}}_{t}-\\alpha_{t}{\\bm{x}}_{0}}{\\beta_{t}^{2}}=-\\frac{{\\bm{x}}_{1}}{\\b"
+  },
+  {
+   "id": "b0234",
+   "t": "text",
+   "w": "p",
+   "en": "The marginal score becomes:"
+  },
+  {
+   "id": "b0235",
+   "t": "keep",
+   "w": "table",
+   "en": "∇ log ⁡ p t ​ ( 𝒙 t ) \\displaystyle\\nabla\\log p_{t}({\\bm{x}}_{t}) = 𝔼 ⁡ [ ∇ log ⁡ p t | 0 ​ ( 𝒙 t | 𝒙 0 ) ∣ 𝒙 t ] \\displaystyle=\\mathbb{E}\\left[\\nabla\\log p_{t|0}({\\bm{x}}_{t}|{\\bm{x}}_{0})\\mid{\\bm{x}"
+  },
+  {
+   "id": "b0236",
+   "t": "text",
+   "w": "p",
+   "en": "For the velocity field ⟦SLOT_78⟧, we derive:"
+  },
+  {
+   "id": "b0237",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒗 t ​ ( 𝒙 ) = 𝔼 ⁡ [ α t ˙ ​ 𝒙 0 + β t ˙ ​ 𝒙 1 ∣ 𝒙 t = 𝒙 ] = α t ˙ ​ 𝔼 ​ [ 𝒙 0 ∣ 𝒙 t = 𝒙 ] + β t ˙ ​ 𝔼 ​ [ 𝒙 1 ∣ 𝒙 t = 𝒙 ] = α t ˙ ​ 𝔼 ​ [ 𝒙 t − β t ​ 𝒙 1 α t ∣ 𝒙 t = 𝒙 ] + β t ˙ ​ 𝔼 ​ [ 𝒙 1 ∣ 𝒙 t = 𝒙 "
+  },
+  {
+   "id": "b0238",
+   "t": "text",
+   "w": "p",
+   "en": "Substituting ⟦SLOT_79⟧ and ⟦SLOT_80⟧ simplifies Equation 25 to:"
+  },
+  {
+   "id": "b0239",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒗 t ( 𝒙 ) = − 𝒙 1 − t − t 1 − t ∇ log p t ( 𝒙 ) . {\\bm{v}}_{t}({\\bm{x}})=-\\frac{{\\bm{x}}}{1-t}-\\frac{t}{1-t}\\nabla\\log p_{t}({\\bm{x}}). (26)"
+  },
+  {
+   "id": "b0240",
+   "t": "text",
+   "w": "p",
+   "en": "Solving for the score yields:"
+  },
+  {
+   "id": "b0241",
+   "t": "keep",
+   "w": "table",
+   "en": "∇ log ⁡ p t ​ ( 𝒙 ) = − 𝒙 t − 1 − t t ​ 𝒗 t ​ ( 𝒙 ) . \\nabla\\log p_{t}({\\bm{x}})=-\\frac{{\\bm{x}}}{t}-\\frac{1-t}{t}{\\bm{v}}_{t}({\\bm{x}}). (27)"
+  },
+  {
+   "id": "b0242",
+   "t": "text",
+   "w": "p",
+   "en": "Substituting Equation 27 into 21 gives the final SDE:"
+  },
+  {
+   "id": "b0243",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝒙 t = [ 𝒗 t ​ ( 𝒙 t ) + σ t 2 2 ​ t ​ ( 𝒙 t + ( 1 − t ) ​ 𝒗 t ​ ( 𝒙 t ) ) ] ​ d ​ t + σ t ​ d ​ 𝒘 . \\mathrm{d}{\\bm{x}}_{t}=\\left[{\\bm{v}}_{t}({\\bm{x}}_{t})+\\frac{\\sigma_{t}^{2}}{2t}\\left({\\bm{x}}_"
+  },
+  {
+   "id": "b0244",
+   "t": "text",
+   "w": "p",
+   "en": "Applying Euler-Maruyama discretization yields the update rule:"
+  },
+  {
+   "id": "b0245",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒙 t + Δ ​ t = 𝒙 t + [ 𝒗 θ ​ ( 𝒙 t , t ) + σ t 2 2 ​ t ​ ( 𝒙 t + ( 1 − t ) ​ 𝒗 θ ​ ( 𝒙 t , t ) ) ] ​ Δ ​ t + σ t ​ Δ ​ t ​ ϵ , \\displaystyle{\\bm{x}}_{t+\\Delta t}={\\bm{x}}_{t}+\\left[{\\bm{v}}_{\\theta}({\\"
+  },
+  {
+   "id": "b0246",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_81⟧ injects stochasticity."
+  },
+  {
+   "id": "b0247",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Further Details on the Experimental Setup"
+  },
+  {
+   "id": "b0248",
+   "t": "text",
+   "w": "h3",
+   "en": "B.1 Quality Metrics"
+  },
+  {
+   "id": "b0249",
+   "t": "text",
+   "w": "p",
+   "en": "The details of quality metrics are as follows:"
+  },
+  {
+   "id": "b0250",
+   "t": "text",
+   "w": "li",
+   "en": "• Aesthetic score [59]: a CLIP-based linear regressor that predicts an image’s aesthetic score."
+  },
+  {
+   "id": "b0251",
+   "t": "text",
+   "w": "li",
+   "en": "• DeQA score [60]: a multimodal large language model based image-quality assessment (IQA) model that quantifies how distortions, texture damage, and other low-level artefacts affect perceived quality."
+  },
+  {
+   "id": "b0252",
+   "t": "text",
+   "w": "li",
+   "en": "• ImageReward [32]: a general purpose T2I human preference reward model that captures text–image alignment, visual fidelity, and harmlessness."
+  },
+  {
+   "id": "b0253",
+   "t": "text",
+   "w": "li",
+   "en": "• UnifiedReward [61]: a recently proposed unified reward model for multimodal understanding and generation that currently achieves state-of-the-art performance on the human preference assessment leaderboard."
+  },
+  {
+   "id": "b0254",
+   "t": "text",
+   "w": "h3",
+   "en": "B.2 Model Specification"
+  },
+  {
+   "id": "b0255",
+   "t": "text",
+   "w": "p",
+   "en": "The following table lists the base model and the reward models and their corresponding links."
+  },
+  {
+   "id": "b0256",
+   "t": "keep",
+   "w": "table",
+   "en": "Models Links SD3.5-M [ 4 ] https://huggingface.co/stabilityai/stable-diffusion-3.5-medium Aesthetic Score [ 59 ] https://github.com/LAION-AI/aesthetic-predictor PickScore [ 19 ] https://huggingface.co"
+  },
+  {
+   "id": "b0257",
+   "t": "text",
+   "w": "h3",
+   "en": "B.3 Hyperparameters Specification"
+  },
+  {
+   "id": "b0258",
+   "t": "text",
+   "w": "p",
+   "en": "Except for ⟦SLOT_82⟧, GRPO hyperparameters are fixed across tasks. We use a sampling timestep ⟦SLOT_83⟧ and an evaluation timestep ⟦SLOT_84⟧. Other settings include a group size ⟦SLOT_85⟧, an noise level ⟦SLOT_86⟧ and an image resolution of 512. The KL ratio ⟦SLOT_87⟧ is set to 0.04 for GenEval and Text Rendering, and 0.01 for Pickscore. We use Lora with ⟦SLOT_88⟧ and ⟦SLOT_89⟧."
+  },
+  {
+   "id": "b0259",
+   "t": "text",
+   "w": "h3",
+   "en": "B.4 Compute Resources Specification"
+  },
+  {
+   "id": "b0260",
+   "t": "text",
+   "w": "p",
+   "en": "We train our model using 24 NVIDIA A800 GPUs. The learning curves in Appendix C.5 provide details on the specific GPU hours."
+  },
+  {
+   "id": "b0261",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Extended Experimental Results"
+  },
+  {
+   "id": "b0262",
+   "t": "text",
+   "w": "h3",
+   "en": "C.1 Flow-GRPO vs. Other Alignment Methods"
+  },
+  {
+   "id": "b0263",
+   "t": "text",
+   "w": "p",
+   "en": "We compare Flow-GRPO with several alignment methods: supervised fine-tuning (SFT), reward-weighted regression (Flow-RWR [14, 76]), Flow-DPO [14], and their online variants. Flow-GRPO consistently outperforms all baselines by a significant margin. At each step, we generate a group of images using the same group size as in Flow-GRPO. The only difference lies in the update rule:"
+  },
+  {
+   "id": "b0264",
+   "t": "text",
+   "w": "li",
+   "en": "• SFT: Select the highest-reward image in each group and fine-tune on it."
+  },
+  {
+   "id": "b0265",
+   "t": "text",
+   "w": "li",
+   "en": "• Flow-RWR [14, 76]: Apply a softmax over rewards in each group and perform reward-weighted likelihood maximization."
+  },
+  {
+   "id": "b0266",
+   "t": "text",
+   "w": "li",
+   "en": "• Flow-DPO [14, 39]: Use the highest-reward image in each group as the chosen sample and the lowest as the rejected, then apply the DPO loss."
+  },
+  {
+   "id": "b0267",
+   "t": "text",
+   "w": "p",
+   "en": "Offline variants use a fixed pretrained model for data collection, while online variants update their data collection model every 40 steps. As shown in Figure 8, Flow-GRPO outperforms all other methods. The figure also indicates that DPO and SFT improve over time. In contrast, RWR does not, which aligns with experimental findings on RWR in [12]. Additionally, Online DPO surpasses offline DPO, aligning with [15]’s finding that online DPO performs better. For the second-best online DPO, a hyperparameter search on its key parameter ⟦SLOT_90⟧ revealed that smaller values are not always optimal; excessively small ⟦SLOT_91⟧ values can cause training collapse."
+  },
+  {
+   "id": "b0268",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0269",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0270",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8: Comparison of Flow-GRPO and Other Alignment Methods on the Human Preference Alignment task. Since methods like DPO use different tuned batch sizes from Flow-GRPO, we use the number of training prompts on the x-axis for a fair comparison across these methods."
+  },
+  {
+   "id": "b0271",
+   "t": "text",
+   "w": "h4",
+   "en": "DDPO."
+  },
+  {
+   "id": "b0272",
+   "t": "text",
+   "w": "p",
+   "en": "DDPO [12] was originally developed for diffusion-based backbones, so we adapted it to flow-matching models via our ODE-to-SDE conversion. Using SD3.5-M as the base model and PickScore as the reward signal, we track the evaluation reward throughout the entire training process in Figure 8. We find that DDPO’s reward increases more slowly than Flow-GRPO’s and eventually collapses in the later stages, whereas Flow-GRPO trains stably and continues to improve consistently over time."
+  },
+  {
+   "id": "b0273",
+   "t": "text",
+   "w": "h4",
+   "en": "ReFL."
+  },
+  {
+   "id": "b0274",
+   "t": "text",
+   "w": "p",
+   "en": "ReFL [32] directly fine-tunes diffusion models by viewing reward model scores as human preference losses and back-propagating gradients to a randomly-picked late timestep ⟦SLOT_92⟧. Following ImageReward [32], we back-propagate gradients to a randomly chosen late timestep ⟦SLOT_93⟧ during denoising. Figure 8 shows that GRPO surpasses ReFL when the reward is differentiable, indicating that GRPO maintains strong performance in settings where ReFL applies. More importantly, GRPO does not require differentiable rewards, enabling direct use of state-of-the-art Vision-Language Models (VLMs) as reward providers. This offers two key advantages:"
+  },
+  {
+   "id": "b0275",
+   "t": "text",
+   "w": "li",
+   "en": "• Sophisticated, General-Purpose Rewards: VLMs can conduct human-like evaluations through a structured reasoning process. Given a prompt, a VLM can decompose it into key criteria, reason step by step to verify each aspect in the generated image, and then provide a comprehensive overall score. This enables a single, unified reward model to handle diverse tasks, from text-to-image generation to complex instruction-based image editing."
+  },
+  {
+   "id": "b0276",
+   "t": "text",
+   "w": "li",
+   "en": "• Future-Proof and Cost-Free Upgrades: The field of VLMs is advancing at a breathtaking pace. By using a VLM as the reward source, our framework automatically benefits from these improvements. As VLMs become more capable, the reward model becomes stronger without any additional training data or computational cost."
+  },
+  {
+   "id": "b0277",
+   "t": "text",
+   "w": "h4",
+   "en": "ORW."
+  },
+  {
+   "id": "b0278",
+   "t": "text",
+   "w": "p",
+   "en": "ORW [35] is an online reward-weighted regression method that guides the model to prioritize high-reward regions. Unlike KL regularization, it employs Wasserstein-2 regularization to prevent policy collapse and maintain diversity. To ensure a fair comparison, we adopt the same experimental setup as in our Human Preference Alignment task. For ORW, we set ⟦SLOT_94⟧ and ⟦SLOT_95⟧ (lower values led to unstable training). The steps_per_epoch parameter, which controls how frequently the data-collecting policy is updated, was chosen from ⟦SLOT_96⟧ based on best performance. Table 5 reports reward scores on the test set across training steps. Following ORW’s Table 1, we randomly sampled 50 DrawBench prompts and generated 64 images per prompt to compute CLIP and Diversity scores. As shown in Table 6, Flow-GRPO outperforms ORW on both metrics."
+  },
+  {
+   "id": "b0279",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Reward scores on the test set over training steps."
+  },
+  {
+   "id": "b0280",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Step 0 Step 240 Step 480 Step 720 Step 960 SD3.5-M + ORW 28.79 29.05 29.15 27.58 23.05 SD3.5-M + Flow-GRPO 28.79 29.10 29.17 29.51 29.89"
+  },
+  {
+   "id": "b0281",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Comparison of CLIP and diversity scores across different fine-tuning methods."
+  },
+  {
+   "id": "b0282",
+   "t": "keep",
+   "w": "table",
+   "en": "Method CLIP Score ↑ \\uparrow Diversity Score ↑ \\uparrow SD3.5-M 27.99 0.96 SD3.5-M + ORW 28.40 0.97 SD3.5-M + Flow-GRPO 30.18 1.02"
+  },
+  {
+   "id": "b0283",
+   "t": "text",
+   "w": "h3",
+   "en": "C.2 Effect of Denoising Reduction"
+  },
+  {
+   "id": "b0284",
+   "t": "text",
+   "w": "p",
+   "en": "We show the extended Denoising Reduction ablations of Visual Text Rendering and Human Preference Alignment tasks in Figure 9."
+  },
+  {
+   "id": "b0285",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0286",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a) Visual Text Rendering"
+  },
+  {
+   "id": "b0287",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0288",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(b) Human Preference Alignment"
+  },
+  {
+   "id": "b0289",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9: Effect of Denoising Reduction"
+  },
+  {
+   "id": "b0290",
+   "t": "text",
+   "w": "h3",
+   "en": "C.3 Effect of Initial Noise"
+  },
+  {
+   "id": "b0291",
+   "t": "text",
+   "w": "p",
+   "en": "We initialize each rollout with difference random noise to increase exploratory diversity during RL training. We perform an additioanl ablation to confirm this claim. With SD3.5-M as the base model and PickScore as the reward, we compare Flow-GRPO with different initial noise against Flow-GRPO with the same initial noise. Figure 11 shows the variant with different noise consistently achieved high rewards during the training process."
+  },
+  {
+   "id": "b0292",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0293",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 10: Effect of Initial Noise"
+  },
+  {
+   "id": "b0294",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0295",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 11: Additional Results on FLUX.1-Dev"
+  },
+  {
+   "id": "b0296",
+   "t": "text",
+   "w": "h3",
+   "en": "C.4 Additional Results on FLUX.1-Dev"
+  },
+  {
+   "id": "b0297",
+   "t": "text",
+   "w": "p",
+   "en": "We run Flow-GRPO on FLUX.1-Dev [5] using PickScore as the reward signal. The reward curve rises steadily throughout training without noticeable reward hacking. Figure 11 shows the reward values over the training process, and Table 7 compares FLUX.1-Dev with FLUX.1-Dev + Flow-GRPO on DrawBench."
+  },
+  {
+   "id": "b0298",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Comparison of FLUX.1-Dev and Flow-GRPO fine-tuned models."
+  },
+  {
+   "id": "b0299",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Aesthetic DeQA ImageReward PickScore UnifiedReward FLUX.1-Dev 5.71 4.31 0.85 22.62 3.65 FLUX.1-Dev + Flow-GRPO 6.02 4.24 1.32 23.97 3.81"
+  },
+  {
+   "id": "b0300",
+   "t": "text",
+   "w": "h3",
+   "en": "C.5 Learning Curves with or without KL"
+  },
+  {
+   "id": "b0301",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 12 shows learning curves for three tasks, with and without KL. These results emphasize that KL regularization is not empirically equivalent to early stopping. Adding appropriate KL can achieve the same high reward as the KL-free version and maintain image quality, though it requires longer training."
+  },
+  {
+   "id": "b0302",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0303",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a) Compositional Image Generation"
+  },
+  {
+   "id": "b0304",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0305",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(b) Visual Text Rendering"
+  },
+  {
+   "id": "b0306",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0307",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(c) Human Preference Alignment"
+  },
+  {
+   "id": "b0308",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 12: Learning Curves with and without KL. KL penalty slows early training yet effectively suppresses reward hacking."
+  },
+  {
+   "id": "b0309",
+   "t": "text",
+   "w": "h3",
+   "en": "C.6 Additional Qualitative Results"
+  },
+  {
+   "id": "b0310",
+   "t": "text",
+   "w": "p",
+   "en": "Figures 13, 14 & 15 qualitatively compare SD3.5-M with its Flow-GRPO enhanced versions (with and without KL regularization) using GenEval, OCR and PickScore rewards, respectively. Flow-GRPO with KL regularization improves the target capability while maintaining image quality and minimizing reward-hacking. Conversely, removing the KL constraint significantly degrades image quality and diversity."
+  },
+  {
+   "id": "b0311",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0312",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 13: Additional Qualitative comparison between the SD3.5-M and SD3.5-M + Flow-GRPO trained with GenEval reward."
+  },
+  {
+   "id": "b0313",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0314",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 14: Additional Qualitative comparison between the SD3.5-M and SD3.5-M + Flow-GRPO trained with OCR reward."
+  },
+  {
+   "id": "b0315",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0316",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 15: Additional Qualitative comparison between the SD3.5-M and SD3.5-M + Flow-GRPO trained with PickScore reward."
+  },
+  {
+   "id": "b0317",
+   "t": "text",
+   "w": "h3",
+   "en": "C.7 Evolution of Evaluation Images During Flow-GRPO Training"
+  },
+  {
+   "id": "b0318",
+   "t": "text",
+   "w": "p",
+   "en": "To better understand the training dynamics of our proposed Flow-GRPO framework, we visualize the evolution of generated samples corresponding to fixed evaluation prompts at regular intervals during training in Figure 16, 17 & 18. For consistency, all visualizations are produced using a 40-step ODE-based sampling schedule. These qualitative results provide a visual representation of how the model progressively improves its generation quality and alignment with task objectives over time."
+  },
+  {
+   "id": "b0319",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0320",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 16: We visualize the generated samples across successive training iterations during the optimization of SD3.5-Medium on the GenEval task."
+  },
+  {
+   "id": "b0321",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0322",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 17: We visualize the generated samples across successive training iterations during the optimization of SD3.5-Medium on the OCR task."
+  },
+  {
+   "id": "b0323",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0324",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 18: We visualize the generated samples across successive training iterations during the optimization of SD3.5-Medium on the PickScore task."
+  },
+  {
+   "id": "b0325",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D Training Sample Visualization with Denoising Reduction"
+  },
+  {
+   "id": "b0326",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we compare images obtained with SDE sampling at various steps against those produced by ODE sampling, and offer an intuitive view of the denoising reduction strategy. Figure 19 presents SD3.5-Medium samples under four inference settings: (a) ODE sampling with 40 steps; (b) SDE sampling with 40 steps; (c) SDE sampling with 10 steps; (d) SDE sampling with 5 steps."
+  },
+  {
+   "id": "b0327",
+   "t": "text",
+   "w": "p",
+   "en": "The 40-step ODE and SDE runs yield visually indistinguishable images, confirming that our SDE sampler preserves quality. Shortening the SDE schedule to 10 and 5 steps introduces conspicuous artifacts, like color drift and fine details blur. Contrary to expectation that such low-quality samples might hinder optimization. it actually do just the opposite and accelerate optimization. Because Flow-GRPO relies on relative preferences, it still extracts a useful reward signal, while the shorter trajectories signifactly cut wall-clock time. Consequently, Flow-GRPO with denoising reduction strategy converges more quickly on both layout-oriented benchmarks such as GenEval and quality-focused metrics such as PickScore, without sacrificing final performance."
+  },
+  {
+   "id": "b0328",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0329",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 19: Visualization of training samples under difference inference settings."
+  }
+ ]
+}

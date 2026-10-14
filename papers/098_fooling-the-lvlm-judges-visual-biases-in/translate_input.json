@@ -1,0 +1,1174 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fooling the LVLM Judges: Visual Biases in LVLM-Based Evaluation"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Recently, large vision–language models (LVLMs) have emerged as the preferred tools for judging text–image alignment, yet their robustness along the visual modality remains underexplored. This work is "
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0004",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "Leveraging their dual capacities for generation and cross-modal understanding, large vision–language models (LVLMs) have been adopted as automated evaluators of text–image pairs, enabling nuanced assessments that capture semantic coherence beyond superficial matching Ku et al. 2024; Chen et al. 2024a; Chen et al. 2024b. This approach has proven particularly effective for evaluating text-to-image (T2I) generation models, where the model is presented with an image-generation prompt and its corresponding output, and is tasked with assessing their semantic alignment Zhang et al. 2023; Chen et al. 2024b. With expectations for consistent and fair assessments, LVLM-based judgments are now widely used as reward signals in the training of next-generation image generation models Zhou et al. 2024; Wang et al. 2024b."
+  },
+  {
+   "id": "b0007",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: The LVLM judge is influenced by visual manipulations, resulting in an unfairly inflated evaluation score. Embedding the image generation instruction in the image (left) produces a manipulated image (right), leading to unfair assessment."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Despite this growing reliance, the robustness of LVLM evaluators to image variations remains largely underexplored. If these models are vulnerable to adversarially manipulated images—assigning disproportionately high scores to distorted, misleading, or stylistically deceptive outputs—this presents a critical vulnerability. Such susceptibility not only compromises the reliability of the evaluation process itself but also risks propagating flawed reward signals during the training of image generation systems."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "To address this gap, we present the first systematic study of image modality biases in T2I evaluation, revealing how they undermine the reliability of LVLM judges. Inspired by prior works on image perturbations Hendrycks and Dietterich 2019; Jia et al. 2020; Yang et al. 2023, we define a set of potential visual biases and investigate whether their introduction into an evaluated image leads LVLM judges to assign unfairly higher scores compared to the original. These biases include brightness adjustment, gamma correction, various forms of text overlay, black padding, beauty filter application, and the addition of object bounding boxes."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "Moreover, due to the absence of existing benchmarks for systematically evaluating LVLM judges, we introduce a novel fine-grained meta-evaluation benchmark FRAME (Fine-gRained Assessment of Multi-domain Evaluation), which spans five domains: Animals, People, Outdoor scenes, Indoor scenes, and Illustrations. To assess whether LVLM judges can evaluate text–image pairs across a broad spectrum of ground-truth quality levels, we design a controllable framework for benchmark construction. Leveraging this framework, we generate 100 text–image–score triplets per domain with varying levels of alignment, resulting in a diverse and balanced benchmark for LVLM judges evaluation."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "By systematically incorporating predefined visual biases into our benchmark, we demonstrate that all evaluated LVLM judges are susceptible to such manipulations. Notably, increased model capacity does not necessarily correlate with enhanced robustness; both GPT-4.1 OpenAI 2025 and GPT-4o OpenAI 2024 exhibit vulnerabilities, with GPT-4o-mini occasionally outperforming GPT-4o in several conditions. Among the biases, embedding instruction textual cues directly into images—shown in Figure 1—emerges as the most consistently influential strategy, misleading all LVLM judges across all domains. Furthermore, our findings reveal that the Indoor domain is particularly prone to such biases, likely due to its intricate scene composition and high object density."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "Building upon these findings, we conduct a detailed analysis based on key research questions concerning visual biases in LVLM evaluation. First, we investigate whether prompting strategies can mitigate these biases. While certain strategies lead to partial improvements, none fully eliminate the vulnerabilities, highlighting the need for more robust LVLM evaluation frameworks. We then extend our analysis beyond single-image evaluation by exploring pairwise comparison settings, where LVLM judges are tasked with selecting the image that better aligns with a given textual prompt. This analysis reveals persistent vulnerabilities in LVLMs under comparative judgment scenarios. Finally, we observe that combining multiple biases further exacerbates the vulnerability of LVLM judges."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Works"
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Evaluation of Image Generation Models"
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "To assess image-text alignment in text-to-image (T2I) generation, traditional metrics such as Fréchet Inception Distance (FID) Heusel et al. 2017 and Inception Score (IS) Salimans et al. 2016 have been widely adopted. Embedding-based methods, including CLIPScore Hessel et al. 2021 and BLIPScore Li et al. 2022, have improved evaluation by leveraging pretrained vision-language models to compute cross-modal similarity. Recent approaches incorporate human preference modeling—exemplified by PickScore Kirstain et al. 2023, ImageReward Xu et al. 2023, HPSv2 Wu et al. 2023, and Prometheus-Vision Lee et al. 2024b—to achieve better alignment with subjective judgments. Other studies have focused on compositional evaluation using question-answering frameworks Lin et al. 2024; Wu et al. 2024; Hu et al. 2023; Yarom et al. 2023, enabling more interpretable and fine-grained assessments."
+  },
+  {
+   "id": "b0017",
+   "t": "keep",
+   "w": "table",
+   "en": "Bias Definition Original → Biased Bounding Box Highlighting Drawing visible boxes around key objects in the image to emphasize their presence or location. → \\rightarrow Authenticity Overlay Adding the"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Taxonomy of visual biases illustrated through comparisons between original and biased images."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 LLM and LVLM Judges"
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "Recently, the LLM-as-a-judge paradigm has gained popularity Zheng et al. 2023; Gu et al. 2024, offering scalable and consistent evaluations Liu et al. 2023b; Zhu et al. 2023. However, these models have been shown to be vulnerable to biases and adversarial attacks Wang et al. 2024a; Liusie et al. 2024; Zeng et al. 2024; Raina et al. 2024; Lee et al. 2024a. Recently, this paradigm has been extended to multimodal scenarios through LVLM-as-a-judge frameworks Zhang et al. 2023; Ku et al. 2024; Chen et al. 2024b, although similar biases persist in these contexts as well Chen et al. 2024a. Despite these advances, visual biases in the context of T2I generation remain largely unexplored. To our knowledge, this study presents the first systematic analysis of their effects on LVLM judges in T2I tasks."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Taxonomy of Visual Biases"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Building on prior research on visual perturbations Hendrycks and Dietterich 2019; Jia et al. 2020; Yang et al. 2023; Yan et al. 2024; Shtedritski et al. 2023, we define visual biases as systematic manipulations of images designed to artificially enhance their perceived alignment with textual prompts. Such interventions can mislead LVLM judges, resulting in inflated evaluation scores that do not accurately reflect true semantic alignment. Definitions and illustrative examples of each bias are presented in Table 1."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "h4",
+   "en": "Bounding Box Highlighting"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "This technique manipulates images by enclosing generated objects within bounding boxes, which draws explicit attention to their presence and potentially signals successful object inclusion to the model—even when the object’s form, number, or position is inaccurate. This manipulation raises concerns that LVLMs may prioritize spatial saliency over holistic visual fidelity."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "h4",
+   "en": "Authenticity Overlay"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "This bias involves embedding the phrase \"Reference Image\" onto an image, introducing an implicit signal that suggests ground-truth authenticity. Although this phrase conveys no meaningful visual information, its presence may cause the model to overestimate the image’s authenticity, thereby inflating the evaluation score."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "h4",
+   "en": "Keyword Overlay"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "In this manipulation, a keyword from the original textual prompt (e.g., \"Cat\") is overlaid on the image. Although it provides no visual evidence of alignment, this textual insertion can create an illusion of relevance and give the impression that the keyword is genuinely part of the image, encouraging the LVLM judge to assign a higher score based on superficial cross-modal coherence."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "h4",
+   "en": "Instruction Overlay"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "This bias involves overlaying the entire instruction (e.g., “generate a red dog.”) onto the image to create the illusion of strong text-image alignment. Even if the image does not accurately follow the instruction, the presence of the embedded text can mislead LVLMs by exploiting their reliance on textual cues within the image itself."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "h4",
+   "en": "Beauty Filter"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "This manipulation targets the people domain by applying aesthetic filters that enhance facial features—such as symmetry, smoothness, or brightness—in accordance with conventional attractiveness norms. Although unrelated to instruction fidelity, these enhancements can exploit aesthetic biases in LVLMs, raising fairness concerns in generative evaluation."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "h4",
+   "en": "Brightness Adjustment"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "By artificially increasing the image brightness, this manipulation enhances perceived illumination. LVLM judges may confuse visual clarity with semantic quality, leading to higher scores that do not necessarily reflect improved alignment with the instruction or the actual quality of the image."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "h4",
+   "en": "Gamma Correction"
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "Gamma correction adjusts the tonal distribution of an image, particularly affecting the midtones. This alteration can create the perception of improved balance or sharpness, potentially directing the model’s attention toward specific regions of the image."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "h4",
+   "en": "Black Padding"
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "Adding black padding alters the image’s framing by isolating the core content. Though the visual semantics remain unchanged, this shift in composition can enhance the perceived focus or centrality of the subject, subtly influencing LVLM preferences."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "h2",
+   "en": "4 FRAME Benchmark"
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "Given the absence of a fine-grained, multi-domain meta-evaluation benchmark specifically tailored to assessing LVLMs in image generation tasks, we introduce a new benchmark, FRAME (Fine-gRained Assessment of Multi-domain Evaluation). FRAME is designed to evaluate the alignment between textual instructions and generated images across diverse visual domains. Section 4.1 describes our controllable benchmark construction methodology, which enables systematic score distribution adjustment. Section 4.2 presents key statistics of the benchmark."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Benchmark Construction"
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "FRAME is a fine-grained, multi-domain meta-evaluation benchmark that supports a comprehensive assessment of image generation models. It spans five commonly used domains in image synthesis Yu et al. 2022: Animals, People, Outdoor Scenes, Indoor Scenes, and Illustrations. Each domain contains 100 evaluation instances, resulting in a total of 500 instances."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "Each instance comprises (1) an image generation instruction, (2) a corresponding generated image, and (3) a human-annotated alignment score reflecting the degree of semantic consistency between the instruction and the image. Within each domain, we define four to five domain-specific visual concepts, carefully curated to capture distinctive visual elements. These concepts are systematically combined to create rich and contextually grounded generation instructions."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "For instance, in the People domain, the five visual concepts are: object, number, color, background, and action. Background examples include a city street or a high school classroom, while actions range from typing on a laptop to riding a bicycle. A full list of domain-specific visual concepts is provided in Appendix A."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "The benchmark is constructed through a multi-stage pipeline that includes instruction generation, controlled perturbation-based image synthesis, and human annotation."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "h4",
+   "en": "Instruction Formulation"
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "The process begins with the random sampling of visual elements from a predefined set of domain-specific concepts. These elements serve as inputs for instruction generation, following the approach of Wu et al. 2024. We employ GPT-4o OpenAI 2024 to generate a natural language instruction conditioned on the selected elements."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "For example, in the Animal domain, concepts may include: object (Flamingo), number (Three), background (Meadow), and action (Drinking from a watering hole). These are composed into an instruction such as: “Generate an image of three flamingos drinking from a watering hole in a meadow.” This structured formulation ensures systematic and nuanced control over both compositional and contextual complexity."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "h4",
+   "en": "Image Generation"
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "To produce a wide distribution of alignment scores, we apply a controllable generation framework. Rather than using only the original instructions, we introduce controlled perturbations by randomly modifying a subset of the visual concepts, yielding perturbed instructions. These perturbed prompts are then used to generate images."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "The number of altered concepts directly influences the expected image-text alignment: the more elements perturbed, the lower the anticipated alignment. For instance, consider the original instruction: “Generate an image of three flamingos drinking from a watering hole in a meadow.” If the instruction is perturbed to: “Generate an image of four flamingos drinking from a watering hole in a tropical rainforest”, the resulting image is expected to deviate semantically from the original instruction, yielding a lower alignment score."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "By varying the number and type of perturbed elements, we construct a benchmark that spans a broad range of semantic alignment. All images are generated using the DALL-E 3 model Betker et al. 2023 with a default setting."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "h4",
+   "en": "Human Annotation"
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "In the final stage, human annotators evaluate the semantic alignment between each generated image and its paired instruction. Each instance is scored based on how accurately the image reflects the instruction. Annotators are also instructed to identify and exclude cases involving unfeasible or incoherent instructions (e.g., impossible object-action combinations). Such instances are returned to the generation pipeline for regeneration. In addition, to ensure ethical integrity, any instruction that may produce harmful or inappropriate content is filtered out during this phase, guaranteeing that the resulting dataset is safe for evaluation. Further details on the human annotation procedure can be found in Appendix A"
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Statistics"
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "Statistics of FRAME are presented in Table 2. Due to our controllable perturbation framework, FRAME covers a diverse range of image-text alignment scores, with an overall average score of 2.57 across the dataset. This wide score distribution enables robust and fine-grained evaluation of model sensitivity to both compositional and semantic variations."
+  },
+  {
+   "id": "b0057",
+   "t": "keep",
+   "w": "table",
+   "en": "1-2 2-3 3-4 4-5 Total Avg. People 28 30 24 18 100 2.66 Animal 19 48 25 8 100 2.52 Illustration 27 51 12 10 100 2.36 Indoor 16 52 24 8 100 2.48 Outdoor 17 33 34 16 100 2.84 Total 107 214 119 60 500 2.5"
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Score distribution of the FRAME benchmark based on human evaluations. The \"Avg.\" column shows the average alignment score per domain."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Experiments"
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "We employ the FRAME benchmark and the predefined bias categories introduced in Section 3 to systematically evaluate the robustness of various LVLM judges against image-side biases. Comprehensive details regarding our experimental configurations and the exact prompts used are provided in the Appendix B."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 Experimental Setting"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "h4",
+   "en": "LVLM Judges"
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "Our evaluation includes eight state-of-the-art LVLMs. This set comprises four proprietary models from the GPT family: GPT-4.1 OpenAI 2025, GPT-4.1-mini, GPT-4o OpenAI 2024, and GPT-4o-mini; three models from the LLaVA family: LLaVA-1.5-13B Liu et al. 2024, LlaVA-NEXT-8B Li et al. 2024a, and LLaVA-Onevision-7B Li et al. 2024b; and one model from the Qwen family: Qwen2.5-VL-32B-Instruct Bai et al. 2025."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "h4",
+   "en": "Evaluation"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "Each LVLM judge is prompted with a standardized evaluation instruction alongside a text-image pair. We first report the average scores assigned by the LVLM judges to unaltered (original) images, which serve as a baseline. Subsequently, for each bias category, we prompt the LVLM judges with the corresponding text-biased image pairs and record the average scores assigned. We then calculate and report the percentage changes in average scores relative to the original (unbiased) condition to quantify the impact of each bias on judging behavior."
+  },
+  {
+   "id": "b0066",
+   "t": "keep",
+   "w": "table",
+   "en": "Domain Bias Orig. Bright. Gamma. Refer. Keyword. Inst. Padding. Bounding. GPT-4.1 People 1.65 1.72 (+4.2%) 1.70 (+2.7%) 1.72 (+3.9%) 1.76 (+6.4%) 1.77 (+7.0%) 1.77 (+7.3%) 1.90 (+14.9%) Animal 1.17 1."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Evaluation results of five different LVLM judges assessing text-to-image generation under various image bias conditions across multiple domains. Reported values correspond to the average alignment scores assigned by each LVLM judge, with values in parentheses indicating the change relative to evaluations on original (Orig.), unmanipulated images. Number highlighted in RED signifies successful attacks, where the presence of image biases led LVLM judges to assign higher scores. Please refer to the Appendix C for more results."
+  },
+  {
+   "id": "b0068",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Impact of visual biases across all LVLM judges. Left: Average attack success rates across five domains and seven types of visual bias. An attack is considered successful when the LVLM assigns a higher average score to the biased images than to the original counterparts. Right: Average percentage increase in score for successful attacks, reflecting the magnitude of the visual bias effect."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2 Results"
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "Table 3 presents the overall robustness results of LVLM judges when exposed to image-side biases across five distinct domains.22 2 Note that object-oriented Keyword Overlay and Bounding Box Highlighting manipulations are not applicable to the Outdoor domain, as it does not contain objects. The results reveal a consistent vulnerability to visual bias, as LVLM judges frequently assign inflated scores to image–text pairs containing visual manipulations. This susceptibility persists regardless of variations in (1) model type, (2) domain, and (3) bias category, indicating a systematic weakness in the current LVLM judge based evaluation."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "h4",
+   "en": "The vulnerability across models remains evident even as model capacity increases."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Table 3, all LVLM judges, including GPT-4.1 OpenAI 2025, exhibit susceptibility to these vulnerabilities, indicating that even the advanced models are not immune to these biases. Notably, models with higher capacity are sometimes more vulnerable to certain biases; for instance, GPT-4.1 and GPT-4o show greater sensitivity to Bounding Box manipulations compared to their smaller counterparts, GPT-4.1-mini and GPT-4o-mini."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 2 presents the attack success rate, defined as the proportion of domain–bias combinations in which manipulated images receive higher average scores, along with the average score increase in those successful cases. These results highlight how frequently and how strongly LVLM judges are influenced by visual biases. Interestingly, the results indicate that increased model capacity does not consistently correlate with improved robustness. For example, GPT-4o-mini demonstrates the strongest robustness in terms of attack success rate, with inflated scores observed in 64.71% of domain–bias combinations, compared to 67.65% for GPT-4o. Moreover, when considering the average percentage change in successful attacks, the Qwen2.5-VL-32B-Instruct model exhibits the highest robustness. Our findings reveal that larger model capacity alone does not guarantee increased resistance to visual biases. This trend may contrast with prior observations in other evaluation settings involving LLM judges Cantini et al. 2025; Howe et al. 2025, where larger models typically demonstrate greater robustness."
+  },
+  {
+   "id": "b0075",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Orig. Beauty. GPT-4.1 1.65 1.64 (-0.6%) GPT-4.1-mini 1.55 1.60 (+2.9%) Qwen2.5-32B-Inst. 2.14 2.21 (+3.2%) llava-1.5-13b 0.67 0.69 (+3.8%) GPT-4o 1.14 1.05 (-8.3%) GPT-4o-mini 2.32 2.31 (-0.5%) "
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Evaluation results of eight LVLM judges on beauty filter bias in the People domain."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "h4",
+   "en": "Instruction Overlay exhibits the most pronounced impact."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "Among all manipulation types, the Instruction Overlay—which directly embeds textual instructions onto the image—proves to be the most universally impactful. It consistently induces elevated scores across all LVLM judges and domains. Additionally, even subtle perturbations such as brightness adjustment (Bright.) and luminance shifts via gamma correction (Gamma.) are sufficient to mislead most LVLM judges, indicating a broad vulnerability to low-level visual changes."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "Table 4 presents results of the beauty filter applied to the People domain. Some models—particularly the majority of open-sourced evaluators—demonstrate a marked preference for images enhanced with beauty filters, consistently assigning them higher scores than their original versions. This finding raises ethical concerns, suggesting that current LVLMs may implicitly reinforce aesthetic biases by favoring filtered appearances."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "h4",
+   "en": "The Indoor domain exhibits the highest susceptibility."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "Across all models, the Indoor and Animal domains demonstrate the greatest sensitivity to visual perturbations, particularly those involving Bounding Boxes and Instruction Overlays. This elevated susceptibility likely stems from the complexity of the visual scenes and the increased reliance on accurate object recognition in these domains. In such settings, even minor visual modifications can disrupt the model’s perception of scene structure, leading to misleadingly inflated evaluation scores."
+  },
+  {
+   "id": "b0082",
+   "t": "keep",
+   "w": "table",
+   "en": "Bias Standard Bias-aware CoT Orig. 1.36 1.27 1.72 Bright. 1.44 (+5.9%) 1.35 (+6.2%) 1.82 (+5.7%) Gamma. 1.45 (+6.2%) 1.36 (+6.5%) 1.80 (+4.6%) Refer. 1.39 (+2.3%) 1.30 (+2.3%) 1.79 (+3.7%) Keyword. 1."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Evaluation results of prompt-based mitigation strategies using GPT-4.1-mini as the LVLM judge."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Analysis"
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we conduct a comprehensive analysis of the key research questions concerning visual biases in LVLM-based evaluation, using GPT-4.1-mini as the judge."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "h4",
+   "en": "LVLM judge bias persists under counter-prompting conditions."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "Recent studies demonstrate that prompting techniques—such as Chain-of-Thought (CoT) prompting Wei et al. 2022 and explicit debiasing prompts Hwang et al. 2025 33 3 You must disregard any superficial or stylistic perturbations that do not materially affect the semantic alignment between the instruction and the generated image.—can partially mitigate biases in LLMs. To evaluate whether these techniques also reduce susceptibility to visual bias in LVLM judges, we compare their effectiveness against a standard evaluation prompt."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Table 5, while CoT and bias-aware prompting exhibit some efficacy in mitigating certain types of bias, they fail to eliminate the overall bias. 44 4 We report averages across four domains, excluding Outdoor where Keyword. and Bounding. are inapplicable. Interestingly, CoT prompting leads to elevated evaluation scores for images containing bounding boxes. This may be attributed to the fact that bounding boxes guide the model’s visual attention during reasoning steps, thereby facilitating object-centric reasoning and inflating evaluation scores in an unintended manner. This observation aligns with recent findings that bounding boxes can enhance the visual attention of LVLMs during CoT reasoning Sun et al. 2024; Shao et al. 2024."
+  },
+  {
+   "id": "b0089",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Pairwise evaluation of group A vs. group B. Top: original results. Bottom: results after applying instruction overlay bias to set A."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "h4",
+   "en": "LVLM Judge Biases are Valid in Pairwise Evaluation."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "We investigate whether the influences of visual biases persist under pairwise evaluation settings Chen et al. 2024a; Chen et al. 2024b; Lee et al. 2024a. Specifically, for each prompt in the FRAME benchmark, we generate a corresponding set of images (B) using identical generation settings as the original image set (A). In the primary comparison, the LVLM judge evaluates each original image (A) against its counterpart (B). Additionally, we prompt the LVLM judge to compare the manipulated version of an image from Group A against its unmanipulated counterpart from Group B.55 5 For each domain, we apply the bias that yielded the highest average score during the main experiments in Table 3. To control for position bias Chen et al. 2024a; Wang et al. 2023; Liu et al. 2023a, each pairwise comparison is conducted twice, with the image order reversed, and the preference scores are averaged."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Figure 3, the introduction of visual biases consistently leads judges to favor the manipulated images. Notably, in the people, indoor, outdoor, and animal domains, baseline results show that A’s win rate is less than or equal to that of B. However, after manipulation, this ranking reverses, with A’s win rate surpassing that of B. This finding suggests that visual biases can be strategically exploited to mislead LVLM judges in pairwise evaluations, potentially resulting in unfair or inaccurate assessments of T2I generation models."
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "table",
+   "en": "Domain Orig. +Single bias +Combined bias People 1.55 1.68 (+8.4%) 1.71 (+10.3%) Animal 1.02 1.16 (+14.0%) 1.17 (+14.2%) Illustration 1.51 1.57 (+4.3%) 1.58 (+4.7%) Indoor 1.38 1.61 (+17.1%) 1.69 (+22."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Evaluation results of combined visual manipulations using GPT-4.1-mini as the LVLM judge."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "h4",
+   "en": "Combined Visual Biases Exacerbate LVLM Judges’ Vulnerability."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "We investigate whether combining two visual manipulations further amplifies judgment errors made by LVLM judges. We explore all combinations of two distinct bias strategies and identify the most impactful pair per domain, as shown in Table 6. Interestingly, an instruction overlay bias is involved in four of the five most influential combinations, underscoring its predominant impact—an observation that aligns with our earlier findings."
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in the table, the application of dual biases results in a substantial increase in average evaluation scores, thereby amplifying the impact of the attack. Although the combined effect of two biases is less than the sum of their individual effects, the compounding pattern suggests that stacking additional biases, such as three or more, could lead to even greater distortions in model judgment."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "h2",
+   "en": "7 Conclusion"
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "p",
+   "en": "This study uncovers a fundamental weakness in LVLM-based evaluation: susceptibility to visual biases that inflate scores without altering semantic content. Through eight defined manipulations—including brightness, overlays, and bounding boxes—we show that even state-of-the-art models are consistently misled. These vulnerabilities persist across evaluation formats and are only partially mitigated by prompting, highlighting the need for more robust assessment frameworks."
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "h2",
+   "en": "Limitations"
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "p",
+   "en": "As the first study to investigate the impact of image-side manipulations on LVLM-based evaluation, our work primarily focuses on representative visual modifications, including brightness adjustments and text overlays. Future research may explore more sophisticated attack strategies, including cross-model adversarial techniques or semantic-preserving perturbations. Moreover, as discussed in Section 6, the identified visual biases persist under the proposed prompting strategies. This highlights the need for future work to develop robust defense mechanisms specifically targeted at image-side manipulations."
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "p",
+   "en": "Moreover, since our study focuses on evaluating the robustness of LVLM judges rather than the performance of individual judges, we do not report correlation metrics between LVLM-generated scores and human judgments. However, to support future research in this area, our benchmark includes manually labeled scores provided by human annotators. These annotations can be readily used to assess human–model alignment or to train reward models in reinforcement learning with human feedback (RLHF)."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "p",
+   "en": "Finally, our benchmark covers five domains that are commonly used in text-to-image generation tasks Yu et al. 2022. Future research could extend this framework by incorporating a broader range of domains—such as medical imaging or satellite imagery—to more comprehensively evaluate the generalizability of LVLM-based evaluators."
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "h2",
+   "en": "Ethical Considerations"
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "p",
+   "en": "All models used in our study are obtained from official and publicly accessible sources. GPT models are accessed via OpenAI’s official platform, while Llava and Qwen models are acquired from their respective repositories with proper authorization. Our use of these models aligns with open science principles and adheres to the licensing terms under which they are released."
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "p",
+   "en": "To ensure the ethical integrity of our benchmark, all images are manually reviewed. Any prompts or instructions that could potentially generate harmful, offensive, or inappropriate content are filtered out during this process, thereby ensuring that the final dataset is suitable for research and evaluation purposes. In the process of writing this paper, we utilize an AI assistant at the sentence level for drafting and refining individual sentences."
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al. (2025) Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, Sibo Song, Kai Dang, Peng Wang, Shijie Wang, Jun Tang, Humen Zhong, Yuanzhi Zhu, Mingkun Yang, Zhaohai Li, Jianqiang Wan, "
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Betker et al. (2023) James Betker, Gabriel Goh, Li Jing, Tim Brooks, Jianfeng Wang, Linjie Li, Long Ouyang, Juntang Zhuang, Joyce Lee, Yufei Guo, Wesam Manassra, Prafulla Dhariwal, Casey Chu, Yunxin J"
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cantini et al. (2025) Riccardo Cantini, Alessio Orsino, Massimo Ruggiero, and Domenico Talia. 2025. Benchmarking adversarial robustness to bias elicitation in large language models: Scalable automated"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024a) Dongping Chen, Ruoxi Chen, Shilin Zhang, Yaochen Wang, Yinuo Liu, Huichi Zhou, Qihui Zhang, Yao Wan, Pan Zhou, and Lichao Sun. 2024a. Mllm-as-a-judge: Assessing multimodal llm-as-a"
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024b) Zhaorun Chen, Yichao Du, Zichen Wen, Yiyang Zhou, Chenhang Cui, Zhenzhen Weng, Haoqin Tu, Chaoqi Wang, Zhengwei Tong, Qinglan Huang, and 1 others. 2024b. Mj-bench: Is your multimod"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gu et al. (2024) Jiawei Gu, Xuhui Jiang, Zhichao Shi, Hexiang Tan, Xuehao Zhai, Chengjin Xu, Wei Li, Yinghan Shen, Shengjie Ma, Honghao Liu, and 1 others. 2024. A survey on llm-as-a-judge. arXiv prepr"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hendrycks and Dietterich (2019) Dan Hendrycks and Thomas Dietterich. 2019. Benchmarking neural network robustness to common corruptions and perturbations. arXiv preprint arXiv:1903.12261 ."
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hessel et al. (2021) Jack Hessel, Ari Holtzman, Maxwell Forbes, Ronan Le Bras, and Yejin Choi. 2021. Clipscore: A reference-free evaluation metric for image captioning. In Proceedings of the 2021 Conf"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Heusel et al. (2017) Martin Heusel, Hubert Ramsauer, Thomas Unterthiner, Bernhard Nessler, and Sepp Hochreiter. 2017. Gans trained by a two time-scale update rule converge to a local nash equilibrium."
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Howe et al. (2025) Nikolaus Howe, Ian McKenzie, Oskar Hollinsworth, Michał Zajac, Tom Tseng, Aaron Tucker, Pierre-Luc Bacon, and Adam Gleave. 2025. Scaling trends in language model robustness . Prepri"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hu et al. (2023) Yushi Hu, Benlin Liu, Jungo Kasai, Yizhong Wang, Mari Ostendorf, Ranjay Krishna, and Noah A Smith. 2023. Tifa: Accurate and interpretable text-to-image faithfulness evaluation with qu"
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hwang et al. (2025) Yerin Hwang, Yongil Kim, Jahyun Koo, Taegwan Kang, Hyunkyung Bae, and Kyomin Jung. 2025. Llms can be easily confused by instructional distractions. arXiv preprint arXiv:2502.04362 "
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jia et al. (2020) Xiaojun Jia, Xingxing Wei, Xiaochun Cao, and Xiaoguang Han. 2020. Adv-watermark: A novel watermark perturbation for adversarial examples. In Proceedings of the 28th ACM international"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kirstain et al. (2023) Yuval Kirstain, Adam Polyak, Uriel Singer, Shahbuland Matiana, Joe Penna, and Omer Levy. 2023. Pick-a-pic: An open dataset of user preferences for text-to-image generation. Adva"
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ku et al. (2024) Max Ku, Dongfu Jiang, Cong Wei, Xiang Yue, and Wenhu Chen. 2024. Viescore: Towards explainable metrics for conditional image synthesis evaluation. In Proceedings of the 62nd Annual Me"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lee et al. (2024a) Dongryeol Lee, Yerin Hwang, Yongil Kim, Joonsuk Park, and Kyomin Jung. 2024a. Are llm-judges robust to expressions of uncertainty? investigating the effect of epistemic markers on l"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lee et al. (2024b) Seongyun Lee, Seungone Kim, Sue Park, Geewook Kim, and Minjoon Seo. 2024b. Prometheus-vision: Vision-language model as a judge for fine-grained evaluation. In Findings of the Associ"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024a) Bo Li, Kaichen Zhang, Hao Zhang, Dong Guo, Renrui Zhang, Feng Li, Yuanhan Zhang, Ziwei Liu, and Chunyuan Li. 2024a. Llava-next: Stronger llms supercharge multimodal capabilities in t"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024b) Bo Li, Yuanhan Zhang, Dong Guo, Renrui Zhang, Feng Li, Hao Zhang, Kaichen Zhang, Yanwei Li, Ziwei Liu, and Chunyuan Li. 2024b. Llava-onevision: Easy visual task transfer . Preprint ,"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2022) Junnan Li, Dongxu Li, Caiming Xiong, and Steven Hoi. 2022. Blip: Bootstrapping language-image pre-training for unified vision-language understanding and generation. In International c"
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lin et al. (2024) Zhiqiu Lin, Deepak Pathak, Baiqi Li, Jiayao Li, Xide Xia, Graham Neubig, Pengchuan Zhang, and Deva Ramanan. 2024. Evaluating text-to-visual generation with image-to-text generation. "
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2024) Haotian Liu, Chunyuan Li, Yuheng Li, and Yong Jae Lee. 2024. Improved baselines with visual instruction tuning. In Proceedings of the IEEE/CVF Conference on Computer Vision and Patte"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023a) Nelson F Liu, Kevin Lin, John Hewitt, Ashwin Paranjape, Michele Bevilacqua, Fabio Petroni, and Percy Liang. 2023a. Lost in the middle: How language models use long contexts. arXiv p"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023b) Yang Liu, Dan Iter, Yichong Xu, Shuohang Wang, Ruochen Xu, and Chenguang Zhu. 2023b. G-eval: Nlg evaluation using gpt-4 with better human alignment. In Proceedings of the 2023 Confe"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liusie et al. (2024) Adian Liusie, Potsawee Manakul, and Mark Gales. 2024. Llm comparative assessment: Zero-shot nlg evaluation through pairwise comparisons using large language models. In Proceedings"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2024) OpenAI. 2024. Hello gpt-4o. https://openai.com/index/hello-gpt-4o . Accessed: 2025-05-15."
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2025) OpenAI. 2025. Introducing gpt-4.1 in the api ."
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Raina et al. (2024) Vyas Raina, Adian Liusie, and Mark Gales. 2024. Is llm-as-a-judge robust? investigating universal adversarial attacks on zero-shot llm assessment. In Proceedings of the 2024 Confer"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Salimans et al. (2016) Tim Salimans, Ian Goodfellow, Wojciech Zaremba, Vicki Cheung, Alec Radford, and Xi Chen. 2016. Improved techniques for training gans. Advances in neural information processing s"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Shao et al. (2024) Hao Shao, Shengju Qian, Han Xiao, Guanglu Song, Zhuofan Zong, Letian Wang, Yu Liu, and Hongsheng Li. 2024. Visual cot: Advancing multi-modal language models with a comprehensive dat"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Shtedritski et al. (2023) Aleksandar Shtedritski, Christian Rupprecht, and Andrea Vedaldi. 2023. What does clip know about a red circle? visual prompt engineering for vlms. In Proceedings of the IEEE/"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sun et al. (2024) Guangyan Sun, Mingyu Jin, Zhenting Wang, Cheng-Long Wang, Siqi Ma, Qifan Wang, Tong Geng, Ying Nian Wu, Yongfeng Zhang, and Dongfang Liu. 2024. Visual agents as fast and slow thinker"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2024a) Peiyi Wang, Lei Li, Liang Chen, Zefan Cai, Dawei Zhu, Binghuai Lin, Yunbo Cao, Lingpeng Kong, Qi Liu, Tianyu Liu, and 1 others. 2024a. Large language models are not fair evaluators"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2023) Peiyi Wang, Lei Li, Liang Chen, Zefan Cai, Dawei Zhu, Binghuai Lin, Yunbo Cao, Qi Liu, Tianyu Liu, and Zhifang Sui. 2023. Large language models are not fair evaluators. arXiv prepri"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2024b) Xiyao Wang, Jiuhai Chen, Zhaoyang Wang, Yuhang Zhou, Yiyang Zhou, Huaxiu Yao, Tianyi Zhou, Tom Goldstein, Parminder Bhatia, Furong Huang, and 1 others. 2024b. Enhancing visual-lang"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wei et al. (2022) Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Fei Xia, Ed Chi, Quoc V Le, Denny Zhou, and 1 others. 2022. Chain-of-thought prompting elicits reasoning in large language mod"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2023) Xiaoshi Wu, Yiming Hao, Keqiang Sun, Yixiong Chen, Feng Zhu, Rui Zhao, and Hongsheng Li. 2023. Human preference score v2: A solid benchmark for evaluating human preferences of text-to"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2024) Xindi Wu, Dingli Yu, Yangsibo Huang, Olga Russakovsky, and Sanjeev Arora. 2024. Conceptmix: A compositional image generation benchmark with controllable difficulty. arXiv preprint arX"
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xu et al. (2023) Jiazheng Xu, Xiao Liu, Yuchen Wu, Yuxuan Tong, Qinkai Li, Ming Ding, Jie Tang, and Yuxiao Dong. 2023. Imagereward: Learning and evaluating human preferences for text-to-image generati"
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yan et al. (2024) An Yan, Zhengyuan Yang, Junda Wu, Wanrong Zhu, Jianwei Yang, Linjie Li, Kevin Lin, Jianfeng Wang, Julian McAuley, Jianfeng Gao, and 1 others. 2024. List items one by one: A new data "
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2023) Jianwei Yang, Hao Zhang, Feng Li, Xueyan Zou, Chunyuan Li, and Jianfeng Gao. 2023. Set-of-mark prompting unleashes extraordinary visual grounding in gpt-4v. arXiv preprint arXiv:231"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yarom et al. (2023) Michal Yarom, Yonatan Bitton, Soravit Changpinyo, Roee Aharoni, Jonathan Herzig, Oran Lang, Eran Ofek, and Idan Szpektor. 2023. What you see is what you read? improving text-image "
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yu et al. (2022) Jiahui Yu, Yuanzhong Xu, Jing Yu Koh, Thang Luong, Gunjan Baid, Zirui Wang, Vijay Vasudevan, Alexander Ku, and 1 others. 2022. Scaling autoregressive models for content-rich text-to-i"
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zeng et al. (2024) Zhiyuan Zeng, Jiatong Yu, Tianyu Gao, Yu Meng, Tanya Goyal, and Danqi Chen. 2024. Evaluating large language models at evaluating instruction following. In 12th International Confere"
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2023) Xinlu Zhang, Yujie Lu, Weizhi Wang, An Yan, Jun Yan, Lianke Qin, Heng Wang, Xifeng Yan, William Yang Wang, and Linda Ruth Petzold. 2023. Gpt-4v (ision) as a generalist evaluator fo"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zheng et al. (2023) Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric Xing, and 1 others. 2023. Judging llm-as-a-judge with mt"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhou et al. (2024) Yiyang Zhou, Zhiyuan Fan, Dongjie Cheng, Sihan Yang, Zhaorun Chen, Chenhang Cui, Xiyao Wang, Yun Li, Linjun Zhang, and Huaxiu Yao. 2024. Calibrated self-rewarding vision language mo"
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2023) Lianghui Zhu, Xinggang Wang, and Xinlong Wang. 2023. Judgelm: Fine-tuned large language models are scalable judges. arXiv preprint arXiv:2310.17631 ."
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Details of Benchmark Construction"
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "p",
+   "en": "The visual concepts associated with each domain used in the benchmark construction are listed in Table 7. For each domain, we randomly sample visual elements from the corresponding concept list and prompt GPT-4o to generate a natural language instruction conditioned on the selected elements. Subsequently, we use the DALL-E 3 model Betker et al. 2023, with its default configuration, to generate images based on the generated instructions. The interface used for human annotation of our dataset is shown in Figure 8."
+  },
+  {
+   "id": "b0159",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Details of Experimental Setup"
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "h3",
+   "en": "B.1 Model Choice"
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "p",
+   "en": "The specific versions of the GPT models used in our experiments are as follows: gpt-4.1-2025-04-14, gpt-4.1-mini-2025-04-14, gpt-4o-2024-08-06, and gpt-4o-mini-2024-07-18."
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "p",
+   "en": "For the open-source models, we utilize the following: Llava-1.5-13b66 6 https://huggingface.co/llava-hf/llava-1.5-13b-hf, Llava-next-8b77 7 https://huggingface.co/llava-hf/llama3-llava-next-8b-hf, Llava-onevision-7b88 8 https://huggingface.co/llava-hf/llava-onevision-qwen2-7b-ov-hf, and Qwen2.5-32B-Instruct99 9 https://huggingface.co/Qwen/Qwen2.5-VL-32B-Instruct. All models are retrieved from Hugging Face’s official repositories to ensure consistency and reproducibility."
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "h3",
+   "en": "B.2 Evaluation Prompts"
+  },
+  {
+   "id": "b0164",
+   "t": "text",
+   "w": "p",
+   "en": "For the single evaluation setting used in the main experiment (Table 3), we adopt the prompt template presented in Figure 4. To facilitate the analysis of prompting strategies (Table 5), we employ two additional templates: a bias-aware prompt (Figure 5) and a Chain-of-Thought (CoT) prompt (Figure 6). Lastly, for the analysis involving pairwise evaluation (Table 3), we use the template illustrated in Figure 7."
+  },
+  {
+   "id": "b0165",
+   "t": "text",
+   "w": "h3",
+   "en": "B.3 Bias Recipe"
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "p",
+   "en": "For brightness adjustment and gamma correction, we search over the following set of scaling factors: [0.9, 0.95, 1.03, 1.05, 1.1, 1.11, 1.15, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 2.0, 2.1, 2.3], and report the most impactful value per setting. For text overlay methods—including Authenticity, Keyword, and Instruction—we vary the overlay position among five predefined locations: bottom-right, bottom-left, top-right, top-left, and center. The font size is fixed at 30 for Authenticity and Keyword overlays, and at 20 for Instruction overlays, to account for the longer instruction text length. For the black padding bias, we test a range of padding thickness values: [10, 15, 20, 25, 30, 40, 50]. The beauty filter is applied using an open-source implementation from https://github.com/TencentARC/GFPGAN. Bounding boxes are manually annotated by one of the co-authors using the annotation tool at https://www.makesense.ai."
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "h4",
+   "en": "Recipe for Main experiments"
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "p",
+   "en": "We release the full set of bias configurations used in our experiments (Table 3 and C), including the most effective parameters for each model, domain, and manipulation type (Bright., Gamma., Refer., Keyword., Inst., Padding.). Detailed recipes are presented in Tables 8 and 9."
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "h4",
+   "en": "Recipe for Analysis"
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "p",
+   "en": "We employ the GPT-4.1-mini model for all analysis experiments. For the prompt-based mitigation experiments in Table 5, we use the most effective parameters identified for GPT-4.1-mini per domain and bias type, as shown in Table 8 (e.g., a value of 0.9 for Bright. in the People domain, and the ‘center’ position for Instruction Overlay in the Illustration domain)."
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "p",
+   "en": "In the pairwise evaluation experiments (Figure 3), we apply the most impactful overlay positions for the Instruction Overlay bias, as determined from Table 8 (e.g., top-right’ in the People domain and bottom-right’ in the Animal domain)."
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "p",
+   "en": "Lastly, in the combined visual biases experiment (Table 6), we evaluate all possible combinations of two biases based on the GPT-4.1-mini recipe in Table 8 and report the most effective combinations per domain in Table 10."
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Additional Experimental Results"
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "p",
+   "en": "Additional experiment results using three additional models (GPT-4o-mini, llama3-llava-next-8b, and llava-onevision-qwen2-7b-ov) are shown in Table 11."
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "table",
+   "en": "Domain Attribute Values Animals Object Dog, Cat, Lion, Tiger, Elephant, Giraffe, Zebra, Kangaroo, Panda, Gorilla, Eagle, etc. Number one, two, three, four, five Background Tropical Rainforest, Flower "
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Visual Concepts List used for Benchmark Construction"
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Prompt template used for single-image scoring evaluations reported in Table 3."
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Prompt template used for bias-aware promoting methods reported in Table 5."
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Prompt template used for CoT prompting methods reported in Table 5."
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Prompt template used for pairwise scoring evaluations reported in Figure 3."
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "table",
+   "en": "Domain Bias Bright. Gamma. Refer. Keyword. Inst. Padding. GPT-4.1 People 1.7 1.5 top-right top-right bottom-right 50 Animal 1.5 2.3 center top-left bottom-left 20 Illustration 1.3 0.9 bottom-left bott"
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8: Most impactful parameters for each bias type across domains and model types (Part 1)."
+  },
+  {
+   "id": "b0187",
+   "t": "keep",
+   "w": "table",
+   "en": "Domain Bias Bright. Gamma. Refer. Keyword. Inst. Padding. GPT-4o-mini People 1.2 1.3 top-left top-left top-right 20 Animal 1.2 1.7 bottom-left top-left top-right 50 Illustration 1.03 1.3 bottom-right "
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 9: Most impactful parameters for each bias type across domains and model types (Part 2)."
+  },
+  {
+   "id": "b0189",
+   "t": "keep",
+   "w": "table",
+   "en": "Domain Combined bias recipe People Inst.: “top-right” + Beauty. Animal Refer.: “center” + Gamma.:“2.1” Illustration Inst.: “center” + Gamma.: “0.9” Indoor Inst.: “center” + Padding.: “40” Outdoor Inst"
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 10: Most impactful combinations of two visual biases for GPT-4.1-mini across different domains."
+  },
+  {
+   "id": "b0191",
+   "t": "keep",
+   "w": "table",
+   "en": "Domain Bias Orig. Bright. Gamma. Refer. Keyword. Inst. Padding. Bounding. GPT-4o-mini People 2.32 2.32 (0.0%) 2.32 (0.0%) 2.30 (-1.0%) 2.42 (+4.3%) 2.60 (+11.8%) 2.29 (-1.3%) 3.07 (+32.2%) Animal 1.76"
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 11: Evaluation results of three additional LVLM judges assessing text-to-image generation under various image bias conditions across multiple domains. Reported values correspond to the average alignment scores assigned by each LVLM judge, with values in parentheses indicating the change relative to evaluations on original (Orig.), unmanipulated images. Number highlighted in RED signifies successful attacks, where the presence of image biases led LVLM judges to assign higher scores."
+  },
+  {
+   "id": "b0193",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8: Human annotation task interface."
+  }
+ ]
+}

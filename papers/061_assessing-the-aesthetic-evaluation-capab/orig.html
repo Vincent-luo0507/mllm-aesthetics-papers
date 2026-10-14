@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>061_assessing-the-aesthetic-evaluation-capab</title>
+<script>
+window.MathJax={
+  tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']],processEscapes:true},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+body{max-width:1180px;margin:0 auto;padding:24px 20px;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+color:#1f2937;line-height:1.8;font-size:15.5px;background:#fff;}
+img{max-width:100%;height:auto;display:block;margin:12px auto;}
+table{border-collapse:collapse;margin:14px 0;font-size:14px;} td,th{border:1px solid #d8dee6;padding:6px 9px;}
+h1,h2,h3,h4{color:#1e3a8a;}
+</style></head><body>
+<html><body><h1 class="ltx_title ltx_title_document">Assessing the Aesthetic Evaluation Capabilities of GPT-4 with Vision: 
+<br class="ltx_break"/>Insights from Group and Individual Assessments</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Yoshia Abe
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Tatsuya Daikoku
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Yasuo Kuniyoshi
+</span></span></div>
+<div class="ltx_abstract" id="abstract1"><h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p class="ltx_p" id="abstract1.1">Recently, it has been recognized that large language models demonstrate high performance on various intellectual tasks.
+However, few studies have investigated alignment with humans in behaviors that involve sensibility, such as aesthetic evaluation.
+This study investigates the performance of GPT-4 with Vision, a state-of-the-art language model that can handle image input, on the task of aesthetic evaluation of images.
+We employ two tasks, prediction of the average evaluation values of a group and an individual’s evaluation values.
+We investigate the performance of GPT-4 with Vision by exploring prompts and analyzing prediction behaviors.
+Experimental results reveal GPT-4 with Vision’s superior performance in predicting aesthetic evaluations and the nature of different responses to beauty and ugliness.
+Finally, we discuss developing an AI system for aesthetic evaluation based on scientific knowledge of the human perception of beauty, employing agent technologies that integrate traditional deep learning models with large language models.</p>
+</div>
+<div class="ltx_pagination ltx_role_newpage"></div>
+<div class="ltx_para" id="p1">
+<p class="ltx_p" id="p1.1"><span class="ltx_text" id="p1.1.1"></span></p>
+</div>
+<div class="ltx_para ltx_align_center" id="p2">
+<table class="ltx_tabular ltx_align_top" id="p2.1">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="p2.1.1">
+<td class="ltx_td ltx_align_center" id="p2.1.1.1" style="padding-top:-1.5pt;padding-bottom:-1.5pt;">
+The University of Tokyo</td></tr>
+</tbody>
+</table>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">1. </span>Introduction</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1">In recent years, Large Language Models (LLMs) have been shown to be effective for a number of tasks, such as Q&amp;A tasks and logical reasoning tasks.
+While these types of intellectual problem-solving abilities have been widely investigated, there have not been many investigations on performance for tasks requiring sensibility <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx18" title="">Ye 24</a>, <a class="ltx_ref" href="#bib.bibx9" title="">OpenAI 23</a>]</cite>.
+In this paper, we investigate how closely state-of-the-art LLMs align with humans in one of the sensibility behaviors, aesthetic evaluation.</p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1">Humans perform aesthetic evaluations on information accross various modalities.
+In addition to aesthetic evaluation of textual information (e.g. stories and poems), which can be handled by LLMs,
+humans also perceive beauty in images, music, and moral behaviors.
+In this paper, we focus on the beauty of images, a modality where substantial knowledge about aesthetic evaluations has been established.</p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1">Recently, GPT-4, one of the most powerful LLMs, has begun to support image input <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx9" title="">OpenAI 23</a>, <a class="ltx_ref" href="#bib.bibx17" title="">Yang 23</a>]</cite>.
+Among various types of Vision Language Models that can handle images and text, in this paper, we adopt GPT-4 with vision (GPT-4V) as the language model under investigation.</p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1">The purpose of this paper is to investigate the aesthetic evaluation performance of GPT-4V.
+A comparison of prompt engineering methods and an analysis of the behavior of predictions are also conducted.
+The experimental results reveal the nature of the current LLM’s aesthetic evaluation performance and behavior, and provide insight for improvement.
+In the last of this paper, we discuss the direction of future developments: we should take scientific knowledge of beauty into account and build an aesthetic evaluation model using agent technology that integrates traditional deep learning models and LLMs.</p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">2. </span>Related Works</h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1">There has been a lot of research on approximating the aesthetic evaluation of images using AI technologies <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx3" title="">Deng 17</a>]</cite>.
+Initially, image features were desined directly by humans <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx5" title="">Ke 06</a>]</cite>, or by machine learning models using generic image features such as the Fisher vector <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx7" title="">Marchesotti 11</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1">In the past decade or so, deep learning technology has advanced, and research has emerged on approximating the aesthetic evaluation of images using neural networks in a black box manner.
+For example, studies have been reported that use convolutional neural networks to acquire image features through learning <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx4" title="">Kao 15</a>, <a class="ltx_ref" href="#bib.bibx12" title="">Talebi 18</a>]</cite>.
+These studies have been contributed to by the fact that large-scale aesthetic evaluation datasets (e.g. AVA <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx8" title="">Murray 12</a>]</cite>) were constructed using platform sites on the Internet. These large datasets are beneficial for deep learning, which requires a large amount of training data.
+Most of the above studies set the mean value of the people’s aesthetic evaluation as the ground truth for regression or classification.
+This is called the Generic Image Aesthetics Assessment (GIAA) <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx6" title="">Li 20</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1">On the other hand, there has been recent progress in adressing the task of approximating the aesthetic evaluation of a particular individual, which is called the Personalized Image Aesthetics Assessment (PIAA) <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx6" title="">Li 20</a>]</cite>.
+Several methods have been proposed for constructing PIAA models using deep learning:
+a method where a model that takes an image as an input, receives the individual’s attributes as conditioning, and outputs the individual’s aesthetic evaluation <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx16" title="">Yang 22</a>]</cite>. Another method is to firstly train a GIAA model using a dataset of people’s aesthetic evaluations and then convert into a PIAA model by fine-tuning with personal data <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx16" title="">Yang 22</a>]</cite>. Another method is to use the GIAA model as a sub-module, make a sub-module that predicts the difference between the output values of the GIAA model and the individual aesthetic evaluations, and build a PIAA model by adding these two sub-modules <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx11" title="">Ren 17</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.p4">
+<p class="ltx_p" id="S2.p4.1">However, the problem with these methods is that the use of the average value of the aesthetic evaluation of the masses neutralizes the differences in individual processes of perception of beauty <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx20" title="">Zhu 22</a>]</cite>.
+In the PIAA task, there are the problem of such individual differences in aesthetic evaluation <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx11" title="">Ren 17</a>]</cite> and the problem of the small amount of data for each individual person.
+These problems are currently hindering the construction of PIAA models because they are incompatible with deep learning, which requires a large amount of data and consistent labeling.</p>
+</div>
+<div class="ltx_para" id="S2.p5">
+<p class="ltx_p" id="S2.p5.1">One possible solution to such problems might be to use LLMs.
+This is because the perception of beauty is said to be strongly influenced not only by the objective features of the input stimuli, but also by the prior and background knowledge that a person has acquired through past experiences <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx2" title="">Chatterjee 16</a>, <a class="ltx_ref" href="#bib.bibx10" title="">Reber 04</a>]</cite>.
+LLMs have extensive knowledge acquired from vast amount of text data, which may be transferable to aesthetic evaluation.
+Therefore, as a first step, this study aims to investigate the current LLM’s performance for aesthetic evaluation.</p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">3. </span>Methods</h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1">Using the OpenAI API of GPT-4V, we investigate how well a LLM performs on aesthetic evaluation of images.</p>
+</div>
+<div class="ltx_para" id="S3.p2">
+<p class="ltx_p" id="S3.p2.1">Two tasks, GIAA and PIAA, are employed.
+GIAA is a task in which GPT-4V predicts the average aesthetic evaluation of an image given by a group of users, as a three-class classification problem.
+PIAA is a task in which GPT-4V understands the tendncy of a user’s aesthetic evaluation using few-shot prompting, and predicts the user’s aesthetic evaluation for a newly presented image based on the understanding. This is also a three-class classification problem.</p>
+</div>
+<div class="ltx_para" id="S3.p3">
+<p class="ltx_p" id="S3.p3.1">PARA <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx16" title="">Yang 22</a>]</cite> exists as a dataset of aesthetic evaluation of images that can be used for both GIAA and PIAA.
+PARA stores aesthetic evaluations by 438 raters for a total of 31220 images.</p>
+</div>
+<div class="ltx_para" id="S3.p4">
+<p class="ltx_p" id="S3.p4.1">In both cases of GIAA and PIAA, basically, the performance indicator is the percentage of correct answers in the three-class classification problem (accuracy).
+This indicator is appropriate because the number of samples in each class (low/middle/high) is the same in our experiments.
+In some cases, we also report the precision, recall, and f1-score for each class as additional performance measures.</p>
+</div>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">4. </span>Exp. 1: GIAA</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1">PARA dataset contains images of 10 semantic patterns: portrait, animal, scene, building, still life, night scene, food, indoor, plant, and others.
+In this experiment, we use six of them (portrait, animal, scene, night scene, food, and plant), which we call ”target-semantics”.</p>
+</div>
+<div class="ltx_para" id="S4.p2">
+<p class="ltx_p" id="S4.p2.1">PARA dataset stores the average aesthetic score (1-5 floating point number) of the aesthetic evaluation by multiple raters for each image.
+In this experiment, this value is divided into the following three intervals and used as the correct label for the aesthetic evaluation.
+The values greater than 1.0 and up to 2.5 are defined as ”low”, greater than 2.5 and up to 3.5 are defined as ”middle”, and greater than 3.5 and up to 5.0 are defined as ”high”.</p>
+</div>
+<div class="ltx_para" id="S4.p3">
+<p class="ltx_p" id="S4.p3.1">Considering the number of patterns to be explored and the GPT-4V’s API usage fee, it is not efficient to obtain GPT-4V’s aesthetic evaluation for all images in the PARA dataset, so a subset of the entire dataset is used in this experiment.
+Among the images belonging to the 6 patterns of target-semantics, <math alttext="n" class="ltx_Math" display="inline" id="S4.p3.m1" intent=":literal"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> images are extracted from each of the aesthetic evaluation labels (low/middle/high).
+The resulting <math alttext="6*3*n=18n" class="ltx_Math" display="inline" id="S4.p3.m2" intent=":literal"><semantics><mrow><mrow><mn>6</mn><mo lspace="0.222em" rspace="0.222em">∗</mo><mn>3</mn><mo lspace="0.222em" rspace="0.222em">∗</mo><mi>n</mi></mrow><mo>=</mo><mrow><mn>18</mn><mo lspace="0em" rspace="0em">​</mo><mi>n</mi></mrow></mrow><annotation encoding="application/x-tex">6*3*n=18n</annotation></semantics></math> image are used as the subset for validation to measure the aesthetic evaluation performance of GPT-4V.
+This is done for 5 random seeds to account for variation.</p>
+</div>
+<div class="ltx_para" id="S4.p4">
+<p class="ltx_p" id="S4.p4.1">The prompt for GPT-4V is designed as follows.
+First, the following text is input as a system attribute prompt that presents the premise of the interaction.</p>
+</div>
+<div class="ltx_para" id="S4.p5">
+<blockquote class="ltx_quote" id="S4.p5.1">
+<p class="ltx_p" id="S4.p5.1.1"><span class="ltx_text ltx_font_typewriter" id="S4.p5.1.1.1">You will be asked to provide an aesthetic evaluation of the image that will be presented to you.
+The aesthetic evaluation of the image will be conducted in three levels: 0: low, 1: middle, 2: high.
+First, the image will be presented, followed by a question. Provide your answer after the question is presented.
+When answering, output only in JSON format. Refrain from outputting anything other than JSON format.
+</span></p>
+</blockquote>
+</div>
+<div class="ltx_para" id="S4.p6">
+<p class="ltx_p" id="S4.p6.1">Next, after inputting a tokenized image to be evaluated, we input the following text as a user attribute prompt for question about aesthetic evaluation.
+GPT-4V’s output is limited to JSON format, so it can be parsed mechanically.
+We call the following prompt the <math alttext="Q_{\mathrm{Default}}" class="ltx_Math" display="inline" id="S4.p6.m1" intent=":literal"><semantics><msub><mi>Q</mi><mi>Default</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Default}}</annotation></semantics></math> prompt to distinguish it from the variations used in Exp. 1-B and 1-C.</p>
+</div>
+<div class="ltx_para" id="S4.p7">
+<blockquote class="ltx_quote" id="S4.p7.1">
+<p class="ltx_p" id="S4.p7.1.1"><span class="ltx_text ltx_font_typewriter" id="S4.p7.1.1.1">Predict the aesthetic evaluation of the image by choosing from three classes (0: low, 1: middle, 2: high) as an integer value (0,1,2), and explain the reason and your confidence level (as a floating-point number ranging from 0 to 1).
+<br class="ltx_break"/>
+<br class="ltx_break"/>Note:
+<br class="ltx_break"/>- Answer in English. 
+<br class="ltx_break"/>- Answer from the perspective of your position.
+<br class="ltx_break"/>- Ensure that your output is strictly in JSON format without any additional characters or formatting symbols such as ‘‘‘ before and after the JSON object.
+<br class="ltx_break"/>- Strictly adhere to the example format provided below:
+<br class="ltx_break"/>{"reason": "~~~", "prediction": 0, "confidence": 0.5}
+<br class="ltx_break"/></span></p>
+</blockquote>
+</div>
+<div class="ltx_para" id="S4.p8">
+<p class="ltx_p" id="S4.p8.1">In making the prompts, we employ various methods of prompt engineering that are often used: clear and specific task instruction, output format settings, example responses, task segmentation and so on.
+In addition, since it is said that GPT-4V currently performs better in English, all the information is written in English.</p>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.1 </span>Exp. 1-A: Comparison of Resolution</h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1">GPT-4V can receive tokenized images with text data as input.
+When tokenizing images, two resolution modes, low and high, are available (as of 2024/2).
+When the resolution mode is low, the image is resized to 512x512 and tokenized.
+When the resolution mode is high, the image is reduced to within 2048x2048 with a fixed aspect ratio, then resized to 768 on the short side and tokenized.
+In Exp. 1-A, we examine the difference in the prediction performance of the aesthetic evaluation of an image when the resolution mode is set to low or high.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.1">The GIAA performance for the two resolution modes low/high is shown in Fig. <a class="ltx_ref" href="#S4.F1" title="Figure 1 ‣ 4.1 Exp. 1-A: Comparison of Resolution ‣ 4. Exp. 1: GIAA ‣ Assessing the Aesthetic Evaluation Capabilities of GPT-4 with Vision: Insights from Group and Individual Assessments"><span class="ltx_text ltx_ref_tag">1</span></a>.
+This graph shows a box-and-whisker plot of the percentage of correct responses (accuracy) for each of the five seed trials.
+The upper and lower whiskers indicate the range of <math alttext="1.5" class="ltx_Math" display="inline" id="S4.SS1.p2.m1" intent=":literal"><semantics><mn>1.5</mn><annotation encoding="application/x-tex">1.5</annotation></semantics></math> times the quartile range from the lower and upper quartiles, respectively, and values outside this range are indicated by white circles as outliers.
+The red diamonds indicate the mean values, and the red upper and lower whiskers indicate the 95% confidence intervals. (The box-and-whisker plot and the red dots are the same for subsequent experiments.)
+A Welch’s t-test (significance level <math alttext="0.05" class="ltx_Math" display="inline" id="S4.SS1.p2.m2" intent=":literal"><semantics><mn>0.05</mn><annotation encoding="application/x-tex">0.05</annotation></semantics></math>) was conducted on the sample group of the mean percentage of correct responses (accuracy) in these two conditions, and the p-value was <math alttext="0.885" class="ltx_Math" display="inline" id="S4.SS1.p2.m3" intent=":literal"><semantics><mn>0.885</mn><annotation encoding="application/x-tex">0.885</annotation></semantics></math>, indicating that there was no significant difference.
+Since these results indicate that there is no difference between low and high resolution modes, we decided to use the low resolution mode for all the subsequent experiments.</p>
+</div>
+<figure class="ltx_figure" id="S4.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="518" id="S4.F1.g1" src="figures/accuracy_f1-score_comparison.png" style="aspect-ratio:518/518;" width="518"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Comparison of accuracy in different resolusion modes</figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.2 </span>Exp. 1-B: Comparison of Question</h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1">It is well known that when we ask LLMs to perform some reasoning task, it is better to divide the question into subproblems <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx19" title="">Zhou 23</a>]</cite> or to make them think in logical steps <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx14" title="">Wei 23</a>]</cite>.
+Although it is debatable whether or not logical reasoning is necessary for the image aesthetic evaluation task we are dealing with now, we assume that when a person evaluates an image aesthetically, he/she evaluates the various items first, integrates them, and then makes a final judgment.
+We create two patterns of prompts that follow this assumption.
+In the first pattern <math alttext="Q_{\mathrm{Elements}}" class="ltx_Math" display="inline" id="S4.SS2.p1.m1" intent=":literal"><semantics><msub><mi>Q</mi><mi>Elements</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Elements}}</annotation></semantics></math>, GPT-4V is asked to evaluate eight items (composition, shade, color, lightness, darkness, sharpness, depth of field, emotion, and creativity) that can be related to the aesthetic evaluation of an image first, and then answer the final aesthetic evaluation based on these evaluations.
+In the second pattern <math alttext="Q_{\mathrm{Techniques}}" class="ltx_Math" display="inline" id="S4.SS2.p1.m2" intent=":literal"><semantics><msub><mi>Q</mi><mi>Techniques</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Techniques}}</annotation></semantics></math>, the participants are asked to evaluate the three perspectives known as the basic techniques for taking beautiful pictures <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx3" title="">Deng 17</a>]</cite> first, and then answer the final aesthetic evaluation based on these evaluations. The three perspectives are: rule of thirds (dividing the image vertically and horizontally into three sections each and placing the subject on the four intersections of the dividing lines to improve balance), low depth of field (showing the subject clearly and blurring the background to make the subject stand out), and opposing colors (combining colors that are opposite to each other on the color wheel to create a strong visual contrast).</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.1">We compared the three prompt patterns <math alttext="Q_{\mathrm{Elements}}" class="ltx_Math" display="inline" id="S4.SS2.p2.m1" intent=":literal"><semantics><msub><mi>Q</mi><mi>Elements</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Elements}}</annotation></semantics></math>, <math alttext="Q_{\mathrm{Techniques}}" class="ltx_Math" display="inline" id="S4.SS2.p2.m2" intent=":literal"><semantics><msub><mi>Q</mi><mi>Techniques</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Techniques}}</annotation></semantics></math>, and <math alttext="Q_{\mathrm{Default}}" class="ltx_Math" display="inline" id="S4.SS2.p2.m3" intent=":literal"><semantics><msub><mi>Q</mi><mi>Default</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Default}}</annotation></semantics></math>. The results are shown in Fig. <a class="ltx_ref" href="#S4.F2" title="Figure 2 ‣ 4.2 Exp. 1-B: Comparison of Question ‣ 4. Exp. 1: GIAA ‣ Assessing the Aesthetic Evaluation Capabilities of GPT-4 with Vision: Insights from Group and Individual Assessments"><span class="ltx_text ltx_ref_tag">2</span></a>.
+A Welch’s t-test (significance level <math alttext="0.05" class="ltx_Math" display="inline" id="S4.SS2.p2.m4" intent=":literal"><semantics><mn>0.05</mn><annotation encoding="application/x-tex">0.05</annotation></semantics></math>) was conducted on the sample groups of any two conditions taken from the groups of the three conditions, and the results were as follows.
+(<math alttext="Q_{\mathrm{Default}}" class="ltx_Math" display="inline" id="S4.SS2.p2.m5" intent=":literal"><semantics><msub><mi>Q</mi><mi>Default</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Default}}</annotation></semantics></math>, <math alttext="Q_{\mathrm{Techniques}}" class="ltx_Math" display="inline" id="S4.SS2.p2.m6" intent=":literal"><semantics><msub><mi>Q</mi><mi>Techniques</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Techniques}}</annotation></semantics></math>) pair had p-value of <math alttext="0.004" class="ltx_Math" display="inline" id="S4.SS2.p2.m7" intent=":literal"><semantics><mn>0.004</mn><annotation encoding="application/x-tex">0.004</annotation></semantics></math> and
+(<math alttext="Q_{\mathrm{Elements}}" class="ltx_Math" display="inline" id="S4.SS2.p2.m8" intent=":literal"><semantics><msub><mi>Q</mi><mi>Elements</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Elements}}</annotation></semantics></math>, <math alttext="Q_{\mathrm{Techniques}}" class="ltx_Math" display="inline" id="S4.SS2.p2.m9" intent=":literal"><semantics><msub><mi>Q</mi><mi>Techniques</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Techniques}}</annotation></semantics></math>) pair had p-value <math alttext="0.022" class="ltx_Math" display="inline" id="S4.SS2.p2.m10" intent=":literal"><semantics><mn>0.022</mn><annotation encoding="application/x-tex">0.022</annotation></semantics></math>, indicating a significant difference.
+Although in the (<math alttext="Q_{\mathrm{Default}}" class="ltx_Math" display="inline" id="S4.SS2.p2.m11" intent=":literal"><semantics><msub><mi>Q</mi><mi>Default</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Default}}</annotation></semantics></math>, <math alttext="Q_{\mathrm{Elements}}" class="ltx_Math" display="inline" id="S4.SS2.p2.m12" intent=":literal"><semantics><msub><mi>Q</mi><mi>Elements</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Elements}}</annotation></semantics></math>) pair, the p-value was <math alttext="0.142" class="ltx_Math" display="inline" id="S4.SS2.p2.m13" intent=":literal"><semantics><mn>0.142</mn><annotation encoding="application/x-tex">0.142</annotation></semantics></math>, indicating no significant difference, the graph shows that the mean and its 95% confidence interval were higher in the <math alttext="Q_{\mathrm{Default}}" class="ltx_Math" display="inline" id="S4.SS2.p2.m14" intent=":literal"><semantics><msub><mi>Q</mi><mi>Default</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Default}}</annotation></semantics></math> condition.
+These results indicate that <math alttext="Q_{\mathrm{Default}}" class="ltx_Math" display="inline" id="S4.SS2.p2.m15" intent=":literal"><semantics><msub><mi>Q</mi><mi>Default</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Default}}</annotation></semantics></math> is the best question prompt, so we decided to use <math alttext="Q_{\mathrm{Default}}" class="ltx_Math" display="inline" id="S4.SS2.p2.m16" intent=":literal"><semantics><msub><mi>Q</mi><mi>Default</mi></msub><annotation encoding="application/x-tex">Q_{\mathrm{Default}}</annotation></semantics></math> prompt in the subsequent experiment.</p>
+</div>
+<figure class="ltx_figure" id="S4.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="622" id="S4.F2.g1" src="figures/accuracy_f1-score_comparison.png" style="aspect-ratio:622/622;" width="622"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Comparison of accuracy in different question cases (GIAA) </figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.3 </span>Exp. 1-C: Comparison of Persona</h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.1">It is know that it is better to specify a persona when having LLMs perform some inference task <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx15" title="">Xu 23</a>]</cite>.
+In Exp. 1-A and 1-B, we investigated the GIAA performance of GPT-4V without specifying a persona, but in Exp. 1-C, we investigate the difference depending on the persona specified.</p>
+</div>
+<div class="ltx_para" id="S4.SS3.p2">
+<p class="ltx_p" id="S4.SS3.p2.1">Persona information is given at the beginning of the system attribute prompt.
+We use 6 patterns of personas: photographer, artist, critic, ordinary person+ (a person interested in photography and painting), ordinary person- (a person not interested in photography or painting), and none (no persona specification).</p>
+</div>
+<div class="ltx_para" id="S4.SS3.p3">
+<p class="ltx_p" id="S4.SS3.p3.1">The result of the comparison of these six personas is shown in Fig. <a class="ltx_ref" href="#S4.F3" title="Figure 3 ‣ 4.3 Exp. 1-C: Comparison of Persona ‣ 4. Exp. 1: GIAA ‣ Assessing the Aesthetic Evaluation Capabilities of GPT-4 with Vision: Insights from Group and Individual Assessments"><span class="ltx_text ltx_ref_tag">3</span></a>.
+A one-way ANOVA (Analysis of Variance) (significance level <math alttext="0.05" class="ltx_Math" display="inline" id="S4.SS3.p3.m1" intent=":literal"><semantics><mn>0.05</mn><annotation encoding="application/x-tex">0.05</annotation></semantics></math>) was conducted to test for significant differences among the six conditions for the sample group of the mean accuracy.
+The result was p-value <math alttext="0.788" class="ltx_Math" display="inline" id="S4.SS3.p3.m2" intent=":literal"><semantics><mn>0.788</mn><annotation encoding="application/x-tex">0.788</annotation></semantics></math>, indicating no significant difference.
+However, considering the variation in accuracy seen in Fig. <a class="ltx_ref" href="#S4.F3" title="Figure 3 ‣ 4.3 Exp. 1-C: Comparison of Persona ‣ 4. Exp. 1: GIAA ‣ Assessing the Aesthetic Evaluation Capabilities of GPT-4 with Vision: Insights from Group and Individual Assessments"><span class="ltx_text ltx_ref_tag">3</span></a>, we can see that the case with no persona specification (None) may be relatively the most effective.
+In this case, the prediction performances other than accuracy for the three aesthetic evaluation classes are shown in Table <a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ 4.3 Exp. 1-C: Comparison of Persona ‣ 4. Exp. 1: GIAA ‣ Assessing the Aesthetic Evaluation Capabilities of GPT-4 with Vision: Insights from Group and Individual Assessments"><span class="ltx_text ltx_ref_tag">1</span></a>.
+All of these are averages over <math alttext="5" class="ltx_Math" display="inline" id="S4.SS3.p3.m3" intent=":literal"><semantics><mn>5</mn><annotation encoding="application/x-tex">5</annotation></semantics></math> seeds, rounded to the third decimal place.
+For each indicator, maximum value is shown in bold and the minimum value in underline.</p>
+</div>
+<div class="ltx_para" id="S4.SS3.p4">
+<p class="ltx_p" id="S4.SS3.p4.1">The precision, recall, and f1-score indices all show that the performance of the other two classes is higher than that of the ”middle” aesthetics evaluation class.
+This indicates the obvious phenomenon that the classes with extreme ratings are more predictable than the class with intermediate ratings, regardless of whether they are superior or inferior.
+On the other hand, a different phenomenon is observed for precision and recall.
+Precision, i.e., the percentage of instances predicted as a certain class that actually belong to that class, is higher for ”high” than for ”low”.
+Conversely, the recall, i.e., the proportion of correctly predicted instances of a class among the instances actually belonging to that class, shows that ”low” is higher than ”high”.
+These results suggest that the reliability of judgments of beauty is high and ugliness is easy to detect.
+These results indicate the different nature of beauty and ugliness in the GPT-4V’s GIAA.</p>
+</div>
+<figure class="ltx_figure" id="S4.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="622" id="S4.F3.g1" src="figures/accuracy_f1-score_comparison.png" style="aspect-ratio:622/622;" width="622"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Comparison of accuracy in different persona cases</figcaption>
+</figure>
+<figure class="ltx_table" id="S4.T1">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T1.1.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_rr" id="S4.T1.1.1.1">class</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r" id="S4.T1.1.1.2">precision</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r" id="S4.T1.1.1.3">recall</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S4.T1.1.1.4">f1-score</th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T1.1.2">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_rr ltx_border_t" id="S4.T1.1.2.1">0: low</th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.1.2.2">0.771</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.1.2.3"><span class="ltx_text ltx_font_bold" id="S4.T1.1.2.3.1">0.860</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.1.2.4"><span class="ltx_text ltx_font_bold" id="S4.T1.1.2.4.1">0.813</span></td></tr>
+<tr class="ltx_tr" id="S4.T1.1.3">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_rr" id="S4.T1.1.3.1">1: middle</th>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T1.1.3.2"><span class="ltx_text ltx_underline" id="S4.T1.1.3.2.1">0.563</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T1.1.3.3"><span class="ltx_text ltx_underline" id="S4.T1.1.3.3.1">0.600</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.1.3.4"><span class="ltx_text ltx_underline" id="S4.T1.1.3.4.1">0.580</span></td></tr>
+<tr class="ltx_tr" id="S4.T1.1.4">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_rr" id="S4.T1.1.4.1">2: high</th>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S4.T1.1.4.2"><span class="ltx_text ltx_font_bold" id="S4.T1.1.4.2.1">0.814</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S4.T1.1.4.3">0.663</td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S4.T1.1.4.4">0.730</td></tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Comparison of metrics among three classes (GIAA)</figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">5. </span>Exp. 2: PIAA</h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1">It is said that when an LLM is asked to perform some inference task, a method that provides several examples of correct answer to the task (called ”few-shot examples”) improves the performance <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx1" title="">Brown 20</a>]</cite>.
+This method, few-shot prompting is used in this experiment to make GPT-4V perform the PIAA task.</p>
+</div>
+<div class="ltx_para" id="S5.p2">
+<p class="ltx_p" id="S5.p2.1">In this experiment, we measure GPT-4V’s PIAA performance using verification subset extracted from PARA dataset, as in Exp. 1.
+Since PARA dataset contains information on what score each user gave to which images, we extract a subset for verification from the set of images evaluated by a user.
+Six semantic patterns in ”target-semantics” are used as in Exp. 1.</p>
+</div>
+<div class="ltx_para" id="S5.p3">
+<p class="ltx_p" id="S5.p3.1">On the other hand, the correct labels for the aesthetic evaluation are assigned in a different way than in Exp. 1.
+This is because a user’s aesthetic evaluation of an image is a discrete value ranging from <math alttext="1.0" class="ltx_Math" display="inline" id="S5.p3.m1" intent=":literal"><semantics><mn>1.0</mn><annotation encoding="application/x-tex">1.0</annotation></semantics></math> to <math alttext="5.0" class="ltx_Math" display="inline" id="S5.p3.m2" intent=":literal"><semantics><mn>5.0</mn><annotation encoding="application/x-tex">5.0</annotation></semantics></math> in <math alttext="0.5" class="ltx_Math" display="inline" id="S5.p3.m3" intent=":literal"><semantics><mn>0.5</mn><annotation encoding="application/x-tex">0.5</annotation></semantics></math> increments.
+The scores of <math alttext="1.0,1.5,2.0" class="ltx_Math" display="inline" id="S5.p3.m4" intent=":literal"><semantics><mrow><mn>1.0</mn><mo>,</mo><mn>1.5</mn><mo>,</mo><mn>2.0</mn></mrow><annotation encoding="application/x-tex">1.0,1.5,2.0</annotation></semantics></math> are ”low”, <math alttext="2.5,3.0,3.5" class="ltx_Math" display="inline" id="S5.p3.m5" intent=":literal"><semantics><mrow><mn>2.5</mn><mo>,</mo><mn>3.0</mn><mo>,</mo><mn>3.5</mn></mrow><annotation encoding="application/x-tex">2.5,3.0,3.5</annotation></semantics></math> are ”middle”, and <math alttext="4.0,4.5,5.0" class="ltx_Math" display="inline" id="S5.p3.m6" intent=":literal"><semantics><mrow><mn>4.0</mn><mo>,</mo><mn>4.5</mn><mo>,</mo><mn>5.0</mn></mrow><annotation encoding="application/x-tex">4.0,4.5,5.0</annotation></semantics></math> are ”high”.
+Among the images in PARA dataset that were evaluated by the user under consideration, for each of the six ”target-semantics” patterns, <math alttext="n" class="ltx_Math" display="inline" id="S5.p3.m7" intent=":literal"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> images are extracted from each of the three aesthetic evaluation classes.
+The resulting <math alttext="6*3*n=18n" class="ltx_Math" display="inline" id="S5.p3.m8" intent=":literal"><semantics><mrow><mrow><mn>6</mn><mo lspace="0.222em" rspace="0.222em">∗</mo><mn>3</mn><mo lspace="0.222em" rspace="0.222em">∗</mo><mi>n</mi></mrow><mo>=</mo><mrow><mn>18</mn><mo lspace="0em" rspace="0em">​</mo><mi>n</mi></mrow></mrow><annotation encoding="application/x-tex">6*3*n=18n</annotation></semantics></math> images are used as a subset for validation for one user, and the PIAA performance of GPT-4V is measured.
+This is done for <math alttext="m" class="ltx_Math" display="inline" id="S5.p3.m9" intent=":literal"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> users to account for variation. (In Exp. 2, only one random number seed is used.)</p>
+</div>
+<div class="ltx_para" id="S5.p4">
+<p class="ltx_p" id="S5.p4.1">Here, the issue is how the number of users for verification ”m” is determined.
+In PARA dataset, which consists of the ratings from <math alttext="438" class="ltx_Math" display="inline" id="S5.p4.m1" intent=":literal"><semantics><mn>438</mn><annotation encoding="application/x-tex">438</annotation></semantics></math> users,
+<math alttext="125" class="ltx_Math" display="inline" id="S5.p4.m2" intent=":literal"><semantics><mn>125</mn><annotation encoding="application/x-tex">125</annotation></semantics></math> users rated more than <math alttext="3000" class="ltx_Math" display="inline" id="S5.p4.m3" intent=":literal"><semantics><mn>3000</mn><annotation encoding="application/x-tex">3000</annotation></semantics></math> images.
+Among these <math alttext="125" class="ltx_Math" display="inline" id="S5.p4.m4" intent=":literal"><semantics><mn>125</mn><annotation encoding="application/x-tex">125</annotation></semantics></math> users, we plot the number of users who have at least threshold <math alttext="k" class="ltx_Math" display="inline" id="S5.p4.m5" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> images in each of the 18 patterns (resulting from the product of <math alttext="6" class="ltx_Math" display="inline" id="S5.p4.m6" intent=":literal"><semantics><mn>6</mn><annotation encoding="application/x-tex">6</annotation></semantics></math> semantic patterns and <math alttext="3" class="ltx_Math" display="inline" id="S5.p4.m7" intent=":literal"><semantics><mn>3</mn><annotation encoding="application/x-tex">3</annotation></semantics></math> aesthetic evaluation classes) in Fig. <a class="ltx_ref" href="#S5.F4" title="Figure 4 ‣ 5. Exp. 2: PIAA ‣ Assessing the Aesthetic Evaluation Capabilities of GPT-4 with Vision: Insights from Group and Individual Assessments"><span class="ltx_text ltx_ref_tag">4</span></a>.
+We consider that it is better to select <math alttext="k=20" class="ltx_Math" display="inline" id="S5.p4.m8" intent=":literal"><semantics><mrow><mi>k</mi><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">k=20</annotation></semantics></math> so that up to <math alttext="10" class="ltx_Math" display="inline" id="S5.p4.m9" intent=":literal"><semantics><mn>10</mn><annotation encoding="application/x-tex">10</annotation></semantics></math> pictures per one pattern in the <math alttext="18" class="ltx_Math" display="inline" id="S5.p4.m10" intent=":literal"><semantics><mn>18</mn><annotation encoding="application/x-tex">18</annotation></semantics></math> patterns can be used as few-shot examples and <math alttext="10" class="ltx_Math" display="inline" id="S5.p4.m11" intent=":literal"><semantics><mn>10</mn><annotation encoding="application/x-tex">10</annotation></semantics></math> pictures can be used for testing.
+So we select the corresponding <math alttext="m=26" class="ltx_Math" display="inline" id="S5.p4.m12" intent=":literal"><semantics><mrow><mi>m</mi><mo>=</mo><mn>26</mn></mrow><annotation encoding="application/x-tex">m=26</annotation></semantics></math> users as target users for PIAA task (we call them ”target-users”).</p>
+</div>
+<div class="ltx_para" id="S5.p5">
+<p class="ltx_p" id="S5.p5.1">Therefore, for one pattern in the <math alttext="18" class="ltx_Math" display="inline" id="S5.p5.m1" intent=":literal"><semantics><mn>18</mn><annotation encoding="application/x-tex">18</annotation></semantics></math> patterns, the number of images <math alttext="n" class="ltx_Math" display="inline" id="S5.p5.m2" intent=":literal"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> is <math alttext="k=20" class="ltx_Math" display="inline" id="S5.p5.m3" intent=":literal"><semantics><mrow><mi>k</mi><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">k=20</annotation></semantics></math>, the number of candidates of few-shot examples is <math alttext="10" class="ltx_Math" display="inline" id="S5.p5.m4" intent=":literal"><semantics><mn>10</mn><annotation encoding="application/x-tex">10</annotation></semantics></math>, the number of few-shot examples that are actually presented <math alttext="f" class="ltx_Math" display="inline" id="S5.p5.m5" intent=":literal"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math> is variable, and the number of test images <math alttext="t" class="ltx_Math" display="inline" id="S5.p5.m6" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> is <math alttext="10" class="ltx_Math" display="inline" id="S5.p5.m7" intent=":literal"><semantics><mn>10</mn><annotation encoding="application/x-tex">10</annotation></semantics></math>.
+That is, in a subset of <math alttext="6*3*n=360" class="ltx_Math" display="inline" id="S5.p5.m8" intent=":literal"><semantics><mrow><mrow><mn>6</mn><mo lspace="0.222em" rspace="0.222em">∗</mo><mn>3</mn><mo lspace="0.222em" rspace="0.222em">∗</mo><mi>n</mi></mrow><mo>=</mo><mn>360</mn></mrow><annotation encoding="application/x-tex">6*3*n=360</annotation></semantics></math> images for verification for a user, <math alttext="6*3*t=18t=180" class="ltx_Math" display="inline" id="S5.p5.m9" intent=":literal"><semantics><mrow><mrow><mn>6</mn><mo lspace="0.222em" rspace="0.222em">∗</mo><mn>3</mn><mo lspace="0.222em" rspace="0.222em">∗</mo><mi>t</mi></mrow><mo>=</mo><mrow><mn>18</mn><mo lspace="0em" rspace="0em">​</mo><mi>t</mi></mrow><mo>=</mo><mn>180</mn></mrow><annotation encoding="application/x-tex">6*3*t=18t=180</annotation></semantics></math> images are test images, <math alttext="6*3*10=180" class="ltx_Math" display="inline" id="S5.p5.m10" intent=":literal"><semantics><mrow><mrow><mn>6</mn><mo lspace="0.222em" rspace="0.222em">∗</mo><mn>3</mn><mo lspace="0.222em" rspace="0.222em">∗</mo><mn>10</mn></mrow><mo>=</mo><mn>180</mn></mrow><annotation encoding="application/x-tex">6*3*10=180</annotation></semantics></math> images are candidates of few-shot examples, and <math alttext="6*3*f=18f" class="ltx_Math" display="inline" id="S5.p5.m11" intent=":literal"><semantics><mrow><mrow><mn>6</mn><mo lspace="0.222em" rspace="0.222em">∗</mo><mn>3</mn><mo lspace="0.222em" rspace="0.222em">∗</mo><mi>f</mi></mrow><mo>=</mo><mrow><mn>18</mn><mo lspace="0em" rspace="0em">​</mo><mi>f</mi></mrow></mrow><annotation encoding="application/x-tex">6*3*f=18f</annotation></semantics></math> images are actually used as few-shot examples.</p>
+</div>
+<div class="ltx_para" id="S5.p6">
+<p class="ltx_p" id="S5.p6.1">The presentation of few-shot examples and testing are conducted independently for each semantic patterns. For example, when portraits is used as a semantic pattern, we present <math alttext="f" class="ltx_Math" display="inline" id="S5.p6.m1" intent=":literal"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math> portrait images for each of three aesthetic evaluation classes, as few-shot examples.
+GPT-4V predicts the aesthetic evaluation of newly presented portrait images in the test set based on the understanding of the tendency gained from <math alttext="3f" class="ltx_Math" display="inline" id="S5.p6.m2" intent=":literal"><semantics><mrow><mn>3</mn><mo lspace="0em" rspace="0em">​</mo><mi>f</mi></mrow><annotation encoding="application/x-tex">3f</annotation></semantics></math> images.</p>
+</div>
+<figure class="ltx_figure" id="S5.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="344" id="S5.F4.g1" src="figures/plot_samples_left_with_varying_thre2.png" style="aspect-ratio:622/344;" width="622"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>The number of users to be used in Exp. 2</figcaption>
+</figure>
+<div class="ltx_para" id="S5.p7">
+<p class="ltx_p" id="S5.p7.1">The prompt is designed as follows.
+First, the following text is input as the system attribute prompt to show few-shot examples.</p>
+</div>
+<div class="ltx_para" id="S5.p8">
+<blockquote class="ltx_quote" id="S5.p8.1">
+<p class="ltx_p" id="S5.p8.1.1"><span class="ltx_text ltx_font_typewriter" id="S5.p8.1.1.1">You will be tasked with understanding a user’s "aesthetic evaluation tendencies towards images."
+A total of {<math alttext="3f" class="ltx_Math" display="inline" id="S5.p8.m1" intent=":literal"><semantics><mrow><mn>3</mn><mo lspace="0em" rspace="0em">​</mo><mi>f</mi></mrow><annotation encoding="application/x-tex">3f</annotation></semantics></math>} images will be presented for this purpose, all of which are themed around {<math alttext="name~of~semantic" class="ltx_Math" display="inline" id="S5.p8.m2" intent=":literal"><semantics><mrow><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0.330em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>f</mi><mo lspace="0.330em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">name~of~semantic</annotation></semantics></math>}.
+The aesthetic evaluation of the images will be conducted in three levels (0: low, 1: middle, 2: high).
+</span></p>
+</blockquote>
+<p class="ltx_p" id="S5.p8.2">Then, the tokenized images for few-shot examples and their aesthetic labels made by the target user are input as a system attribute prompt.</p>
+</div>
+<div class="ltx_para" id="S5.p9">
+<blockquote class="ltx_quote" id="S5.p9.1">
+<p class="ltx_p" id="S5.p9.1.1"><span class="ltx_text ltx_font_typewriter" id="S5.p9.1.1.1">{<math alttext="Tokenized~Image" class="ltx_Math" display="inline" id="S5.p9.m1" intent=":literal"><semantics><mrow><mi>T</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>k</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>z</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>d</mi><mo lspace="0.330em" rspace="0em">​</mo><mi>I</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>g</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><annotation encoding="application/x-tex">Tokenized~Image</annotation></semantics></math>} 
+<br class="ltx_break"/>The aesthetic evaluation of the above image is {<math alttext="Aesthetic~Label" class="ltx_Math" display="inline" id="S5.p9.m2" intent=":literal"><semantics><mrow><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>h</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi><mo lspace="0.330em" rspace="0em">​</mo><mi>L</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>b</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi></mrow><annotation encoding="application/x-tex">Aesthetic~Label</annotation></semantics></math>}.
+#############################################
+</span></p>
+</blockquote>
+<p class="ltx_p" id="S5.p9.2">Finally, the following text is input as a system attribute prompt.</p>
+<blockquote class="ltx_quote" id="S5.p9.3">
+<p class="ltx_p" id="S5.p9.3.1"><span class="ltx_text ltx_font_typewriter" id="S5.p9.3.1.1">Based on the examples provided, you will now be asked to predict the user’s aesthetic evaluation of the images that will be presented.
+</span></p>
+</blockquote>
+</div>
+<div class="ltx_para" id="S5.p10">
+<p class="ltx_p" id="S5.p10.1">Next, after inputting a tokenized image to be evaluated, the following text is input as a user attribute prompt.
+GPT-4V’s output is limited to JSON format, so it can be parsed mechanically.</p>
+</div>
+<div class="ltx_para" id="S5.p11">
+<blockquote class="ltx_quote" id="S5.p11.1">
+<p class="ltx_p" id="S5.p11.1.1"><span class="ltx_text ltx_font_typewriter" id="S5.p11.1.1.1">Based on the initial {<math alttext="3f" class="ltx_Math" display="inline" id="S5.p11.m1" intent=":literal"><semantics><mrow><mn>3</mn><mo lspace="0em" rspace="0em">​</mo><mi>f</mi></mrow><annotation encoding="application/x-tex">3f</annotation></semantics></math>} example images presented and your interpretation of the user’s aesthetic evaluation tendencies, evaluate the aesthetic value of the last image shown.
+<br class="ltx_break"/>Predict the aesthetic evaluation of the image by choosing from three classes (0: low, 1: middle, 2: high) as an integer value (0,1,2), and explain the reason and your confidence level (as a floating-point number ranging from 0 to 1).
+<br class="ltx_break"/>Note:
+<br class="ltx_break"/>- Answer in English.
+<br class="ltx_break"/>- Answer from the perspective of the user’s position.
+<br class="ltx_break"/>- Ensure that your output is strictly in JSON format without any additional characters or formatting symbols such as ‘‘‘ before and after the JSON object.
+<br class="ltx_break"/>- Be careful not to make any mistakes in the JSON format key names.
+<br class="ltx_break"/>- Strictly adhere to the example format provided below:
+<br class="ltx_break"/>{"reason": "~~~", "prediction": 0, "confidence": 0.5}
+<br class="ltx_break"/></span></p>
+</blockquote>
+</div>
+<section class="ltx_subsection" id="S5.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">5.1 </span>Exp. 2-A: Comparison of Question</h3>
+<div class="ltx_para" id="S5.SS1.p1">
+<p class="ltx_p" id="S5.SS1.p1.1">As mentioned in Exp. 1-B, it is known that if we want LLMs to perform some reasoning task, it is better to divide the question into subproblems <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx19" title="">Zhou 23</a>]</cite> or to think in logical steps <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx14" title="">Wei 23</a>]</cite>.
+In this PIAA task, we hypothesize that it would be better to ask the GPT-4V to understand the tendency in the few-shot example images and their ratings from the user, and then to ask GPT-4V to predict the aesthetic evaluation of the newly presented test image.
+In Exp. 2-A, we investigate whether the performance on the PIAA task varies depending on the presence or absence of the tendency understanding question. The number of few-shot examples <math alttext="f" class="ltx_Math" display="inline" id="S5.SS1.p1.m1" intent=":literal"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math> is set to <math alttext="3" class="ltx_Math" display="inline" id="S5.SS1.p1.m2" intent=":literal"><semantics><mn>3</mn><annotation encoding="application/x-tex">3</annotation></semantics></math>.
+When asking the tendency understanding, the following prompt (user attribute) is used after presenting few-shot examples.</p>
+<blockquote class="ltx_quote" id="S5.SS1.p1.2">
+<p class="ltx_p" id="S5.SS1.p1.2.1"><span class="ltx_text ltx_font_typewriter" id="S5.SS1.p1.2.1.1">Please describe the user’s ’aesthetic evaluation’ tendencies towards images, based on the {<math alttext="3f" class="ltx_Math" display="inline" id="S5.SS1.p1.m3" intent=":literal"><semantics><mrow><mn>3</mn><mo lspace="0em" rspace="0em">​</mo><mi>f</mi></mrow><annotation encoding="application/x-tex">3f</annotation></semantics></math>} images illustrated above.
+</span></p>
+</blockquote>
+</div>
+<div class="ltx_para" id="S5.SS1.p2">
+<p class="ltx_p" id="S5.SS1.p2.1">In this experiment, data for <math alttext="2" class="ltx_Math" display="inline" id="S5.SS1.p2.m1" intent=":literal"><semantics><mn>2</mn><annotation encoding="application/x-tex">2</annotation></semantics></math> users out of <math alttext="26" class="ltx_Math" display="inline" id="S5.SS1.p2.m2" intent=":literal"><semantics><mn>26</mn><annotation encoding="application/x-tex">26</annotation></semantics></math> target-users are excluded because the images used were sometimes rejected due to GPT-4V’s content restriction policy, and the data for the remaining <math alttext="24" class="ltx_Math" display="inline" id="S5.SS1.p2.m3" intent=":literal"><semantics><mn>24</mn><annotation encoding="application/x-tex">24</annotation></semantics></math> users are used in the analysis.</p>
+</div>
+<div class="ltx_para" id="S5.SS1.p3">
+<p class="ltx_p" id="S5.SS1.p3.1">The difference in PIAA performance with and without the tendency understanding question is shown in Fig. <a class="ltx_ref" href="#S5.F5" title="Figure 5 ‣ 5.1 Exp. 2-A: Comparison of Question ‣ 5. Exp. 2: PIAA ‣ Assessing the Aesthetic Evaluation Capabilities of GPT-4 with Vision: Insights from Group and Individual Assessments"><span class="ltx_text ltx_ref_tag">5</span></a>.
+”True” and ”False” in the figure correspond to the cases with and without the question, respectively.
+A Welch’s t-test (significance level <math alttext="0.05" class="ltx_Math" display="inline" id="S5.SS1.p3.m1" intent=":literal"><semantics><mn>0.05</mn><annotation encoding="application/x-tex">0.05</annotation></semantics></math>) was conducted on the sample group of the mean accuracy in these two conditions, and the p-value was <math alttext="0.822" class="ltx_Math" display="inline" id="S5.SS1.p3.m2" intent=":literal"><semantics><mn>0.822</mn><annotation encoding="application/x-tex">0.822</annotation></semantics></math>, indicating no significant difference.
+Since these results indicate that there is no difference in the performance with and without the tendency understanding question,
+we decided to use the condition of ”True” (with the question) in the subsequent experiment.</p>
+</div>
+<figure class="ltx_figure" id="S5.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="518" id="S5.F5.g1" src="figures/accuracy_f1-score_comparison.png" style="aspect-ratio:518/518;" width="518"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Comparison of accuracy in different question cases (PIAA) </figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S5.SS2">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">5.2 </span>Exp. 2-B: Comparison of Few-Shots</h3>
+<div class="ltx_para" id="S5.SS2.p1">
+<p class="ltx_p" id="S5.SS2.p1.1">The few-shot example in this PIAA task is important information for understanding the tendency of a target user’s aesthetic evaluation.
+We hypothesize that the amount of this information will affect how well GPT-4V can predict the user’s aesthetic evaluation.
+In Exp. 2-B, we investigate whether there is a difference in PIAA evaluation performance depending on the number of the few-shot examples <math alttext="f" class="ltx_Math" display="inline" id="S5.SS2.p1.m1" intent=":literal"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math> by varying <math alttext="f=0,3,6,9" class="ltx_Math" display="inline" id="S5.SS2.p1.m2" intent=":literal"><semantics><mrow><mrow><mi>f</mi><mo>=</mo><mn>0</mn></mrow><mo>,</mo><mn>3</mn><mo>,</mo><mn>6</mn><mo>,</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">f=0,3,6,9</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="S5.SS2.p2">
+<p class="ltx_p" id="S5.SS2.p2.1">In this experiment, in the case of <math alttext="f=3" class="ltx_Math" display="inline" id="S5.SS2.p2.m1" intent=":literal"><semantics><mrow><mi>f</mi><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">f=3</annotation></semantics></math>, we use the same data obtained in the condition of ”True” in Exp. 2-A, so the data used for the analysis is from the <math alttext="24" class="ltx_Math" display="inline" id="S5.SS2.p2.m2" intent=":literal"><semantics><mn>24</mn><annotation encoding="application/x-tex">24</annotation></semantics></math> users.
+The difference in PIAA performance due to the difference in the number of few-shot examples is shown in Fig. <a class="ltx_ref" href="#S5.F6" title="Figure 6 ‣ 5.2 Exp. 2-B: Comparison of Few-Shots ‣ 5. Exp. 2: PIAA ‣ Assessing the Aesthetic Evaluation Capabilities of GPT-4 with Vision: Insights from Group and Individual Assessments"><span class="ltx_text ltx_ref_tag">6</span></a>.
+A Welch’s t-test (significance level <math alttext="0.05" class="ltx_Math" display="inline" id="S5.SS2.p2.m3" intent=":literal"><semantics><mn>0.05</mn><annotation encoding="application/x-tex">0.05</annotation></semantics></math>) was conducted on the two sample groups of the mean accuracy from the sample groups of the four conditions.
+The p-values for the three pairs of <math alttext="(0,3),(0,6),(0,9)" class="ltx_Math" display="inline" id="S5.SS2.p2.m4" intent=":literal"><semantics><mrow><mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mn>3</mn><mo stretchy="false">)</mo></mrow><mo>,</mo><mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mn>6</mn><mo stretchy="false">)</mo></mrow><mo>,</mo><mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mn>9</mn><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">(0,3),(0,6),(0,9)</annotation></semantics></math> were <math alttext="0.007,0.014,0.015" class="ltx_Math" display="inline" id="S5.SS2.p2.m5" intent=":literal"><semantics><mrow><mn>0.007</mn><mo>,</mo><mn>0.014</mn><mo>,</mo><mn>0.015</mn></mrow><annotation encoding="application/x-tex">0.007,0.014,0.015</annotation></semantics></math>, respectively, indicating significant differences.
+On the other hand, the p-values for the three pairs of <math alttext="(3,6),(3,9),(6,9)" class="ltx_Math" display="inline" id="S5.SS2.p2.m6" intent=":literal"><semantics><mrow><mrow><mo stretchy="false">(</mo><mn>3</mn><mo>,</mo><mn>6</mn><mo stretchy="false">)</mo></mrow><mo>,</mo><mrow><mo stretchy="false">(</mo><mn>3</mn><mo>,</mo><mn>9</mn><mo stretchy="false">)</mo></mrow><mo>,</mo><mrow><mo stretchy="false">(</mo><mn>6</mn><mo>,</mo><mn>9</mn><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">(3,6),(3,9),(6,9)</annotation></semantics></math> were <math alttext="0.837,0.765,0.931" class="ltx_Math" display="inline" id="S5.SS2.p2.m7" intent=":literal"><semantics><mrow><mn>0.837</mn><mo>,</mo><mn>0.765</mn><mo>,</mo><mn>0.931</mn></mrow><annotation encoding="application/x-tex">0.837,0.765,0.931</annotation></semantics></math>, respectively, indicating no significant differences.</p>
+</div>
+<div class="ltx_para" id="S5.SS2.p3">
+<p class="ltx_p" id="S5.SS2.p3.1">These results indicate that there is a difference between using no examples and using examples with a few shots, but that if examples are used, there may not be a large difference in the number of examples with a few shots.
+However, the number of few-shot examples is only <math alttext="3,6,9" class="ltx_Math" display="inline" id="S5.SS2.p3.m1" intent=":literal"><semantics><mrow><mn>3</mn><mo>,</mo><mn>6</mn><mo>,</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">3,6,9</annotation></semantics></math> in this experiment, which is not a broad generalization.
+Perhaps performance could be improved if the number of examples were <math alttext="50" class="ltx_Math" display="inline" id="S5.SS2.p3.m2" intent=":literal"><semantics><mn>50</mn><annotation encoding="application/x-tex">50</annotation></semantics></math> or <math alttext="100" class="ltx_Math" display="inline" id="S5.SS2.p3.m3" intent=":literal"><semantics><mn>100</mn><annotation encoding="application/x-tex">100</annotation></semantics></math>, or if the number of examples were <math alttext="1" class="ltx_Math" display="inline" id="S5.SS2.p3.m4" intent=":literal"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math> or <math alttext="2" class="ltx_Math" display="inline" id="S5.SS2.p3.m5" intent=":literal"><semantics><mn>2</mn><annotation encoding="application/x-tex">2</annotation></semantics></math>.
+There must be a tradeoff between the need for more information to capture individual tendencies and the fact that a larger context length would degrade LLM’s performance on inference tasks, so it will be important to find the best parameter <math alttext="f" class="ltx_Math" display="inline" id="S5.SS2.p3.m6" intent=":literal"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>. This should be addressed in future works.</p>
+</div>
+<div class="ltx_para" id="S5.SS2.p4">
+<p class="ltx_p" id="S5.SS2.p4.1">Table <a class="ltx_ref" href="#S5.T2" title="Table 2 ‣ 5.2 Exp. 2-B: Comparison of Few-Shots ‣ 5. Exp. 2: PIAA ‣ Assessing the Aesthetic Evaluation Capabilities of GPT-4 with Vision: Insights from Group and Individual Assessments"><span class="ltx_text ltx_ref_tag">2</span></a> shows the prediction performance, other than accuracy, for the three aesthetic evaluation classes, when <math alttext="f=3" class="ltx_Math" display="inline" id="S5.SS2.p4.m1" intent=":literal"><semantics><mrow><mi>f</mi><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">f=3</annotation></semantics></math>.
+All of these are averages over <math alttext="24" class="ltx_Math" display="inline" id="S5.SS2.p4.m2" intent=":literal"><semantics><mn>24</mn><annotation encoding="application/x-tex">24</annotation></semantics></math> target-users, rounded to the third decimal place.
+For each indicator, maximum value is shown in bold and the minimum value in underline.
+The maximum value for each indicator is shown in class ”high” for precision, and in class ”low” for recall and f1-score, as in the case of GIAA (Table <a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ 4.3 Exp. 1-C: Comparison of Persona ‣ 4. Exp. 1: GIAA ‣ Assessing the Aesthetic Evaluation Capabilities of GPT-4 with Vision: Insights from Group and Individual Assessments"><span class="ltx_text ltx_ref_tag">1</span></a>).
+This indicates that the reliability of judgments of beauty is high and ugliness is easy to detect.</p>
+</div>
+<div class="ltx_para" id="S5.SS2.p5">
+<p class="ltx_p" id="S5.SS2.p5.1">On the other hand, the trend of the mimimum value is different from that of the GIAA case.
+In the case of GIAA, the minimum value corresponds to class ”middle” for all indicators, while in the case of PIAA, the minimum value of recall was seen in the class ”high”.
+The fact that the class ”high” is the largest in precision but the smallest in recall indicates that it is difficult to determine the tendency of what an individual perceives as beauty, probably because of individual differences, and that if the tendency is understood, the reliability of the prediction is high.
+On the other hand, the high recall of the class ”low” is considered to indicate that it is easy to grasp the tendency of ugliness, i.e., there are few individual differences.
+These results of the PIAA experiments also show the different nature of beauty and ugliness in aesthetic evaluation.</p>
+</div>
+<figure class="ltx_figure" id="S5.F6"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="622" id="S5.F6.g1" src="figures/accuracy_f1-score_comparison.png" style="aspect-ratio:622/622;" width="622"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Comparison of accuracy in different <math alttext="f" class="ltx_Math" display="inline" id="S5.F6.m1" intent=":literal"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math> cases</figcaption>
+</figure>
+<figure class="ltx_table" id="S5.T2">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S5.T2.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S5.T2.1.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_rr" id="S5.T2.1.1.1">class</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r" id="S5.T2.1.1.2">precision</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r" id="S5.T2.1.1.3">recall</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S5.T2.1.1.4">f1-score</th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T2.1.2">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_rr ltx_border_t" id="S5.T2.1.2.1">0: low</th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T2.1.2.2">0.667</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T2.1.2.3"><span class="ltx_text ltx_font_bold" id="S5.T2.1.2.3.1">0.622</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.1.2.4"><span class="ltx_text ltx_font_bold" id="S5.T2.1.2.4.1">0.640</span></td></tr>
+<tr class="ltx_tr" id="S5.T2.1.3">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_rr" id="S5.T2.1.3.1">1: middle</th>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S5.T2.1.3.2"><span class="ltx_text ltx_underline" id="S5.T2.1.3.2.1">0.418</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S5.T2.1.3.3">0.585</td>
+<td class="ltx_td ltx_align_center" id="S5.T2.1.3.4"><span class="ltx_text ltx_underline" id="S5.T2.1.3.4.1">0.487</span></td></tr>
+<tr class="ltx_tr" id="S5.T2.1.4">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_rr" id="S5.T2.1.4.1">2: high</th>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S5.T2.1.4.2"><span class="ltx_text ltx_font_bold" id="S5.T2.1.4.2.1">0.702</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S5.T2.1.4.3"><span class="ltx_text ltx_underline" id="S5.T2.1.4.3.1">0.464</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S5.T2.1.4.4">0.555</td></tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Comparison of metrics among three classes (PIAA)</figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">6. </span>Discussion</h2>
+<div class="ltx_para" id="S6.p1">
+<p class="ltx_p" id="S6.p1.1">The purpose of this paper was to investigate the performance of current LLMs in aesthetic evaluation of images.
+There are two different aesthetic evaluation tasks, GIAA and PIAA, which were tested in Exp. 1 and 2, respectivey.
+We used the percentage of correct response (accuracy) to a three-classes classification task as an index to evaluate performance.
+At the same time, since the performance of LLMs is known to vary widely across prompts, we examine the image resolution mode, the question items, and the persona patterns in Exp. 1, and the influence of question of understanding target user’s aesthetic evaluation tendency and the number of few-shot examples in Exp. 2.</p>
+</div>
+<div class="ltx_para" id="S6.p2">
+<p class="ltx_p" id="S6.p2.1">The results of Exp. 1 show that there is no difference in performance between different image resolution modes in GPT-4V’s API.
+The results also show that performance is higher when no questions were used and no persona was specified.
+This suggests that because GIAA is a task to predict the average aesthetic evaluation of the group of users, the addition of question items or personas may lead to a limitation or misdirection of perspectives and thoughts.
+The performance on the GIAA task in the best condition, in other words, in the case where no question is used and no persona is specified in Exp. 1-C, was <math alttext="0.708" class="ltx_Math" display="inline" id="S6.p2.m1" intent=":literal"><semantics><mn>0.708</mn><annotation encoding="application/x-tex">0.708</annotation></semantics></math> (rounded to the third decimal places) in accuracy.
+The fact that, although GPT-4V has not been specially trained for the task of aesthetic evalution of images, it achieved a correct response rate of <math alttext="0.708" class="ltx_Math" display="inline" id="S6.p2.m2" intent=":literal"><semantics><mn>0.708</mn><annotation encoding="application/x-tex">0.708</annotation></semantics></math>, which is much higher than the chance level <math alttext="0.333" class="ltx_Math" display="inline" id="S6.p2.m3" intent=":literal"><semantics><mn>0.333</mn><annotation encoding="application/x-tex">0.333</annotation></semantics></math> for the three-classes classification task, is surprising.</p>
+</div>
+<div class="ltx_para" id="S6.p3">
+<p class="ltx_p" id="S6.p3.1">The results of Exp. 2 show that there is no difference in performance depending on whether or not the question is about understanding individual tendencies, and that as long as the number of few-shot examples is not zero, similar performance levels are demonstrated.
+The performance on the PIAA task in the best condition, in other words, in the case where GPT-4V is asked a question of tendency understanding and the number of few-shot examples <math alttext="f=3" class="ltx_Math" display="inline" id="S6.p3.m1" intent=":literal"><semantics><mrow><mi>f</mi><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">f=3</annotation></semantics></math> in Exp. 2-B, was <math alttext="0.557" class="ltx_Math" display="inline" id="S6.p3.m2" intent=":literal"><semantics><mn>0.557</mn><annotation encoding="application/x-tex">0.557</annotation></semantics></math> (rounded to the third decimal places) in accuracy.
+Compared to the GIAA task where the average aesthetic evaluation is predicted, it is natural that the accuracy is lower for the PIAA task where individual differences must be considered.
+Nevertheless, it is again surprising that GPT-4V achieved a correct response rate of <math alttext="0.557" class="ltx_Math" display="inline" id="S6.p3.m3" intent=":literal"><semantics><mn>0.557</mn><annotation encoding="application/x-tex">0.557</annotation></semantics></math> for the three-classes classification task, which is much higher than the chance level of <math alttext="0.333" class="ltx_Math" display="inline" id="S6.p3.m4" intent=":literal"><semantics><mn>0.333</mn><annotation encoding="application/x-tex">0.333</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="S6.p4">
+<p class="ltx_p" id="S6.p4.1">The analysis of indices other than accuracy revealed differences in the nature of beauty and ugliness in the aesthetic evaluation of GPT-4V for both GIAA and PIAA.
+The results show that the prediction performance is higher when evaluations are biased towards either beauty or ugliness, and that the reliability of judging beauty is higher, while ugliness is easier to detect.
+These results suggest that different approaches may be needed for beauty and ugliness in the same aesthetic evaluation task.</p>
+</div>
+<div class="ltx_para" id="S6.p5">
+<p class="ltx_p" id="S6.p5.1">The limitations of the experiments in this paper are as follows.
+First, the experiments in this paper explored what kind of prompts are best for GIAA and PIAA, but the search range was limited to question items, personas, and the number of few-shot examples.
+A lot of new methods have been proposed for designing prompts, so it is necessary to incorporate them.
+In addition, we only used GPT-4V as a validation target, so comparisons with other language models and deep learning-based models are needed.
+Furthermore, more detailed understanding of the prediction tendencies, other than the comparisons of prediction performance among classes, is required: the analysis of output texts, image features, and user personality traits.
+If we can gain insight into human perception of beauty through the analysis of the behavior of LLMs, it would be an excellent scientific contribution.</p>
+</div>
+<div class="ltx_para" id="S6.p6">
+<p class="ltx_p" id="S6.p6.1">Experiments in this paper show that the current LLM, especially GPT-4V, perform well to some extent on GIAA tasks with accuracy more than <math alttext="70" class="ltx_Math" display="inline" id="S6.p6.m1" intent=":literal"><semantics><mn>70</mn><annotation encoding="application/x-tex">70</annotation></semantics></math>%, even though it has not been trained specifically for the aesthetic evaluation task.
+This suggests the possibility that, in creating a superior aesthetic evaluator, there is an effective strategy not only in training a black-box neural network from scratch but also in using LLMs that already may possess some structure of aesthetic evaluation as a foundation.
+The method of appropriately integrating conventional deep learning models and LLMs to improve the behavior of an AI system is known as agent technology <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx13" title="">Wang 23</a>]</cite> in recent years. In the context of creating AI models for aesthetic evaluation, research should be accelerated in this direction in the future.</p>
+</div>
+<div class="ltx_para" id="S6.p7">
+<p class="ltx_p" id="S6.p7.1">This also points to the importance of model-based development that assumes some structure in the aesthetic evaluation process, rather than model-free construction that does not assume any structure to the evaluation process.
+An LLM trained on the vast amount of text data on the Internet may already have some structure embedded in it.
+It can be compared to a fabric woven from countless intricately intertwined threads.
+Within this, we have to carefully find and unravel a thread that closely approximates the aesthetic evaluation process.
+This would contribute to creating a better aesthetic evaluator, especially for the PIAA task, because an individual’s perception of beauty is influenced by knowledge or contexts <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bibx2" title="">Chatterjee 16</a>]</cite>.
+For this purpose, a deeper understanding of what factors shape an individual’s aesthetic evaluation is also necessary.
+In this regard, AI systems for aesthetic evaluation should be developed based on knowledge of other scientific fields such as the humanities related to beauty and neuroaesthetics.</p>
+</div>
+</section>
+<section class="ltx_section" id="S7">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">7. </span>Conclusion</h2>
+<div class="ltx_para" id="S7.p1">
+<p class="ltx_p" id="S7.p1.1">The experiments in this paper reveal the performance of GPT-4V on aesthetic evaluation tasks, providing insights for enhancing its effectiveness and highlighting areas for further investigation.
+Future research directions will be to construct AI systems that capture human aesthetic evaluation processes using agent technologies that integrate conventional deep learning models and LLMs, based on scientific knowledge about perception of beauty. 
+<br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="S7.p1.1.1">ACKNOWLEDGMENT</span>
+<br class="ltx_break"/>This research was supported by Next Generation AI Research Center of The University of Tokyo and JST SPRING GX project (Grant Number JPMJSP2108).</p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bibx1"><span class="ltx_tag ltx_tag_bibitem">[Brown 20]</span>
+<span class="ltx_bibblock">
+Brown, T. B., Mann, B., Ryder, N., Subbiah, M., Kaplan, J., Dhariwal, P., Neelakantan, A., Shyam, P., Sastry, G., Askell, A., Agarwal, S., Herbert-Voss, A., Krueger, G., Henighan, T., Child, R., Ramesh, A., Ziegler, D. M., Wu, J., Winter, C., Hesse, C., Chen, M., Sigler, E., Litwin, M., Gray, S., Chess, B., Clark, J., Berner, C., McCandlish, S., Radford, A., Sutskever, I., and Amodei, D.: Language Models are Few-Shot Learners (2020), arXiv:2005.14165
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx2"><span class="ltx_tag ltx_tag_bibitem">[Chatterjee 16]</span>
+<span class="ltx_bibblock">
+Chatterjee, A. and Vartanian, O.: Neuroscience of aesthetics, <span class="ltx_text ltx_font_italic" id="bib.bibx2.1">Annals of the New York Academy of Sciences</span>, Vol. 1369, No. 1, pp. 172–194 (2016)
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx3"><span class="ltx_tag ltx_tag_bibitem">[Deng 17]</span>
+<span class="ltx_bibblock">
+Deng, Y., Loy, C. C., and Tang, X.: Image Aesthetic Assessment: An experimental survey, <span class="ltx_text ltx_font_italic" id="bib.bibx3.1">IEEE Signal Processing Magazine</span>, Vol. 34, No. 4, pp. 80–106 (2017)
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx4"><span class="ltx_tag ltx_tag_bibitem">[Kao 15]</span>
+<span class="ltx_bibblock">
+Kao, Y., Wang, C., and Huang, K.: Visual aesthetic quality assessment with a regression model, in <span class="ltx_text ltx_font_italic" id="bib.bibx4.1">2015 IEEE International Conference on Image Processing (ICIP)</span>, pp. 1583–1587 (2015)
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx5"><span class="ltx_tag ltx_tag_bibitem">[Ke 06]</span>
+<span class="ltx_bibblock">
+Ke, Y., Tang, X., and Jing, F.: The design of high-level features for photo quality assessment, in <span class="ltx_text ltx_font_italic" id="bib.bibx5.1">2006 IEEE Computer Society Conference on Computer Vision and Pattern Recognition (CVPR’06)</span>, Vol. 1, pp. 419–426 (2006)
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx6"><span class="ltx_tag ltx_tag_bibitem">[Li 20]</span>
+<span class="ltx_bibblock">
+Li, L., Zhu, H., Zhao, S., Ding, G., and Lin, W.: Personality-Assisted Multi-Task Learning for Generic and Personalized Image Aesthetics Assessment, <span class="ltx_text ltx_font_italic" id="bib.bibx6.1">IEEE Transactions on Image Processing</span>, Vol. 29, pp. 3898–3910 (2020)
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx7"><span class="ltx_tag ltx_tag_bibitem">[Marchesotti 11]</span>
+<span class="ltx_bibblock">
+Marchesotti, L., Perronnin, F., Larlus, D., and Csurka, G.: Assessing the aesthetic quality of photographs using generic image descriptors, in <span class="ltx_text ltx_font_italic" id="bib.bibx7.1">2011 International Conference on Computer Vision</span>, pp. 1784–1791 (2011)
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx8"><span class="ltx_tag ltx_tag_bibitem">[Murray 12]</span>
+<span class="ltx_bibblock">
+Murray, N., Marchesotti, L., and Perronnin, F.: AVA: A large-scale database for aesthetic visual analysis, in <span class="ltx_text ltx_font_italic" id="bib.bibx8.1">2012 IEEE Conference on Computer Vision and Pattern Recognition</span>, pp. 2408–2415 (2012)
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx9"><span class="ltx_tag ltx_tag_bibitem">[OpenAI 23]</span>
+<span class="ltx_bibblock">
+OpenAI, : GPT-4 Technical Report (2023), arXiv:2303.08774
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx10"><span class="ltx_tag ltx_tag_bibitem">[Reber 04]</span>
+<span class="ltx_bibblock">
+Reber, R., Schwarz, N., and Winkielman, P.: Processing Fluency and Aesthetic Pleasure: Is Beauty in the Perceiver’s Processing Experience?, <span class="ltx_text ltx_font_italic" id="bib.bibx10.1">Personality and Social Psychology Review</span>, Vol. 8, No. 4, pp. 364–382 (2004)
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx11"><span class="ltx_tag ltx_tag_bibitem">[Ren 17]</span>
+<span class="ltx_bibblock">
+Ren, J., Shen, X., Lin, Z., Mech, R., and Foran, D. J.: Personalized Image Aesthetics, in <span class="ltx_text ltx_font_italic" id="bib.bibx11.1">Proceedings of the IEEE International Conference on Computer Vision (ICCV)</span> (2017)
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx12"><span class="ltx_tag ltx_tag_bibitem">[Talebi 18]</span>
+<span class="ltx_bibblock">
+Talebi, H. and Milanfar, P.: NIMA: Neural image assessment, <span class="ltx_text ltx_font_italic" id="bib.bibx12.1">IEEE Transactions on Image Processing</span>, Vol. 27, No. 8, pp. 3998–4011 (2018)
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx13"><span class="ltx_tag ltx_tag_bibitem">[Wang 23]</span>
+<span class="ltx_bibblock">
+Wang, L., Ma, C., Feng, X., Zhang, Z., Yang, H., Zhang, J., Chen, Z., Tang, J., Chen, X., Lin, Y., Zhao, W. X., Wei, Z., and Wen, J.-R.: A Survey on Large Language Model based Autonomous Agents (2023), arXiv:2308.11432
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx14"><span class="ltx_tag ltx_tag_bibitem">[Wei 23]</span>
+<span class="ltx_bibblock">
+Wei, J., Wang, X., Schuurmans, D., Bosma, M., Ichter, B., Xia, F., Chi, E., Le, Q., and Zhou, D.: Chain-of-Thought Prompting Elicits Reasoning in Large Language Models (2023), arXiv:2201.11903
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx15"><span class="ltx_tag ltx_tag_bibitem">[Xu 23]</span>
+<span class="ltx_bibblock">
+Xu, B., Yang, A., Lin, J., Wang, Q., Zhou, C., Zhang, Y., and Mao, Z.: ExpertPrompting: Instructing Large Language Models to be Distinguished Experts (2023), arXiv:2305.14688
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx16"><span class="ltx_tag ltx_tag_bibitem">[Yang 22]</span>
+<span class="ltx_bibblock">
+Yang, Y., Xu, L., Li, L., Qie, N., Li, Y., Zhang, P., and Guo, Y.: Personalized Image Aesthetics Assessment With Rich Attributes, in <span class="ltx_text ltx_font_italic" id="bib.bibx16.1">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</span>, pp. 19861–19869 (2022)
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx17"><span class="ltx_tag ltx_tag_bibitem">[Yang 23]</span>
+<span class="ltx_bibblock">
+Yang, Z., Li, L., Lin, K., Wang, J., Lin, C.-C., Liu, Z., and Wang, L.: The Dawn of LMMs: Preliminary Explorations with GPT-4V(ision) (2023), arXiv:2309.17421
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx18"><span class="ltx_tag ltx_tag_bibitem">[Ye 24]</span>
+<span class="ltx_bibblock">
+Ye, S., Kim, D., Kim, S., Hwang, H., Kim, S., Jo, Y., Thorne, J., Kim, J., and Seo, M.: FLASK: Fine-grained Language Model Evaluation based on Alignment Skill Sets (2024), arXiv:2307.10928
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx19"><span class="ltx_tag ltx_tag_bibitem">[Zhou 23]</span>
+<span class="ltx_bibblock">
+Zhou, D., SchÃ¤rli, N., Hou, L., Wei, J., Scales, N., Wang, X., Schuurmans, D., Cui, C., Bousquet, O., Le, Q., and Chi, E.: Least-to-Most Prompting Enables Complex Reasoning in Large Language Models (2023), arXiv:2205.10625
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bibx20"><span class="ltx_tag ltx_tag_bibitem">[Zhu 22]</span>
+<span class="ltx_bibblock">
+Zhu, H., Li, L., Wu, J., Zhao, S., Ding, G., and Shi, G.: Personalized Image Aesthetics Assessment via Meta-Learning With Bilevel Gradient Optimization, <span class="ltx_text ltx_font_italic" id="bib.bibx20.1">IEEE Transactions on Cybernetics</span>, Vol. 52, No. 3, pp. 1798–1811 (2022)
+
+</span></li>
+</ul>
+</section>
+</body></html>
+</body></html>

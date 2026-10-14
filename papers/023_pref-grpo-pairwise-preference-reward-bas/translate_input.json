@@ -1,0 +1,1336 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Pref-GRPO: Pairwise Preference Reward-based GRPO for Stable Text-to-Image Reinforcement Learning"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Recent progress has made GRPO-based reinforcement learning central to advancing text-to-image (T2I) generation. Current GRPO methods score a group of generated images with pointwise reward models and "
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Alongside the optimization side, existing T2I benchmarks offer only coarse, primary-dimension-only evaluation , reporting aggregate scores that hide where models actually succeed or fail. We propose U"
+  },
+  {
+   "id": "b0004",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Together, Pref-GRPO and UniGenBench contribute a more stable optimization objective and a more diagnostic evaluation framework, pointing to fine-grained compositional reasoning as the next frontier fo"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "h6",
+   "en": "Index Terms:"
+  },
+  {
+   "id": "b0006",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "Fig. 1. Pref-GRPO: from illusory advantage to pairwise preference fitting. (a) Pointwise reward models assign tightly clustered scores to images within a group, producing an illusory advantage after normalization and causing reward hacking. (b) Pref-GRPO reformulates the GRPO objective from absolute score maximization to pairwise preference fitting, enabling stable T2I optimization."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "h2",
+   "en": "I Introduction"
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Recent progress in text-to-image (T2I) generation has made reinforcement learning [1, 2, 3, 4] and comprehensive benchmarking [5, 6, 7] two pivotal pillars for advancing model capabilities and for evaluating them reliably. Specifically, several GRPO-based approaches [1, 3] employ pointwise reward models [8, 9, 10] to score a group of generated images at each training step and normalize these scores into advantages following the GRPO objective [11]. This pipeline has proven highly effective in aligning T2I generation with human preferences."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "In parallel, evaluating T2I models, particularly their instruction-following capability, has become increasingly important. Widely adopted benchmarks [6, 5] probe compositional aspects using CLIP [12]-based or detection-based metrics, and TIIF-Bench [7] further incorporates additional dimensions such as text rendering."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "Despite these advances, existing approaches still face two key limitations: (1) Existing GRPO-based methods use pointwise reward models to maximize reward scores, which provides early gains but often leads to reward hacking: reward scores keep rising while image quality deteriorates over prolonged training (Fig. 2), a failure mode also noted in prior work [1, 3]. (2) Current T2I benchmarks provide only coarse, primary-dimension-only evaluation, covering a limited range of sub-dimensions without reporting fine-grained sub-dimension scores (Tab. I)."
+  },
+  {
+   "id": "b0012",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 2: Reward hacking under UnifiedReward. (a) UnifiedReward scores rise monotonically during training. (b) Generated images gradually drift toward an unnaturally dark style, despite the rising reward, which is a clear reward-hacking signature."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "In light of these issues, we argue that (1) reward hacking in GRPO-based methods stems from an illusory advantage that arises when pointwise reward models assign tightly clustered scores to images within the same group. Normalizing these scores into advantages disproportionately amplifies small gaps. Under a reward-maximization objective, such inflated advantages drive the policy to over-optimize for trivial reward cues, eventually steering it toward reward-hacking behaviors that rapidly increase scores while destabilizing generation (Figs. Pref-GRPO: Pairwise Preference Reward-based GRPO for Stable Text-to-Image Reinforcement Learning and 2). Moreover, small biases in the reward model are similarly amplified, encouraging the policy to exploit reward-model flaws rather than align with human preferences. (2) Current T2I models already perform well on most primary dimensions (e.g., object attributes and actions), which makes it necessary to decompose these broad dimensions into finer-grained sub-dimensions for more rigorous, diagnostic evaluation."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "To this end, this work proposes Pref-GRPO, the first pairwise-preference-reward-based GRPO method for stable T2I reinforcement learning, and UniGenBench, a fine-grained T2I evaluation benchmark for semantic consistency."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "(1) Pref-GRPO incorporates a Pairwise Preference Reward Model (PPRM) [13], reformulating the GRPO objective from absolute reward score maximization to pairwise preference fitting. As illustrated in Fig. Pref-GRPO: Pairwise Preference Reward-based GRPO for Stable Text-to-Image Reinforcement Learning, at each training step, given a group of generated images, we use the PPRM on each image pair to identify the preferred image. Each image’s win rate (the proportion of pairwise comparisons in which it is preferred) is then used as the reward signal for policy optimization. This design offers three key advantages: (a) Amplified reward variance: driving high-quality images toward win rates near 1 and low-quality ones toward 0 yields more separable reward distributions and more informative advantage estimates. (b) Robustness to reward noise: relying on relative rankings rather than absolute scores reduces over-optimization for marginal score gains and mitigates reward hacking. (c) Alignment with human preference: pairwise comparisons mirror the way humans compare images, producing reward signals that better capture nuanced preferences. Extensive experiments show that Pref-GRPO discerns subtle quality variations, produces more stable and directional advantages than pointwise scoring, and alleviates reward hacking."
+  },
+  {
+   "id": "b0017",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 3: UniGenBench overview. (a) Prompt themes: 5 primary categories and 20 sub-categories. (b) Subject categories. (c) Evaluation testpoints: 10 primary dimensions and 27 sub-dimensions. (d,e) Benchmarking results of representative open-source and closed-source T2I models on UniGenBench."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE I: Benchmark comparison with existing T2I benchmarks. We summarize benchmark coverage across the dimensions in UniGenBench. Existing benchmarks mainly report primary-dimension scores or cover only a sparse subset of sub-dimensions, whereas UniGenBench provides 10 primary dimensions and 27 sub-dimensions with fine-grained per-sub-dimension evaluation."
+  },
+  {
+   "id": "b0020",
+   "t": "keep",
+   "w": "table",
+   "en": "Benchmark Score Mode Style World Know. Attribute Action Relationship Compound Grammar Layout Logical Reason. Text — — Quant. Expn. Material Size Shape Color Hand Full Body Animal Non Contact Contact S"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "(2) UniGenBench is built for fine-grained T2I evaluation, covering 10 primary dimensions and 27 sub-dimensions, alongside 5 prompt themes (20 sub-themes) and diverse subject categories (Fig. 3). Unlike existing benchmarks that provide only coarse, primary-dimension-only evaluation, most primary dimensions in UniGenBench are further subdivided into fine-grained sub-dimensions, each associated with explicit testpoints (Tab. I). We further build an automated evaluation pipeline powered by a strong MLLM (Gemini-2.5-Pro [14]) for both benchmark construction and T2I model evaluation, illustrated in Fig. 7. We benchmark popular closed-source models, including GPT-4o [15], Nano Banana, Seedream-4.0 [16], and Imagen-4.0-Ultra [17], as well as leading open-source models such as Qwen-Image [18], HiDream-I1-Full [19], and Bagel [20]. As shown in Fig. 3(d, e), both open- and closed-source models perform relatively well on Style and World Knowledge prompts, but consistently underperform on prompts requiring Logical Reasoning, such as those involving causal or contrastive relationships."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Contributions: (1) We identify a root cause of reward hacking in pointwise-reward GRPO: the illusory advantage induced by within-group score normalization. (2) We propose Pref-GRPO, the first pairwise-preference-reward-based GRPO method for stable T2I reinforcement learning, which reformulates the optimization objective from absolute reward score maximization to pairwise preference fitting. (3) Experiments on UniGenBench, GenEval, and T2I-CompBench show that Pref-GRPO alleviates reward hacking and improves semantic alignment (+5.84% overall on UniGenBench, with +12.69% on Text and +12.04% on Logical Reasoning), without sacrificing perceptual quality. (4) We introduce UniGenBench, a fine-grained T2I benchmark with 10 primary dimensions and 27 sub-dimensions across 5 prompt themes (20 sub-themes), together with an MLLM-based pipeline for benchmark construction and evaluation. (5) We benchmark representative open- and closed-source T2I models on UniGenBench, revealing that Style and World Knowledge are saturated across strong models, while fine-grained compositional capabilities such as Logical Reasoning, Grammar, and Compound remain the primary bottlenecks."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "h2",
+   "en": "II Related Work"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "Reinforcement Learning for T2I Generation is gaining rapid momentum. Early efforts pursued preference-driven objectives [21, 22, 23]. For example, DiffusionDPO [23], adapted from Direct Preference Optimization (DPO) [24], optimizes preference consistency via a classification-style objective as a simpler alternative to RLHF. DyMO [21] offers a plug-and-play, training-free alignment method that steers generated images toward human preferences at inference. More recently, group relative policy optimization (GRPO) has advanced online RL-enhanced image generation. Flow-GRPO [25] and DanceGRPO [3] instantiate GRPO on flow-matching models, introducing stochasticity by recasting the original deterministic ODE as an equivalent SDE. While effective, these reward score-maximization methods are prone to reward hacking due to illusory advantage. To this end, we propose Pref-GRPO, which shifts training from reward-score maximization to pairwise preference fitting, yielding more stable advantages, and thereby mitigates reward hacking."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "Existing Benchmarks for T2I Evaluation have expanded the evaluation of T2I models beyond simple visual fidelity, incorporating compositional reasoning [5, 6] and world knowledge [26]. Recently, [7] introduces TIIF-Bench, containing 5k prompts spanning multiple dimensions, i.e., text rendering and style control, rigorously evaluating model robustness to variations in prompt length. However, existing benchmarks largely focus on primary dimension–level coarse assessment, covering a limited set of sub-tasks and lacking fine-grained assessment of these sub-tasks. To address this gap, we propose a unified image generation benchmark, UniGenBench, consisting of 600 prompts spanning diverse themes and categories, assessing T2I models across 10 primary dimensions and 27 sub-dimensions."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h2",
+   "en": "III Motivation for Pairwise Preference Reward"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "Existing GRPO-based text-to-image methods optimize the policy by maximizing pointwise reward scores [1, 3, 2, 4]. This design implicitly assumes that the absolute score assigned by the reward model is both sufficiently discriminative within a rollout group and reliable enough to support gradient scaling. In practice, however, these assumptions are often violated. For visually similar images sampled from the same prompt, pointwise reward models such as HPSv2 [9] and UnifiedReward [8] frequently produce highly compressed scores (see Fig. Pref-GRPO: Pairwise Preference Reward-based GRPO for Stable Text-to-Image Reinforcement Learning). GRPO then normalizes these near-identical scores by a very small group standard deviation, turning negligible score gaps into disproportionately large advantages. The optimization is therefore driven not by substantial quality differences, but by amplified numerical fluctuations, which leads to the illusory advantage phenomenon, as analyzed in Sec. IV-B."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "The consequence is not merely optimization instability, but a deeper objective mismatch. Once the training target is defined as absolute reward maximization, the policy is encouraged to chase any reward increase, even when that increase comes from reward-model bias rather than genuine improvement in text-image alignment or visual quality. This helps explain the reward hacking behaviors reported in prior work [1, 3] and observed in our experiments: HPSv2 encourages over-saturated generations (see Fig. 9), while UnifiedReward tends to favor an unnatural dark style (see Fig. 2). Importantly, simply shrinking or clipping the normalized advantage can only dampen the update magnitude; it cannot remove the underlying tendency to optimize toward unreliable absolute-score increments."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "These observations motivate replacing reward score maximization with pairwise preference fitting. Relative comparison is fundamentally better suited to this setting for two reasons. First, when candidate images are close in quality, determining which one is better is typically more reliable than assigning well-calibrated absolute scores to each image independently. Second, pairwise comparison discards uninformative score magnitude and focuses optimization on stable ordering information, making the reward signal less sensitive to small fluctuations and common calibration bias. This change also better matches human evaluation, which is usually comparative rather than absolute for similar generations. Motivated by this, we reformulate traditional GRPO with pairwise preference rewards and pairwise win rates, as detailed next."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "h2",
+   "en": "IV Pref-GRPO"
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "This section presents the technical formulation of Pref-GRPO. We first introduce GRPO on flow matching models in Sec. IV-A, then analyze the illusory advantage phenomenon in Sec. IV-B, and finally describe our Pref-GRPO objective in Sec. IV-C."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "h3",
+   "en": "IV-A Flow Matching GRPO"
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "h5",
+   "en": "Flow Matching"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "Let ⟦SLOT_0⟧ be a data sample and ⟦SLOT_1⟧ a noise sample. Rectified flow [27] defines intermediate samples as"
+  },
+  {
+   "id": "b0035",
+   "t": "keep",
+   "w": "table",
+   "en": "x t = ( 1 − t ) ​ x 0 + t ​ x 1 , t ∈ [ 0 , 1 ] , x_{t}=(1-t)x_{0}+tx_{1},\\quad t\\in[0,1], (1)"
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "and trains a velocity field ⟦SLOT_2⟧ via the flow matching [28] objective:"
+  },
+  {
+   "id": "b0037",
+   "t": "keep",
+   "w": "table",
+   "en": "ℒ FM ​ ( θ ) = 𝔼 t , x 0 , x 1 ​ [ ‖ v − v θ ​ ( x t , t ) ‖ 2 2 ] , v = x 1 − x 0 . \\mathcal{L}_{\\text{FM}}(\\theta)=\\mathbb{E}_{t,x_{0},x_{1}}\\big[\\|v-v_{\\theta}(x_{t},t)\\|_{2}^{2}\\big],\\quad v=x_{1}"
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "Beyond training, the iterative denoising process at inference time can be naturally formalized as a Markov Decision Process [29]. We discretize ⟦SLOT_3⟧ into ⟦SLOT_4⟧ steps. At each step, the state is ⟦SLOT_5⟧, where ⟦SLOT_6⟧ denotes the prompt. The action ⟦SLOT_7⟧ corresponds to producing the denoised sample ⟦SLOT_8⟧, yielding a deterministic transition to ⟦SLOT_9⟧. The initial state samples a prompt ⟦SLOT_10⟧ with ⟦SLOT_11⟧ and ⟦SLOT_12⟧. A reward is only provided at the terminal state (⟦SLOT_13⟧): ⟦SLOT_14⟧, and zero otherwise."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "h5",
+   "en": "GRPO on Flow Matching"
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "GRPO [11] introduces a group-relative advantage to stabilize policy updates. On flow matching models, for a group of ⟦SLOT_15⟧ generated images ⟦SLOT_16⟧, the advantage of the ⟦SLOT_17⟧-th image is"
+  },
+  {
+   "id": "b0041",
+   "t": "keep",
+   "w": "table",
+   "en": "A ^ t i = R ⁡ ( x 0 i , c ) − mean ⁡ ( { R ⁡ ( x 0 j , c ) } j = 1 G ) std ⁡ ( { R ⁡ ( x 0 j , c ) } j = 1 G ) . \\hat{A}_{t}^{i}=\\frac{R(x_{0}^{i},c)-\\mathrm{mean}(\\{R(x_{0}^{j},c)\\}_{j=1}^{G})}{\\math"
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "The policy is updated by maximizing the clipped, KL-regularized objective"
+  },
+  {
+   "id": "b0043",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒥 Flow ​ ( θ ) = 𝔼 c , { x i } ​ [ f ⁡ ( r , A ^ , θ , η , β ) ] , \\mathcal{J}_{\\text{Flow}}(\\theta)=\\mathbb{E}_{c,\\{x^{i}\\}}\\Big[f(r,\\hat{A},\\theta,\\eta,\\beta)\\Big], (4)"
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "where"
+  },
+  {
+   "id": "b0045",
+   "t": "keep",
+   "w": "table",
+   "en": "f ( r , A ^ , θ , η , β ) = 1 G ∑ i = 1 G 1 T ∑ t = 0 T − 1 min ( r t i ( θ ) A ^ t i , \\displaystyle f(r,\\hat{A},\\theta,\\eta,\\beta)=\\frac{1}{G}\\sum_{i=1}^{G}\\frac{1}{T}\\sum_{t=0}^{T-1}\\min\\Big(r_{t}^"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "with ⟦SLOT_18⟧."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "To enable the stochastic exploration required by GRPO, Flow-GRPO [1] converts the deterministic flow ODE ⟦SLOT_19⟧ to an equivalent SDE:"
+  },
+  {
+   "id": "b0048",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ x t = ( v θ ​ ( x t , t ) + σ t 2 2 ​ t ​ ( x t + ( 1 − t ) ​ v θ ​ ( x t , t ) ) ) ​ d ​ t + σ t ​ d ​ w t , dx_{t}=\\big(v_{\\theta}(x_{t},t)+\\frac{\\sigma_{t}^{2}}{2t}(x_{t}+(1-t)v_{\\theta}(x_{t},"
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_20⟧ is a standard Wiener process and ⟦SLOT_21⟧ is a time-dependent noise scale. Euler-Maruyama discretization gives the update rule:"
+  },
+  {
+   "id": "b0050",
+   "t": "keep",
+   "w": "table",
+   "en": "x t + Δ ​ t = x t + ( v θ ​ ( x t , t ) + σ t 2 2 ​ t ​ ( x t + ( 1 − t ) ​ v θ ​ ( x t , t ) ) ) ​ Δ ​ t \\displaystyle x_{t+\\Delta t}=x_{t}+\\big(v_{\\theta}(x_{t},t)+\\frac{\\sigma_{t}^{2}}{2t}(x_{t}+(1"
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_22⟧ and ⟦SLOT_23⟧ is a scalar hyperparameter."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "h3",
+   "en": "IV-B Illusory Advantage in Pointwise-Reward GRPO"
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "Existing flow-matching-based GRPO methods [1, 3, 2, 4] use pointwise reward models [8, 12, 9] to score a group of generated images at each update step. The advantage of each image is then obtained by normalizing its reward within the group, as in Eq. 3. This normalization is intended to standardize updates across samples. In practice, however, pointwise reward models often assign tightly clustered scores ⟦SLOT_24⟧ to visually similar images from the same prompt, yielding a small within-group standard deviation ⟦SLOT_25⟧. As a consequence, even minor score gaps are disproportionately magnified after normalization (see Fig. Pref-GRPO: Pairwise Preference Reward-based GRPO for Stable Text-to-Image Reinforcement Learning(a))."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "To make this effect explicit, let ⟦SLOT_26⟧ and ⟦SLOT_27⟧ denote the mean and standard deviation of the group’s rewards. Define the centered reward of sample ⟦SLOT_28⟧ as ⟦SLOT_29⟧. The normalized advantage then becomes:"
+  },
+  {
+   "id": "b0055",
+   "t": "keep",
+   "w": "table",
+   "en": "A ^ t i = Δ ​ r i σ r . \\hat{A}_{t}^{i}=\\frac{\\Delta r_{i}}{\\sigma_{r}}. (8)"
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "For clarity, we drop the clip and KL terms and isolate the effect of reward normalization. The gradient of the GRPO objective with respect to ⟦SLOT_30⟧ is then:"
+  },
+  {
+   "id": "b0057",
+   "t": "keep",
+   "w": "table",
+   "en": "∇ θ 𝒥 Flow ​ ( θ ) = 𝔼 c , { x i } ​ [ 1 G ​ ∑ i = 1 G 1 T ​ ∑ t = 0 T − 1 ∇ θ ( r t i ​ ( θ ) ​ A ^ t i ) ] . \\nabla_{\\theta}\\mathcal{J}_{\\text{Flow}}(\\theta)=\\mathbb{E}_{c,\\{x^{i}\\}}\\Bigg[\\frac{1}{G"
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "Substituting ⟦SLOT_31⟧ and treating ⟦SLOT_32⟧ as a per-group constant, we obtain:"
+  },
+  {
+   "id": "b0059",
+   "t": "keep",
+   "w": "table",
+   "en": "∇ θ 𝒥 Flow ​ ( θ ) = 1 σ r ​ 𝔼 c , { x i } ​ [ 1 G ​ ∑ i = 1 G 1 T ​ ∑ t = 0 T − 1 ∇ θ ( r t i ​ ( θ ) ​ Δ ​ r i ) ] . \\displaystyle\\nabla_{\\theta}\\mathcal{J}_{\\text{Flow}}(\\theta)=\\frac{1}{\\sigma_{r}"
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "The gradient norm therefore contains an explicit factor of ⟦SLOT_33⟧:"
+  },
+  {
+   "id": "b0061",
+   "t": "keep",
+   "w": "table",
+   "en": "‖ ∇ θ 𝒥 Flow ‖ ∝ 1 σ r . \\|\\nabla_{\\theta}\\mathcal{J}_{\\text{Flow}}\\|\\propto\\frac{1}{\\sigma_{r}}. (11)"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "Therefore, when a pointwise reward model assigns nearly identical scores to images within the same group (i.e., ⟦SLOT_34⟧), the normalization becomes highly sensitive to small perturbations. Even when ⟦SLOT_35⟧ is small, dividing by a small ⟦SLOT_36⟧ produces disproportionately large normalized advantages ⟦SLOT_37⟧, making the update direction overly dependent on noisy reward differences."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "This amplification causes the model to over-optimize for spurious reward differences, manifesting as reward hacking. We term this failure mode the illusory advantage phenomenon. The illusory advantage has two detrimental effects. (1) Excessive optimization: minimal score variations are exaggerated, pushing the policy toward extreme, reward-hacked behaviors (Figs. 2 and 9). (2) Sensitivity to reward noise: the optimization becomes highly susceptible to biases in the reward model, encouraging the policy to exploit model flaws rather than pursue genuine quality improvements."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "h3",
+   "en": "IV-C Pairwise Preference Reward-based GRPO"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "To mitigate the illusory advantage, we propose Pref-GRPO, which uses a Pairwise Preference Reward Model (PPRM) [13] to reformulate the optimization objective as pairwise preference fitting. Instead of relying on absolute reward scores, Pref-GRPO evaluates relative preferences among generated images, mirroring the way humans compare images pairwise. This yields a reward signal that better captures nuanced differences in image quality and prompt alignment, producing more stable and informative advantages for policy optimization while reducing susceptibility to reward hacking. Specifically, given a set of ⟦SLOT_38⟧ images ⟦SLOT_39⟧ sampled from ⟦SLOT_40⟧ for prompt ⟦SLOT_41⟧, for each ordered pair ⟦SLOT_42⟧ with ⟦SLOT_43⟧ we use the PPRM to determine whether image ⟦SLOT_44⟧ is preferred over image ⟦SLOT_45⟧. The win rate of image ⟦SLOT_46⟧ is defined as"
+  },
+  {
+   "id": "b0066",
+   "t": "keep",
+   "w": "table",
+   "en": "w i = 1 G − 1 ​ ∑ j ≠ i 𝟙 ​ ( x 0 i ≻ x 0 j ) , w_{i}=\\frac{1}{G-1}\\sum_{j\\neq i}\\mathbb{1}\\big(x_{0}^{i}\\succ x_{0}^{j}\\big), (12)"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_47⟧ is the indicator function, and ⟦SLOT_48⟧ indicates that image ⟦SLOT_49⟧ is preferred over image ⟦SLOT_50⟧ according to the PPRM. The win rates are then used as rewards, replacing the scalar rewards ⟦SLOT_51⟧ in the GRPO advantage:"
+  },
+  {
+   "id": "b0068",
+   "t": "keep",
+   "w": "table",
+   "en": "A ^ t i = w i − mean ⁡ ( { w j } j = 1 G ) std ⁡ ( { w j } j = 1 G ) . \\hat{A}_{t}^{i}=\\frac{w_{i}-\\mathrm{mean}(\\{w_{j}\\}_{j=1}^{G})}{\\mathrm{std}(\\{w_{j}\\}_{j=1}^{G})}. (13)"
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "Compared to reward score maximization, Pref-GRPO offers several advantages: (1) Amplified reward variance: replacing scalar rewards with pairwise win rates spreads win rates across ⟦SLOT_52⟧, yielding a larger within-group variance. High-quality samples approach ⟦SLOT_53⟧, and lower-quality samples approach ⟦SLOT_54⟧, producing a more discriminative and robust reward distribution for advantage estimation, thereby mitigating reward hacking. (2) Robustness to reward noise: because optimization relies on relative rankings rather than raw scores, Pref-GRPO reduces sensitivity to small fluctuations and biases in the reward model, lowering the likelihood of reward hacking and improving training stability. (3) Alignment with human preference: human preference judgments over images are inherently relative rather than absolute. Mirroring this process lets Pref-GRPO capture fine-grained quality distinctions often missed by pointwise scoring, providing a more faithful signal for policy improvement."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "h2",
+   "en": "V UniGenBench"
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "Rigorous evaluation is equally important for discerning whether a T2I model faithfully follows complex semantics. This requires a benchmark that goes beyond coarse aggregate scores and probes fine-grained semantic capabilities. However, existing benchmarks [5, 6, 7] still exhibit the following limitations: (1) Sparse sub-dimension coverage: existing benchmarks typically include only a few sub-dimensions within each primary dimension, missing many practical capabilities. For example, as shown in Tab. I, current benchmarks include only a single sub-dimension for Relationship and Grammar, leading to incomplete and potentially misleading assessments in these aspects. (2) No sub-dimension-level reporting: existing benchmarks report scores only at the primary-dimension level, without breaking down performance across sub-dimensions. This coarse reporting limits interpretability and prevents diagnosing a T2I model’s strengths and weaknesses."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "Motivated by this gap, we propose UniGenBench, a T2I evaluation benchmark designed not only to compare models, but also to reveal where their semantic understanding actually breaks down. UniGenBench offers the following advantages:"
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "li",
+   "en": "• Comprehensive fine-grained evaluation: 10 primary dimensions and 27 sub-dimensions, enabling substantially finer-grained diagnosis than benchmarks that report only coarse dimension-level scores."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "li",
+   "en": "• Broad prompt coverage: 5 major prompt themes and 20 sub-themes, spanning scenarios from realistic rendering to open-ended creative composition."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "li",
+   "en": "• Efficient benchmark design: 600 prompts, each with 1 to 5 explicit testpoints, achieving broad semantic coverage without the thousands of prompts used by prior benchmarks."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "li",
+   "en": "• Reliable MLLM-based assessment: each prompt is paired with structured testpoint descriptions, enabling precise, interpretable per-testpoint assessment of whether the intended semantic targets are satisfied."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "We will first introduce our design of prompt themes and evaluation criteria in the benchmark (Sec. V-A), and then elaborate on our MLLM-based automated pipeline for prompt generation and T2I evaluation (Sec. V-B)."
+  },
+  {
+   "id": "b0078",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 4: Prompt themes of UniGenBench. Representative examples for each of the 5 primary themes and 20 sub-themes."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "h3",
+   "en": "V-A Prompt Themes and Evaluation Dimensions"
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Fig. 3, UniGenBench covers five major prompt themes: Art, Illustration, Creative Divergence, Design, and Film&Storytelling, further divided into 20 subcategories. It also spans diverse subject categories including animals, objects, anthropomorphic characters, scenes, and an Other category for special entities (e.g., robots in science-fiction themes). This design ensures the benchmark spans both practical generation scenarios and open-ended creative settings, rather than skewing toward a narrow prompt distribution. Representative examples of the prompt themes are shown in Fig. 4."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "Unlike coarse benchmarks that only report a few high-level metrics, UniGenBench defines 10 primary evaluation dimensions and 27 sub-dimensions. As illustrated in Fig. 5, we explicitly include several challenging yet practically important capabilities that are often overlooked, such as logical reasoning, facial expressions, pronoun reference, hand actions, and fine-grained relationship understanding (e.g., composition, similarity, and inclusion relations), as well as grammatical consistency across multiple entities. This finer decomposition enables the benchmark to diagnose a model’s strengths and weaknesses more precisely, providing substantially richer feedback than dimension-level averages alone."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "At a high level, these ten dimensions cover complementary aspects of semantic faithfulness: Style evaluates adherence to the requested visual form; World Knowledge evaluates consistency with commonsense and real-world facts; Attribute evaluates whether entities exhibit the correct properties; Action evaluates whether entities perform the intended behaviors; Relationship evaluates whether inter-entity relations are grounded correctly; Layout evaluates whether spatial arrangements are rendered accurately; Compound evaluates whether multiple concepts are integrated coherently; Grammar evaluates language-sensitive grounding such as reference, consistency, and negation; Logical Reasoning evaluates causal, contrastive, and inferential understanding; and Text evaluates whether explicit textual content is generated correctly."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "p",
+   "en": "To make these dimensions operational, we further instantiate them with explicit sub-dimension testpoints. Specifically, Attribute is decomposed into quantity, expression, material, size, shape, and color; Action is decomposed into hand actions, full-body motions, animal behaviors, contact interactions, non-contact interactions, and object states; Relationship is decomposed into composition, similarity, inclusion, and comparison; and Layout is decomposed into 2D placement and 3D spatial arrangement. This design allows UniGenBench to reveal which aspect of semantic generation actually fails, rather than only reporting a coarse dimension-level average."
+  },
+  {
+   "id": "b0085",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 5: Evaluation dimensions of UniGenBench. Representative prompt examples for each of the 27 sub-dimensions under the 10 primary evaluation dimensions."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "We further control the complexity of each prompt through the number of associated testpoints. Instead of relying on thousands of prompts with diffuse evaluation targets, UniGenBench uses 600 prompts, each focusing on 1 to 5 specific testpoints. As shown in Fig. 6, this design achieves a practical balance between coverage and efficiency: each prompt remains interpretable and evaluation-friendly, while the benchmark as a whole still spans a broad set of semantic capabilities."
+  },
+  {
+   "id": "b0088",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 6: Distribution of testpoint counts per prompt in UniGenBench. Each prompt is associated with 1 to 5 testpoints, balancing coverage and evaluation interpretability."
+  },
+  {
+   "id": "b0090",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 7: UniGenBench construction and evaluation pipeline. An MLLM (Gemini-2.5-Pro) is used for (a) prompt and testpoint-description generation and (b) fine-grained per-testpoint evaluation."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "h3",
+   "en": "V-B Benchmark Construction and Evaluation Pipeline"
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "Having established diverse prompt themes, subject categories, and evaluation dimensions, we further construct an MLLM-based automated pipeline to operationalize the benchmark shown in Fig. 7. This pipeline serves two complementary purposes: (1) generating large-scale, diverse, and high-quality prompts in a systematic and controllable manner (Sec. V-B1), and (2) enabling scalable, reliable, and fine-grained evaluation of T2I models (Sec. V-B2). By leveraging the reasoning and perception capabilities of MLLMs, the pipeline eliminates the need for costly human annotation, while ensuring both efficiency and reliability in benchmark construction and model assessment."
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "h4",
+   "en": "V-B1 Prompt and Testpoint Description Generation"
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "p",
+   "en": "Let ⟦SLOT_55⟧ denote the set of prompt themes, ⟦SLOT_56⟧ the set of subject categories, and ⟦SLOT_57⟧ the set of evaluation dimensions. For each prompt, we sample a theme ⟦SLOT_58⟧ and a subject category ⟦SLOT_59⟧ uniformly at random. Subsequently, a subset of ⟦SLOT_60⟧ testpoints ⟦SLOT_61⟧, with ⟦SLOT_62⟧, is sampled to target specific fine-grained evaluation aspects."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "The selected tuple ⟦SLOT_63⟧ is input into the MLLM, which generates two outputs: (i) a natural language prompt ⟦SLOT_64⟧ that conforms to the semantic constraints of the selected theme ⟦SLOT_65⟧ and subject category ⟦SLOT_66⟧, and (ii) a structured description set ⟦SLOT_67⟧, where each ⟦SLOT_68⟧ specifies how the corresponding testpoint ⟦SLOT_69⟧ is realized in the prompt. Formally, this process can be expressed as:"
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "table",
+   "en": "( p , { d 1 , … , d k } ) ∼ MLLM ( p , { d i } | t , s , { c 1 , … , c k } ) . (p,\\{d_{1},\\dots,d_{k}\\})\\sim\\mathrm{MLLM}\\Big(p,\\{d_{i}\\}\\;\\big|\\;t,s,\\{c_{1},\\dots,c_{k}\\}\\Big). (14)"
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "h4",
+   "en": "V-B2 T2I Model Evaluation"
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "p",
+   "en": "Given the generated images ⟦SLOT_70⟧ for benchmark prompts ⟦SLOT_71⟧, we evaluate each image using an MLLM. Specifically, the image ⟦SLOT_72⟧, its corresponding prompt ⟦SLOT_73⟧, and its testpoint descriptions ⟦SLOT_74⟧ are provided as input. The MLLM evaluates each testpoint ⟦SLOT_75⟧ in the context of ⟦SLOT_76⟧, producing a binary score ⟦SLOT_77⟧ and a textual rationale ⟦SLOT_78⟧ justifying the assessment. This can be formally represented as:"
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "table",
+   "en": "( r i , 1 , … , r i , k , e i , 1 , … , e i , k ) ∼ \\displaystyle(r_{i,1},\\dots,r_{i,k},e_{i,1},\\dots,e_{i,k})\\sim (15) MLLM ⁡ ( { r i , j , e i , j } | x i , p i , { d i , 1 , … , d i , k } ) . \\disp"
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "p",
+   "en": "This process ensures that the evaluation captures both the quantitative performance on each testpoint and the qualitative reasoning behind the assessment."
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "p",
+   "en": "After obtaining the scores ⟦SLOT_79⟧ for each testpoint ⟦SLOT_80⟧ in all generated images, we aggregate them to compute scores of sub- and primary evaluation dimensions. Specifically, for each sub-dimension ⟦SLOT_81⟧, we define its score as the ratio of the number of times the model successfully satisfies the corresponding testpoint description to the total number of occurrences of that testpoint across the benchmark:"
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "table",
+   "en": "R c = ∑ i , j 𝟏 { d i , j ∈ c and r i , j = 1 } ∑ i , j 𝟏 { d i , j ∈ c } , R_{c}=\\frac{\\sum_{i,j}\\mathbf{1}\\{d_{i,j}\\in c\\text{ and }r_{i,j}=1\\}}{\\sum_{i,j}\\mathbf{1}\\{d_{i,j}\\in c\\}}, (16)"
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_82⟧ is the indicator function. The overall score for a primary dimension ⟦SLOT_83⟧ is then obtained by averaging the scores of all its sub-dimensions. This procedure ensures that both fine-grained performance on sub-dimensions and broader performance on primary dimensions are captured."
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "h2",
+   "en": "VI Experiments"
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "h3",
+   "en": "VI-A Experimental Setup"
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "p",
+   "en": "Baselines. We use FLUX.1-dev [30] as the base T2I model and UnifiedReward-Think [13] as the pairwise preference reward model (PPRM) in Pref-GRPO. As reward-maximization baselines, we train FLUX.1-dev with Flow-GRPO [1] using each of HPSv2 [9], CLIP [12], and UnifiedReward (UR) [8] as the pointwise reward."
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "p",
+   "en": "Training. Using the pipeline in Fig. 7(a), we generate 5k training prompts, disjoint from the 600 UniGenBench evaluation prompts. The same 5k prompts are used to train Pref-GRPO and all reward-maximization baselines. Training is conducted on 64 H20 GPUs with 25 sampling steps, 8 rollouts per prompt from the same initial noise ⟦SLOT_84⟧, 4 gradient accumulation steps, and a learning rate of ⟦SLOT_85⟧. Following Flow-GRPO [1], the SDE noise-scale hyperparameter is set to ⟦SLOT_86⟧. We host the PPRM as an inference server using vLLM [31]."
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "p",
+   "en": "Inference. At inference, we generate ⟦SLOT_87⟧ images with 30 sampling steps and a classifier-free guidance scale of 3.5, following the official FLUX.1-dev configuration. To ensure a fair comparison, all methods share identical prompts and initial noise at evaluation."
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluation. We evaluate semantic consistency on UniGenBench, GenEval [5], and T2I-CompBench [6]. For each test prompt, we generate four images and report the average score. Image quality is further evaluated with UnifiedReward [8], ImageReward [32], PickScore [10], and Aesthetic [33]. ImageReward, PickScore, and Aesthetic are disjoint from the training rewards and serve as the independent quality metrics."
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "h3",
+   "en": "VI-B Main Results: Pref-GRPO vs. Reward-Maximization Baselines"
+  },
+  {
+   "id": "b0112",
+   "t": "text",
+   "w": "p",
+   "en": "Quantitative Results. Tab. II shows that Pref-GRPO delivers clear semantic gains on UniGenBench. Relative to the strongest score-maximization baseline (UR), it improves the overall score by 5.84%, with especially large gains on challenging dimensions such as Text (+12.69%) and Logical Reasoning (+12.04%). This pattern is consistent with our motivation in Sec. IV-B: pairwise preferences provide a cleaner gradient signal than pointwise scores on dimensions that require fine-grained semantic grounding and compositional understanding."
+  },
+  {
+   "id": "b0113",
+   "t": "text",
+   "w": "p",
+   "en": "The gains also generalize beyond our held-out evaluation on UniGenBench. As shown in Tabs. VI and IV, Pref-GRPO consistently outperforms reward-maximization baselines on both GenEval and T2I-CompBench, indicating improved out-of-domain compositional reasoning, attribute binding, and spatial understanding. Moreover, Tab. III shows that these semantic gains do not come at the expense of perceptual quality: Pref-GRPO achieves the best score on all four image-quality metrics. Overall, pairwise preference fitting improves semantic alignment without sacrificing image quality."
+  },
+  {
+   "id": "b0114",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE II: In-domain semantic consistency comparison on UniGenBench. FLUX.1-dev fine-tuned with Flow-GRPO using different reward models, versus our Pref-GRPO. Gemini-2.5-Pro is used as the evaluator. Best scores are in bold, second-best are underlined."
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Overall Style World Know. Attr. Action Rel. Logic Reason. Grammar Compound Layout Text FLUX.1-dev 61.30 83.90 88.92 67.84 62.17 67.26 30.91 60.96 47.04 71.83 32.18 w/ HPSv2 58.77 75.20 88.77 66."
+  },
+  {
+   "id": "b0116",
+   "t": "text",
+   "w": "p",
+   "en": "Qualitative Results. Examples are shown in Fig. 8. Existing methods exhibit varying degrees of reward hacking: HPSv2-optimized images tend to be oversaturated, while UR-optimized images drift toward an unnaturally dark style. We also explore mitigating reward hacking by combining multiple reward scores, i.e., summing HPSv2 and CLIP scores during training (third row in Fig. 8). While this partially reduces reward hacking, it does not eliminate it. In contrast, Pref-GRPO avoids these artifacts and faithfully renders the prompt semantics."
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0118",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 8: Qualitative comparison. Rows show FLUX.1-dev trained with HPSv2, HPSv2+CLIP, UnifiedReward, and Pref-GRPO. Pointwise-reward baselines exhibit reward-hacked artifacts (oversaturation for HPSv2, dark style for UnifiedReward), while Pref-GRPO preserves semantic faithfulness and the original FLUX.1-dev visual style."
+  },
+  {
+   "id": "b0119",
+   "t": "text",
+   "w": "p",
+   "en": "A detailed analysis of reward hacking under UnifiedReward and HPSv2 is provided in Sec. VII-A."
+  },
+  {
+   "id": "b0120",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE III: Image quality comparison. FLUX.1-dev fine-tuned with Flow-GRPO using different reward models, versus our Pref-GRPO. ImageReward, PickScore, and Aesthetic are not used as training rewards and serve as independent quality metrics. Best results are in bold, second-best are underlined."
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Unified Reward Pick Score Image Reward Aes. FLUX.1-dev 3.04 22.42 1.27 6.13 w/ HPSv2 3.09 22.62 1.34 6.20 w/ HPSv2+CLIP 3.08 22.61 1.30 6.25 w/ UnifiedReward 3.14 22.88 1.38 6.31 w/ Pref-GRPO 3."
+  },
+  {
+   "id": "b0122",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE IV: Out-of-domain performance comparison on T2I-CompBench. FLUX.1-dev fine-tuned with Flow-GRPO using different reward models, versus our Pref-GRPO. Best results are in bold, second-best are underlined."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Overall Color Shape Texture 2D Spatial 3D Spatial Numeracy Non- Spatial Complex FLUX.1-dev 48.17 77.34 48.32 62.66 28.01 40.04 61.88 30.67 36.49 w/ HPSv2 46.77 78.17 51.55 66.13 22.06 33.75 56.3"
+  },
+  {
+   "id": "b0124",
+   "t": "text",
+   "w": "h3",
+   "en": "VI-C Benchmarked T2I Models on UniGenBench"
+  },
+  {
+   "id": "b0125",
+   "t": "text",
+   "w": "p",
+   "en": "We further benchmark representative closed-source and open-source T2I models on UniGenBench, spanning diffusion, MMDiT, autoregressive, and unified architectures. Closed-source models are accessed via their official APIs, and open-source models via their released checkpoints, both using the providers’ default inference settings."
+  },
+  {
+   "id": "b0126",
+   "t": "text",
+   "w": "p",
+   "en": "Closed-source Models. We benchmark GPT-4o [15] (OpenAI), Imagen-4.0-Ultra [17] (Google), Seedream-3.0 and Seedream-4.0 [16] (ByteDance), Nano Banana (Google), DALL-E-3 (OpenAI), FLUX-Pro-Ultra and Kontext-Max [30] (Black Forest Labs), and Keling-Ketu (Kuaishou)."
+  },
+  {
+   "id": "b0127",
+   "t": "text",
+   "w": "p",
+   "en": "Open-source Models. We benchmark Qwen-Image [18], HiDream-I1-Full [19], Show-o2 [34], SD-3.5-Large [35], SDXL [35], FLUX.1-dev [30], CogView4 [36], Hunyuan-DiT [37], Playground 2.5 [38], Janus [39], Janus-Pro [40], Janus-Flow [41], Emu3 [42], Bagel [20], and BLIP3-o [43]."
+  },
+  {
+   "id": "b0128",
+   "t": "text",
+   "w": "h3",
+   "en": "VI-D Benchmarking Results on UniGenBench"
+  },
+  {
+   "id": "b0129",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE V: Benchmarking results on UniGenBench. We report the overall score and primary-dimension breakdown for the evaluated T2I models. Best and second-best scores are computed separately within the closed- and open-source groups; they are marked in bold and underlined, with top-3 per group annotated by the medal icons."
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Overall Style World Know. Attr. Action Rel. Logic Reason. Grammar Compound Layout Text Closed-source Models Keling-Ketu 65.93 92.27 86.62 71.66 68.73 70.94 43.75 71.26 60.81 77.23 16.03 DALL-E-3"
+  },
+  {
+   "id": "b0131",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE VI: Out-of-domain performance comparison on GenEval. FLUX.1-dev fine-tuned with Flow-GRPO using different reward models, versus our Pref-GRPO. Best results are in bold, second-best are underlined."
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Overall Single Obj. Two Obj. Count. Color Pos. Attr. Bind. FLUX.1-dev 62.92 97.81 79.55 71.56 77.66 18.50 42.25 w/ HPSv2 59.31 97.43 75.00 62.81 73.67 21.00 34.75 w/ HPSv2+CLIP 64.85 98.12 81.00"
+  },
+  {
+   "id": "b0133",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Tab. V, UniGenBench reveals a clear yet nuanced performance hierarchy. Closed-source models remain the strongest overall, with GPT-4o [15] and Imagen-4.0-Ultra [17] leading on 7 of 10 primary dimensions. Their advantage is most pronounced on dimensions that require deeper semantic grounding (e.g., Logical Reasoning, Relationship, Compound, and Text) rather than low-level visual quality. By contrast, dimensions such as Style and World Knowledge are already saturated across many models (most score above 0.8), indicating they are no longer the main bottlenecks for current T2I systems. This contrast illustrates why coarse overall scores are insufficient: the real gap between strong and weak models lies in higher-order semantic composition, not in basic visual plausibility."
+  },
+  {
+   "id": "b0134",
+   "t": "text",
+   "w": "p",
+   "en": "Open-source models are closing the gap but remain less balanced across dimensions. Qwen-Image [18] is the strongest open-source model overall, and HiDream-I1-Full [19] is competitive on Action, Layout, and Attribute. Compared with leading closed-source systems, however, open-source models show larger variance across the 10 primary dimensions, with noticeably weaker performance on Logical Reasoning, Grammar, and Compound. This indicates the remaining gap is not primarily one of image quality, but of fine-grained instruction grounding and coherently satisfying multiple constraints within a single prompt. UniGenBench thus serves not only as a leaderboard, but also as a diagnostic benchmark that exposes where current T2I models still fail."
+  },
+  {
+   "id": "b0135",
+   "t": "text",
+   "w": "p",
+   "en": "Tab. VII further sharpens this diagnosis by exposing the sub-dimension breakdown hidden beneath the primary-dimension averages. Among closed-source models, GPT-4o leads on semantically fine-grained sub-dimensions such as expression, non-contact interaction, Grammar, and Logical Reasoning, whereas Imagen-4.0-Ultra leads on structure-sensitive sub-dimensions including quantity, contact interaction, composition, and 3D spatial arrangement (Layout). Even among top-tier systems, strengths are not uniform: some models are stronger on abstract semantic interpretation, others on preserving spatial and compositional structure. The fine-grained breakdown is even more informative for open-source models. Qwen-Image shows the most balanced profile and leads in a majority of sub-dimensions among open-source systems, indicating broad rather than narrow improvements. HiDream-I1-Full is competitive on several geometry- and action-related sub-dimensions, but remains visibly weaker on reasoning-intensive dimensions (Logical Reasoning, Grammar, and Compound). Crucially, models with similar primary-dimension averages can still differ substantially in the specific sub-dimensions they master, which UniGenBench makes explicit."
+  },
+  {
+   "id": "b0136",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE VII: Fine-grained benchmarking results of the models reported in Tab. V. We report sub-dimension breakdowns for overlapping models with available fine-grained annotations. Best scores are in bold, second-best in underlined, computed separately for closed- and open-source models."
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Style World Know. Attribute Action Relationship Compound Grammar Layout Logic Reason. Text Quant. Express. Materi. Size Shape Color Hand Full Body Animal Non Contact Contact State Compos. Sim. I"
+  },
+  {
+   "id": "b0138",
+   "t": "text",
+   "w": "h2",
+   "en": "VII Analyses and Ablations"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0140",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 9: Reward hacking under HPSv2. HPSv2 scores continue to rise, but image quality collapses around step 160, manifesting as severe over-saturation."
+  },
+  {
+   "id": "b0141",
+   "t": "text",
+   "w": "h3",
+   "en": "VII-A Reward Hacking in Pointwise GRPO"
+  },
+  {
+   "id": "b0142",
+   "t": "text",
+   "w": "p",
+   "en": "We analyze reward hacking under two representative pointwise reward models, UnifiedReward [8] and HPSv2 [9]. For UnifiedReward, Fig. 2 shows that reward scores rise rapidly during training, yet the generated images gradually drift toward an unnatural dark style and perceptual quality degrades. For HPSv2, the same failure mode emerges even more abruptly in Fig. 9: the reward keeps rising, while image quality starts to collapse at around step 160, accompanied by severe over-saturation. Taken together, these results reveal a consistent mismatch between reward growth and real generation quality under reward score maximization."
+  },
+  {
+   "id": "b0143",
+   "t": "text",
+   "w": "p",
+   "en": "This mismatch is consistent with the illusory advantage analysis in Sec. IV-B. Once pointwise reward scores within a rollout group become highly compressed, GRPO amplifies tiny score gaps into large normalized advantages, causing the policy to over-optimize for spurious reward cues rather than genuine improvements in alignment or aesthetics. HPSv2 exhibits reward hacking earlier than UnifiedReward, consistent with its smaller intra-group score variance in Fig. Pref-GRPO: Pairwise Preference Reward-based GRPO for Stable Text-to-Image Reinforcement Learning(a), which intensifies the amplification effect. By contrast, Pref-GRPO optimizes relative preferences rather than absolute-score increments, leading to substantially more stable training behavior."
+  },
+  {
+   "id": "b0144",
+   "t": "text",
+   "w": "p",
+   "en": "Several complementary observations support this mitigation. First, Fig. Pref-GRPO: Pairwise Preference Reward-based GRPO for Stable Text-to-Image Reinforcement Learning(a) shows that Pref-GRPO maintains a larger intra-group reward variance, directly suppressing the illusory-advantage amplification mechanism. Second, Figs. 2 and 9 show that, unlike pointwise-score GRPO, Pref-GRPO does not drift toward visually degraded solutions during prolonged training. Third, the qualitative comparison in Fig. 8 shows that Pref-GRPO preserves the original FLUX.1-dev visual style and does not collapse to reward-hacked artifacts. Finally, as we show next in Sec. VII-B, a controlled point-score-derived win-rate variant further confirms that replacing absolute-score maximization with a relative-comparison objective is itself the key stabilizing factor."
+  },
+  {
+   "id": "b0145",
+   "t": "text",
+   "w": "h3",
+   "en": "VII-B Point-Score vs. Pairwise-Preference Win Rates"
+  },
+  {
+   "id": "b0146",
+   "t": "text",
+   "w": "p",
+   "en": "To disentangle the effect of the optimization objective from that of the reward model itself, we introduce a controlled variant based on point score-derived win rates. Specifically, we first compute UnifiedReward scores for all images in a rollout group, then convert these scores into pairwise win rates by comparing every image pair, and finally use the resulting win rates as rewards for training. This keeps the underlying reward model unchanged while replacing reward score maximization with a relative-comparison objective."
+  },
+  {
+   "id": "b0147",
+   "t": "text",
+   "w": "p",
+   "en": "This ablation isolates the source of the stability gain. If the improvement of Pref-GRPO came solely from using a stronger pairwise reward model, then converting UnifiedReward scores into win rates should offer little benefit. However, Fig. 10 shows the opposite: once the optimization target is changed from reward score maximization to win-rate fitting, the dark-style reward hacking observed under UnifiedReward is already substantially alleviated. Quantitative results in Tab. VIII further confirm this trend: training with point-score-derived win rates consistently outperforms reward score maximization, and Pref-GRPO, which uses native pairwise preference rewards, achieves the best overall performance."
+  },
+  {
+   "id": "b0148",
+   "t": "text",
+   "w": "p",
+   "en": "These results support two conclusions. First, a significant part of the instability in prior GRPO methods arises from the objective formulation, not merely from imperfections in the reward model. Second, pairwise preference rewards outperform score-derived win rates, indicating that native pairwise supervision provides cleaner and more faithful relative signals than rankings derived from compressed pointwise scores. In short, Pref-GRPO benefits from both components: relative-preference optimization is the key stabilizing factor, strengthened further by a dedicated pairwise reward model. A practical corollary is that practitioners with only scalar rewards can adopt win-rate fitting as a drop-in stability improvement."
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0150",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 10: Point-score-derived win-rate training alleviates reward hacking. Converting UnifiedReward scores into pairwise win rates substantially mitigates the dark-style drift observed under direct score maximization, supporting relative preferences (not the reward model itself) as the key stabilizing factor."
+  },
+  {
+   "id": "b0151",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE VIII: Point-score-derived win rate vs. pairwise preference win rate. Compared to direct score maximization (“w/ UR (score)”), converting UnifiedReward scores into pairwise win rates (“w/ UR (score win rate)”) already improves stability; Pref-GRPO further benefits from a native pairwise preference reward. Best results are in bold, second-best are underlined."
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "table",
+   "en": "Model UniGen GenEval Unified Reward Pick Score Image Reward Aes. FLUX.1-dev 61.30 62.92 3.04 22.42 1.27 6.13 w/ UR (score) 63.62 67.28 3.14 22.88 1.38 6.31 w/ UR (score winrate) 64.32 68.13 3.20 22.91"
+  },
+  {
+   "id": "b0153",
+   "t": "text",
+   "w": "h3",
+   "en": "VII-C Wall-Clock Overhead of Pairwise Rewards"
+  },
+  {
+   "id": "b0154",
+   "t": "text",
+   "w": "p",
+   "en": "Although pairwise rewards require ⟦SLOT_88⟧ comparisons within each rollout group of size ⟦SLOT_89⟧, the practical question is whether this additional computation becomes a prohibitive bottleneck during training. To answer this, we measure wall-clock reward computation time when training FLUX.1-dev on ⟦SLOT_90⟧ H800 GPUs, with the reward inference service deployed on another 4 H800 GPUs via vLLM [31]; this isolates per-step cost from the multi-node overhead of the 64-GPU main setup. We compare two settings across different group sizes: (i) point-score rewards from UnifiedReward, and (ii) pairwise preference win-rate rewards used in Pref-GRPO."
+  },
+  {
+   "id": "b0155",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE IX: Wall-clock reward computing time per training step. “Requests/step” counts the number of reward-model forward computations invoked by each scheme in a training step."
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "table",
+   "en": "Reward type Rollouts / group Requests / step Time / step Point score (UnifiedReward) 8 32 3 s 16 64 5 s Pairwise winrate (Ours) 8 112 7 s 12 264 14 s 16 480 22 s"
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "p",
+   "en": "Tab. IX shows that the added cost is moderate. Under the default setting ⟦SLOT_91⟧, pairwise win-rate rewards increase the per-step reward time from 3 s to 7 s, an additional 4 s of overhead. At ⟦SLOT_92⟧, the number of reward-model requests grows from 64 to 480 (⟦SLOT_93⟧), yet wall-clock reward time grows only from 5 s to 22 s (⟦SLOT_94⟧), far sublinear in the number of pairwise comparisons. Pairwise supervision is therefore effectively amortized by parallel reward serving."
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "p",
+   "en": "The main concern with pairwise rewards is theoretical complexity, not practical infeasibility. In our setting, ⟦SLOT_95⟧ already yields strong empirical gains (Tab. III, Figs. 2, 8), so the added reward latency remains modest relative to the training benefit. Overall, Pref-GRPO achieves a favorable computation–performance trade-off: substantially improved generation quality and mitigated reward hacking, with only limited wall-clock overhead."
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 11: Joint optimization of Pref-GRPO with a CLIP score reward. Adding CLIP improves semantic consistency while slightly reducing perceptual quality, but does not trigger reward hacking. The pairwise preference fitting acts as a stabilizing regularizer for the auxiliary score signal."
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE X: Joint optimization of Pref-GRPO and CLIP-based reward score maximization. Best results are in bold."
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "table",
+   "en": "Model UniGen GenEval Unified Reward Pick Score Image Reward Aes. Pref-GRPO 69.46 70.53 3.26 23.02 1.44 6.52 w/ CLIP 70.02 71.26 3.18 22.86 1.41 6.44"
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "h3",
+   "en": "VII-D Joint Optimization with Auxiliary Score Rewards"
+  },
+  {
+   "id": "b0164",
+   "t": "text",
+   "w": "p",
+   "en": "To examine whether score-based rewards can still provide useful auxiliary supervision, we add a CLIP [12] reward on top of Pref-GRPO and perform joint optimization. Here CLIP serves as a score-based reward signal that focuses more on semantic consistency between the prompt and the generated image. This experiment tests whether pairwise preference fitting can serve as a stabilizing objective while score-based rewards provide complementary semantic guidance."
+  },
+  {
+   "id": "b0165",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Tab. X, joint optimization improves semantic consistency on UniGenBench and GenEval, but slightly reduces image-quality-oriented metrics relative to vanilla Pref-GRPO. The qualitative results in Fig. 11 show the same trade-off: semantics improve, while perceptual quality drops mildly. Importantly, unlike pure score maximization, this setting does not exhibit obvious reward hacking. This suggests that pairwise preference fitting acts as a stabilizing regularizer in joint optimization, making it possible to incorporate auxiliary score rewards without collapsing to reward-hacked solutions."
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "h3",
+   "en": "VII-E Robustness to Noisy Preferences"
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "p",
+   "en": "To test robustness to imperfect preference supervision, we inject synthetic noise into the pairwise reward during training by independently flipping each pairwise outcome with probability ⟦SLOT_96⟧, roughly matching typical human-disagreement rates on image preferences."
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Tab. XI, Pref-GRPO remains strong under noisy preferences and consistently outperforms all point score-based baselines. Although the injected noise causes a small drop relative to the clean Pref-GRPO model, the degradation is limited across all metrics. This result suggests that pairwise preference optimization remains robust under moderate label corruption, which is important in practical settings where preference annotations are often noisy, inconsistent, or partially unreliable."
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE XI: Robustness of Pref-GRPO under 10% preference noise. The noisy variant flips each pairwise preference outcome with probability ⟦SLOT_97⟧ during training."
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "table",
+   "en": "Method UniGen T2I- Comp GenEval Unified Reward Pick Score FLUX.1.dev 61.30 48.17 62.92 3.04 22.42 w/ HPSv2+CLIP 58.77 46.77 59.31 3.09 22.62 w/ UnifiedReward 63.62 50.20 67.28 3.14 22.88 w/ Pref-GRPO "
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "h3",
+   "en": "VII-F Human Validation of the UniGenBench Evaluator"
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "p",
+   "en": "To verify the reliability of the automatic judge used in UniGenBench, we conduct a testpoint-level agreement study between Gemini-2.5-Pro [14] and human annotators. We sample 400 held-out prompt-image-testpoint triplets from benchmark predictions generated by models of varying strengths, with 40 triplets for each of the 10 primary dimensions. Each triplet contains a prompt, a generated image, and one explicit testpoint description. Five annotators independently judge whether the image satisfies the specified testpoint using the same binary protocol as in benchmark evaluation, and the human majority vote is taken as the reference label."
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "p",
+   "en": "We report inter-annotator agreement, Gemini-vs.-human-majority accuracy, macro-F1, and Cohen’s ⟦SLOT_98⟧ in Tab. XII. These metrics provide complementary views of evaluator reliability: inter-annotator agreement reflects the intrinsic ambiguity of each dimension and serves as a practical human reference ceiling, Gemini-vs.-human-majority accuracy measures direct agreement with human judgment, macro-F1 prevents class imbalance from dominating the result, and ⟦SLOT_99⟧ discounts agreement that may occur by chance. Gemini-2.5-Pro achieves strong overall consistency with human judgments. Agreement is highest on more direct dimensions such as Style, Attribute, and Layout, while more abstract dimensions such as Relationship, Compound, and Logical Reasoning remain relatively more challenging. This tracking behavior supports Gemini-2.5-Pro’s use as the UniGenBench evaluator."
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE XII: Human validation of Gemini-2.5-Pro as the UniGenBench evaluator. We report Inter-Ann. Agr., Gemini-vs.-human-majority Acc., Macro-F1, and Cohen’s ⟦SLOT_100⟧ for each primary dimension."
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "table",
+   "en": "Dimension Inter-Ann. Agr. Acc. Macro- F1 𝜿 \\boldsymbol{\\kappa} Overall 0.92 0.83 0.82 0.66 Style 0.96 0.90 0.89 0.76 World Know. 0.91 0.82 0.81 0.64 Attribute 0.93 0.84 0.83 0.67 Action 0.91 0.82 0.81"
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "h2",
+   "en": "VIII Conclusion"
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "p",
+   "en": "This paper addresses two limitations in current T2I research: unstable GRPO optimization under pointwise reward score maximization, and the lack of fine-grained benchmarks for diagnosing semantic consistency. To this end, we propose Pref-GRPO, which replaces absolute score maximization with pairwise preference fitting, and UniGenBench, which evaluates semantic consistency through fine-grained testpoints spanning diverse prompt themes and evaluation dimensions. Extensive experiments show that Pref-GRPO yields more stable training, alleviates reward hacking, and achieves consistently stronger semantic consistency on both in-domain and out-of-domain benchmarks. Besides, UniGenBench reveals where strong T2I models still fail, especially on more demanding dimensions such as relationship understanding, compositional instruction following, logical reasoning, and text rendering. We hope these two contributions together provide a more reliable training objective and a more informative evaluation protocol for future T2I reinforcement learning research."
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] J. Liu, G. Liu, J. Liang, Y. Li, J. Liu, X. Wang, P. Wan, D. Zhang, and W. Ouyang (2025) Flow-grpo: training flow matching models via online rl . arXiv preprint arXiv:2505.05470 . Cited by: §I , §"
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] J. Li, Y. Cui, T. Huang, Y. Ma, C. Fan, M. Yang, and Z. Zhong (2025) MixGRPO: unlocking flow-based grpo efficiency with mixed ode-sde . arXiv preprint arXiv:2507.21802 . Cited by: §I , §III , §IV-"
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] Z. Xue, J. Wu, Y. Gao, F. Kong, L. Zhu, M. Chen, Z. Liu, W. Liu, Q. Guo, W. Huang, et al. (2025) DanceGRPO: unleashing grpo on visual generation . arXiv preprint arXiv:2505.07818 . Cited by: §I , "
+  },
+  {
+   "id": "b0182",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] X. He, S. Fu, Y. Zhao, W. Li, J. Yang, D. Yin, F. Rao, and B. Zhang (2025) TempFlow-grpo: when timing matters for grpo in flow mdels . arXiv preprint arXiv:2508.04324 . Cited by: §I , §III , §IV-B"
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] D. Ghosh, H. Hajishirzi, and L. Schmidt (2023) Geneval: an object-focused framework for evaluating text-to-image alignment . NIPS 36 , pp. 52132–52152 . Cited by: §I , §I , §II , §V , §VI-A ."
+  },
+  {
+   "id": "b0184",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] K. Huang, K. Sun, E. Xie, Z. Li, and X. Liu (2023) T2i-compbench: a comprehensive benchmark for open-world compositional text-to-image generation . NIPS 36 , pp. 78723–78747 . Cited by: §I , §I , "
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] X. Wei, J. Zhang, Z. Wang, H. Wei, Z. Guo, and L. Zhang (2025) TIIF-bench: how does your t2i model follow your instructions? . arXiv preprint arXiv:2506.02161 . Cited by: §I , §I , §II , §V ."
+  },
+  {
+   "id": "b0186",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] Y. Wang, Y. Zang, H. Li, C. Jin, and J. Wang (2025) Unified reward model for multimodal understanding and generation . arXiv preprint arXiv:2503.05236 . Cited by: §I , §III , §IV-B , §VI-A , §VI-A"
+  },
+  {
+   "id": "b0187",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] X. Wu, Y. Hao, K. Sun, Y. Chen, F. Zhu, R. Zhao, and H. Li (2023) Human preference score v2: a solid benchmark for evaluating human preferences of text-to-image synthesis . arXiv preprint arXiv:23"
+  },
+  {
+   "id": "b0188",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] Y. Kirstain, A. Polyak, U. Singer, S. Matiana, J. Penna, and O. Levy (2023) Pick-a-pic: an open dataset of user preferences for text-to-image generation . NIPS 36 , pp. 36652–36663 . Cited by: §I"
+  },
+  {
+   "id": "b0189",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] D. Guo, D. Yang, H. Zhang, J. Song, R. Zhang, R. Xu, Q. Zhu, S. Ma, P. Wang, X. Bi, et al. (2025) Deepseek-r1: incentivizing reasoning capability in llms via reinforcement learning . arXiv prepri"
+  },
+  {
+   "id": "b0190",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark, et al. (2021) Learning transferable visual models from natural language supervision ."
+  },
+  {
+   "id": "b0191",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] Y. Wang, Z. Li, Y. Zang, C. Wang, Q. Lu, C. Jin, and J. Wang (2025) Unified multimodal chain-of-thought reward model through reinforcement fine-tuning . arXiv preprint arXiv:2505.03318 . Cited by"
+  },
+  {
+   "id": "b0192",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] Y. Huang and L. F. Yang (2025) Gemini 2.5 pro capable of winning gold at imo 2025 . arXiv preprint arXiv:2507.15855 . Cited by: §I , §VII-F ."
+  },
+  {
+   "id": "b0193",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] A. Hurst, A. Lerer, A. P. Goucher, A. Perelman, A. Ramesh, A. Clark, A. Ostrow, A. Welihinda, A. Hayes, A. Radford, et al. (2024) Gpt-4o system card . arXiv preprint arXiv:2410.21276 . Cited by: "
+  },
+  {
+   "id": "b0194",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] Y. Gao, L. Gong, Q. Guo, X. Hou, Z. Lai, F. Li, L. Li, X. Lian, C. Liao, L. Liu, et al. (2025) Seedream 3.0 technical report . arXiv preprint arXiv:2504.11346 . Cited by: §I , §VI-C ."
+  },
+  {
+   "id": "b0195",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] C. Saharia, W. Chan, S. Saxena, L. Li, J. Whang, E. L. Denton, K. Ghasemipour, R. Gontijo Lopes, B. Karagol Ayan, T. Salimans, et al. (2022) Photorealistic text-to-image diffusion models with dee"
+  },
+  {
+   "id": "b0196",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] C. Wu, J. Li, J. Zhou, J. Lin, K. Gao, K. Yan, S. Yin, S. Bai, X. Xu, Y. Chen, et al. (2025) Qwen-image technical report . arXiv preprint arXiv:2508.02324 . Cited by: §I , §VI-C , §VI-D ."
+  },
+  {
+   "id": "b0197",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] Q. Cai, J. Chen, Y. Chen, Y. Li, F. Long, Y. Pan, Z. Qiu, Y. Zhang, F. Gao, P. Xu, et al. (2025) HiDream-i1: a high-efficient image generative foundation model with sparse diffusion transformer ."
+  },
+  {
+   "id": "b0198",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] C. Deng, D. Zhu, K. Li, C. Gou, F. Li, Z. Wang, S. Zhong, W. Yu, X. Nie, Z. Song, et al. (2025) Emerging properties in unified multimodal pretraining . arXiv preprint arXiv:2505.14683 . Cited by:"
+  },
+  {
+   "id": "b0199",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] X. Xie and D. Gong (2025) DyMO: training-free diffusion model alignment with dynamic multi-objective scheduling . In CVPR , pp. 13220–13230 . Cited by: §II ."
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] K. Yang, J. Tao, J. Lyu, C. Ge, J. Chen, W. Shen, X. Zhu, and X. Li (2024) Using human feedback to fine-tune diffusion models without any reward model . In CVPR , pp. 8941–8951 . Cited by: §II ."
+  },
+  {
+   "id": "b0201",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] B. Wallace, M. Dang, R. Rafailov, L. Zhou, A. Lou, S. Purushwalkam, S. Ermon, C. Xiong, S. Joty, and N. Naik (2024) Diffusion model alignment using direct preference optimization . In CVPR , pp. "
+  },
+  {
+   "id": "b0202",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] R. Rafailov, A. Sharma, E. Mitchell, C. D. Manning, S. Ermon, and C. Finn (2023) Direct preference optimization: your language model is secretly a reward model . NIPS 36 , pp. 53728–53741 . Cited"
+  },
+  {
+   "id": "b0203",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] C. Tong, Z. Guo, R. Zhang, W. Shan, X. Wei, Z. Xing, H. Li, and P. Heng (2025) Delving into rl for image generation with cot: a study on dpo vs. grpo . arXiv preprint arXiv:2505.17017 . Cited by:"
+  },
+  {
+   "id": "b0204",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] Y. Niu, M. Ning, M. Zheng, W. Jin, B. Lin, P. Jin, J. Liao, C. Feng, K. Ning, B. Zhu, et al. (2025) Wise: a world knowledge-informed semantic evaluation for text-to-image generation . arXiv prepr"
+  },
+  {
+   "id": "b0205",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] X. Liu, C. Gong, and Q. Liu (2022) Flow straight and fast: learning to generate and transfer data with rectified flow . arXiv preprint arXiv:2209.03003 . Cited by: §IV-A ."
+  },
+  {
+   "id": "b0206",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] Y. Lipman, R. T. Chen, H. Ben-Hamu, M. Nickel, and M. Le (2022) Flow matching for generative modeling . arXiv preprint arXiv:2210.02747 . Cited by: §IV-A ."
+  },
+  {
+   "id": "b0207",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] K. Black, M. Janner, Y. Du, I. Kostrikov, and S. Levine (2023) Training diffusion models with reinforcement learning . arXiv preprint arXiv:2305.13301 . Cited by: §IV-A ."
+  },
+  {
+   "id": "b0208",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] B. F. Labs. (2024) Flux . https://github.com/black-forest-labs/flux . Cited by: §VI-A , §VI-C , §VI-C ."
+  },
+  {
+   "id": "b0209",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] W. Kwon, Z. Li, S. Zhuang, Y. Sheng, L. Zheng, C. H. Yu, J. Gonzalez, H. Zhang, and I. Stoica (2023) Efficient memory management for large language model serving with pagedattention . In SOSP , p"
+  },
+  {
+   "id": "b0210",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] J. Xu, X. Liu, Y. Wu, Y. Tong, Q. Li, M. Ding, J. Tang, and Y. Dong (2023) Imagereward: learning and evaluating human preferences for text-to-image generation . NIPS 36 , pp. 15903–15935 . Cited "
+  },
+  {
+   "id": "b0211",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] C. Schuhmann. (2022) Laion aesthetics . https://github.com/LAION-AI/aesthetic-predictor . Cited by: §VI-A ."
+  },
+  {
+   "id": "b0212",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] J. Xie, Z. Yang, and M. Z. Shou (2025) Show-o2: improved native unified multimodal models . arXiv preprint arXiv:2506.15564 . Cited by: §VI-C ."
+  },
+  {
+   "id": "b0213",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] R. Rombach, A. Blattmann, D. Lorenz, P. Esser, and B. Ommer (2021) High-resolution image synthesis with latent diffusion models . External Links: 2112.10752 Cited by: §VI-C ."
+  },
+  {
+   "id": "b0214",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] M. Ding, Z. Yang, W. Hong, W. Zheng, C. Zhou, D. Yin, J. Lin, X. Zou, Z. Shao, H. Yang, and J. Tang (2021) CogView: mastering text-to-image generation via transformers . arXiv preprint arXiv:2105"
+  },
+  {
+   "id": "b0215",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] Z. Li, J. Zhang, Q. Lin, J. Xiong, Y. Long, et al. (2024) Hunyuan-dit: a powerful multi-resolution diffusion transformer with fine-grained chinese understanding . External Links: 2405.08748 Cited"
+  },
+  {
+   "id": "b0216",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] D. Li, A. Kamko, E. Akhgari, A. Sabet, L. Xu, and S. Doshi (2024) Playground v2. 5: three insights towards enhancing aesthetic quality in text-to-image generation . arXiv preprint arXiv:2402.1724"
+  },
+  {
+   "id": "b0217",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] C. Wu, X. Chen, Z. Wu, Y. Ma, X. Liu, Z. Pan, W. Liu, Z. Xie, X. Yu, C. Ruan, et al. (2025) Janus: decoupling visual encoding for unified multimodal understanding and generation . In CVPR , pp. 1"
+  },
+  {
+   "id": "b0218",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] X. Chen, Z. Wu, X. Liu, Z. Pan, W. Liu, Z. Xie, X. Yu, and C. Ruan (2025) Janus-pro: unified multimodal understanding and generation with data and model scaling . arXiv preprint arXiv:2501.17811 "
+  },
+  {
+   "id": "b0219",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] Y. Ma, X. Liu, X. Chen, W. Liu, C. Wu, Z. Wu, Z. Pan, Z. Xie, H. Zhang, X. yu, L. Zhao, Y. Wang, J. Liu, and C. Ruan (2024) JanusFlow: harmonizing autoregression and rectified flow for unified mu"
+  },
+  {
+   "id": "b0220",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[42] X. Wang, X. Zhang, Z. Luo, Q. Sun, Y. Cui, J. Wang, F. Zhang, Y. Wang, Z. Li, Q. Yu, et al. (2024) Emu3: next-token prediction is all you need . arXiv preprint arXiv:2409.18869 . Cited by: §VI-C "
+  },
+  {
+   "id": "b0221",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[43] J. Chen, Z. Xu, X. Pan, Y. Hu, C. Qin, T. Goldstein, L. Huang, T. Zhou, S. Xie, S. Savarese, et al. (2025) Blip3-o: a family of fully open unified multimodal models-architecture, training and dat"
+  }
+ ]
+}

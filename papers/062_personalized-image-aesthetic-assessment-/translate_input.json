@@ -1,0 +1,958 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Personalized Image Aesthetic Assessment via Preference-rich Sample Mining and Cohort Merging"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0002",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1. Beauty is in the eye of the beholder. Individuals with distinct profiles demonstrate significant variations in aesthetic judgments of identical images. We propose PRAC, a Multimodal Large Language Model (MLLM)-based framework that accurately predicts aesthetic ratings aligned with individual preferences and offers interpretable rationales explaining divergent judgments."
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract."
+  },
+  {
+   "id": "b0004",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Personalized Image Aesthetic Assessment (PIAA) aims to predict aesthetic ratings of images that vary across individuals. The aesthetic preferences manifest to different extents across distinct visual "
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "h6",
+   "en": "Keywords:"
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "h2",
+   "en": "1. Introduction"
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "The widespread use of smartphones and social networks have dramatically transformed the consumption patterns of visual media. This shift has intensified user attention on image aesthetics, establishing image aesthetic assessment (IAA) as a prominent research topic (Deng et al., 2017; Yang et al., 2026b; Li et al., 2024). Early studies primarily focused on generic IAA, which predicts average aesthetic ratings that reflect general judgments (Murray et al., 2012; Yang et al., 2024b; Huang et al., 2024b; Sheng et al., 2026b). However, aesthetics is inherently subjective—different users may have substantially different aesthetic evaluations of the same image (as illustrated in Figure 1). This has driven growing interest in personalized image aesthetic assessment (PIAA), which models individual preferences by adapting to user-centric aesthetic tastes (Ren et al., 2017; Chen et al., 2025; Maerten et al., 2025). With the surging demand for customization, PIAA offers expanding applications including personalized image recommendations (Chen et al., 2024; Liu et al., 2024; Sheng et al., 2025), user-centric photo enhancement (Zhang et al., 2022; Ni et al., 2022; Sheng et al., 2026a), and personalized image generation (Xu et al., 2025; Wei et al., 2025; Yang et al., 2026a; Yang et al., 2025)."
+  },
+  {
+   "id": "b0008",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2. Motivation of this study. Individual aesthetic differences vary in magnitude across distinct visual stimuli and exhibit cohort-specific distribution patterns. Two example images from the PARA database (Yang et al., 2022) are shown, along with their corresponding personalized aesthetic ratings."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "In the past few years, a proliferation of novel PIAA models have been reported in the literature. People’s aesthetic tastes are typically determined by complex factors including both image attributes and user characteristics. This requires that models possess not only visual understanding capabilities but also knowledge of various demographic and personality dimensions, such as age, cultural background, and psychological traits (Kim et al., 2018). To address these challenges, previous vision-based PIAA methods have largely resorted to auxiliary tasks related to preference representation, such as personalized feedback or personality trait prediction (Lv et al., 2021; Li et al., 2020). Another challenge in PIAA is the few-shot learning (FSL) nature, as it is difficult to collect a large number of annotated images for a specific user. To address the dilemma, previous approaches are typically designed by fine-tuning generic IAA models (Ren et al., 2017; Wang et al., 2018), or resort to meta-learning for extracting common aesthetic features across users that can efficiently transfer to target individuals (Zhu et al., 2020; Li et al., 2022)."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "Despite the encouraging progress achieved, two important aspects remain underexplored in current PIAA methods. First, psychological research has demonstrated that some stimuli naturally elicit more active preference responses than others (Risko et al., 2012), indicating that not all images are equally informative for modeling aesthetic taste. Second, researches in cognitive aesthetics (Celikors and Field, 2025) revealed that aesthetic preferences often cluster among individuals with shared sensibilities—‘beauty is in the eye of your cohort’—suggesting that identifying aesthetically-resonant cohort offers valuable insights for target user modeling. Inspired by the above psychological studies, we argue that 1) quantifying the richness of aesthetic preferences across images and 2) identifying aesthetically-resonant user cohorts, provide viable pathways for modeling personalized aesthetic preferences, as illustrated in Figure 2. In this context, identified informative samples and auxiliary cohorts can navigate the few-shot learning constraints in PIAA, maximizing the utility of the limited aesthetic annotations available for target users. With comprehensive visual understanding and extensive open-world knowledge of demographic and personality factors (Jiang et al., 2023; Li et al., 2023a), Multimodal Large Language Models (MLLMs) present natural advantages for sample measurement and cohort identification."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "Motivated by the above facts, this paper presents PRAC, a novel MLLM-based PIAA model that captures individual aesthetics by preference-rich sample mining and aesthetically-resonant cohort merging. PRAC is designed with two key components: PreferSelect and PreferMerge. Specifically, the MLLM is first instructed to predict aesthetic divergence across the public through aesthetic distribution training on rich generic aesthetic data. Building upon the learned consensus aesthetic understanding and MLLMs’ open-world knowledge, PreferSelect identifies preference-rich samples by analyzing both Collective Controversy and Personalized Deviation. Collective Controversy measures the intrinsic aesthetic controversy of an image among the general public, while Personalized Deviation captures the deviation of a specific user’s aesthetic taste from the public consensus. Subsequently, targeted fine-tuning is performed on the identified preference-rich samples to encode user-specific aesthetic patterns. PreferMerge searches for aesthetically-resonant user cohorts by comparing MLLM-derived preference embeddings. Cohort-based model merging is then performed to aggregate preference patterns from aesthetically-resonant users with similar tastes to further enhance personalization for the target individual. The contributions of this work are three-fold:"
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "li",
+   "en": "• A novel MLLM-based framework for personalized image aesthetic assessment (PRAC), which identifies informative samples and auxiliary cohorts to customize MLLMs for individual aesthetic tastes with limited annotations."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "li",
+   "en": "• We design two key components for preference modeling: PreferSelect mines preference-rich samples through dual-metric analysis of Collective Controversy and Personalized Deviation, while PreferMerge integrates preference patterns from aesthetically-resonant users via cohort-based merging."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "li",
+   "en": "• Extensive experiments conducted on four PIAA benchmarks demonstrate that PRAC outperforms state-of-the-arts on personalized rating prediction. Moreover, PRAC can offer rationales for varying aesthetic judgments, enhancing predictive interpretability."
+  },
+  {
+   "id": "b0016",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3. Overview of the proposed PRAC. The framework consists of three stages: (a) Generic Aesthetic Predictor: the MLLM is trained with aesthetic distribution supervision on generic aesthetic data to establish foundational aesthetic understanding; (b) PreferSelect: preference-rich samples are identified through collective controversy and personalized deviation metrics; (c) PreferMerge: the target user’s personalized model is constructed by merging models from aesthetically-resonant cohort."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h2",
+   "en": "2. Related Works"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "Personalized Image Aesthetic Assessment. PIAA aims to model individual aesthetic tastes based on few user-provided aesthetic annotations. To capture aesthetic preferences, existing vision-based PIAA methods leveraged aesthetics-related auxiliary tasks, including users’ photo favoriting behavior (Kim et al., 2018), image re-ranking (Hamzah, 2012), and personalized retouching (Lv et al., 2021), etc. Li et al. found that individual aesthetic preference strongly correlates with their personality traits and proposed a multi-task learning framework to jointly estimate both personality traits and aesthetic preferences (Li et al., 2020). Zhu et al. further introduced a personalized aesthetic assessment approach that models aesthetic attributes of images as subjective factors and users’ personality traits as objective factors (Zhu et al., 2021). To address the few-shot learning challenge, meta-learning was adopted to identify common aesthetic features across users that can be adapted to target individuals (Li et al., 2022; Zhu et al., 2020). Recently, Yang et al. applied contrastive learning to explore users’ preference differences across various aesthetic levels (Yang et al., 2024c). Yun et al. innovatively employed Task Arithmetic to model target users’ preferences by leveraging existing generic data (Yun and Choo, 2024). Different from these approaches, we model personalized aesthetics by quantifying preference richness across images and measuring preference similarity among users."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "LLMs/MLLMs-based Personalization. The emergence of LLMs and MLLMs has opened new possibilities for personalization tasks due to their excellent capabilities in understanding complex patterns, reasoning about user behaviors, and generating contextually appropriate responses (Zhang et al., 2024b). Recent efforts employ techniques like personalized prompting, adaptation, and alignment to tailor these models to individual users (Liu et al., 2025; Huang et al., 2024a). Tan et al. employed personalized parameter-efficient fine-tuning to store user-specific behavior patterns and preferences, thereby democratizing LLMs (Tan et al., 2024). Zhang et al. proposed a parameterized memory-injected approach with a bayesian optimization search strategy to achieve LLM personalization (Zhang et al., 2024a). In this study, we present the first exploration of personalizing MLLMs for modeling individual aesthetic preferences."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "Model Merging. Model merging efficiently combines parameters from multiple specialized models to enhance overall capabilities without additional training. Representative approaches include linear interpolation, task arithmetic, and selective parameter merging(Li et al., 2023b). For LLMs and MLLMs, this paradigm enables capability integration without the prohibitive computational costs and data requirements of full-scale retraining (Yang et al., 2024a; Lu et al., 2024). Wu et al. proposed aggregating parameters from lightweight task-specific experts learned from similar tasks to benefit target downstream tasks (Wu et al., 2023). Tang et al. designed a partial linearization method for parameter-efficient fine-tuned models, improving multi-task fusion capabilities with low computational overhead (Tang et al., 2023). In this paper, we introduce cohort-based model merging for PIAA task."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "h2",
+   "en": "3. Method"
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we detail the proposed PRAC, which models aesthetic preferences by mining preference-rich samples and merging aesthetically-resonant cohorts. The overall framework is shown in Figure 3, which consists of three stages. First, we establish a Generic Aesthetic Predictor by training an MLLM on rich generic aesthetic data, enabling consensus aesthetic understanding. Building on this foundation and leveraging its powerful open-world knowledge, we design PreferSelect to mine preference-rich samples. Finally, we propose PreferMerge, a cohort-based model merging strategy that identifies aesthetically-resonant users and integrates them to further boost personalization for the target individual."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1. Generic Aesthetic Predictor"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "We first train a generic aesthetic predictor to model the distribution of public aesthetic judgments. Its ability to capture preference divergence serves as a crucial prerequisite for subsequent personalization stages. Given an image ⟦SLOT_0⟧, we obtain its aesthetic distribution from the statistics of individual annotations. The distribution label is represented as probabilities over five discrete aesthetic levels [Excellent, Good, Fair, Bad, Poor], denoted as ⟦SLOT_1⟧, where ⟦SLOT_2⟧ denotes the probability of the ⟦SLOT_3⟧-th aesthetic level. Utilizing these generic aesthetic data, we integrate a parameter-efficient LoRA module (Hu et al., 2022) into MLLMs to conduct aesthetic distribution training. Specifically, we design specialized prompt templates to guide MLLMs in generating aesthetic distributions and employ the Kullback-Leibler (KL) Divergence loss to optimize parameters."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "Guiding MLLMs for Distribution Prediction. Inspired by the training of previous MLLMs-based scoring methods (Wu et al., 2024; You et al., 2025), we prompt the MLLM with an image along with a fixed question: ‘How would you rate the aesthetic quality of this image?’. Simultaneously, we specify the output template as ‘The aesthetic quality of the image is ⟦SLOT_4⟧Level Token⟦SLOT_5⟧’, where ⟦SLOT_6⟧Level Token⟦SLOT_7⟧ represents the predicted aesthetic level. Given that the token constitutes probabilities over all possible vocabulary in the language model, we perform a close-set softmax over the five textual aesthetic levels to obtain predicted aesthetic distribution of MLLMs, denoted as ⟦SLOT_8⟧."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "KL Loss for Parameter Update. For the ⟦SLOT_9⟧-th image ⟦SLOT_10⟧, we compute the KL divergence between the predicted distribution ⟦SLOT_11⟧ from the MLLM and the ground-truth distribution ⟦SLOT_12⟧ as the training loss. By aggregating the total loss ⟦SLOT_13⟧ across the entire training set, we optimize the parameters of the integrated LoRA module. This is formulated as:"
+  },
+  {
+   "id": "b0028",
+   "t": "keep",
+   "w": "table",
+   "en": "(1) ℒ K ​ L = 1 N g ∑ i = 1 N g D K ​ L ( 𝐪 i ∥ 𝐩 i ) = 1 N g ​ ∑ i = 1 N g ∑ j = 1 5 q j i ​ log ⁡ ( q j i p j i ) , \\begin{split}\\mathcal{L}_{KL}&=\\frac{1}{N_{g}}\\sum_{i=1}^{N_{g}}D_{KL}(\\mathbf{q}^"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_14⟧ denotes the KL divergence operation, ⟦SLOT_15⟧ is the number of training images and ⟦SLOT_16⟧ indexes the five aesthetic levels of [Excellent, Good, Fair, Bad, Poor]."
+  },
+  {
+   "id": "b0030",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4. Visualization of PreferSelect results. Two users from the PARA database (Yang et al., 2022) with distinct profiles (demographics and Big-Five personality traits) and their corresponding top-3/bottom-3 preference-rich samples based on ⟦SLOT_17⟧ rankings."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2. Preference-rich Sample Mining"
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "The varying richness of aesthetic preference across images lies in the fact that certain samples are more informative for personalization. PreferSelect aims to utilize the acquired aesthetics principles of the Generic Aesthetic Predictor along with MLLM’s extensive open-world knowledge to identify preference-rich samples. Inspired by research in cognitive aesthetics showing that aesthetic experiences arise from the interplay of demographics and personality traits (Washizu et al., 2025), we design a dual-metric selection mechanism to measure the preference richness of samples. This mechanism synergistically combines two perspectives: 1) the intrinsic aesthetic controversy of an image among the general public (Collective Controversy), and 2) the predicted deviation of a specific user’s taste from the public (Personalized Deviation)."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "Collective Controversy Metric (CCM). Images eliciting significant controversy in aesthetic judgments inherently encode richer personalized preference information. Based on this observation, we design a simple yet effective metric to quantify such controversy. Specifically, for a given image ⟦SLOT_18⟧, we utilize the Generic Aesthetics Predictor to predict its aesthetic distribution ⟦SLOT_19⟧ and calculate the standard deviation (STD) of this distribution as the measurement:"
+  },
+  {
+   "id": "b0035",
+   "t": "keep",
+   "w": "table",
+   "en": "(2) CCM ​ ( I i ) = σ ⁡ ( 𝐩 i ) = ∑ j = 1 5 ( j − μ i ) 2 ⋅ p j i , \\text{CCM}(I^{i})=\\sigma(\\mathbf{p}^{i})=\\sqrt{\\sum_{j=1}^{5}(j-\\mu^{i})^{2}\\cdot{p_{j}^{i}}},"
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_20⟧ denotes the standard deviation, and ⟦SLOT_21⟧ is the mean of the distribution for image ⟦SLOT_22⟧."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "Personalized Deviation Metric (PDM). People’s aesthetic preferences are significantly influenced by their intrinsic attributes, particularly personality traits and photographic expertise (Yang et al., 2022). MLLMs with extensive open-world knowledge of demographic and personality traits (Jiang et al., 2023), provide a foundation for measuring the impact of these factors on aesthetic judgments. Inspired by in-context learning (Dong et al., 2024), we convert discrete user profiles (age, traits, expertise) into natural language descriptions and integrate them into the prompt: ‘You are a ⟦SLOT_23⟧User Profile⟦SLOT_24⟧, how would you rate the aesthetic quality of this image?’. This prompt is then input to the Generic Aesthetic Predictor to generate an in-context aesthetic distribution. The PDM is defined as the KL Divergence between the generic distribution ⟦SLOT_25⟧ and the in-context distribution ⟦SLOT_26⟧:"
+  },
+  {
+   "id": "b0038",
+   "t": "keep",
+   "w": "table",
+   "en": "(3) PDM ( I i ) = D K ​ L ( 𝐩 u i ∥ 𝐩 i ) . \\text{PDM}(I^{i})=D_{KL}(\\mathbf{p}_{u}^{i}\\parallel\\mathbf{p}^{i})."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "To comprehensively integrate both Collective Controversy and Personalized Deviation, we propose a unified preference richness score ⟦SLOT_27⟧. For image ⟦SLOT_28⟧, it is formulated as a weighted combination of the two fundamental metrics:"
+  },
+  {
+   "id": "b0040",
+   "t": "keep",
+   "w": "table",
+   "en": "(4) P score ​ ( I i ) = ( 1 − α ) ⋅ CCM ​ ( I i ) + α ⋅ PDM ​ ( I i ) , \\text{P}_{\\text{score}}(I^{i})=(1-\\alpha)\\cdot\\text{CCM}(I^{i})+\\alpha\\cdot\\text{PDM}(I^{i}),"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_29⟧ is a weighting hyperparameter that balances the contributions of collective controversy and personalized deviation. For a specific user ⟦SLOT_30⟧ with his/her personal images, we compute ⟦SLOT_31⟧ for each image and rank all candidates accordingly. Images with higher scores are selected to form the personalized query set ⟦SLOT_32⟧ for the user. This curated set facilitates efficient encoding of user-specific aesthetic patterns in the PreferMerge stage. Figure 4 illustrates the PreferSelect results: two users with distinct demographic and personality traits demonstrate markedly different preference-rich samples. Furthermore, within each user, top-3 samples exhibit significantly higher ⟦SLOT_33⟧ than bottom-3 samples, validating the quantification of preference-richness."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3. Aesthetically-resonant Cohort Merging"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "Based on the identified preference-rich images, we propose PreferMerge, a cohort-based model merging strategy that discovers and integrates aesthetically-resonant user cohorts to enhance target user personalization. Under limited annotation scenarios (e.g., 10-shot or 100-shot settings, commonly adopted in the PIAA task) where the target user provides aesthetic ratings on preference-rich samples, PreferMerge first measures aesthetic preference similarity across users, then identifies and merges aesthetically-resonant users to strengthen personalization for the target individual."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "Measuring Cross-user Preference Similarity. Individual annotations on preference-rich samples directly reflect their aesthetic sensibilities, providing a foundation for measuring cross-user preference similarity. We fine-tune the Generic Aesthetic Predictor using these personalized annotations and extract gradient directions as preference embeddings. The correlation between preference embeddings serves as a robust metric for quantifying preference similarity among users."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "Given a query set ⟦SLOT_34⟧ of preference-rich samples for user ⟦SLOT_35⟧, where ⟦SLOT_36⟧ denotes the user’s personalized annotation to image ⟦SLOT_37⟧ as a discrete aesthetic level label, we perform targeted fine-tuning. A user-specific LoRA module is injected into the Generic Aesthetic Predictor and fine-tuned exclusively on its parameters ⟦SLOT_38⟧. The cross-entropy loss between predicted and ground-truth aesthetic levels guides the parameter updates. We compute the gradient fluctuations of parameters ⟦SLOT_39⟧ on the query set ⟦SLOT_40⟧ as the preference embedding for user ⟦SLOT_41⟧. Specifically, we employ the Fisher Information Matrix (FIM) as an indicator (Amari, 1998), which quantifies the model’s sensitivity to parameter perturbations under limited data:"
+  },
+  {
+   "id": "b0046",
+   "t": "keep",
+   "w": "table",
+   "en": "(5) 𝐅 u = 𝔼 ( I , y ) ∼ 𝒟 u [ ∇ θ u ​ log ​ p ​ ( y ∣ I ) ​ ∇ θ u ​ log ⁡ p ​ ( y ∣ I ) T ] , \\mathbf{F}_{u}=\\mathop{\\mathbb{E}}\\limits_{(I,y)\\sim\\mathcal{D}_{u}}\\left[\\nabla_{\\theta_{u}}\\log p\\left(y"
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_42⟧ represents the preference embedding. For two users ⟦SLOT_43⟧ and ⟦SLOT_44⟧, with respective embeddings ⟦SLOT_45⟧ and ⟦SLOT_46⟧, we compute the cosine distance between them to measure preference similarity ⟦SLOT_47⟧:"
+  },
+  {
+   "id": "b0048",
+   "t": "keep",
+   "w": "table",
+   "en": "(6) Sim ⁡ ( U i , U j ) = 𝐅 u i ⋅ 𝐅 u j ‖ 𝐅 u i ‖ ⋅ ‖ 𝐅 u j ‖ . \\operatorname{Sim}\\left(U_{i},U_{j}\\right)=\\frac{\\mathbf{F}_{u}^{i}\\cdot\\mathbf{F}_{u}^{j}}{\\left\\|\\mathbf{F}_{u}^{i}\\right\\|\\cdot\\left\\"
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "Cohort Selection and Merging. With cross-user preference similarities quantified, we identify an optimal cohort of aesthetically-resonant users and merge them to enhance target user personalization. The selection is performed on a pre-constructed User Pool, which contains personalized LoRAs from multiple training users obtained through targeted fine-tuning on their respective query sets, serving as a rich library of diverse aesthetic preferences. The selection strategy balances two key objectives: Target Relevance and Cohort Diversity. Target Relevance ensures that selected users are maximally relevant to the target individual, while Cohort Diversity prevents redundancy among the selected users. To balance these two aspects, we introduce a trade-off parameter ⟦SLOT_48⟧ and formulate the optimal selection problem as:"
+  },
+  {
+   "id": "b0050",
+   "t": "keep",
+   "w": "table",
+   "en": "(7) 𝒮 ∗ = arg ⁡ max 𝒮 ⊂ 𝒫 , | 𝒮 | = K [ \\displaystyle\\mathcal{S}^{*}=\\mathop{\\arg\\max}\\limits_{\\mathcal{S}\\subset\\mathcal{P},\\left|\\mathcal{S}\\right|=K}\\Big[ β ⋅ ∑ U i ∈ 𝒮 Sim ⁡ ( U t ​ a ​ r ​ g ​ e "
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_49⟧ denotes the User Pool, and ⟦SLOT_50⟧ is the optimal subset of ⟦SLOT_51⟧ aesthetically-resonant users that maximizes relevance to the target user while minimizing intra-cohort redundancy."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "Once the optimal set ⟦SLOT_52⟧ is identified, we merge the personalized LoRA models from these selected users through a weighted fusion operation. Each model contributes proportionally to its preference similarity with the target user:"
+  },
+  {
+   "id": "b0053",
+   "t": "keep",
+   "w": "table",
+   "en": "(8) θ m ​ e ​ r ​ g ​ e ​ d = ∑ i = 1 K w i ⋅ θ u i , \\theta_{merged}=\\sum_{i=1}^{K}w_{i}\\cdot\\theta_{u}^{i},"
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_53⟧ represents the normalized merging weight for model ⟦SLOT_54⟧. This targeted merging efficiently leverages preference patterns from users with similar aesthetic tastes to enhance the personalization for the target individual."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "h2",
+   "en": "4. Experiments"
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1. Experimental Settings"
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "Databases. To evaluate the proposed PRAC, we conduct extensive experiments on four PIAA benchmarks: PARA (Yang et al., 2022), FLICKR-AES (Ren et al., 2017), REAL-CUR (Ren et al., 2017), and AADB (Kong et al., 2016). In these datasets, each image is annotated by multiple users for preference modeling, with key statistics summarized in Table 1. Specifically, Ann. Users per Img and Ann. Imgs per User denote the average number of users annotating each image and the average number of images annotated per user, respectively. Notably, PARA (Yang et al., 2022) provides rich user profiles characterized by six attributes: age, gender, education, artistic experience, photographic experience, and personality traits. Moreover, REAL-CUR (Ren et al., 2017) consists of photographs from real personal albums, where each image is rated exclusively by its owner."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1. Statistics of PIAA datasets. ‘/’ denotes train/test split."
+  },
+  {
+   "id": "b0059",
+   "t": "keep",
+   "w": "table",
+   "en": "Database PARA FLICKR-AES REAL-CUR AADB Num. of Imgs 28,220 / 3,000 35,263 / 4,737 0 / 2,871 8,458 / 1,542 Num. of Users 398 / 40 173 / 37 0 / 14 168 / 22 Ann. Users per Img 25 5 1 5 Ann. Imgs per User"
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "Implementation Details. We adopt the open-source MLLM mPLUG-Owl3 (Ye et al., 2024) as our base model. During the Generic Aesthetic Predictor phase, images labeled with distribution statistics derived from multiple users’ annotations within the target PIAA databases are employed for training. We construct the User Pool using training user data from each dataset, while the testing users serve as targets. The hyperparameters are set to ⟦SLOT_55⟧=0.3, ⟦SLOT_56⟧=6, and ⟦SLOT_57⟧=0.5, with detailed ablation studies provided in Section 4.3. Notably, both the training and inference of PRAC for a target user can be executed on a single NVIDIA RTX 3090 GPU, with memory consumption and inference speed detailed in Section 4.5."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluation Criterion. Similar to the previous literature, we employ the Spearman Rank-order Correlation Coefficient (SRCC) as a criterion to validate the performance of PIAA models. Furthermore, there are two commonly used testing patterns based on the number of images in the query set ⟦SLOT_58⟧, namely 10-shot and 100-shot (Ren et al., 2017)."
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2. Comparison between PRAC and state-of-the-art PIAA methods, with the average SRCC of 40 testing users from PARA (Yang et al., 2022) in 10-shot and 100-shot testing modes."
+  },
+  {
+   "id": "b0063",
+   "t": "keep",
+   "w": "table",
+   "en": "Methods 10-shot 100-shot PARA (unconditional) 0.681 0.695 PARA (artistic) 0.686 0.698 PARA (photographic) 0.683 0.698 PARA (personality) 0.691 0.705 BLG-PIAA ( Zhu et al., 2020 ) 0.688 0.698 PA-IAA ( "
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3. Comparison between PRAC and 11 representative PIAA models across the 37 testing users of the FLICKR-AES database (Ren et al., 2017). The best results are shown in bold."
+  },
+  {
+   "id": "b0065",
+   "t": "keep",
+   "w": "table",
+   "en": "Methods 10-shot 100-shot PAM (attribute only) 0.511 0.516 PAM (content only) 0.512 0.516 PAM ( Ren et al., 2017 ) 0.513 0.524 USAR-PPR 0.521 0.544 USAR-PAD 0.520 0.537 USAR ( Lv et al., 2018 ) 0.525 0"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4. Performance comparison conducted on 22 testing users from the AADB (Kong et al., 2016) database."
+  },
+  {
+   "id": "b0067",
+   "t": "keep",
+   "w": "table",
+   "en": "Methods 10-shot 100-shot BA-PIAA ( Zhu et al., 2020 ) 0.450 0.513 BLG-PIAA ( Zhu et al., 2020 ) 0.497 0.545 Inductive-PIAA ( Li et al., 2022 ) 0.524 0.565 TAPP-PIAA ( Li et al., 2022 ) 0.534 0.612 MTC"
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5. Cross-database evaluation. Models trained on FLICKR-AES (Ren et al., 2017) and evaluated on testing users from REAL-CUR (Ren et al., 2017) and AADB (Kong et al., 2016) databases."
+  },
+  {
+   "id": "b0069",
+   "t": "keep",
+   "w": "table",
+   "en": "Databases Methods 10-shot 100-shot REAL-CUR PA-PIAA ( Li et al., 2020 ) 0.443 0.562 BLG-PIAA ( Zhu et al., 2020 ) 0.448 0.578 PIAA-SOA ( Zhu et al., 2021 ) 0.487 0.589 TAPP-PIAA ( Li et al., 2022 ) - "
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2. Performance Evaluation"
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "Intra-database Evaluation. We first evaluate the performance of the proposed PRAC in modeling personalized aesthetic preferences on the PARA (Yang et al., 2022), FLICKR-AES (Ren et al., 2017), and AADB (Kong et al., 2016) databases. The experimental results are presented in Table 2, Table 3, and Table 4, respectively. PRAC consistently achieves the best performance across all datasets, demonstrating that PreferSelect and PreferMerge accurately capture individual aesthetic preferences. Notably, compared to auxiliary task-based methods such as USAR (user-specific re-ranking) (Lv et al., 2018), UG-PIAA (user personalized retouching) (Lv et al., 2021), and IM-PIAA (user content preference) (Hou et al., 2022), PRAC achieves superior results using only aesthetic annotations, highlighting the advantages of leveraging MLLMs for preference modeling. Furthermore, PRAC outperforms meta-learning based methods such as BLG-PIAA (Zhu et al., 2020) and TAPP-PIAA (Li et al., 2022), validating the effectiveness of preference-rich sample mining and aesthetically-resonant cohort merging for few-shot preference modeling."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "Cross-database Evaluation. To verify the generalization performance of the PRAC, we further conduct a cross-database testing experiment. Following the protocol established in previous work (Li et al., 2020; Zhu et al., 2020; Yang et al., 2024c), we utilized the model trained on the FLICKR-AES dataset (Ren et al., 2017) to evaluate the personalization performance on 14 real users from REAL-CUR (Ren et al., 2017) and 22 testing users from AADB (Kong et al., 2016). Table 5 presents the comparative results, where PRAC consistently achieves state-of-the-art performance. These results demonstrate that the proposed PRAC has a strong generalization ability, which is important for real world applications."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6. Ablation study of PRAC components across the four PIAA databases. The ✓indicates the component is enabled."
+  },
+  {
+   "id": "b0074",
+   "t": "keep",
+   "w": "table",
+   "en": "Databases PreferSelect PreferMerge 10-shot 100-shot PARA – – 0.634 0.672 ✓ – 0.640 0.701 ✓ ✓ 0.707 0.733 FLICKR-AES – – 0.644 0.672 ✓ – 0.661 0.717 ✓ ✓ 0.692 0.778 AADB – – 0.541 0.602 ✓ – 0.570 0.613"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7. Personalization performance of different open-source MLLMs with and without the proposed PRAC on the PIAA task evaluated on PARA database."
+  },
+  {
+   "id": "b0076",
+   "t": "keep",
+   "w": "table",
+   "en": "Backbone 10-shot 100-shot Qwen3-VL (w/o PRAC) 0.540 0.574 Qwen3-VL (w PRAC) 0.694 0.723 InternVL-3.5 (w/o PRAC) 0.394 0.478 InternVL-3.5 (w PRAC) 0.690 0.718 mPLUG-Owl3 (w/o PRAC) 0.497 0.647 mPLUG-Ow"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3. Ablation Study"
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "Contributions of Model Components. To validate the effectiveness of each component in PRAC, we conduct comprehensive ablation experiments on the four benchmark PIAA datasets, as summarized in Table 6. First, we examine the personalization performance of the Generic Aesthetic Predictor (baseline) fine-tuned directly on randomly selected user query sets without PreferSelect and PreferMerge. To ensure unbiased evaluation, experiments for all testing users were conducted 10 times with random sampling of training images, and the average results were recorded. The results clearly demonstrate that PRAC outperforms the Generic Aesthetic Predictor by substantial margins, with performance improvements exceeding 5% across all datasets in both 10-shot and 100-shot settings. Furthermore, we test the model using only PreferSelect, which also shows notable improvements over the baseline. These results provide evidence for the effectiveness of both PreferSelect and PreferMerge in personalized aesthetic modeling."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "Impact of MLLMs. We compare the personalization performance of popular open-source MLLMs (Qwen3-VL (Bai et al., 2023), InternVL-3.5 (Wang et al., 2025), and mPLUG-Owl3 (Ye et al., 2024)) with and without PRAC on the PARA dataset, as illustrated in Table 7. The results demonstrate that PRAC consistently outperforms direct fine-tuning (no personalization) in both 10-shot and 100-shot settings across all MLLMs. Moreover, the stable performance gains validate that PRAC is model-agnostic and can be effectively integrated with various MLLM architectures to enhance personalized aesthetic modeling."
+  },
+  {
+   "id": "b0080",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5. Ablation study on weight ⟦SLOT_59⟧ (balancing CCM and PDM) and user profiles (demographics, art/photography experience, and personality traits) in PreferSelect."
+  },
+  {
+   "id": "b0082",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6. Ablation study on aesthetically-resonant cohort size ⟦SLOT_60⟧ and the hyperparameter ⟦SLOT_61⟧ (balancing Target Relevance and Cohort Diversity) in PreferMerge."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "p",
+   "en": "Ablation of PreferSelect. The hyperparameter ⟦SLOT_62⟧ (balancing CCM and PDM) and user profiles (demographics, art/photography experience, and personality traits), jointly influence preference-rich sample mining in PreferSelect. To scrutinize these effects, we conduct an ablation study on the PARA database (Yang et al., 2022), evaluating how PreferSelect influences the modeling of personalized aesthetic preferences under varying balancing weights and when different types of user information are excluded, as illustrated in Figure 5. Results show that ⟦SLOT_63⟧ achieves optimal performance, and all ablation settings outperform the baseline (w/o PreferSelect), validating the importance of preference-rich sample mining. Moreover, user traits notably impact the measurement of preference richness, underscoring the critical role of personality traits in shaping aesthetic preferences, as similarly evidenced in PIAA studies (Li et al., 2020; Zhu et al., 2021)."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "p",
+   "en": "Ablation of PreferMerge. The search for aesthetically-resonant users and the cohort size used for merging are crucial factors affecting the prediction of personalized aesthetic preferences for target individuals. Figure 6 presents an ablation study on the hyperparameter ⟦SLOT_64⟧ (balancing Target Relevance and Cohort Diversity) and the cohort size ⟦SLOT_65⟧ in PreferMerge. Optimal performance is achieved at ⟦SLOT_66⟧. The results reveal that smaller cohorts (⟦SLOT_67⟧) benefit from higher diversity weighting, while larger cohorts (⟦SLOT_68⟧) suffer from user redundancy, leading to performance degradation. The setting of ⟦SLOT_69⟧ demonstrates that the optimal aesthetically-resonant cohort takes into account both relevance and diversity."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "h3",
+   "en": "4.4. Qualitative Analysis"
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "How PRAC Personalizes Using PreferSelect and PreferMerge? Beyond quantitative evaluation on rating prediction, we conduct a qualitative study using two example users to visualize how the proposed PRAC model performs sample mining and cohort merging, ultimately facilitating personalized aesthetic expression. As illustrated in Figure 7, for each testing user, we visualize: (1) the top-3 preference-rich samples mined by PreferSelect; (2) the identified cohort with merging weights from PreferMerge; (3) predicted ratings and reasons generated using the prompt ‘Please explain why you rated the image this way’. The two users exhibit opposite evaluations (Bad vs Good) on the same image, supported by distinct explanations, different samples from PreferSelect, and diverse cohorts from PreferMerge. This demonstrates the effectiveness of PRAC in capturing personalized aesthetic preferences."
+  },
+  {
+   "id": "b0088",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7. Visualization of personalization modeling in PRAC with two testing users from the PARA database (Yang et al., 2022)."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "How Do Personality Traits relate to Preference Embeddings? Personality traits play a crucial role in preference-rich sample mining, while preference embeddings facilitate aesthetically-resonant cohort merging. Preference embeddings are derived by calculating parameter perturbations during the fine-tuning of the MLLM on selected preference-rich samples. To investigate the relationship between the Big-Five Personality Traits and Preference Embeddings, we conduct a qualitative analysis involving 398 users in the PARA (Yang et al., 2022). Specifically, we recorded each user’s preference embedding alongside their personality traits, which include five dimensions: Openness, Conscientiousness, Extraversion, Agreeableness, and Neuroticism. Subsequently, unsupervised clustering was applied across all users, followed by the calculation of average personality traits for each cluster, as illustrated in Figure 8. The results indicate that users exhibit highly concentrated and distinct personality trait distributions. For instance, the purple cluster is characterized by high Agreeableness (Agr), while the orange cluster displays notably high levels of Extraversion (Ext) and Neuroticism (Neu). These observations underscore the effectiveness of PRAC, through PreferSelect and PreferMerge, in modeling personalized aesthetic preferences."
+  },
+  {
+   "id": "b0091",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8. Clustering distribution of 398 users based on their Big-Five personality traits and Preference Embeddings."
+  },
+  {
+   "id": "b0093",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9. Comparison of computational costs between PRAC and the current state-of-the-art PIAA method (Yun and Choo, 2024)."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "h3",
+   "en": "4.5. Computational Cost"
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "For the proposed PRAC, all target users share a frozen MLLM backbone (e.g., mPLUG-Owl3) equipped with different trained personalized LoRAs. Figure 9 compares the computational costs (memory per target, training time per target, and inference speed) between PRAC and the current state-of-the-art ViT-based PIAA model (Yun and Choo, 2024). The results demonstrate that PRAC achieves competitive performance in both memory consumption and runtime efficiency. All metrics are measured on a single RTX 3090 GPU."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "h2",
+   "en": "5. Conclusion"
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we rethink personalized image aesthetic assessment by modeling preference richness across images and cross-user preference similarity. We have proposed PRAC, the first MLLM-based PIAA model that accurately predicts users’ personalized aesthetic ratings on images and provides interpretable rationales explaining divergent judgments. Through preference-rich sample mining and aesthetically-resonant cohort merging, we effectively model individual aesthetic preferences under few-shot annotations. Extensive evaluations across four PIAA benchmark datasets demonstrate the superior performance of the proposed model. While very encouraging results have been achieved in this work, investigations on the cohort-relatedness of aesthetic preferences would further facilitate preference modeling, which is worth of more explorations."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "h6",
+   "en": "Acknowledgements."
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Amari (1998) S. Amari Natural gradient works efficiently in learning . Neural computation 10 ( 2 ), pp. 251–276 . Cited by: §3.3 ."
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al. (2023) J. Bai, S. Bai, Y. Chu, Z. Cui, K. Dang, X. Deng, Y. Fan, W. Ge, Y. Han, F. Huang, et al. Qwen technical report . arXiv preprint arXiv:2309.16609 . Cited by: §4.3 ."
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Celikors and Field (2025) E. Celikors and D. J. Field Beauty is in the eye of your cohort: structured individual differences allow predictions of individualized aesthetic ratings of images . Cognition"
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2025) L. Chen, O. Strafforello, A. Maerten, T. Tuytelaars, and J. Wagemans On the role of individual differences in current approaches to computational image aesthetics . arXiv preprint a"
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024) Z. Chen, L. Zhang, F. Weng, L. Pan, and Z. Lan Tailored visions: enhancing text-to-image generation with personalized prompt rewriting . In Proceedings of the IEEE/CVF Conference on"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Deng et al. (2017) Y. Deng, C. C. Loy, and X. Tang Image aesthetic assessment: an experimental survey . IEEE Signal Processing Magazine 34 ( 4 ), pp. 80–106 . Cited by: §1 ."
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dong et al. (2024) Q. Dong, L. Li, D. Dai, C. Zheng, J. Ma, R. Li, H. Xia, J. Xu, Z. Wu, B. Chang, et al. A survey on in-context learning . In Proceedings of the 2024 Conference on Empirical Methods i"
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hamzah (2012) M. Hamzah Objectifying subjectivity in images through aesthetics: a bergsonian approach . In 2012 International Conference on Innovation Management and Technology Research , pp. 247–252 "
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hou et al. (2022) J. Hou, W. Lin, G. Yue, W. Liu, and B. Zhao Interaction-matrix based personalized image aesthetics assessment . IEEE Transactions on Multimedia 25 , pp. 5263–5278 . Cited by: §4.2 , "
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hu et al. (2022) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, W. Chen, et al. Lora: low-rank adaptation of large language models. . ICLR 1 ( 2 ), pp. 3 . Cited by: §3.1 ."
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024a) Y. Huang, X. Sheng, Z. Yang, Q. Yuan, Z. Duan, P. Chen, L. Li, W. Lin, and G. Shi Aesexpert: towards multi-modality foundation model for image aesthetics perception . In Proceedin"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024b) Y. Huang, Q. Yuan, X. Sheng, Z. Yang, H. Wu, P. Chen, Y. Yang, L. Li, and W. Lin Aesbench: an expert benchmark for multimodal large language models on image aesthetics perception "
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jiang et al. (2023) G. Jiang, M. Xu, S. Zhu, W. Han, C. Zhang, and Y. Zhu Evaluating and inducing personality in pre-trained language models . In Advances in Neural Information Processing Systems , A."
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kim et al. (2018) W. Kim, J. Choi, and J. Lee Objectivity and subjectivity in aesthetic quality assessment of digital photographs . IEEE Transactions on Affective Computing 11 ( 3 ), pp. 493–506 . Cit"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kong et al. (2016) S. Kong, X. Shen, Z. Lin, R. Mech, and C. Fowlkes Photo aesthetics ranking network with attributes and content adaptation . In European conference on computer vision , pp. 662–679 ."
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023a) C. Li, J. Wang, K. Zhu, Y. Zhang, W. Hou, J. Lian, and X. Xie Emotionprompt: leveraging psychology for large language models enhancement via emotional stimulus . arXiv preprint arXiv"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024) L. Li, X. Sheng, P. Chen, J. Wu, and W. Dong Towards explainable image aesthetics assessment with attribute-oriented critiques generation . IEEE Transactions on Circuits and Systems f"
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2020) L. Li, H. Zhu, S. Zhao, G. Ding, and W. Lin Personality-assisted multi-task learning for generic and personalized image aesthetics assessment . IEEE Transactions on Image Processing 2"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023b) W. Li, Y. Peng, M. Zhang, L. Ding, H. Hu, and L. Shen Deep model fusion: a survey . arXiv preprint arXiv:2309.15698 . Cited by: §2 ."
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2022) Y. Li, Y. Yang, H. Li, H. Chen, L. Xu, L. Li, Y. Li, and Y. Guo Transductive aesthetic preference propagation for personalized image aesthetics assessment . In Proceedings of the 30th"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2025) J. Liu, Z. Qiu, Z. Li, Q. Dai, J. Zhu, M. Hu, M. Yang, and I. King A survey of personalized large language models: progress and future directions . arXiv preprint arXiv:2502.11528 . "
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2024) Q. Liu, J. Zhu, Y. Yang, Q. Dai, Z. Du, X. Wu, Z. Zhao, R. Zhang, and Z. Dong Multimodal pretraining, adaptation, and generation for recommendation: a survey . In Proceedings of the "
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lu et al. (2024) Z. Lu, C. Fan, W. Wei, X. Qu, D. Chen, and Y. Cheng Twin-merging: dynamic integration of modular expertise in model merging . Advances in Neural Information Processing Systems 37 , pp"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lv et al. (2021) P. Lv, J. Fan, X. Nie, W. Dong, X. Jiang, B. Zhou, M. Xu, and C. Xu User-guided personalized image aesthetic assessment based on deep reinforcement learning . IEEE Transactions on Mul"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lv et al. (2018) P. Lv, M. Wang, Y. Xu, Z. Peng, J. Sun, S. Su, B. Zhou, and M. Xu USAR: an interactive user-specific aesthetic ranking framework for images . In Proceedings of the 26th ACM internatio"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Maerten et al. (2025) A. Maerten, L. Chen, S. De Winter, C. Bossens, and J. Wagemans LAPIS: a novel dataset for personalized image aesthetic assessment . In Proceedings of the Computer Vision and Patt"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Murray et al. (2012) N. Murray, L. Marchesotti, and F. Perronnin AVA: a large-scale database for aesthetic visual analysis . In 2012 IEEE conference on computer vision and pattern recognition , pp. 24"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ni et al. (2022) S. Ni, F. Shao, X. Chai, H. Chen, and Y. Ho Composition-guided neural network for image cropping aesthetic assessment . IEEE Transactions on Multimedia 25 , pp. 6836–6851 . Cited by: "
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ren et al. (2017) J. Ren, X. Shen, Z. Lin, R. Mech, and D. J. Foran Personalized image aesthetics . In Proceedings of the IEEE international conference on computer vision , pp. 638–647 . Cited by: §1 "
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Risko et al. (2012) E. F. Risko, N. C. Anderson, S. Lanthier, and A. Kingstone Curious eyes: individual differences in personality predict eye movement behavior in scene-viewing . Cognition 122 ( 1 ),"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sheng et al. (2026a) X. Sheng, Z. Duan, X. Pan, Y. Huang, Z. Yang, P. Chen, and L. Li TuningIQA: fine-grained blind image quality assessment for livestreaming camera tuning . In Proceedings of the AAA"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sheng et al. (2026b) X. Sheng, X. Pan, Z. Yang, P. Chen, and L. Li Fine-grained image quality assessment for perceptual image restoration . In Proceedings of the AAAI Conference on Artificial Intellig"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sheng et al. (2025) X. Sheng, P. Xie, W. Zou, P. Chen, T. Zhu, and L. Li InstructCrop: teaching multimodal large language models to crop aesthetic images . In Proceedings of the 33rd ACM International"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tan et al. (2024) Z. Tan, Q. Zeng, Y. Tian, Z. Liu, B. Yin, and M. Jiang Democratizing large language models via personalized parameter-efficient fine-tuning . In Proceedings of the 2024 Conference on"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tang et al. (2023) A. Tang, L. Shen, Y. Luo, Y. Zhan, H. Hu, B. Du, Y. Chen, and D. Tao Parameter efficient multi-task model fusion with partial linearization . arXiv preprint arXiv:2310.04742 . Cited"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2018) G. Wang, J. Yan, and Z. Qin Collaborative and attentive learning for personalized image aesthetic assessment. . In IJCAI , pp. 957–963 . Cited by: §1 , Table 3 ."
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2025) W. Wang, Z. Gao, L. Gu, H. Pu, L. Cui, X. Wei, Z. Liu, L. Jing, S. Ye, J. Shao, et al. Internvl3. 5: advancing open-source multimodal models in versatility, reasoning, and efficienc"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Washizu et al. (2025) S. Washizu, Y. Abe, T. Daikoku, and Y. Kuniyoshi Bodily sensations, emotions, and personality traits in the aesthetic experience of everyday photographs . Scientific Reports . Ci"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wei et al. (2025) Y. Wei, Y. Zheng, Y. Zhang, M. Liu, Z. Ji, L. Zhang, and W. Zuo Personalized image generation with deep generative models: a decade survey . arXiv preprint arXiv:2502.13081 . Cited b"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2023) C. Wu, T. Wang, Y. Ge, Z. Lu, R. Zhou, Y. Shan, and P. Luo Pi-tuning: transferring multimodal foundation models with optimal multi-task interpolation . In International Conference on "
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2024) H. Wu, Z. Zhang, W. Zhang, C. Chen, L. Liao, C. Li, Y. Gao, A. Wang, E. Zhang, W. Sun, et al. Q-align: teaching lmms for visual scoring via discrete text-defined levels . In Internati"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xu et al. (2025) Y. Xu, W. Wang, Y. Zhang, B. Tang, P. Yan, F. Feng, and X. He Personalized image generation with large multimodal models . In Proceedings of the ACM on Web Conference 2025 , pp. 264–2"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2024a) E. Yang, L. Shen, G. Guo, X. Wang, X. Cao, J. Zhang, and D. Tao Model merging in llms, mllms, and beyond: methods, theories, applications and opportunities . arXiv preprint arXiv:2"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2022) Y. Yang, L. Xu, L. Li, N. Qie, Y. Li, P. Zhang, and Y. Guo Personalized image aesthetics assessment with rich attributes . In Proceedings of the IEEE/CVF Conference on Computer Visi"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2026a) Z. Yang, T. Gu, J. Wang, F. Lin, X. Sheng, P. Chen, and L. Li Longt2ibench: a benchmark for evaluating long text-to-image generation with graph-structured annotations . In Proceedi"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2024b) Z. Yang, L. Li, P. Chen, J. Wu, and W. Dong Semantics-aware image aesthetics assessment using tag matching and contrastive ranking . In Proceedings of the 32nd ACM International Co"
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2025) Z. Yang, L. Li, P. Chen, J. Wu, and G. Valenzise Language-guided visual perception disentanglement for image quality assessment and conditional image generation . arXiv preprint arX"
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2024c) Z. Yang, L. Li, Y. Yang, Y. Li, and W. Lin Multi-level transitional contrast learning for personalized image aesthetics assessment . IEEE Transactions on Multimedia 26 ( ), pp. 194"
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2026b) Z. Yang, J. Wang, Z. Zhang, P. Xie, X. Sheng, P. Chen, and L. Li Fine-grained image aesthetic assessment: learning discriminative scores from relative ranks . In Proceedings of the"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ye et al. (2024) J. Ye, H. Xu, H. Liu, A. Hu, M. Yan, Q. Qian, J. Zhang, F. Huang, and J. Zhou Mplug-owl3: towards long image-sequence understanding in multi-modal large language models . arXiv prepri"
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "You et al. (2025) Z. You, X. Cai, J. Gu, T. Xue, and C. Dong Teaching large language models to regress accurate image quality scores using score distribution . In Proceedings of the Computer Vision an"
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yun and Choo (2024) J. Yun and J. Choo Scaling up personalized image aesthetic assessment via task vector customization . In European Conference on Computer Vision , pp. 323–339 . Cited by: §2 , Figur"
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2024a) K. Zhang, Y. Kim, and X. Liu Personalized llm response generation with parameterized memory injection . arXiv preprint arXiv:2404.03565 . Cited by: §2 ."
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2022) M. Zhang, M. Li, J. Yu, and L. Chen Aesthetic photo collage with deep reinforcement learning . IEEE Transactions on Multimedia 25 , pp. 4653–4664 . Cited by: §1 ."
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2024b) Z. Zhang, R. A. Rossi, B. Kveton, Y. Shao, D. Yang, H. Zamani, F. Dernoncourt, J. Barrow, T. Yu, S. Kim, et al. Personalization of large language models: a survey . arXiv preprint"
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2020) H. Zhu, L. Li, J. Wu, S. Zhao, G. Ding, and G. Shi Personalized image aesthetics assessment via meta-learning with bilevel gradient optimization . IEEE Transactions on Cybernetics 52"
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2021) H. Zhu, Y. Zhou, L. Li, Y. Li, and Y. Guo Learning personalized image aesthetics from subjective and objective attributes . IEEE Transactions on Multimedia 25 , pp. 179–190 . Cited b"
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2022) H. Zhu, Y. Zhou, Z. Shao, W. Du, G. Wang, and Q. Li Personalized image aesthetics assessment via multi-attribute interactive reasoning . Mathematics 10 ( 22 ), pp. 4181 . Cited by: T"
+  }
+ ]
+}

@@ -1,0 +1,1618 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Seeing is Improving: Visual Feedback for Iterative Text Layout Refinement"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Recent advances in Multimodal Large Language Models (MLLMs) have enabled automated generation of structured layouts from natural language descriptions. Existing methods typically follow a code-only pa"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "The emergence of Large Language Models (LLMs) [1, 9, 51] and Multimodal Large Language Models (MLLMs) [18, 32, 4, 42] has unlocked new possibilities for automated content generation, particularly for structured visual layouts. By generating structured representations (e.g., SVG code, custom JSON) [11, 52, 8, 35] that define the position, size, and style of each element [22, 20], LLMs can translate natural language descriptions directly into complex designs such as typographic posters, social media graphics, and documents. MLLMs further enhance this by leveraging cross-modal understanding, allowing generation to be conditioned on both text and visual inputs."
+  },
+  {
+   "id": "b0006",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Method comparison. Traditional methods only generate through text code and have no perception of the generated results; our Visual Feedback method can iteratively reflect on the generated result and optimize the layout effect."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "However, existing methods are limited to the code-only paradigm and can only generate codes for layout without considering visual feedback. For instance, COLE [22] and OpenCOLE [20] leverage LLMs to generate typography JSON files, while LGGPT [57] produces customized layout output formats, which are then composed into the final images by a graphic renderer. As shown in Fig. 1(A), while these models can produce layout structures that meet formal specifications, they remain unable to perceive the visual outcomes of their designs. Effective text layout design, however, depends on visual properties such as aesthetic balance, readability, and image–text coherence, which cannot be fully encoded by programmatic rules. Consequently, a model may generate syntactically valid SVG layouts that still suffer from overlapping elements, poor contrast, or misaligned components."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Recent advances in LLMs [9, 21, 32, 12] research demonstrate that reflection, backtracking, and self-validation mechanisms can substantially improve performance on complex reasoning tasks. Moreover, Reinforcement Learning (RL) [34, 38, 40] techniques have proven effective in activating the reflective reasoning capabilities of LLMs. This motivates our core research question: Can such reflection capabilities be transferred to text layout generation to overcome the visual perception gap in existing approaches? We argue that the solution lies in incorporating visual feedback into the text layout generation process, leveraging MLLMs’ inherent cross-modal understanding capabilities. As illustrated in Fig. 1, models should not only generate layout code but also perceive the rendered results to evaluate quality, diagnose visual issues, and devise optimization strategies through iterative refinement."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we propose Visual Feedback Layout Model (VFLM), a novel self-improving framework for text layout generation that establishes a closed-loop process guided by RL. As shown in Fig. 1, VFLM first generates initial SVG layout code, which is rendered into a visual image. This rendered image is fed back to the same model for visual inspection and reflection. If issues are identified or the layout is unsatisfactory, VFLM generates revised code and repeats the process, creating a continuous loop of “generation, rendering, reflection and refinement” until a satisfactory layout is achieved."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "VFLM utilizes a two-stage training pipeline. Firstly, we construct a multi-stage generation-reflection-refinement trajectory dataset by distilling advanced MLLMs, followed by Supervised Fine-Tuning (SFT) to endow model the ability of iterative generation. Secondly, we employ RL to enhance the model’s reflective capabilities. We utilize a reward model trained to evaluate layout quality holistically and incorporate text accuracy via Optical Character Recognition (OCR). While recent research on Agentic RL research [41, 10, 25] often relies on meticulously designed, complex, process-oriented reward mechanisms to guide each intermediate step, our analysis reveals this approach can lead to “reward hacking”. We demonstrate, counter-intuitively, that a simple outcome-based reward, which only assesses the final generated layout, is significantly more effective. This simpler signal compels the VFLM to leverage its inherent visual understanding to holistically balance initial generation quality and iterative refinement, enabling robust and stable performance improvements through visual feedback."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "We validate this framework through extensive experiments based on Qwen2.5-VL-7B model [4] for the task of laying out target text on background images. Both quantitative and qualitative evaluations show VFLM significantly outperforms state-of-the-art layout generation approaches, advanced MLLMs, and image editing models. Furthermore, our ablation studies, which provide fair comparisons against multiple code-only generation methods, confirm the significant and critical advantage of our VFLM. This superiority effectively validates visual feedback as a crucial component in generative text layout, establishing a practical framework for developing self-improving, MLLM-based design agents."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "This work’s contributions can be summarized as follows:"
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "li",
+   "en": "• We propose VFLM, a self-improving framework that, to our knowledge, is the first to apply visual feedback to layout generation. It equips MLLMs with a “generation, rendering, reflection, refinement” cycle, using visual feedback to overcome the limitations of code-only methods."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "li",
+   "en": "• We design a two-stage SFT+RL training method, including a novel reward model for text layout, that successfully activates the model’s iterative refinement capabilities. Extensive experiments validate that our approach consistently outperforms strong existing methods."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "li",
+   "en": "• We demonstrate a key finding that simple, outcome-based rewards are more effective and robust for activating the model’s self-improvement capabilities than complex, process-oriented reward functions."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Multimodal Large Language Model"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "Recent progress in Multimodal Large Language Models (MLLMs) is driven by integrating pretrained vision encoders [36, 54] with LLMs. The two modalities are typically aligned via lightweight projectors or Q-Former [24] structures, a paradigm that has spurred a suite of powerful models. This includes open-source series like LLaVA [31, 29, 30], Qwen-VL [3, 45, 4], and Intern-VL [7, 13, 61, 46], as well as large-scale proprietary systems such as GPT-4o [18], Gemini [43], and Claude [2], which continue to advance the state of the art through massive scaling and enhanced reasoning techniques [47, 58]."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Graphic Layout Generation"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "Graphic layout generation has evolved from early Transformer-based architectures [60, 28] to methods centered on LLMs and MLLMs. Many approaches prompts LLMs to output structured formats like SVG [44], HTML [39], or JSON [26, 22, 20, 6, 15]. Others employ MLLMs to decompose the design process into ordered layers or sub-tasks [8, 27, 22, 35], often coordinating with multi-modal inputs [52, 19]. However, these methods operate in an open-loop, lacking visual perception of the rendered output. While some recent pipelines incorporate visual feedback, they typically rely on non-trainable, inference-only strategies with external advisors [53, 55], or decouple generation and reflection into separately trained models [22]. In contrast, our work introduces visual feedback via RL, unifying these capabilities into a single, self-evolving policy with learnable autonomous judgment."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "h3",
+   "en": "2.3 Reinforcement Learning"
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "Reinforcement learning is a cornerstone for aligning LLMs with human preferences, standardized by the RLHF [34] pipeline which typically uses Proximal Policy Optimization (PPO) [38]. To mitigate the instability and high cost associated with PPO, recent alternatives like Direct Preference Optimization (DPO) [37] and Group Relative Policy Optimization (GRPO) [40] offer more direct and efficient optimization strategies. This alignment paradigm extends naturally to multimodal settings to improve visual grounding and reasoning. Works such as Vision-R1 [17], R1VL [56], and DeepEyes [59] adapt RL to MLLMs by incorporating multimodal rewards, chain-of-thought signals, and specialized replay mechanisms, demonstrating the power of RL in enhancing multimodal alignment and capability."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Method"
+  },
+  {
+   "id": "b0025",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Pipeline of Visual Feedback Method, including Data Construction for Cold-Start SFT and RL with Modified Advantages."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "This work aims to develop a self-improving VFLM for text layout generation that optimizes outputs through visual feedback. We achieve this with a two-stage training framework: (1) Cold-Start SFT to instill basic iterative generation and reflection capabilities, and (2) Reinforcement Learning to enhance performance using vision-based reward signals."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Visual Feedback Layout Model"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "As illustrated in Fig. 1, VFLM establishes a multi-round interaction mechanism between VFLM and a rendering environment. As shown in Algorithm 1, given a background image and target text, VFLM executes an iterative generation, rendering, reflection, refinement cycle:"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "li",
+   "en": "1. Initial Generation: The VFLM first analyzes the input through reasoning, then generates initial layout code through a structured tool call."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "li",
+   "en": "2. Rendering: The rendering tool converts the SVG code into a visual image and feeds it back to the same VFLM."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "li",
+   "en": "3. Visual Reflection: The VFLM examines the rendered layout visual image through reasoning to evaluate whether the quality is satisfactory to it."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "li",
+   "en": "4. Iterative Refinement: If unsatisfied, the VFLM reasons about necessary modifications and a revised layout code is generated. The process repeats until the model determines satisfaction with the layout quality."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Algorithm 1 Visual Feedback for Text Layout Self-Improvement"
+  },
+  {
+   "id": "b0035",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0036",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0037",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0038",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0039",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0040",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0041",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0042",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0043",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0044",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0045",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0046",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0047",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0048",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0049",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Cold-Start Supervised Fine-Tuning"
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "The cold-start SFT stage enables the model to acquire iterative reflection capabilities, and tool usage specifications through distillation from an advanced teacher MLLM."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "Data Construction Due to the absence of natural multi-round reflection data, we employ Doubao-Seed-1.6 [5] as a teacher model for data synthesis. As illustrated in Fig. 2(A), the systhesis pipeline is divided into the following stages:"
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "li",
+   "en": "1. Initial reasoning synthesis: First, The teacher model is prompted with background images and ground-truth layouts to generate the reasoning processes for SVG code generation."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "li",
+   "en": "2. Suboptimal layout generation: This distilled reasoning data is used to fine-tune Qwen2.5-VL-7B. The inference outputs from this model are then collected to serve as the suboptimal initial attempts for the next stage."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "li",
+   "en": "3. Multi-round reflection synthesis: The suboptimal attempts (from Stage 2) are paired with their ground-truth layouts and fed back to the teacher model. The teacher is then instructed to perform iterative reflection and modification to reach the ground-truth solution. This process simulates realistic human design refinement and generates complete multi-round reflection trajectories."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "li",
+   "en": "4. Data combination: Finally, the synthesized data from the above stages are combined and organized using structured tags: intermediate rounds use <think> and <tool_call>, while the final round uses <think> and <answer> (See supplementary materials for specific data samples.)."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "Training Objective We fine-tune Qwen2.5-VL-7B using causal language modeling on the synthesized multi-round reflection trajectories data. To prevent the model from learning suboptimal outputs, the loss for initial responses in improvement sequences is masked, ensuring the model learns from the correction process rather than initial errors."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Iterative Reflection Reinforcement Learning"
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "h4",
+   "en": "3.3.1 RL Algorithm"
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "We adopt the Group Relative Policy Optimization (GRPO) [40] algorithm for RL and make certain improvements to the advantage function. Compared with traditional policy optimization methods, GRPO performs policy gradient optimization within sample groups, enabling the model to learn in the direction of maximizing rewards. The optimization objectives of GRPO are as follows:"
+  },
+  {
+   "id": "b0061",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒥 GRPO ​ ( θ ) = 𝔼 ⁡ [ q ∼ P ⁡ ( Q ) , { o i } i = 1 G ∼ π θ old ​ ( O ∣ q ) ] 1 G ∑ i = 1 G 1 | o i | ∑ t = 1 | o i | { min [ π θ ​ ( o i , t ∣ q , o i , < t ) π θ old ​ ( o i , t ∣ q , o i , < t ) A"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_0⟧ and ⟦SLOT_1⟧ are the clipping hyperparameters and the KL divergence penalty coefficient, respectively."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "For the reward function, we design a three-component reward function to score the layout effect: (1) ⟦SLOT_2⟧(Sec. 3.3.2), a specialized reward model trained to evaluate overall layout quality; (2) ⟦SLOT_3⟧, which evaluates text accuracy based on OCR results from the rendered layout; and (3) ⟦SLOT_4⟧, which measures text accuracy at the code level by comparing the extracted SVG strings with the target text. The total reward is the weighted sum of the three components:"
+  },
+  {
+   "id": "b0064",
+   "t": "keep",
+   "w": "table",
+   "en": "R score = R layout + α ⋅ ( R ocr + R svg ) , R_{\\text{score}}=R_{\\text{layout}}+\\alpha\\cdot\\left(R_{\\text{ocr}}+R_{\\text{svg}}\\right), (2)"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_5⟧ balance aesthetic quality against functional accuracy. In addition, we incorporate a format reward to constrain the output format of the model:"
+  },
+  {
+   "id": "b0066",
+   "t": "keep",
+   "w": "table",
+   "en": "R format = { 1.0 , if format is correct , − 1.0 , if format is incorrect . R_{\\text{format}}=\\begin{cases}1.0,&\\text{if format is correct},\\\\ -1.0,&\\text{if format is incorrect}.\\end{cases} (3)"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "For the advantage function, since the multi-round nature of our approach, the format rewards are applied separately in each round, resulting in inconsistent rewards between rounds for a sequence. Referring to REINFORCE++ [16], we use the mean value of ⟦SLOT_6⟧ within a group as baseline to reshape the reward. The format rewards are then incorporated with a scaling factor ⟦SLOT_7⟧. Finally, the advantages in the global batch are normalized and used for GRPO training:"
+  },
+  {
+   "id": "b0068",
+   "t": "keep",
+   "w": "table",
+   "en": "A raw = R score − mean group ​ ( R score ) + γ ⋅ R format , A_{\\text{raw}}=R_{\\text{score}}-\\mathrm{mean}_{\\text{group}}(R_{\\text{score}})+\\gamma\\cdot R_{\\text{format}}, (4)"
+  },
+  {
+   "id": "b0069",
+   "t": "keep",
+   "w": "table",
+   "en": "A = A raw − mean batch ​ ( A raw ) std batch ​ ( A raw ) . A=\\frac{A_{\\text{raw}}-\\mathrm{mean}_{\\text{batch}}(A_{\\text{raw}})}{\\mathrm{std}_{\\text{batch}}(A_{\\text{raw}})}. (5)"
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "h4",
+   "en": "3.3.2 Layout Reward Model"
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "Training a robust reward model for text layout is uniquely challenging. Unlike tasks with binary correctness, layout quality is a holistic and fine-grained judgment of aesthetics, readability, and coherence. A high-quality preference dataset is crucial for training a model that can guide a stable RL without falling into reward hacking. However, no existing datasets or methodologies are specifically designed for layout generation reward modeling. To address this gap, we train a specialized reward model ⟦SLOT_8⟧ that takes triplets ⟦SLOT_9⟧ as input and outputs a scalar score ⟦SLOT_10⟧, where ⟦SLOT_11⟧ denotes the background image, ⟦SLOT_12⟧ denotes the target text, and ⟦SLOT_13⟧ denotes the rendered layout image."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "Dataset: To create the necessary preference data, we introduce a novel hierarchical data construction method that creates fine-grained quality distinctions across multiple layout quality levels."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "To equip the reward model with comprehensive and robust evaluation capabilities, we construct four distinct quality levels to capture fine-grained layout performance:"
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "li",
+   "en": "• Level-I: High-quality ground-truth layouts serving as gold standards for design excellence."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "li",
+   "en": "• Level-II: Layouts generated by Qwen2.5-VL-7B after fine-tuning on 200K samples exhibit reasonable quality with minor imperfections."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "li",
+   "en": "• Level-III: Layouts from the Level-II model subjected to systematic spatial perturbations applied to layout elements, including random positional offsets that moderately compromise design coherence."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "li",
+   "en": "• Level-IV: Severely degraded layouts stem from the Level-II model under aggressive perturbations, including extensive positional displacement, random font size variations, selective text element deletion, image reference removal, and arbitrary SVG scaling transformations."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "This hierarchical construction enables comprehensive preference learning through systematic pairwise comparisons. For each layout generation prompt, we create layouts at all four quality levels, then form all possible pairwise comparisons between different levels. This yields 6 preference pairs per problem, establishing clear quality orderings that capture nuanced distinctions essential for effective reward model training. This strategy forces the reward model to move beyond simple binary (good/bad) judgments and learn the subtle distinctions that separate excellent layouts from merely acceptable ones. The resulting dataset provides a comprehensive and reliable basis for training a highly discerning layout reward model ⟦SLOT_14⟧."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "Training: The method proposed in [33] is adopted for training the reward model. Specifically, the reward model is initialized with Qwen2.5-VL-3B. To adapt it for preference learning, the final layer is replaced with a linear layer yielding a scalar output. Subsequently, the reward model is trained via the negative log-likelihood loss function:"
+  },
+  {
+   "id": "b0080",
+   "t": "keep",
+   "w": "table",
+   "en": "ℒ RM ​ ( θ ) = − 𝔼 ( B , T , I + , I − ) ∼ 𝒟 ​ [ log ⁡ σ ⁡ ( r θ ​ ( B , T , I + ) − r θ ​ ( B , T , I − ) ) ] \\mathcal{L}_{\\mathrm{RM}}(\\theta)=-\\mathbb{E}_{(B,T,I^{+},I^{-})\\sim\\mathcal{D}}\\left[\\lo"
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_15⟧ and ⟦SLOT_16⟧ denote the better-quality and lower-quality images, respectively, in a pairwise comparison."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "To provide stable reward values for the RL process, the raw output of ⟦SLOT_17⟧ is normalized before being used as the final layout reward ⟦SLOT_18⟧. Following the practice in [49], we standardize ⟦SLOT_19⟧ scores using the mean and standard deviation of the test set distribution. This procedure ensures that the reward signal maintains a consistent scale throughout training, which is crucial for effective policy optimization. The final reward is calculated as:"
+  },
+  {
+   "id": "b0083",
+   "t": "keep",
+   "w": "table",
+   "en": "R layout = r θ − mean test ​ ( r θ ) std test ​ ( r θ ) . R_{\\text{layout}}=\\frac{r_{\\theta}-\\mathrm{mean}_{\\text{test}}(r_{\\theta})}{\\mathrm{std}_{\\text{test}}(r_{\\theta})}. (7)"
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Experiment"
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Experimental Setup"
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluation Datasets For evaluation, we randomly sample 1K examples from our TextLayout dataset as the primary test set, ensuring no overlap with training data. We also conduct additional experiments on the Crello [50] and DESIGNERINTENTION [22] benchmarks, preprocessed into background-text pairs."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluation metrics We adopt three groups of evaluation metrics. Text accuracy is measured using character-level F-measure based on OCR recognition. For graphic metrics, we adopt ⟦SLOT_20⟧, ⟦SLOT_21⟧, and ⟦SLOT_22⟧ [60, 35], which capture text position alignment, text-text overlap, and pixel gradient smoothness within text regions. Additionally, we employ GPT-4o as a judge [14] to evaluate four dimensions: Text Accuracy, Text-Background Harmony, Text Presentation Quality, and Meaning Expression Adaptability. Refer to the supplementary materials for details."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "Existing Methods We compare against three categories of existing methods: (1) Advanced MLLMs: GPT-4o [18], Claude 3.7 [2], Doubao-Seed-1.6[5], and Qwen2.5-VL-72B [4]; (2) Image editing models: GPT-4o(edit) [18], Qwen-Image-Edit [48], and FLUX-Kontext [23]; (3) Specialized layout generation: the open-source domain-specific model OpenCOLE [20] and IGD [35]."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: The Graphic quality metrics and OCR metrics on the TextLayout, Crello and DESIGNERINTENTION test set, where VFLM-step1 and VFLM respectively represent the metrics of our results in the first output and the final result output after iterative reflection."
+  },
+  {
+   "id": "b0090",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Model OCR Graphic GPT-4o Char-F ↑ \\uparrow R a ​ l ​ i ↓ R_{ali}\\downarrow R o ​ v ​ e ↓ R_{ove}\\downarrow R c ​ o ​ m ↓ R_{com}\\downarrow RM Score ↑ \\uparrow Text Harmony Quality Meaning Overa"
+  },
+  {
+   "id": "b0091",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: In comparison with existing methods, we selected one model from each category of methods as a representative. For a more comprehensive comparison, please refer to the supplementary materials."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Comparison with Existing Methods"
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Tab. 1, VFLM demonstrates a clear quantitative advantage. On the TextLayout dataset, VFLM’s initial generation (VFLM-step1) already achieves a higher OCR F1-score (0.9071) than the strongest MLLM competitor, Claude 3.7 (0.8672), and the specialized layout model IGD (0.8481). The final optimized output (VFLM) widens this gap further to 0.9376. This superiority extends across key graphic metrics: VFLM excels at minimizing element overlap (⟦SLOT_23⟧) and optimizing composition (⟦SLOT_24⟧), achieving the highest RM scores and overall GPT-4o evaluation. This strong performance generalizes robustly: VFLM consistently achieves state-of-the-art results on the Crello and DESIGNERINTENTION datasets, establishing a new SOTA on nearly all OCR and Graphic metrics."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "p",
+   "en": "Fig. 3 provides a qualitative comparison of VFLM against existing methods. Models like IGD and Claude 3.7, which generate layouts directly, inevitably suffer from visual artifacts such as text overlap and color conflicts. Meanwhile, image editing models like GPT4o-Image fundamentally conflict with our task, as they inevitably alter the background image. These editing models also struggle to guarantee quality in scenarios with dense text or Chinese characters. VFLM, in contrast, successfully integrates the element-wise consistency of code generation while further leveraging visual feedback to promptly discover and correct visual problems. This ensures a high-quality final output, overcoming the limitations of both competing approaches."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Layout Reward Model Evaluation"
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "The trained reward model achieves a high pairwise prediction accuracy of 97.4% on the preference data test set. To further validate our methodology, we conducted two key analyses presented in Tab. 2. First, we verify the integrity of our four-level data hierarchy using objective metrics. As shown, the external Graphic and OCR metrics exhibit a clear monotonic degradation from Level-I to Level-IV. Among them, ⟦SLOT_25⟧ and ⟦SLOT_26⟧ have slight improvement in Leval-III and Leval-IV because many texts in these two types of data have been lost in the layout, so text overlap and regional gradients will naturally decrease. This result confirms that our data construction process successfully creates a well-defined and reliable quality gradient."
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Metrics and RM score across four quality-level datasets."
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "table",
+   "en": "level OCR Graphic RM Score ↑ \\uparrow Char-F ↑ \\uparrow R a ​ l ​ i ↓ R_{ali}\\downarrow R o ​ v ​ e ↓ R_{ove}\\downarrow R c ​ o ​ m ↓ R_{com}\\downarrow Level-I 0.9474 0.0089 0.0038 6.6795 1.0594 Level"
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "p",
+   "en": "Second, we evaluated whether our trained reward model internalizes this quality structure. The final column of the table reports the average RM Score, i.e., ⟦SLOT_27⟧, which aligns well with the established hierarchy, decreasing consistently from a high for Level-I to a low for Level-IV. This strong discriminative performance across distinct quality levels confirms that our model has learned a nuanced understanding of layout quality, enabling it to provide a reliable and effective supervision signal for reinforcement learning."
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "h3",
+   "en": "4.4 Ablation Study"
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "p",
+   "en": "In the ablation study, we conducted comparative experiments using TextLayout test set. To comprehensively compare the effects of our visual feedback method, we compared it against several training approaches: (1) Cold-Start Model: The cold start model mainly ensures the format of the iterative output and does not significantly improve the layout quality; (2) Single-Round RL: We trained the cold-start model using RL but restricted generation to only one step, enabling fair comparison between single-round generation and iterative visual reflection; (3) RL from Pre-trained Models: Direct RL training from the pre-trained Qwen2.5-VL-7B model without SFT initialization; (4) Direct Output: SFT+RL training was performed using the same source data as our visual feedback method for direct SVG code generation; (5) Direct Output SFT: For fair comparison with our 40K-sample SFT+RL approach, we trained a direct SFT model on 40K samples. Since these models only require a single round of generation training, we use the standard SFT loss and GRPO Advantage calculation method. For more ablation experiments on reward functions and advantage algorithms, as well as training details, please refer to the supplementary materials."
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Ablation experiments on Graphic quality metrics and OCR metrics on TextLayout test set."
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "table",
+   "en": "Model OCR Graphic RM Score ↑ \\uparrow Char-F ↑ \\uparrow R a ​ l ​ i ↓ R_{ali}\\downarrow R o ​ v ​ e ↓ R_{ove}\\downarrow R c ​ o ​ m ↓ R_{com}\\downarrow VFLM-step1 0.9071 0.0035 0.0059 15.4583 0 .5415 "
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "p",
+   "en": "The results of our ablation study, presented in Tab. 3, demonstrate the clear superiority of our Visual Feedback method. Our VFLM achieves the best performance across the majority of metrics, substantially outperforming all RL baselines. More notably, the quality of our initial output (VFLM-step1) is already not inferior to any other competing methods. For instance, its RM score of 0.5415 even surpasses the second-best performing Direct Output SFT (0.5332). Subsequent iterative steps further widened this performance gap, increasing the RM score to 0.6018, and achieving top-notch results in both OCR and image quality. Our success highlights that our visual feedback framework is a more effective solution for layout generation, as it can establish a higher quality benchmark from the very first step and then optimize it to the state-of-the-art level."
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Comparison of training processes: simple outcom rewards vs. complex process rewards."
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "h3",
+   "en": "4.5 Discussion: Effectiveness of Simple Rewards"
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "p",
+   "en": "Can simple outcome-based rewards effectively stimulate self-improvement capabilities in MLLMs? Our empirical investigation provides compelling evidence that they can, and even outperform more sophisticated alternatives."
+  },
+  {
+   "id": "b0112",
+   "t": "text",
+   "w": "p",
+   "en": "We designed a sophisticated process-oriented reward function (Eq. 8–Eq. 10). This complex reward scheme incorporates three distinct optimization objectives: (1) first-round quality maximization using group-wise mean baselines, (2) iterative improvement encouragement via maximum-quality baselines from prior rounds, and (3) strategic termination control via reward and length penalties to prevent reward hacking. Subsequent advantages will be normalized through Eq. 5."
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "table",
+   "en": "A q , o t i = { R q , o t 1 − mean group ​ ( R q , o t 1 ) if ​ i = 1 , 2 ⋅ ( R answer + R length ) if ​ i = last , 2 ⋅ ( R q , o t i − max ⁡ ( R q , o t ≤ i ) ) else , A_{q,o_{t_{i}}}=\\begin{cases}R_"
+  },
+  {
+   "id": "b0114",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_28⟧ represents a complete generation path, and ⟦SLOT_29⟧ represents the response of the ⟦SLOT_30⟧-th round in this complete path. The terminal reward (⟦SLOT_31⟧) components are defined as:"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "table",
+   "en": "R answer = { 0.7 if ​ R q , o t last ≥ max ⁡ ( R q , o t ≤ last ) , R q , o t last − max ⁡ ( R q , o t ≤ last ) else , R_{\\text{answer}}=\\begin{cases}0.7\\qquad\\quad\\text{if }R_{q,o_{t_{\\text{last}}}}\\"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "table",
+   "en": "R length = − 2 ⋅ [ ( R q , o t last − max group ​ ( R q , o t last ) ) ⋅ max ( 0 , 4 − tool _ call _ count ) ] . \\begin{split}R_{\\text{length}}=-2\\cdot\\bigg[&\\left(R_{q,o_{t_{\\text{last}}}}-\\text{max}"
+  },
+  {
+   "id": "b0117",
+   "t": "text",
+   "w": "p",
+   "en": "Fig. 4 illustrates the training dynamics of the two reward schemes. Before 250 steps, both algorithms improved stably: their final answer scores (middle subfigure) showed nearly identical trends, and first-round generation performance was comparable, the outcome-only reward algorithm even slightly outperform the complex process RL one. After 250 steps, the process RL converged and even suffered performance degradation, whereas the outcome-only reward continued to improve steadily until training concluded. The reward gap (right subfigure) reveals that process RL quickly widened this gap but plateaued later, which is likely due to restricted first-round learning in early training. In contrast, the outcome-only reward gradually mastered progressive iterative refinement. Tab. 4 quantifies these observations through comprehensive evaluation metrics. The simple outcome-based reward demonstrates superior effectiveness in stimulating self-improvement capabilities across all evaluation dimensions."
+  },
+  {
+   "id": "b0118",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Comparison of simple outcome rewards and complex process rewards on our test set."
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "table",
+   "en": "OCR Graphic level Char-F ↑ \\uparrow R a ​ l ​ i ↓ R_{ali}\\downarrow R o ​ v ​ e ↓ R_{ove}\\downarrow R c ​ o ​ m ↓ R_{com}\\downarrow RM Score ↑ \\uparrow Outcome RL-step1 0.9071 0.0035 0.0059 1 5.4583 0"
+  },
+  {
+   "id": "b0120",
+   "t": "text",
+   "w": "p",
+   "en": "These findings reveal a fundamental insight: under effective visual feedback mechanisms, simple outcome-based rewards can successfully harness the inherent visual understanding capabilities of MLLMs to elicit robust self-improvement behaviors, while complex process-oriented rewards may actually inhibit optimal performance, leading to the brittle local optima and “reward hacking” (policy collapse) observed in Fig. 4. This counterintuitive result suggests that the powerful internal representations and reasoning capabilities of modern MLLMs, when properly guided by clear outcome objectives and visual feedback, can autonomously develop sophisticated iterative refinement strategies without explicit process supervision."
+  },
+  {
+   "id": "b0121",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Conclusion"
+  },
+  {
+   "id": "b0122",
+   "t": "text",
+   "w": "p",
+   "en": "This paper introduces VFLM, a self-improving framework for text layout design, bridging the critical “visual perception gap” of existing code-only methods. We implement a “generation, rendering, reflection, refinement” loop, which is trained via RL that leverages a novel, specialized layout reward model. A key finding is that rewarding only the final outcome, rather than complex intermediate steps, can more effectively stimulate the model’s self-improvement capabilities. Extensive experiments validate that VFLM consistently outperforms code-only methods, establishing visual feedback as essential for automated design and MLLM-based design agents."
+  },
+  {
+   "id": "b0123",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgments"
+  },
+  {
+   "id": "b0124",
+   "t": "text",
+   "w": "p",
+   "en": "This work is supported by the the National Nature Science Foundation of China (62425114, 62121002, U23B2028), and the Fundamental and Interdisciplinary Disciplines Breakthrough Plan of the Ministry of Education of China (JYB2025XDXM103)."
+  },
+  {
+   "id": "b0125",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] J. Achiam, S. Adler, S. Agarwal, L. Ahmad, I. Akkaya, F. L. Aleman, D. Almeida, J. Altenschmidt, S. Altman, S. Anadkat, et al. (2023) Gpt-4 technical report . arXiv preprint arXiv:2303.08774 . Cit"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] Anthropic (2025) Claude 3.7 sonnet system card . Note: https://www.anthropic.com/news/claude-3-7-sonnet Cited by: §2.1 , §4.1 ."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] J. Bai, S. Bai, S. Yang, S. Wang, S. Tan, P. Wang, J. Lin, C. Zhou, and J. Zhou (2023) Qwen-vl: a versatile vision-language model for understanding, localization, text reading, and beyond . arXiv "
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] S. Bai, K. Chen, X. Liu, J. Wang, W. Ge, S. Song, K. Dang, P. Wang, S. Wang, J. Tang, H. Zhong, Y. Zhu, M. Yang, Z. Li, J. Wan, P. Wang, W. Ding, Z. Fu, Y. Xu, J. Ye, X. Zhang, T. Xie, Z. Cheng, H"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] ByteDance (2025) Doubao-seed-1.6 . Note: https://research.doubao.com/zh/seed1_6 Cited by: §3.2 , §4.1 ."
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] J. Chen, R. Zhang, Y. Zhou, J. Healey, J. Gu, Z. Xu, and C. Chen (2024) TextLap: customizing language models for text-to-layout planning . In Findings of the Association for Computational Linguist"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] Z. Chen, J. Wu, W. Wang, W. Su, G. Chen, S. Xing, M. Zhong, Q. Zhang, X. Zhu, L. Lu, et al. (2024) Internvl: scaling up vision foundation models and aligning for generic visual-linguistic tasks . "
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] Y. Cheng, Z. Zhang, M. Yang, N. Hui, C. Li, X. Wu, and J. Shao (2024) Graphic design with large multimodal model . arXiv preprint arXiv:2404.14368 . Cited by: §1 , §2.2 ."
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] DeepSeek-AI (2025) DeepSeek-r1: incentivizing reasoning capability in llms via reinforcement learning . External Links: 2501.12948 , Link Cited by: §1 , §1 ."
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] G. Dong, H. Mao, K. Ma, L. Bao, Y. Chen, Z. Wang, Z. Chen, J. Du, H. Wang, F. Zhang, et al. (2025) Agentic reinforced policy optimization . arXiv preprint arXiv:2507.19849 . Cited by: §1 ."
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] W. Feng, W. Zhu, T. Fu, V. Jampani, A. Akula, X. He, S. Basu, X. E. Wang, and W. Y. Wang (2024) Layoutgpt: compositional visual planning and generation with large language models . Advances in Ne"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] K. Gandhi, A. Chakravarthy, A. Singh, N. Lile, and N. D. Goodman (2025) Cognitive behaviors that enable self-improving reasoners, or, four habits of highly effective stars . arXiv preprint arXiv:"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] Z. Gao, Z. Chen, E. Cui, Y. Ren, W. Wang, J. Zhu, H. Tian, S. Ye, J. He, X. Zhu, et al. (2024) Mini-internvl: a flexible-transfer pocket multi-modal model with 5% parameters and 90% performance ."
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] D. Haraguchi, N. Inoue, W. Shimoda, H. Mitani, S. Uchida, and K. Yamaguchi (2024) Can gpts evaluate graphic design based on design principles? . In SIGGRAPH Asia 2024 Technical Communications , p"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] H. Hsu and Y. Peng (2025) PosterO: structuring layout trees to enable language models in generalized content-aware layout generation . In Proceedings of the Computer Vision and Pattern Recognitio"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] J. Hu, J. K. Liu, H. Xu, and W. Shen (2025) Reinforce++: an efficient rlhf algorithm with robustness to both prompt and reward models . arXiv preprint arXiv:2501.03262 . Cited by: §3.3.1 ."
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] W. Huang, B. Jia, Z. Zhai, S. Cao, Z. Ye, F. Zhao, Z. Xu, Y. Hu, and S. Lin (2025) Vision-r1: incentivizing reasoning capability in multimodal large language models . arXiv preprint arXiv:2503.06"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] A. Hurst, A. Lerer, A. P. Goucher, A. Perelman, A. Ramesh, A. Clark, A. Ostrow, A. Welihinda, A. Hayes, A. Radford, et al. (2024) Gpt-4o system card . arXiv preprint arXiv:2410.21276 . Cited by: "
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] N. Inoue, K. Kikuchi, E. Simo-Serra, M. Otani, and K. Yamaguchi (2023) Towards Flexible Multi-modal Document Models . In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Reco"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] N. Inoue, K. Masui, W. Shimoda, and K. Yamaguchi (2024) OpenCOLE: Towards Reproducible Automatic Graphic Design Generation . In Proceedings of the IEEE/CVF Conference on Computer Vision and Patte"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] A. Jaech, A. Kalai, A. Lerer, A. Richardson, A. El-Kishky, A. Low, A. Helyar, A. Madry, A. Beutel, A. Carney, et al. (2024) Openai o1 system card . arXiv preprint arXiv:2412.16720 . Cited by: §1 "
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] P. Jia, C. Li, Y. Yuan, Z. Liu, Y. Shen, B. Chen, X. Chen, Y. Zheng, D. Chen, J. Li, et al. (2023) Cole: a hierarchical generation framework for multi-layered and editable graphic design . arXiv "
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] B. F. Labs, S. Batifol, A. Blattmann, F. Boesel, S. Consul, C. Diagne, T. Dockhorn, J. English, Z. English, P. Esser, et al. (2025) FLUX. 1 kontext: flow matching for in-context image generation "
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] J. Li, D. Li, S. Savarese, and S. Hoi (2023) BLIP-2: bootstrapping language-image pre-training with frozen image encoders and large language models . In ICML , Cited by: §2.1 ."
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] X. Li, W. Jiao, J. Jin, G. Dong, J. Jin, Y. Wang, H. Wang, Y. Zhu, J. Wen, Y. Lu, et al. (2025) Deepagent: a general reasoning agent with scalable toolsets . arXiv preprint arXiv:2510.21618 . Cit"
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] J. Lin, J. Guo, S. Sun, Z. J. Yang, J. Lou, and D. Zhang (2023) LayoutPrompter: awaken the design ability of large language models . In Thirty-seventh Conference on Neural Information Processing "
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] J. Lin, S. Sun, D. Huang, T. Liu, J. Li, and J. Bian (2025) From elements to design: a layered approach for automatic graphic design composition . In Proceedings of the Computer Vision and Patter"
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] J. Lin, M. Zhou, Y. Ma, Y. Gao, C. Fei, Y. Chen, Z. Yu, and T. Ge (2023) Autoposter: a highly automatic and content-aware design system for advertising poster generation . In Proceedings of the 3"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] H. Liu, C. Li, Y. Li, and Y. J. Lee (2024) Improved baselines with visual instruction tuning . In 2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , Vol. , pp. 26286–262"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] H. Liu, C. Li, Y. Li, B. Li, Y. Zhang, S. Shen, and Y. J. Lee (2024) LLaVA-next: improved reasoning, ocr, and world knowledge . External Links: Link Cited by: §2.1 ."
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] H. Liu, C. Li, Q. Wu, and Y. J. Lee (2023) Visual instruction tuning . In Advances in Neural Information Processing Systems , A. Oh, T. Naumann, A. Globerson, K. Saenko, M. Hardt, and S. Levine ("
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] OpenAI (2025) Thinking with images . Note: https://openai.com/index/thinking-with-images/ Cited by: §1 , §1 ."
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] L. Ouyang, J. Wu, X. Jiang, D. Almeida, C. Wainwright, P. Mishkin, C. Zhang, S. Agarwal, K. Slama, A. Ray, et al. (2022) Training language models to follow instructions with human feedback . Adva"
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] L. Ouyang, J. Wu, X. Jiang, D. Almeida, C. Wainwright, P. Mishkin, C. Zhang, S. Agarwal, K. Slama, A. Ray, J. Schulman, J. Hilton, F. Kelton, L. Miller, M. Simens, A. Askell, P. Welinder, P. F. C"
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] Y. Qu, S. Fang, Y. Wang, X. Wang, Z. Chen, H. Xie, and Y. Zhang (2025) IGD: instructional graphic design with multimodal layer generation . arXiv preprint arXiv:2507.09910 . Cited by: §1 , §2.2 ,"
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark, et al. (2021) Learning transferable visual models from natural language supervision ."
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] R. Rafailov, A. Sharma, E. Mitchell, C. D. Manning, S. Ermon, and C. Finn (2023) Direct preference optimization: your language model is secretly a reward model . Advances in neural information pr"
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov (2017) Proximal policy optimization algorithms . arXiv preprint arXiv:1707.06347 . Cited by: §1 , §2.3 ."
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] J. Seol, S. Kim, and J. Yoo (2024) Posterllama: bridging design ability of langauge model to contents-aware layout generation . arXiv preprint arXiv:2404.00995 . Cited by: §2.2 ."
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] Z. Shao, P. Wang, Q. Zhu, R. Xu, J. Song, X. Bi, H. Zhang, M. Zhang, Y. Li, Y. Wu, et al. (2024) Deepseekmath: pushing the limits of mathematical reasoning in open language models . arXiv preprin"
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] J. Singh, R. Magazine, Y. Pandya, and A. Nambi (2025) Agentic reasoning and tool integration for llms via reinforcement learning . arXiv preprint arXiv:2505.01441 . Cited by: §1 ."
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[42] B. S. Team (2025) Seed1.5-vl technical report . arXiv preprint arXiv:2505.07062 . Cited by: §1 ."
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[43] G. Team, R. Anil, S. Borgeaud, J. Alayrac, J. Yu, R. Soricut, J. Schalkwyk, A. M. Dai, A. Hauth, K. Millican, et al. (2023) Gemini: a family of highly capable multimodal models . arXiv preprint a"
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[44] F. Wang, Z. Zhao, Y. Liu, D. Zhang, J. Gao, H. Sun, and X. Li (2025) SVGen: interpretable vector graphics generation with large language models . In Proceedings of the 33rd ACM International Conf"
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[45] P. Wang, S. Bai, S. Tan, S. Wang, Z. Fan, J. Bai, K. Chen, X. Liu, J. Wang, W. Ge, Y. Fan, K. Dang, M. Du, X. Ren, R. Men, D. Liu, C. Zhou, J. Zhou, and J. Lin (2024) Qwen2-vl: enhancing vision-l"
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[46] W. Wang, Z. Gao, L. Gu, H. Pu, L. Cui, X. Wei, Z. Liu, L. Jing, S. Ye, J. Shao, et al. (2025) InternVL3.5: advancing open-source multimodal models in versatility, reasoning, and efficiency . arXi"
+  },
+  {
+   "id": "b0172",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[47] J. Wei, X. Wang, D. Schuurmans, M. Bosma, F. Xia, E. Chi, Q. V. Le, D. Zhou, et al. (2022) Chain-of-thought prompting elicits reasoning in large language models . Advances in neural information p"
+  },
+  {
+   "id": "b0173",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[48] C. Wu, J. Li, J. Zhou, J. Lin, K. Gao, K. Yan, S. Yin, S. Bai, X. Xu, Y. Chen, Y. Chen, Z. Tang, Z. Zhang, Z. Wang, A. Yang, B. Yu, C. Cheng, D. Liu, D. Li, H. Zhang, H. Meng, H. Wei, J. Ni, K. C"
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[49] J. Xu, X. Liu, Y. Wu, Y. Tong, Q. Li, M. Ding, J. Tang, and Y. Dong (2023) ImageReward: learning and evaluating human preferences for text-to-image generation . In Proceedings of the 37th Interna"
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[50] K. Yamaguchi (2021) CanvasVAE: learning to generate vector graphic documents . ICCV . Cited by: §4.1 ."
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[51] A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv, et al. (2025) Qwen3 technical report . arXiv preprint arXiv:2505.09388 . Cited by: §1 ."
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[52] T. Yang, Y. Luo, Z. Qi, Y. Wu, Y. Shan, and C. W. Chen (2024) PosterLLaVa: constructing a unified multi-modal layout generator with llm . External Links: 2406.02884 , Link Cited by: §1 , §2.2 ."
+  },
+  {
+   "id": "b0178",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[53] Z. Yang, J. Wang, L. Li, K. Lin, C. Lin, Z. Liu, and L. Wang (2024) Idea2img: iterative self-refinement with gpt-4v for automatic image design and generation . In European Conference on Computer "
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[54] X. Zhai, B. Mustafa, A. Kolesnikov, and L. Beyer (2023) Sigmoid loss for language image pre-training . In Proceedings of the IEEE/CVF international conference on computer vision , pp. 11975–11986"
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[55] J. Zhang, R. Yoshihashi, S. Kitada, A. Osanai, and Y. Nakashima (2024) Vascar: content-aware layout generation via visual-aware self-correction . arXiv preprint arXiv:2412.04237 . Cited by: §2.2 "
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[56] J. Zhang, J. Huang, H. Yao, S. Liu, X. Zhang, S. Lu, and D. Tao (2025) R1-vl: learning to reason with multimodal large language models via step-wise group relative policy optimization . arXiv pre"
+  },
+  {
+   "id": "b0182",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[57] P. Zhang, J. Zhang, J. Cao, H. Li, and L. Jin (2025) Smaller But Better: Unifying Layout Generation with Smaller Large Language Models . International Journal of Computer Vision (IJCV) 133 , pp. "
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[58] Q. Zhang, F. Lyu, Z. Sun, L. Wang, W. Zhang, W. Hua, H. Wu, Z. Guo, Y. Wang, N. Muennighoff, et al. (2025) A survey on test-time scaling in large language models: what, how, where, and how well? "
+  },
+  {
+   "id": "b0184",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[59] Z. Zheng, M. Yang, J. Hong, C. Zhao, G. Xu, L. Yang, C. Shen, and X. Yu (2025) DeepEyes: incentivizing ”thinking with images” via reinforcement learning . arXiv preprint . External Links: 2507.xx"
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[60] M. Zhou, C. Xu, Y. Ma, T. Ge, Y. Jiang, and W. Xu (2022) Composition-aware graphic layout gan for visual-textual presentation designs . arXiv preprint arXiv:2205.00303 . Cited by: §2.2 , §4.1 ."
+  },
+  {
+   "id": "b0186",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[61] J. Zhu, W. Wang, Z. Chen, Z. Liu, S. Ye, L. Gu, H. Tian, Y. Duan, W. Su, J. Shao, et al. (2025) Internvl3: exploring advanced training and test-time recipes for open-source multimodal models . ar"
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "p",
+   "en": "Supplementary Material"
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Dataset Details"
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "p",
+   "en": "We collected approximately 200K samples, including free and paid data from the internet. Each sample contains a background image, target text, well-formatted SVG code, and the corresponding rendered image. Each sample has an average of 9.8 text boxes, with an average text length of 84.7. Fig. 5 is a data example. Based on these data, our training and testing data were constructed, including the dataset for the Cold-Start SFT phase, the queries for the reinforcement learning phase, the training and testing datasets for the reward model, and finally, the dataset used for evaluation."
+  },
+  {
+   "id": "b0190",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Data example, consisting of a background image, target text, SVG layout code, and the corresponding rendered image."
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "h3",
+   "en": "1.1 Cold-Start Dataset Details"
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "p",
+   "en": "We use the method described in the main text and set the maximum number of modifications to 3 during the data generation process. Since each data trajectory includes an initial generation and a final ”satisfied” output, the total number of turns is the number of modifications plus two. This process yielded a total of 8K trajectories, comprising 2,359 two-turn samples (0 modifications), 1,266 three-turn samples (1 modification), 2,030 four-turn samples (2 modifications), and 2,537 five-turn samples (3 modifications). Total data volume is 8K."
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "p",
+   "en": "During cold-start data construction, the prompts used to guide Doubao-Seed-1.6 are prompt 5 and prompt 5, where prompt 5 is utilized for Initial Reasoning synthesis and prompt 5 for Multi-round reflection synthesis."
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "h3",
+   "en": "1.2 Layout Reward Model Dataset"
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "p",
+   "en": "Herein, a qualitative comparison of data across the four quality levels (Level-I, Level-II, Level-III, Level-IV) is presented. These four levels exhibit distinct differences in typesetting quality: Level-I demonstrates the best typesetting quality, while Level-IV, by contrast, shows the worst."
+  },
+  {
+   "id": "b0197",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0198",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Qualitative comparison of four levels of data in the training data of the reward model"
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Training Details"
+  },
+  {
+   "id": "b0200",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 VFLM"
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "p",
+   "en": "All experiments are conducted on a cluster of 16 NVIDIA H200 GPUs. For the Cold-Start SFT stage, we trained the model with 8k data for 2 epochs with a learning rate of ⟦SLOT_32⟧ and a batch size of 64. During this stage, the image max_pixels was set to ⟦SLOT_33⟧."
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "p",
+   "en": "For the RL stage, we set the maximum number of tool calls to 4. The weights for ⟦SLOT_34⟧ and ⟦SLOT_35⟧ (denoted as ⟦SLOT_36⟧) were set to 0.25, while the weight for ⟦SLOT_37⟧ was set to 0.1. We prepare up to 32K samples for training, with early stopping based on reward metrics during RL training. We employed a strict on-policy training strategy with the following configuration: batch size of 64, 8 rollouts per sample, sampling temperature of 1.0, KL divergence coefficient of 1e-3, and learning rate of 1e-6."
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Layout Reward Model"
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "p",
+   "en": "We trained the reward model on a preference dataset constructed from 200K layout samples. Four quality levels (Level-I, Level-II, Level-III, Level-IV) were generated for each query, yielding 1.2M preference pairs. We randomly select 25K pairs as the test set, using the remainder for training. During training, we use a batch size of 512 and train for 2100 steps."
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "h3",
+   "en": "2.3 Ablation Study"
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "p",
+   "en": "In the ablation experiments, Single-Round RL, RL from Pretrained, and Direct Output adopt the same hyperparameter configuration as VFLM. For Direct Output SFT, 40k samples are used for SFT, with a batch size of 128, a learning rate of 1e-5, and training conducted for 2 epochs."
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Evaluation Details"
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Evaluation metrics"
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "We use an OCR engine11 1 https://github.com/PaddlePaddle/PaddleOCR to recognize text in design images and evaluate the accuracy of rendered text using character-level f-measure. In the RL reward function, ⟦SLOT_38⟧ and ⟦SLOT_39⟧ are evaluated using accuracy. Specifically, a character in the OCR recognition result is defined as a True Positive (TP) if it appears in the annotation; otherwise, it is classified as a False Positive (FP). A False Negative (FN) indicates that a character is only present in the annotation but absent from the OCR recognition result. Accordingly, character-level precision, recall, f-measure and accuracy can be formulated as follows:"
+  },
+  {
+   "id": "b0210",
+   "t": "keep",
+   "w": "table",
+   "en": "C ​ h ​ a ​ r ​ _ ​ P = T ​ P T ​ P + F ​ P , \\displaystyle Char\\_P=\\frac{TP}{TP+FP}, (11) C ​ h ​ a ​ r ​ _ ​ R = T ​ P T ​ P + F ​ N , \\displaystyle Char\\_R=\\frac{TP}{TP+FN}, C ​ h ​ a ​ r ​ _ ​ F ="
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "p",
+   "en": "For the GPT4o evaluation, we assess the effect along four dimensions: Text Accuracy, Text-Background Harmony, Text Presentation Quality, and Meaning Expression Adaptability. The evaluation prompt is shown in prompt 5. Fig. 7 is a detailed evaluation sample."
+  },
+  {
+   "id": "b0212",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: A detailed GPT4o evaluation output."
+  },
+  {
+   "id": "b0214",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Model Prompt"
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "h4",
+   "en": "3.2.1 VFLM System prompt"
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "p",
+   "en": "The VFLM system prompt is shown in prompt 5, includes tool definitions and task descriptions."
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "h4",
+   "en": "3.2.2 MLLM System prompt"
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "p",
+   "en": "The system prompt of MLLM models, as shown in prompt 5, only omits the definition of tools and the statement of multi-round responses compared with that of VFLM."
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "h2",
+   "en": "4 More Experiments"
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Number of rounds of reflection"
+  },
+  {
+   "id": "b0221",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8: Training processes: reflection times of VFLM, constrained between 1 and 4."
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "p",
+   "en": "Fig. 8 illustrates the dynamic evolution of reflection counts during training. While the complex process reward employs strategic termination control (Eq. (9)-Eq. (10)) to enforce stability, VFLM under the simple outcome reward exhibits a distinct, insightful trajectory. Specifically, in the initial phase (the first 100 steps), we observe a decline in reflection turns. Combining with Fig. 4, we can analyze this is attributed to the model’s initial instability in output formatting, where iterative attempts often degraded quality compared to the initial generation, prompting the model to curtail its reasoning depth. However, beyond 100 steps, as the output format stabilizes, the model discovers that iterative optimization yields superior rewards. Consequently, the reflection count begins to fluctuate and rise, reflecting the model’s autonomous realization that deeper reflection correlates with better layout quality, rather than relying on rigid, pre-defined constraints."
+  },
+  {
+   "id": "b0224",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9: Reflection Turns vs. Input Complexity. The positive trend (red line) demonstrates that VFLM autonomously increases reflection depth for more complex tasks."
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "p",
+   "en": "To further analyze the number of reflection rounds VFLM performs, we examined the correlation between input complexity (measured by the token length of the Target Text) and the number of reasoning rounds. As shown in Figure Fig. 9, which presents the model outputs of 1000 samples from VFLM on the TextLayout test set, the gray scatter points depict the raw distribution of inference steps, which are inherently discrete integers. To visualize the underlying trend amidst this variance, the red solid line tracks the average reflection turns across complexity intervals. A clear positive trend is observable: for concise inputs (⟦SLOT_40⟧ tokens), the model efficiently converges with fewer refinement steps (averaging ⟦SLOT_41⟧2.5 turns). In contrast, as input complexity increases to over 400 tokens, the model adaptively increases its reasoning depth, approaching the maximum of 4 turns. This confirms that VFLM actively perceives layout difficulty and allocates computational resources accordingly."
+  },
+  {
+   "id": "b0227",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Human Study"
+  },
+  {
+   "id": "b0228",
+   "t": "text",
+   "w": "p",
+   "en": "To further enhance evaluation reliability, we supplement our analysis with a blind human study involving 16 participants, who evaluated outputs from Claude3.7, GPT4o-Image, OpenCOLE, and VFLM on three dimensions across 320 randomly selected queries from three datasets. A total of 960 votes were collected. As shown in the Figure 10, VFLM performed comparably to GPT4o-Image on text coordination and achieved the best results in text accuracy and overall aesthetics."
+  },
+  {
+   "id": "b0229",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0230",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 10: Results of human study."
+  },
+  {
+   "id": "b0231",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Compute Cost and Latency"
+  },
+  {
+   "id": "b0232",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Figure 11, we report the average inference time of VFLM, OpenCOLE, and IGD on the TextLayout test set using 4×4090 GPUs. Although VFLM has the highest latency, it yields substantial performance gains."
+  },
+  {
+   "id": "b0233",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0234",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 11: Comparison of inference time and latency with OpenCOLE and IGD."
+  },
+  {
+   "id": "b0235",
+   "t": "text",
+   "w": "h3",
+   "en": "4.4 More Baseline"
+  },
+  {
+   "id": "b0236",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Metrics and RM score on OpenCOLE* and MLLM feedback baseline."
+  },
+  {
+   "id": "b0237",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Char-F ↑ \\uparrow R a ​ l ​ i ↓ R_{ali}\\downarrow R o ​ v ​ e ↓ R_{ove}\\downarrow R c ​ o ​ m ↓ R_{com}\\downarrow RM Score ↑ \\uparrow OpenCOLE* 0.7671 0.7114 0.0143 21.8279 0.3620 VFLM 0.9071 0."
+  },
+  {
+   "id": "b0238",
+   "t": "text",
+   "w": "p",
+   "en": "The table above shows the results of OpenCOLE trained on the same training set as VFLM. Although retraining brings substantial improvements over the original OpenCOLE, it still underperforms VFLM. We further integrate visual feedback into GPT-4o and Qwen2.5-VL-7B baselines. As shown in the table, without task-specific training, introducing visual feedback to MLLMs yields only marginal gains, with some metrics even showing slight declines."
+  },
+  {
+   "id": "b0239",
+   "t": "text",
+   "w": "h3",
+   "en": "4.5 Ablation on Other Datasets"
+  },
+  {
+   "id": "b0240",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Ablation experiments on Graphic quality metrics and OCR metrics on Crello test set."
+  },
+  {
+   "id": "b0241",
+   "t": "keep",
+   "w": "table",
+   "en": "Model OCR Graphic RM Score ↑ \\uparrow Char-F ↑ \\uparrow R a ​ l ​ i ↓ R_{ali}\\downarrow R o ​ v ​ e ↓ R_{ove}\\downarrow R c ​ o ​ m ↓ R_{com}\\downarrow VFLM-step1 0.8774 0.0046 0.0061 19.5917 0.4392 V"
+  },
+  {
+   "id": "b0242",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Ablation experiments on Graphic quality metrics and OCR metrics on DESIGNERINTENTION test set."
+  },
+  {
+   "id": "b0243",
+   "t": "keep",
+   "w": "table",
+   "en": "Model OCR Graphic RM Score ↑ \\uparrow Char-F ↑ \\uparrow R a ​ l ​ i ↓ R_{ali}\\downarrow R o ​ v ​ e ↓ R_{ove}\\downarrow R c ​ o ​ m ↓ R_{com}\\downarrow VFLM-step1 0.9415 0.0033 0.0023 14.1230 0.5285 V"
+  },
+  {
+   "id": "b0244",
+   "t": "text",
+   "w": "p",
+   "en": "Tab. 6 and Tab. 7 demonstrate the metrics of all models in the ablation experiments on the Crello and DESIGNERINTENTION test sets. Consistent with the conclusions in the TextLayout dataset, VFLM also achieves significant advantages over other baselines on these two datasets, fully demonstrating the generalization ability of our visual feedback method."
+  },
+  {
+   "id": "b0245",
+   "t": "text",
+   "w": "h3",
+   "en": "4.6 Ablation on Reward Functions"
+  },
+  {
+   "id": "b0246",
+   "t": "text",
+   "w": "p",
+   "en": "In our RL training process, the score for layout performance (⟦SLOT_42⟧) from the reward model and two rewards based on text accuracy:"
+  },
+  {
+   "id": "b0247",
+   "t": "keep",
+   "w": "table",
+   "en": "R score = R layout + α ⋅ ( R ocr + R svg ) . R_{\\text{score}}=R_{\\text{layout}}+\\alpha\\cdot\\left(R_{\\text{ocr}}+R_{\\text{svg}}\\right). (12)"
+  },
+  {
+   "id": "b0248",
+   "t": "text",
+   "w": "p",
+   "en": "We perform ablation to investigate whether using only ⟦SLOT_43⟧ from the reward model is effective. To save validation time, tests are conducted on the models of the two ablation experiments: Single-Round RL and Direct Output."
+  },
+  {
+   "id": "b0249",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8: Ablation experiments on the reward function on the TextLayout test set."
+  },
+  {
+   "id": "b0250",
+   "t": "keep",
+   "w": "table",
+   "en": "Model OCR Graphic RM Score ↑ \\uparrow Char-F ↑ \\uparrow R a ​ l ​ i ↓ R_{ali}\\downarrow R o ​ v ​ e ↓ R_{ove}\\downarrow R c ​ o ​ m ↓ R_{com}\\downarrow Single-Round RL 0.8792 0.0024 0.0053 18.9428 0.4"
+  },
+  {
+   "id": "b0251",
+   "t": "text",
+   "w": "p",
+   "en": "The results are presented in Tab. 8. It can be observed from the table that the two models exhibit little difference in RL training performance with and without the ⟦SLOT_44⟧ and ⟦SLOT_45⟧ rewards, with many metrics being relatively close. Since ⟦SLOT_46⟧ and ⟦SLOT_47⟧ have low computational costs and the task essentially involves text typesetting, these two reward functions are retained in the final training of VFLM."
+  },
+  {
+   "id": "b0252",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Case Study"
+  },
+  {
+   "id": "b0253",
+   "t": "text",
+   "w": "p",
+   "en": "Fig. 12 presents a detailed case generated by VFLM. The SVG initially produced by VFLM exhibits several obvious issues in terms of rendering effect; for instance, the main title ”Merry Christmas” is too large and overlaps with the silhouette of the castle. After receiving visual feedback from the rendered image, it can be observed from the model’s reasoning content (highlighted in the figure) that the model identified these problems and implemented appropriate improvements. Following the second round of visual feedback, the model deemed the current layout satisfactory and output it to user as the final result. Fig. 13 is another case."
+  },
+  {
+   "id": "b0254",
+   "t": "text",
+   "w": "p",
+   "en": "Fig. 14 show the more output cases of VFLM. Fig. 15 and Fig. 16 demonstrate the comparison between VFLM and all other models."
+  },
+  {
+   "id": "b0255",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0256",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 12: A detailed VFLM output case."
+  },
+  {
+   "id": "b0257",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0258",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 13: Another detailed VFLM output case."
+  },
+  {
+   "id": "b0259",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0260",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 14: More VFLM output cases."
+  },
+  {
+   "id": "b0261",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0262",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 15: In comparison with all existing methods(Part1)."
+  },
+  {
+   "id": "b0263",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0264",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 16: In comparison with all existing methods(Part2)."
+  },
+  {
+   "id": "b0265",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0266",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0267",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0268",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0269",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  }
+ ]
+}

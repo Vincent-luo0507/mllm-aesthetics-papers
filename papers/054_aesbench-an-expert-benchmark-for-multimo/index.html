@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AesBench：面向多模态大语言模型图像美学感知的专家基准 | 双语对照</title>
+<script>
+window.MathJax={
+  tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']],processEscapes:true},
+  svg:{fontCache:'global'},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}
+};
+</script>
+<script src="../../assets/mathjax/es5/tex-mml-chtml.js" async></script>
+<style>
+:root{--fg:#1f2937;--pri:#1e3a8a;--bd:#e2e8f0;--alt:#f8fafc;}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+color:var(--fg);background:#fff;line-height:1.85;font-size:15.5px;}
+.wrap{max-width:1500px;margin:0 auto;padding:0 20px 80px;}
+header.paperhead{border-bottom:2px solid var(--pri);padding:24px 0 18px;margin-bottom:18px;}
+.zh-title{font-size:25px;font-weight:700;color:var(--pri);line-height:1.35;margin:0 0 8px;}
+.en-title{font-size:16px;color:#4b5563;line-height:1.5;margin:0 0 12px;font-style:italic;}
+.meta{font-size:13px;color:#4b5563;display:flex;flex-wrap:wrap;gap:14px;}
+.meta a{color:#2563eb;}
+.toolbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);border-bottom:1px solid var(--bd);
+padding:9px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;backdrop-filter:blur(6px);}
+.toolbar button{border:1px solid var(--bd);background:#fff;color:var(--pri);border-radius:5px;
+padding:5px 13px;font-size:13px;cursor:pointer;font-family:inherit;}
+.toolbar button.on{background:var(--pri);color:#fff;border-color:var(--pri);}
+.toolbar .sp{flex:1;}
+.abs{background:var(--alt);border:1px solid var(--bd);border-radius:6px;padding:14px 18px;margin:16px 0 24px;font-size:14.5px;}
+.abs h4{margin:0 0 6px;font-size:14px;color:var(--pri);}
+.blk{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid #f1f5f9;}
+.blk>div{padding:10px 16px;}
+.blk>.en{border-right:1px solid var(--bd);color:#334155;}
+.blk>.zh{background:#fff;}
+.blk.atomic{grid-template-columns:1fr;background:var(--alt);}
+.blk.atomic>div{padding:12px 16px;text-align:center;}
+h1,h2,h3,h4{color:var(--pri);line-height:1.45;}
+.blk h2{font-size:19px;margin:16px 0 8px;}
+.blk h3{font-size:16.5px;margin:12px 0 6px;}
+.blk h4{font-size:15px;margin:10px 0 5px;}
+p{margin:0 0 10px;text-align:justify;}
+img{max-width:100%;height:auto;display:block;margin:10px auto;border:1px solid var(--bd);}
+table{border-collapse:collapse;margin:10px auto;font-size:13.5px;background:#fff;}
+td,th{border:1px solid #dbe2ea;padding:5px 9px;}
+figure{margin:8px 0;} figcaption{font-size:13px;color:#4b5563;text-align:center;margin-top:6px;}
+body.view-zh .blk{grid-template-columns:1fr;} body.view-zh .blk>.en{display:none;}
+body.view-en .blk{grid-template-columns:1fr;} body.view-en .blk>.zh{display:none;}
+.mathwarn{background:#fef2f2;border-left:4px solid #b91c1c;padding:8px 12px;font-size:13px;color:#7f1d1d;}
+</style>
+</head><body class="view-both">
+<div class="wrap">
+<header class="paperhead">
+<h1 class="zh-title">AesBench：面向多模态大语言模型图像美学感知的专家基准</h1>
+<p class="en-title">AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception</p>
+<div class="meta"><span>arXiv:2401.08276</span> · <span>作者：Yipo Huang, Quan Yuan, Xiangfei Sheng, Zhichao Yang, Haoning Wu, Pengfei Chen, Yuzhe Yang, Leida Li, Weisi Lin</span> · <span>发布：2024-01-16</span> · <a href="https://arxiv.org/abs/2401.08276" target="_blank">arXiv 页面</a> · <a href="paper.pdf" target="_blank">原版 PDF</a> · <a href="orig.html" target="_blank">原文 HTML</a></div>
+</header>
+<div class="toolbar">
+<button data-v="view-both" class="on">中英双栏</button>
+<button data-v="view-zh">仅中文</button>
+<button data-v="view-en">仅英文</button>
+<span class="sp"></span>
+<a href="../index.html" style="font-size:13px;color:#2563eb;">← 返回总目录</a>
+</div>
+<div class="abs">
+<h4>中文摘要</h4><div>在学界共同努力下，多模态大语言模型（MLLM）正蓬勃发展。然而它们在图像美学感知上的表现仍不明朗，而这恰是真实应用中的迫切需求。一个显见的障碍在于缺少专门评测 MLLM 美学感知有效性的基准，这种盲目摸索可能阻碍具备美学感知能力的更先进 MLLM 的发展。为破解这一困境，本文提出 AesBench——一个专家基准，通过两方面精心设计来全面评估 MLLM 的美学感知能力。（1）我们构建了专家标注美学感知数据库（EAPD），其特点是图像内容多样，且由专业美学专家提供高质量标注。（2）我们提出一套综合准则，从感知（AesP）、共情（AesE）、评价（AesA）与阐释（AesI）四个视角衡量 MLLM 的美学感知能力。大量实验结果强调，当前 MLLM 仅具备初级的美学感知能力，与人类之间仍存在显著差距。我们期望本工作能激励学界对 MLLM 的美学潜力开展更深入的探索。源数据将发布于 https://github.com/yipoh/AesBench。</div>
+<h4 style="margin-top:10px;">Abstract (原文)</h4><div style="color:#475569;">With collective endeavors, multimodal large language models (MLLMs) are undergoing a flourishing development. However, their performances on image aesthetics perception remain indeterminate, which is highly desired in real-world applications. An obvious obstacle lies in the absence of a specific benchmark to evaluate the effectiveness of MLLMs on aesthetic perception. This blind groping may impede the further development of more advanced MLLMs with aesthetic perception capacity. To address this dilemma, we propose AesBench, an expert benchmark aiming to comprehensively evaluate the aesthetic perception capacities of MLLMs through elaborate design across dual facets. (1) We construct an Expert-labeled Aesthetics Perception Database (EAPD), which features diversified image contents and high-quality annotations provided by professional aesthetic experts. (2) We propose a set of integrative criteria to measure the aesthetic perception abilities of MLLMs from four perspectives, including Perception (AesP), Empathy (AesE), Assessment (AesA) and Interpretation (AesI). Extensive experimental results underscore that the current MLLMs only possess rudimentary aesthetic perception ability, and there is still a significant gap between MLLMs and humans. We hope this work can inspire the community to engage in deeper explorations on the aesthetic potentials of MLLMs. Source data will be available at https://github.com/yipoh/AesBench.</div>
+</div>
+<div id="body">
+<div class="blk atomic"><div><p class="ltx_p" id="abstract1.1">With collective endeavors, multimodal large language models (MLLMs) are undergoing a flourishing development. However, their performances on image aesthetics perception remain indeterminate, which is highly desired in real-world applications. An obvious obstacle lies in the absence of a specific benchmark to evaluate the effectiveness of MLLMs on aesthetic perception. This <em class="ltx_emph ltx_font_bold ltx_font_italic" id="abstract1.1.1">blind</em> groping may impede the further development of more advanced MLLMs with aesthetic perception capacity. To address this dilemma, we propose <span class="ltx_text ltx_font_bold" id="abstract1.1.2">AesBench</span>, an expert benchmark aiming to comprehensively evaluate the aesthetic perception capacities of MLLMs through elaborate design across dual facets. (1) We construct an Expert-labeled Aesthetics Perception Database (EAPD), which features diversified image contents and high-quality annotations provided by professional aesthetic experts. (2) We propose a set of integrative criteria to measure the aesthetic perception abilities of MLLMs from four perspectives, including <span class="ltx_text ltx_font_bold" id="abstract1.1.3">Perception</span> (<em class="ltx_emph ltx_font_italic" id="abstract1.1.4">AesP</em>), <span class="ltx_text ltx_font_bold" id="abstract1.1.5">Empathy</span> (<em class="ltx_emph ltx_font_italic" id="abstract1.1.6">AesE</em>), <span class="ltx_text ltx_font_bold" id="abstract1.1.7">Assessment</span> (<em class="ltx_emph ltx_font_italic" id="abstract1.1.8">AesA</em>) and <span class="ltx_text ltx_font_bold" id="abstract1.1.9">Interpretation</span> (<em class="ltx_emph ltx_font_italic" id="abstract1.1.10">AesI</em>). Extensive experimental results underscore that the current MLLMs only possess rudimentary aesthetic perception ability, and there is still a significant gap between MLLMs and humans. We hope this work can inspire the community to engage in deeper explorations on the aesthetic potentials of MLLMs. Source data will be available at <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/yipoh/AesBench" title="">https://github.com/yipoh/AesBench</a>.</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2></div><div class="zh"><h2>1 引言</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p1.1">Recent advancements in large language models (LLMs), such as ChatGPT <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib30" title="">OpenAI (2023)</a></cite> and LLaMA <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib34" title="">Touvron et al. (2023)</a></cite>, have demonstrated remarkable achievements in comprehension, reasoning, and generation, garnering substantial interest from both academia and industry. Building on the success of LLMs in pure-textual tasks, multimodal large language models (MLLMs) have sparked a new wave in the field of visual-language processing, releasing numerous representative works, such as MiniGPT <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib49" title="">Zhu et al. (2023)</a></cite>, Otter <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib24" title="">Li et al. (2023a)</a></cite> and LLaVA <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib28" title="">Liu et al. (2023b)</a></cite>. Recently, these MLLMs have evolved into versatile assistants, facilitating human-machine interaction and collaboration <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib46" title="">Zhang et al. (2023b)</a></cite>. Despite the broad capabilities of MLLMs, existing benchmarks mainly focus on general evaluation in several language or vision tasks, <em class="ltx_emph ltx_font_italic" id="S1.p1.1.1">e.g.</em> visual question answering <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib2" title="">Antol et al. (2015)</a></cite>, image captioning <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib15" title="">Hossain et al. (2019)</a></cite>, object segmentation <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib22" title="">Lai et al. (2023)</a></cite> and content understanding <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib4" title="">Cai et al. (2023)</a></cite>. However, <span class="ltx_text ltx_font_bold" id="S1.p1.1.2">the effectiveness of MLLMs on the highly abstract image aesthetics perception task remains underexplored</span>, which plays a significant role in image aesthetics assessment, aesthetic attribute analysis, image aesthetics cropping and image aesthetics captioning <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib18" title="">Huang et al. (2023)</a></cite>. The potential of MLLMs in image aesthetics perception holds considerable promise for applications in smart photography, album management, photo recommendation and image enhancement, <em class="ltx_emph ltx_font_italic" id="S1.p1.1.3">etc</em> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib29" title="">Lu et al. (2021)</a>; <a class="ltx_ref" href="#bib.bib17" title="">Huang et al. (2020)</a></cite>. Therefore, it is highly desired to evaluate the abilities of existing MLLMs on aesthetic perception, which is expected to promote the further development of more advanced MLLMs with better aesthetic perception.</p></div><div class="zh"><p>以 ChatGPT（OpenAI, 2023）与 LLaMA（Touvron et al., 2023）为代表的大语言模型（LLM）近来取得瞩目成就，在理解、推理与生成上表现卓越，引发了学术界与产业界的广泛关注。在 LLM 于纯文本任务取得成功的基础上，多模态大语言模型（MLLM）掀起了视觉—语言处理领域的新浪潮，涌现出 MiniGPT（Zhu et al., 2023）、Otter（Li et al., 2023a）与 LLaVA（Liu et al., 2023b）等一批代表性工作。近来，这些 MLLM 已演进为通用助手，服务于人机交互与协作（Zhang et al., 2023b）。尽管 MLLM 能力广泛，现有基准主要聚焦于若干语言或视觉任务上的通用评测，例如视觉问答（Antol et al., 2015）、图像描述（Hossain et al., 2019）、目标分割（Lai et al., 2023）与内容理解（Cai et al., 2023）。然而，MLLM 在高度抽象的图像美学感知任务上的有效性仍未被充分探索，而这一任务在图像美学评估、美学属性分析、图像美学裁剪与图像美学描述中举足轻重（Huang et al., 2023）。MLLM 在图像美学感知上的潜力，为智能摄影、相册管理、照片推荐与图像增强等应用带来了可观前景（Lu et al., 2021; Huang et al., 2020）。因此，评估现有 MLLM 的美学感知能力十分必要，这有望推动具备更强美学感知能力的先进 MLLM 进一步发展。</p></div></div>
+<div class="blk atomic"><div><p class="ltx_p ltx_align_center" id="S1.F1.2"><span class="ltx_text" id="S1.F1.2.1"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="306" id="S1.F1.g1" src="figures/expert.png" style="aspect-ratio:687/306;" width="687"/></span></p></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Overview of the proposed AesBench. We first construct a high-quality Expert-labeled Aesthetics Perception Database (EAPD), based on which we further build the <em class="ltx_emph ltx_font_italic" id="S1.F1.4">golden</em> benchmark to evaluate four abilities of MLLMs on image aesthetics perception, including Aesthetic Perception (AesP), Aesthetic Empathy (AesE), Aesthetic Assessment (AesA) and Aesthetic Interpretation (AesI).</figcaption></div><div class="zh"><p>图 1：本文提出的 AesBench 总览。我们首先构建高质量的专家标注美学感知数据库（EAPD），并在此基础上进一步构建黄金基准，用以评测 MLLM 在图像美学感知上的四项能力，即美学感知（AesP）、美学共情（AesE）、美学评价（AesA）与美学阐释（AesI）。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p2.1">In this work, we propose <span class="ltx_text ltx_font_bold" id="S1.p2.1.1">AesBench</span>, a systematically designed <em class="ltx_emph ltx_font_italic" id="S1.p2.1.2">golden</em> benchmark to comprehensively evaluate the aesthetic perception abilities of MLLMs. Specifically, the proposed AesBench encompasses two major facets, <em class="ltx_emph ltx_font_italic" id="S1.p2.1.3">i.e.</em> <span class="ltx_text ltx_font_bold" id="S1.p2.1.4">high-quality data</span> and <span class="ltx_text ltx_font_bold" id="S1.p2.1.5">integrative criteria</span>. In terms of the former, we construct the Expert-labeled Aesthetics Perception Database (EAPD), which consists of 2,800 diverse-sourced images covering natural images (NIs), artistic images (AIs) and artificial intelligence-generated images (AGIs). Furthermore, each image of the EAPD is annotated by experts with professional backgrounds in aesthetics, which comprises researchers engaged in computational aesthetics, educators versed in aesthetic principles, and art students possessing sophisticated art skills. With these high-quality annotations, the benchmark results of MLLMs can be more reliable. For the latter, we develop a set of integrative criteria to systematically evaluate the aesthetic perception abilities of MLLMs. These criteria are
+designed from four dimensions, which are illustrated in Figure <a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">1</span></a>.</p></div><div class="zh"><p>本文提出 AesBench——一个经过系统设计的黄金基准，用以全面评估 MLLM 的美学感知能力。具体地，AesBench 包含两个主要方面，即高质量数据与综合性准则。就前者而言，我们构建了专家标注美学感知数据库（EAPD），它由 2800 张多来源图像构成，覆盖自然图像（NI）、艺术图像（AI）与人工智能生成图像（AGI）。此外，EAPD 中的每张图像都由具备美学专业背景的专家标注，这些专家包括从事计算美学研究的科研人员、通晓美学原理的教育工作者，以及具备深厚艺术功底的艺术专业学生。借助这些高质量标注，MLLM 的基准评测结果更为可靠。就后者而言，我们提出了一套综合性准则，从四个维度系统评估 MLLM 的美学感知能力，如图 1 所示。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i1.p1.1.1">Aesthetic Perception</span> (<em class="ltx_emph ltx_font_italic" id="S1.I1.i1.p1.1.2">AesP</em>): As shown in Figure <a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">1</span></a>(a), this dimension focuses on the ability of MLLMs to recognize and understand aesthetic attributes.</p>
+</div></li></div><div class="zh"><p>• 美学感知（AesP）：如图 1(a) 所示，该维度关注 MLLM 识别和理解美学属性的能力。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i2.p1.1.1">Aesthetic Empathy</span> (<em class="ltx_emph ltx_font_italic" id="S1.I1.i2.p1.1.2">AesE</em>): As shown in Figure <a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">1</span></a>(b), this dimension evaluates the ability of MLLMs to resonate with the emotional aspects conveyed through aesthetic expressions like humans.</p>
+</div></li></div><div class="zh"><p>• 美学共情（AesE）：如图 1(b) 所示，该维度评估 MLLM 像人类一样与美学表达所传递的情绪层面产生共鸣的能力。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i3.p1.1.1">Aesthetic Assessment</span> (<em class="ltx_emph ltx_font_italic" id="S1.I1.i3.p1.1.2">AesA</em>): As shown in Figure <a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">1</span></a>(c), this dimension evaluates the ability of MLLMs to judge aesthetic grades and predict quality scores based on the language description.</p>
+</div></li></div><div class="zh"><p>• 美学评价（AesA）：如图 1(c) 所示，该维度评估 MLLM 依据语言描述判断美学等级、预测质量分数的能力。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S1.I1.i4" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i4.p1">
+<p class="ltx_p" id="S1.I1.i4.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i4.p1.1.1">Aesthetic Interpretation</span> (<em class="ltx_emph ltx_font_italic" id="S1.I1.i4.p1.1.2">AesI</em>): As shown in Figure <a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">1</span></a>(d), this dimension involves the ability of MLLMs to interpret and analyze the reasons for aesthetic quality.</p>
+</div></li></div><div class="zh"><p>• 美学阐释（AesI）：如图 1(d) 所示，该维度涉及 MLLM 阐释与分析美学质量成因的能力。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p4.1">In summary, we present a comprehensive exploration of the abilities of MLLMs for the task of image aesthetics perception, which is structured around a novel four-dimensional evaluation framework, encompassing perception, empathy, assessment, and interpretation. These dimensions collectively form the foundation of AesBench, a <em class="ltx_emph ltx_font_italic" id="S1.p4.1.1">golden</em> benchmark of MLLMs on image aesthetics perception. The contributions of this work can be summarized as three-fold.</p></div><div class="zh"><p>综上，我们围绕一个新颖的四维评测框架，对 MLLM 在图像美学感知任务上的能力做了全面探索，涵盖感知、共情、评价与阐释四个方面。这些维度共同构成了 AesBench——面向 MLLM 图像美学感知的黄金基准。本文的贡献可概括为三点。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p5.1"><math alttext="\bullet" class="ltx_Math" display="inline" id="S1.p5.m1" intent=":literal"><semantics><mo>∙</mo><annotation encoding="application/x-tex">\bullet</annotation></semantics></math> We construct a high-quality Expert-labeled Aesthetics Perception Database (EAPD), encompassing 2,800 diverse-sourced images, along with 8,400 question-answer pairs and 2,800 aesthetic interpretations, all meticulously annotated by professional experts in aesthetics.</p></div><div class="zh"><p><math alttext="\bullet" class="ltx_Math" display="inline" id="S1.p5.m1" intent=":literal"><semantics><mo>∙</mo><annotation encoding="application/x-tex">\bullet</annotation></semantics></math> 我们构建了高质量的专家标注美学感知数据库（EAPD），包含 2800 张多来源图像、8400 组问答对以及 2800 条美学阐释，全部由美学领域的专业专家精心标注。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p6.1"><math alttext="\bullet" class="ltx_Math" display="inline" id="S1.p6.m1" intent=":literal"><semantics><mo>∙</mo><annotation encoding="application/x-tex">\bullet</annotation></semantics></math> We propose a set of integrative criteria to systematically evaluate the aesthetic perception abilities of MLLMs, which is based on the four-dimensional evaluation framework, including perception (AesP), empathy (AesE), assessment (AesA), and interpretation (AesI).</p></div><div class="zh"><p><math alttext="\bullet" class="ltx_Math" display="inline" id="S1.p6.m1" intent=":literal"><semantics><mo>∙</mo><annotation encoding="application/x-tex">\bullet</annotation></semantics></math> 我们提出一套综合性准则，基于感知（AesP）、共情（AesE）、评价（AesA）与阐释（AesI）的四维评测框架，系统评估 MLLM 的美学感知能力。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p7.1"><math alttext="\bullet" class="ltx_Math" display="inline" id="S1.p7.m1" intent=":literal"><semantics><mo>∙</mo><annotation encoding="application/x-tex">\bullet</annotation></semantics></math> We conduct extensive evaluations on 15 well-known MLLMs using AesBench, including two authoritative GPT-4V and Gemini Pro Vision, as well as thirteen state-of-the-art open-source counterparts. Comprehensive experimental results reveal that there is still a significant gap between MLLMs and humans in image aesthetics perception.</p></div><div class="zh"><p><math alttext="\bullet" class="ltx_Math" display="inline" id="S1.p7.m1" intent=":literal"><semantics><mo>∙</mo><annotation encoding="application/x-tex">\bullet</annotation></semantics></math> 我们用 AesBench 对 15 个知名 MLLM 做了广泛评测，其中包括两个权威模型 GPT-4V 与 Gemini Pro Vision，以及 13 个最先进的开源同类模型。全面的实验结果表明，在图像美学感知上，MLLM 与人类之间仍存在显著差距。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p8.1">We will make our code and database publicly available. We hope that these contributions can encourage the community to delve into more profound investigations of the yet untapped aesthetic potentials of MLLMs in future studies.</p></div><div class="zh"><p>我们将公开代码与数据库。希望这些贡献能够激励学界在未来研究中更深入地挖掘 MLLM 尚未被触及的美学潜力。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">2 </span>Constructing the EAPD</h2></div><div class="zh"><h2>2 构建 EAPD</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.p1.1">Image aesthetics perception is widely regarded as a highly abstract and complex task <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib33" title="">Sheng et al. (2023)</a>; <a class="ltx_ref" href="#bib.bib40" title="">Yang et al. (2022)</a>; <a class="ltx_ref" href="#bib.bib26" title="">Li et al. (2023c)</a></cite>. To ensure the reliability of AesBench, it is essential to construct a high-quality Expert-labeled Aesthetics Perception Database (EAPD), meticulously annotated by professional experts in aesthetics. Specifically, the construction of EAPD consists of three stages, including data collection, expert selection and subjective experiments.</p></div><div class="zh"><p>图像美学感知被广泛视为一项高度抽象而复杂的任务（Sheng et al., 2023; Yang et al., 2022; Li et al., 2023c）。为保证 AesBench 的可靠性，必须构建一个由美学专业专家精心标注的高质量专家标注美学感知数据库（EAPD）。具体地，EAPD 的构建包含三个阶段：数据采集、专家遴选与主观实验。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.1 </span>Data Collection</h3></div><div class="zh"><h3>2.1 数据采集</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS1.p1.1">To cover diversified image contents, we collect multi-sourced images from diverse datasets, including three <em class="ltx_emph ltx_font_italic" id="S2.SS1.p1.1.1">natural-image</em> datasets (<em class="ltx_emph ltx_font_italic" id="S2.SS1.p1.1.2">i.e.</em> AADB <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib20" title="">Kong et al. (2016)</a></cite>, PARA <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib40" title="">Yang et al. (2022)</a></cite> and TAD66K <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib14" title="">He et al. (2022)</a></cite>), three <em class="ltx_emph ltx_font_italic" id="S2.SS1.p1.1.3">artistic image</em> datasets (<em class="ltx_emph ltx_font_italic" id="S2.SS1.p1.1.4">i.e.</em> BAID <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib43" title="">Yi et al. (2023)</a></cite>, CAD <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib23" title="">Li et al. (2018)</a></cite> and ArtEmis <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib1" title="">Achlioptas et al. (2021)</a></cite>), as well as three <em class="ltx_emph ltx_font_italic" id="S2.SS1.p1.1.5">artificial intelligence-generated image</em> datasets (<em class="ltx_emph ltx_font_italic" id="S2.SS1.p1.1.6">i.e.</em> DiffusionDB <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib36" title="">Wang et al. (2023)</a></cite>, AGIQA-1K <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib25" title="">Li et al. (2023b)</a></cite> and AGIQA-3K <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib45" title="">Zhang et al. (2023a)</a></cite>). Then, we use a well-trained scene classification model <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib31" title="">Radford et al. (2021)</a></cite> to predict the scene labels automatically, and then double-check the labels manually to maintain annotation correctness. Next, we sample 2,493 images based on scene labels to maintain content diversity. Further, we add 152 high-aesthetic images from LITE <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib35" title="">Unsplash (2023)</a></cite> and Impressions <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib21" title="">Kruk et al. (2023)</a></cite> datasets, and 155 low-aesthetic images from SPAQ <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib11" title="">Fang et al. (2020)</a></cite> and KonIQ-10K <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib16" title="">Hosu et al. (2020)</a></cite> datasets, to balance aesthetic quality distribution. The information of sampled multi-sourced images is summarized in Table <a class="ltx_ref" href="#S2.T1" title="Table 1 ‣ 2.2 Expert Selection ‣ 2 Constructing the EAPD ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">1</span></a>. Finally, the EAPD consists of <span class="ltx_text ltx_font_bold" id="S2.SS1.p1.1.7">2,800 multi-sourced images</span>, which are provided to professional aesthetic experts for high-quality annotation.</p></div><div class="zh"><p>为覆盖多样化的图像内容，我们从多个数据集中采集多来源图像，包括三个自然图像数据集（AADB（Kong et al., 2016）、PARA（Yang et al., 2022）与 TAD66K（He et al., 2022））、三个艺术图像数据集（BAID（Yi et al., 2023）、CAD（Li et al., 2018）与 ArtEmis（Achlioptas et al., 2021）），以及三个人工智能生成图像数据集（DiffusionDB（Wang et al., 2023）、AGIQA-1K（Li et al., 2023b）与 AGIQA-3K（Zhang et al., 2023a））。随后，我们用一个训练良好的场景分类模型（Radford et al., 2021）自动预测场景标签，再人工复核标签以保证标注正确。接着，我们依据场景标签采样 2493 张图像以维持内容多样性。此外，我们从 LITE Unsplash（2023）与 Impressions（Kruk et al., 2023）数据集中加入 152 张高美学质量图像，从 SPAQ（Fang et al., 2020）与 KonIQ-10K（Hosu et al., 2020）数据集中加入 155 张低美学质量图像，以平衡美学质量分布。所采集的多来源图像信息汇总于表 1。最终，EAPD 由 2800 张多来源图像构成，交由专业美学专家进行高质量标注。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.2 </span>Expert Selection</h3></div><div class="zh"><h3>2.2 专家遴选</h3></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 1: </span>Overview of the image source datasets.</figcaption></div><div class="zh"><p>表 1：图像来源数据集总览。</p></div></div>
+<div class="blk atomic"><div><table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S2.T1.2">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S2.T1.2.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_tt" id="S2.T1.2.1.1" style="padding:2.5pt 5.4pt;">Type</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S2.T1.2.1.2" style="padding:2.5pt 5.4pt;">Dataset</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S2.T1.2.1.3" style="padding:2.5pt 5.4pt;">Sampled Size</th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S2.T1.2.2">
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S2.T1.2.2.1" rowspan="7" style="padding:2.5pt 5.4pt;"><span class="ltx_text" id="S2.T1.2.2.1.1">NIs</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S2.T1.2.2.2" style="padding:2.5pt 5.4pt;">AADB <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib20" title="">Kong et al. (2016)</a></cite></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.2.2.3" style="padding:2.5pt 5.4pt;">96</td></tr>
+<tr class="ltx_tr" id="S2.T1.2.3">
+<td class="ltx_td ltx_align_left" id="S2.T1.2.3.1" style="padding:2.5pt 5.4pt;">PARA <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib40" title="">Yang et al. (2022)</a></cite></td>
+<td class="ltx_td ltx_align_center" id="S2.T1.2.3.2" style="padding:2.5pt 5.4pt;">539</td></tr>
+<tr class="ltx_tr" id="S2.T1.2.4">
+<td class="ltx_td ltx_align_left" id="S2.T1.2.4.1" style="padding:2.5pt 5.4pt;">TAD66K <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib14" title="">He et al. (2022)</a></cite></td>
+<td class="ltx_td ltx_align_center" id="S2.T1.2.4.2" style="padding:2.5pt 5.4pt;">304</td></tr>
+<tr class="ltx_tr" id="S2.T1.2.5">
+<td class="ltx_td ltx_align_left" id="S2.T1.2.5.1" style="padding:2.5pt 5.4pt;">LITE <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib35" title="">Unsplash (2023)</a></cite></td>
+<td class="ltx_td ltx_align_center" id="S2.T1.2.5.2" style="padding:2.5pt 5.4pt;">146</td></tr>
+<tr class="ltx_tr" id="S2.T1.2.6">
+<td class="ltx_td ltx_align_left" id="S2.T1.2.6.1" style="padding:2.5pt 5.4pt;">Impressions <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib21" title="">Kruk et al. (2023)</a></cite></td>
+<td class="ltx_td ltx_align_center" id="S2.T1.2.6.2" style="padding:2.5pt 5.4pt;">6</td></tr>
+<tr class="ltx_tr" id="S2.T1.2.7">
+<td class="ltx_td ltx_align_left" id="S2.T1.2.7.1" style="padding:2.5pt 5.4pt;">SPAQ <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib11" title="">Fang et al. (2020)</a></cite></td>
+<td class="ltx_td ltx_align_center" id="S2.T1.2.7.2" style="padding:2.5pt 5.4pt;">50</td></tr>
+<tr class="ltx_tr" id="S2.T1.2.8">
+<td class="ltx_td ltx_align_left" id="S2.T1.2.8.1" style="padding:2.5pt 5.4pt;">KonIQ-10K <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib16" title="">Hosu et al. (2020)</a></cite></td>
+<td class="ltx_td ltx_align_center" id="S2.T1.2.8.2" style="padding:2.5pt 5.4pt;">105</td></tr>
+<tr class="ltx_tr" id="S2.T1.2.9">
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S2.T1.2.9.1" rowspan="3" style="padding:2.5pt 5.4pt;"><span class="ltx_text" id="S2.T1.2.9.1.1">AIs</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S2.T1.2.9.2" style="padding:2.5pt 5.4pt;">BAID <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib43" title="">Yi et al. (2023)</a></cite></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.2.9.3" style="padding:2.5pt 5.4pt;">622</td></tr>
+<tr class="ltx_tr" id="S2.T1.2.10">
+<td class="ltx_td ltx_align_left" id="S2.T1.2.10.1" style="padding:2.5pt 5.4pt;">CAD <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib23" title="">Li et al. (2018)</a></cite></td>
+<td class="ltx_td ltx_align_center" id="S2.T1.2.10.2" style="padding:2.5pt 5.4pt;">10</td></tr>
+<tr class="ltx_tr" id="S2.T1.2.11">
+<td class="ltx_td ltx_align_left" id="S2.T1.2.11.1" style="padding:2.5pt 5.4pt;">ArtEmis <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib1" title="">Achlioptas et al. (2021)</a></cite></td>
+<td class="ltx_td ltx_align_center" id="S2.T1.2.11.2" style="padding:2.5pt 5.4pt;">170</td></tr>
+<tr class="ltx_tr" id="S2.T1.2.12">
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r ltx_border_t" id="S2.T1.2.12.1" rowspan="3" style="padding:2.5pt 5.4pt;"><span class="ltx_text" id="S2.T1.2.12.1.1">AGIs</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S2.T1.2.12.2" style="padding:2.5pt 5.4pt;">DiffusionDB <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib36" title="">Wang et al. (2023)</a></cite></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.2.12.3" style="padding:2.5pt 5.4pt;">653</td></tr>
+<tr class="ltx_tr" id="S2.T1.2.13">
+<td class="ltx_td ltx_align_left" id="S2.T1.2.13.1" style="padding:2.5pt 5.4pt;">AGIQA-3K <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib45" title="">Zhang et al. (2023a)</a></cite></td>
+<td class="ltx_td ltx_align_center" id="S2.T1.2.13.2" style="padding:2.5pt 5.4pt;">82</td></tr>
+<tr class="ltx_tr" id="S2.T1.2.14">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S2.T1.2.14.1" style="padding:2.5pt 5.4pt;">AGIQA-1K <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib25" title="">Li et al. (2023b)</a></cite></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S2.T1.2.14.2" style="padding:2.5pt 5.4pt;">17</td></tr>
+</tbody>
+</table></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS2.p1.1">Unlike most existing aesthetics-related datasets, <span class="ltx_text ltx_font_bold" id="S2.SS2.p1.1.1">all participants in this work are expected to be experts with rich aesthetic experience</span>. Specifically, to guarantee quality and diversity of annotation, we recruit subjects by considering six perspectives, including <em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.1.2">health state</em>, <em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.1.3">age distribution</em>, <em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.1.4">gender balance</em>, <em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.1.5">educational background</em>, <em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.1.6">working experience</em>, and <em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.1.7">personality traits</em>. First, we ensure that each participant is in <span class="ltx_text ltx_font_bold" id="S2.SS2.p1.1.8">good health</span>, strictly adhering to ethical guidelines that prohibit any form of coerced participation. Second, we require that all participants should have <span class="ltx_text ltx_font_bold" id="S2.SS2.p1.1.9">professional backgrounds in aesthetics</span>, which include researchers engaged in computational aesthetics, educators versed in aesthetic principles, and art students possessing sophisticated art skills. Third, we pay great attention to ensure <span class="ltx_text ltx_font_bold" id="S2.SS2.p1.1.10">diversity among all participants</span>, particularly in <em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.1.11">age distribution</em>, <em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.1.12">gender balance</em>, <em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.1.13">good educational background</em>, and <em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.1.14">personality traits</em> (based on Big-Five personality traits<cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib40" title="">Yang et al. (2022)</a></cite>). Taking into account the above factors comprehensively, we recruited 32 professional aesthetic experts who met the aforementioned criteria to participate in the subjective experiment, ensuring the validity and reliability of annotations. The detailed portrait distribution of participants is provided in <span class="ltx_text" id="S2.SS2.p1.1.15" style="--ltx-fg-color:#808080;">Supplementary Section 1</span>.</p></div><div class="zh"><p>与多数既有的美学相关数据集不同，本文要求所有参与者都是具备丰富美学经验的专家。具体地，为保证标注的质量与多样性，我们从六个方面招募被试：健康状况、年龄分布、性别均衡、教育背景、从业经历与人格特质。首先，我们确保每位参与者身体健康，严格遵守禁止任何形式强制参与的伦理准则。其次，我们要求所有参与者具备美学专业背景，包括从事计算美学研究的科研人员、通晓美学原理的教育工作者，以及具备深厚艺术功底的艺术专业学生。第三，我们高度重视参与者之间的多样性，尤其是年龄分布、性别均衡、良好教育背景与人格特质（基于大五人格特质（Yang et al., 2022））。综合上述因素，我们招募了 32 位符合上述标准的专业美学专家参与主观实验，以保证标注的有效性与可靠性。参与者的详细画像分布见补充材料第 1 节。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.3 </span>Subjective Experiments</h3></div><div class="zh"><h3>2.3 主观实验</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS3.p1.1">In this work, we conduct subjective experiments to collect expert annotations, in strict compliance with the generic psychological experiment protocol <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib32" title="">Sheikh et al. (2006)</a></cite>. First, the images of the entire database are segmented into 56 distinct sessions, and each session contains 50 unlabeled images. Then, we develop a local-deployed annotation tool (.exe format) and assign a personal user ID to each participant. Furthermore, a well-devised annotation quality control strategy ensures that all qualified annotations are automatically saved based on text richness and diversity, and each image is annotated by at least one expert (details are provided in <span class="ltx_text" id="S2.SS3.p1.1.1" style="--ltx-fg-color:#808080;">Supplementary Section 1</span>). To mitigate the risk of test fatigue, consecutive annotations on more than 30 images will trigger a reminder of the break. Similar to the existing MLLM benchmarks <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib7" title="">Chen et al. (2023c)</a>; <a class="ltx_ref" href="#bib.bib4" title="">Cai et al. (2023)</a></cite>, we collect a total of <span class="ltx_text ltx_font_bold" id="S2.SS3.p1.1.2">8,400 question-answer pairs</span> and <span class="ltx_text ltx_font_bold" id="S2.SS3.p1.1.3">2,800 aesthetic interpretations</span>. Specifically, each image is equipped with three expert-asked questions focusing on AesP, AesE and AesA respectively, and one expert-answered aesthetic interpretation for AesI. These <em class="ltx_emph ltx_font_italic" id="S2.SS3.p1.1.4">golden</em> annotations serve as ground truth for evaluating the abilities of MLLMs. Therefore, the EAPD can be divided into four subsets based on the benchmark objectives, as illustrated in Figure <a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ 2.3 Subjective Experiments ‣ 2 Constructing the EAPD ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">2</span></a>, <em class="ltx_emph ltx_font_italic" id="S2.SS3.p1.1.5">i.e.</em> AesPQA subset (evaluating AesP), AesEQA subset (evaluating AesE), AesAQA subset (evaluating AesA) and AesInter subset (evaluating AesI). These subsets are described in detail below.</p></div><div class="zh"><p>本文严格按照通用心理学实验规程（Sheikh et al., 2006）开展主观实验以采集专家标注。首先，把整个数据库的图像切分为 56 个独立场次，每场包含 50 张未标注图像。随后，我们开发了一个本地部署的标注工具（.exe 格式），并为每位参与者分配了个人用户 ID。此外，一套精心设计的标注质量控制策略确保：所有合格标注会基于文本丰富度与多样性被自动保存，且每张图像至少由一位专家标注（细节见补充材料第 1 节）。为降低测试疲劳的风险，连续标注超过 30 张图像会触发休息提醒。与现有的 MLLM 基准类似（Chen et al., 2023c; Cai et al., 2023），我们共采集了 8400 组问答对与 2800 条美学阐释。具体地，每张图像配有分别聚焦 AesP、AesE 与 AesA 的三个专家提问，以及一条面向 AesI 的专家作答的美学阐释。这些黄金标注作为评测 MLLM 能力的真值。由此，EAPD 可按基准目标划分为四个子集，如图 2 所示，即 AesPQA 子集（评测 AesP）、AesEQA 子集（评测 AesE）、AesAQA 子集（评测 AesA）与 AesInter 子集（评测 AesI）。下面详细介绍这些子集。</p></div></div>
+<div class="blk atomic"><div><p class="ltx_p ltx_align_center" id="S2.F2.2"><span class="ltx_text" id="S2.F2.2.1"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="499" id="S2.F2.g1" src="figures/questions2.jpg" style="aspect-ratio:707/499;" width="707"/></span></p></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Data samples from the constructed EAPD, which includes four subsets, <em class="ltx_emph ltx_font_italic" id="S2.F2.4">i.e.</em> AesPQA subset (benchmarking AesP), AesEQA subset (benchmarking AesE), AesAQA subset (benchmarking AesA) and AesInter subset (benchmarking AesI). </figcaption></div><div class="zh"><p>图 2：所构建 EAPD 的数据样例，包含四个子集，即 AesPQA 子集（评测 AesP）、AesEQA 子集（评测 AesE）、AesAQA 子集（评测 AesA）与 AesInter 子集（评测 AesI）。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">3 </span>Developing the Criteria</h2></div><div class="zh"><h2>3 制定评测准则</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.p1.1">Based on the expert-labeled aesthetics perception database, we propose a set of integrative criteria to measure the aesthetic perception abilities of MLLMs from four perspectives, including <span class="ltx_text ltx_font_bold" id="S3.p1.1.1">Perception</span> (<em class="ltx_emph ltx_font_italic" id="S3.p1.1.2">AesP</em>), <span class="ltx_text ltx_font_bold" id="S3.p1.1.3">Empathy</span> (<em class="ltx_emph ltx_font_italic" id="S3.p1.1.4">AesE</em>), <span class="ltx_text ltx_font_bold" id="S3.p1.1.5">Assessment</span> (<em class="ltx_emph ltx_font_italic" id="S3.p1.1.6">AesA</em>) and <span class="ltx_text ltx_font_bold" id="S3.p1.1.7">Interpretation</span> (<em class="ltx_emph ltx_font_italic" id="S3.p1.1.8">AesI</em>).</p></div><div class="zh"><p>在专家标注美学感知数据库的基础上，我们提出一套综合性准则，从感知（AesP）、共情（AesE）、评价（AesA）与阐释（AesI）四个视角衡量 MLLM 的美学感知能力。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.1 </span>Benchmark on Aesthetic Perception</h3></div><div class="zh"><h3>3.1 美学感知基准</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS1.p1.1">We first leverage the AesPQA subset to evaluate the aesthetic <span class="ltx_text ltx_font_bold" id="S3.SS1.p1.1.1">perception</span> (AesP) ability of MLLMs, aiming to investigate whether they can accurately respond to simple natural language queries related to aesthetic attributes. The AesPQA subset contains 2,800 multi-sourced images (as listed in Table <a class="ltx_ref" href="#S2.T1" title="Table 1 ‣ 2.2 Expert Selection ‣ 2 Constructing the EAPD ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">1</span></a>), and each image is equipped with one perception-related question, one correct option, and 1-3 false options (as illustrated in Figure <a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ 2.3 Subjective Experiments ‣ 2 Constructing the EAPD ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">2</span></a>). Specifically, the questions in AesPQA cover four perceptual dimensions and four question types. These diverse questions will be fed into MLLMs for evaluation, and then their outputs are further calculated as the rate of correct answers.</p></div><div class="zh"><p>我们首先利用 AesPQA 子集评估 MLLM 的美学感知（AesP）能力，旨在考察它们能否准确回答与美学属性相关的简单自然语言提问。AesPQA 子集包含 2800 张多来源图像（见表 1），每张图像配有一个感知相关问题、一个正确选项与 1–3 个错误选项（如图 2 所示）。具体地，AesPQA 中的问题覆盖四个感知维度与四种问题类型。这些多样化的问题将被输入 MLLM 进行评测，其输出进而被统计为正确率。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS1.p2.1"><em class="ltx_emph ltx_font_italic" id="S3.SS1.p2.1.1">Perceptual Dimensions:</em> Inspired by recent research on aesthetic perception <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib40" title="">Yang et al. (2022)</a></cite> and human perception process on image aesthetics <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib26" title="">Li et al. (2023c)</a></cite>, the questions of the AesPQA subset consist of four dimensions as follows:</p></div><div class="zh"><p>感知维度：受近期美学感知研究（Yang et al., 2022）以及人类图像美学感知过程（Li et al., 2023c）的启发，AesPQA 子集的问题由以下四个维度构成：</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S3.I1.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i1.p1">
+<p class="ltx_p" id="S3.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i1.p1.1.1">Technical quality</span> focuses on fundamental aspects such as sharpness, contrast, exposure, noise, etc, which are pivotal in influencing the aesthetic appeal of an image, forming the cornerstone of overall visual attractiveness.</p>
+</div></li></div><div class="zh"><p>• 技术质量关注锐度、对比度、曝光、噪声等基础方面，它们对图像的美感影响重大，构成了整体视觉吸引力的基石。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S3.I1.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i2.p1">
+<p class="ltx_p" id="S3.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i2.p1.1.1">Color and light</span> are crucial for both the overall aesthetic expression of an image and the local emphasis on objects, which involve a detailed evaluation of color contrast, color harmony, color richness, and use of light.</p>
+</div></li></div><div class="zh"><p>• 色彩与光影对图像的整体美学表达与对物体的局部强调都至关重要，涉及色彩对比、色彩和谐、色彩丰富度以及用光方式的细致评价。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S3.I1.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i3.p1">
+<p class="ltx_p" id="S3.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i3.p1.1.1">Composition</span> is not merely the visual location of the target but a fundamental aspect of conveying meaning and aesthetic value in images, <em class="ltx_emph ltx_font_italic" id="S3.I1.i3.p1.1.2">e.g.</em> symmetry, rule of thirds, and leading lines, playing a crucial role in structuring the visual narrative and enhancing the aesthetic appeal.</p>
+</div></li></div><div class="zh"><p>• 构图不仅是主体的视觉位置，更是图像传达意义与美学价值的基本方面，例如对称、三分法与引导线，它在组织视觉叙事、增强美感上起着关键作用。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S3.I1.i4" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i4.p1">
+<p class="ltx_p" id="S3.I1.i4.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i4.p1.1.1">Content</span> focuses on the thematic essence, personal character, and the manner of story presentation in an image, which is crucial for evaluating elements such as originality, creativity, attraction, and enjoyment.</p>
+</div></li></div><div class="zh"><p>• 内容关注图像的主题内核、人物个性与故事呈现方式，这对原创性、创意、吸引力与愉悦感等要素的评价至关重要。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS1.p3.1"><em class="ltx_emph ltx_font_italic" id="S3.SS1.p3.1.1">Question Types:</em> In the AesPQA subset, inspired by the existing MLLM benchmarks <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib7" title="">Chen et al. (2023c)</a>; <a class="ltx_ref" href="#bib.bib4" title="">Cai et al. (2023)</a></cite>, four commonly used question types are utilized to simulate human query formats when interacting with MLLMs. 1) <span class="ltx_text ltx_font_bold" id="S3.SS1.p3.1.2">Yes-or-No</span> questions are binary queries requiring a simple positive or negative response (<em class="ltx_emph ltx_font_italic" id="S3.SS1.p3.1.3">e.g., Does the image maintain a balance between warm and cold colors?</em>). 2) <span class="ltx_text ltx_font_bold" id="S3.SS1.p3.1.4">What</span> questions are used to examine more comprehensive aesthetic perception. For example, <em class="ltx_emph ltx_font_italic" id="S3.SS1.p3.1.5">What aspect of the image is primarily used to enhance the aesthetic perception?</em> 3) <span class="ltx_text ltx_font_bold" id="S3.SS1.p3.1.6">How</span> questions are employed to evaluate more details about the production of aesthetic feeling (<em class="ltx_emph ltx_font_italic" id="S3.SS1.p3.1.7">e.g., How is the aesthetic perception felt in this image?</em>). 4) <span class="ltx_text ltx_font_bold" id="S3.SS1.p3.1.8">Why</span> questions aim to understand the rationale behind aesthetic perception, including the reasons for aesthetic judgment or the underlying principles of visual appeal (<em class="ltx_emph ltx_font_italic" id="S3.SS1.p3.1.9">e.g., Why might the aesthetic perception of the photograph be considered less appealing?</em>). The diversified question types effectively simulate a wide range of human-like inquiries, facilitating the practicability of AesBench in evaluating the aesthetic perception abilities of MLLMs.</p></div><div class="zh"><p>问题类型：在 AesPQA 子集中，受现有 MLLM 基准启发（Chen et al., 2023c; Cai et al., 2023），我们采用四种常用问题类型来模拟人类与 MLLM 交互时的提问形式。1）是非题是需要简单肯定或否定回答的二元提问（例如：这幅图像是否保持了冷暖色彩之间的平衡？）。2）What 问句用于考察更全面的美学感知，例如：图像主要借助哪个方面来增强美学感受？3）How 问句用于评估美感产生的更多细节（例如：这幅图像的美感是如何被感受到的？）。4）Why 问句旨在理解美学感知背后的缘由，包括美学判断的理由或视觉吸引力的深层原理（例如：为什么这幅照片的美学感受可能被认为欠佳？）。多样化的问题类型有效模拟了广泛的人类式提问，提升了 AesBench 在评测 MLLM 美学感知能力上的实用性。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS1.p4.1"><em class="ltx_emph ltx_font_italic" id="S3.SS1.p4.1.1">Evaluation Process:</em> Based on the AesPQA subset, we feed the perception-related questions to various MLLMs to measure their abilities on aesthetic perception. The input prompt to query MLLMs is exemplified as <em class="ltx_emph ltx_font_italic" id="S3.SS1.p4.1.2">#User: Does the image maintain a balance between warm and cold colors?</em> [Image_token] <em class="ltx_emph ltx_font_italic" id="S3.SS1.p4.1.3">Choose one from the following options: A) Yes B) No. You should output the correct option without explanation.</em> Despite the explicit prompt for MLLMs to merely provide the correct option, as observed by recent works <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib39" title="">Wu et al. (2024)</a>; <a class="ltx_ref" href="#bib.bib4" title="">Cai et al. (2023)</a>; <a class="ltx_ref" href="#bib.bib38" title="">Wu et al. (2023b)</a></cite> and further validated by us, some MLLMs are unable to consistently generate outputs that align with <span class="ltx_text ltx_font_bold" id="S3.SS1.p4.1.4">instructed format</span>. For the above <em class="ltx_emph ltx_font_italic" id="S3.SS1.p4.1.5">Yes-or-No</em> question with the correct option: <em class="ltx_emph ltx_font_italic" id="S3.SS1.p4.1.6">B) No</em>, different MLLMs may output “B) No”, “B”, “No”, or “The image can not maintain a balance between warm and cold colors”, which are all correct in fact. These irregular formats present significant challenges for the accurate assessment by existing traditional language metrics (such as BLEU-4, CIDEr). Inspired by <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib28" title="">Liu et al. (2023b)</a></cite>, we propose, validate, and implement a GPT-assisted evaluation strategy that integrates decision rules with GPT. Specifically, outputs of MLLMs that align strictly with the candidate options are regarded as ‘<em class="ltx_emph ltx_font_italic" id="S3.SS1.p4.1.7">explicit responses</em>’, determined through direct comparison with the correct option. Otherwise, the outputs are regarded as ‘<em class="ltx_emph ltx_font_italic" id="S3.SS1.p4.1.8">ambiguous responses</em>’. For these, the questions, correct answers and <em class="ltx_emph ltx_font_italic" id="S3.SS1.p4.1.9">ambiguous responses</em> of MLLMs are submitted to GPT for evaluation (details are provided in <span class="ltx_text" id="S3.SS1.p4.1.10" style="--ltx-fg-color:#808080;">Supplementary Section 2</span>).</p></div><div class="zh"><p>评测流程：基于 AesPQA 子集，我们把感知相关问题输入各个 MLLM，以衡量它们的美学感知能力。查询 MLLM 的输入提示示例为：#User: 这幅图像是否保持了冷暖色彩之间的平衡？[Image_token] 从以下选项中选择其一：A) 是 B) 否。你只需输出正确选项，不要解释。尽管已明确提示 MLLM 仅给出正确选项，但正如近期工作（Wu et al., 2024; Cai et al., 2023; Wu et al., 2023b）所观察到、并被我们进一步验证的那样，部分 MLLM 无法始终按指令格式生成输出。对上述正确选项为 B) 否 的是非题，不同 MLLM 可能输出“B) 否”“B”“否”或“这幅图像未能保持冷暖色彩之间的平衡”，事实上这些都算正确。这些不规范的格式给传统语言指标（如 BLEU-4、CIDEr）的准确评测带来很大挑战。受 Liu et al.（2023b）启发，我们提出、验证并实现了一种把判定规则与 GPT 相结合的 GPT 辅助评测策略。具体地，与候选选项严格一致的 MLLM 输出被视为“显式回答”，通过与正确选项直接比较来判定；否则输出被视为“模糊回答”。对于模糊回答，我们把问题、正确答案与 MLLM 的模糊回答一并提交给 GPT 评判（细节见补充材料第 2 节）。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.2 </span>Benchmark on Aesthetic Empathy</h3></div><div class="zh"><h3>3.2 美学共情基准</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS2.p1.1">Aesthetic empathy, a critical aspect of image aesthetics perception, embodies a multi-dimensional and comprehensive process, involving emotional response, interest, recognition of uniqueness, and understanding of the vibe in aesthetic experiences. Therefore, based on the proposed AesEQA subset, we further study the abilities of MLLMs to understand the aesthetic empathy contained in images as humans. Like AesPQA, the AesEQA subset comprises 2,800 images, each accompanied by one empathy-related question, one correct option, and 1-3 false options, as illustrated in Figure <a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ 2.3 Subjective Experiments ‣ 2 Constructing the EAPD ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">2</span></a>. These questions are fed into MLLMs for evaluation, and the efficacy of these models is quantified based on the accuracy rate of their responses. Specifically, based on the principles of sentiment analysis research <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib12" title="">Feng et al. (2023)</a></cite>, AesEQA collects empathy-related questions from four dimensions as follows:</p></div><div class="zh"><p>美学共情是图像美学感知的关键一环，体现为一个多维、综合的过程，涉及审美体验中的情绪反应、兴趣、对独特性的识别以及对氛围的理解。因此，基于所提出的 AesEQA 子集，我们进一步研究 MLLM 像人类一样理解图像所蕴含的美学共情的能力。与 AesPQA 类似，AesEQA 子集包含 2800 张图像，每张配有一个共情相关问题、一个正确选项与 1–3 个错误选项，如图 2 所示。这些问题被输入 MLLM 进行评测，模型效果以其回答的准确率来量化。具体地，依据情感分析研究的原则（Feng et al., 2023），AesEQA 从以下四个维度采集共情相关问题：</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S3.I2.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i1.p1">
+<p class="ltx_p" id="S3.I2.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i1.p1.1.1">Emotion</span> refers to the complex emotional reactions that images evoke. It includes a range of emotional responses, such as joy, sadness, fear, and surprise, which are triggered by the image.</p>
+</div></li></div><div class="zh"><p>• 情绪指图像所唤起的复杂情绪反应，包括由图像引发的喜悦、悲伤、恐惧、惊讶等一系列情感回应。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S3.I2.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i2.p1">
+<p class="ltx_p" id="S3.I2.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i2.p1.1.1">Interest</span> is defined as the degree of curiosity and attraction towards images, such as visual allure, emotional resonance, novelty, facts and culture.</p>
+</div></li></div><div class="zh"><p>• 兴趣定义为对图像的好奇与吸引程度，例如视觉魅力、情感共鸣、新奇感、事实性与文化内涵。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S3.I2.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i3.p1">
+<p class="ltx_p" id="S3.I2.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i3.p1.1.1">Uniqueness</span> evaluates the originality and distinctiveness of photographic images or artworks, <em class="ltx_emph ltx_font_italic" id="S3.I2.i3.p1.1.2">e.g.</em> novel concepts, unique stylistic approaches and innovative techniques.</p>
+</div></li></div><div class="zh"><p>• 独特性评价摄影图像或艺术作品的原创性与与众不同之处，例如新颖的构思、独特的风格手法与创新的技法。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S3.I2.i4" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i4.p1">
+<p class="ltx_p" id="S3.I2.i4.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i4.p1.1.1">Vibe</span> refers to the overarching emotional ambiance or thematic representation conveyed by images, which articulates a holistic sensation, characterized by harmony, liveliness, mystery, elegance, and others.</p>
+</div></li></div><div class="zh"><p>• 氛围指图像传达的整体情绪基调或主题表征，它表达一种整体感受，其特征可以是和谐、生动、神秘、优雅等等。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS2.p3.1">Each dimension provides a unique perspective for evaluating the empathy-related abilities of current MLLMs. Additionally, the AesEQA subset also integrates a quartet of question types: <em class="ltx_emph ltx_font_italic" id="S3.SS2.p3.1.1">Yes-or-No, What, How</em> and <em class="ltx_emph ltx_font_italic" id="S3.SS2.p3.1.2">Why</em>. These four types of questions are leveraged to examine the ability to deal with common cases of human-machine interaction and collaboration, which play a pivotal role in the thorough evaluation of MLLMs. Finally, we also employ the GPT-assisted evaluation strategy to calculate the accuracy rate of the responses generated by MLLMs.</p></div><div class="zh"><p>每个维度都为评估当前 MLLM 的共情相关能力提供了独特视角。此外，AesEQA 子集同样整合了是非题、What、How 与 Why 四种问题类型。这四类问题被用于考察模型处理人机交互与协作中常见情形的能力，在对 MLLM 的完备评测中起着关键作用。最后，我们也采用 GPT 辅助评测策略来计算 MLLM 所生成回答的准确率。</p></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 2: </span>Evaluation results on the <span class="ltx_text ltx_font_bold" id="S3.T2.3">Aesthetic Perception</span> ability. We highlight the best results of each sub-category in bold and the second-best results in underlining.</figcaption></div><div class="zh"><p>表 2：美学感知能力的评测结果。各子类别的最优结果加粗，次优结果加下划线。</p></div></div>
+<div class="blk atomic"><div><table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T2.4">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T2.4.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_tt" id="S3.T2.4.1.1" rowspan="2" style="padding:2.5pt 2.8pt;"><span class="ltx_text" id="S3.T2.4.1.1.1">MLLM</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_tt" colspan="4" id="S3.T2.4.1.2" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.1.2.1">Perceptual Dimensions</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_tt" colspan="3" id="S3.T2.4.1.3" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.1.3.1">Image Sources</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_tt" colspan="4" id="S3.T2.4.1.4" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.1.4.1">Question Types</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.4.1.5" rowspan="2" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.1.5.1">Overall</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.4.1.6" rowspan="2" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.1.6.1">Rank</span></th></tr>
+<tr class="ltx_tr" id="S3.T2.4.2">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.2.1" style="padding:2.5pt 2.8pt;"><em class="ltx_emph ltx_font_italic" id="S3.T2.4.2.1.1">Tec. Qua.</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.2.2" style="padding:2.5pt 2.8pt;"><em class="ltx_emph ltx_font_italic" id="S3.T2.4.2.2.1">Col. Lig.</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.2.3" style="padding:2.5pt 2.8pt;"><em class="ltx_emph ltx_font_italic" id="S3.T2.4.2.3.1">Comp.</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T2.4.2.4" style="padding:2.5pt 2.8pt;"><em class="ltx_emph ltx_font_italic" id="S3.T2.4.2.4.1">Content</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.2.5" style="padding:2.5pt 2.8pt;"><em class="ltx_emph ltx_font_italic" id="S3.T2.4.2.5.1">NIs</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.2.6" style="padding:2.5pt 2.8pt;"><em class="ltx_emph ltx_font_italic" id="S3.T2.4.2.6.1">AIs</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T2.4.2.7" style="padding:2.5pt 2.8pt;"><em class="ltx_emph ltx_font_italic" id="S3.T2.4.2.7.1">AGIs</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.2.8" style="padding:2.5pt 2.8pt;"><em class="ltx_emph ltx_font_italic" id="S3.T2.4.2.8.1">Yes-No</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.2.9" style="padding:2.5pt 2.8pt;"><em class="ltx_emph ltx_font_italic" id="S3.T2.4.2.9.1">What</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.2.10" style="padding:2.5pt 2.8pt;"><em class="ltx_emph ltx_font_italic" id="S3.T2.4.2.10.1">How</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T2.4.2.11" style="padding:2.5pt 2.8pt;"><em class="ltx_emph ltx_font_italic" id="S3.T2.4.2.11.1">Why</em></th></tr>
+<tr class="ltx_tr" id="S3.T2.4.3" style="--ltx-bg-color:#EFEFEF;">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T2.4.3.1" style="padding:2.5pt 2.8pt;"><em class="ltx_emph ltx_font_italic" id="S3.T2.4.3.1.1" style="--ltx-bg-color:#EFEFEF;">Random guess</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.3.2" style="padding:2.5pt 2.8pt;"><span class="ltx_text" id="S3.T2.4.3.2.1" style="--ltx-bg-color:#EFEFEF;">34.82%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.3.3" style="padding:2.5pt 2.8pt;"><span class="ltx_text" id="S3.T2.4.3.3.1" style="--ltx-bg-color:#EFEFEF;">31.02%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.3.4" style="padding:2.5pt 2.8pt;"><span class="ltx_text" id="S3.T2.4.3.4.1" style="--ltx-bg-color:#EFEFEF;">30.53%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T2.4.3.5" style="padding:2.5pt 2.8pt;"><span class="ltx_text" id="S3.T2.4.3.5.1" style="--ltx-bg-color:#EFEFEF;">37.20%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.3.6" style="padding:2.5pt 2.8pt;"><span class="ltx_text" id="S3.T2.4.3.6.1" style="--ltx-bg-color:#EFEFEF;">31.59%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.3.7" style="padding:2.5pt 2.8pt;"><span class="ltx_text" id="S3.T2.4.3.7.1" style="--ltx-bg-color:#EFEFEF;">32.50%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T2.4.3.8" style="padding:2.5pt 2.8pt;"><span class="ltx_text" id="S3.T2.4.3.8.1" style="--ltx-bg-color:#EFEFEF;">31.19%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.3.9" style="padding:2.5pt 2.8pt;"><span class="ltx_text" id="S3.T2.4.3.9.1" style="--ltx-bg-color:#EFEFEF;">50.00%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.3.10" style="padding:2.5pt 2.8pt;"><span class="ltx_text" id="S3.T2.4.3.10.1" style="--ltx-bg-color:#EFEFEF;">27.35%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.3.11" style="padding:2.5pt 2.8pt;"><span class="ltx_text" id="S3.T2.4.3.11.1" style="--ltx-bg-color:#EFEFEF;">27.32%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T2.4.3.12" style="padding:2.5pt 2.8pt;"><span class="ltx_text" id="S3.T2.4.3.12.1" style="--ltx-bg-color:#EFEFEF;">25.00%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.3.13" style="padding:2.5pt 2.8pt;"><span class="ltx_text" id="S3.T2.4.3.13.1" style="--ltx-bg-color:#EFEFEF;">35.02%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.4.3.14" style="padding:2.5pt 2.8pt;"><span class="ltx_text" id="S3.T2.4.3.14.1" style="--ltx-bg-color:#EFEFEF;">/</span></th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T2.4.4">
+<td class="ltx_td ltx_align_left ltx_border_r ltx_border_t" id="S3.T2.4.4.1" style="padding:2.5pt 2.8pt;">Q-Instruct</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.4.4.2" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_underline" id="S3.T2.4.4.2.1">66.03%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.4.4.3" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_underline" id="S3.T2.4.4.3.1">74.48%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.4.4.4" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.4.4.1">73.68%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T2.4.4.5" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.4.5.1">68.09%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.4.4.6" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.4.6.1">76.48%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.4.4.7" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_underline" id="S3.T2.4.4.7.1">69.70%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T2.4.4.8" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_underline" id="S3.T2.4.4.8.1">69.28%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.4.4.9" style="padding:2.5pt 2.8pt;">64.68%</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.4.4.10" style="padding:2.5pt 2.8pt;">63.31%</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.4.4.11" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.4.11.1">85.28%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T2.4.4.12" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_underline" id="S3.T2.4.4.12.1">86.34%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.4.4.13" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.4.13.1">72.61%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.4.4.14" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.4.14.1">1</span></td></tr>
+<tr class="ltx_tr" id="S3.T2.4.5">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T2.4.5.1" style="padding:2.5pt 2.8pt;">GPT-4V</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.5.2" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.5.2.1">69.02%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.5.3" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.5.3.1">74.66%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.5.4" style="padding:2.5pt 2.8pt;">71.72%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.5.5" style="padding:2.5pt 2.8pt;">65.57%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.5.6" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_underline" id="S3.T2.4.5.6.1">75.67%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.5.7" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.5.7.1">72.58%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.5.8" style="padding:2.5pt 2.8pt;">65.82%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.5.9" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_underline" id="S3.T2.4.5.9.1">68.93%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.5.10" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_underline" id="S3.T2.4.5.10.1">64.67%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.5.11" style="padding:2.5pt 2.8pt;">76.70%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.5.12" style="padding:2.5pt 2.8pt;">84.46%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.5.13" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_underline" id="S3.T2.4.5.13.1">72.08%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.5.14" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_underline" id="S3.T2.4.5.14.1">2</span></td></tr>
+<tr class="ltx_tr" id="S3.T2.4.6">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T2.4.6.1" style="padding:2.5pt 2.8pt;">Gemini Pro Vision</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.6.2" style="padding:2.5pt 2.8pt;">65.08%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.6.3" style="padding:2.5pt 2.8pt;">74.57%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.6.4" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_underline" id="S3.T2.4.6.4.1">72.24%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.6.5" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_underline" id="S3.T2.4.6.5.1">67.97%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.6.6" style="padding:2.5pt 2.8pt;">74.63%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.6.7" style="padding:2.5pt 2.8pt;">69.62%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.6.8" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.6.8.1">70.03%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.6.9" style="padding:2.5pt 2.8pt;">64.70%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.6.10" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.6.10.1">64.95%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.6.11" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_underline" id="S3.T2.4.6.11.1">78.71%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.6.12" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.6.12.1">90.24%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.6.13" style="padding:2.5pt 2.8pt;">71.99%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.6.14" style="padding:2.5pt 2.8pt;">3</td></tr>
+<tr class="ltx_tr" id="S3.T2.4.7">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T2.4.7.1" style="padding:2.5pt 2.8pt;">ShareGPT4V</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.7.2" style="padding:2.5pt 2.8pt;">62.18%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.7.3" style="padding:2.5pt 2.8pt;">71.90%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.7.4" style="padding:2.5pt 2.8pt;">69.29%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.7.5" style="padding:2.5pt 2.8pt;">64.89%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.7.6" style="padding:2.5pt 2.8pt;">70.79%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.7.7" style="padding:2.5pt 2.8pt;">71.57%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.7.8" style="padding:2.5pt 2.8pt;">63.96%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.7.9" style="padding:2.5pt 2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.4.7.9.1">69.32%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.7.10" style="padding:2.5pt 2.8pt;">61.33%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.7.11" style="padding:2.5pt 2.8pt;">72.01%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.7.12" style="padding:2.5pt 2.8pt;">77.56%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.7.13" style="padding:2.5pt 2.8pt;">69.18%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.7.14" style="padding:2.5pt 2.8pt;">4</td></tr>
+<tr class="ltx_tr" id="S3.T2.4.8">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T2.4.8.1" style="padding:2.5pt 2.8pt;">mPLUG-Owl2</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.8.2" style="padding:2.5pt 2.8pt;">60.90%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.8.3" style="padding:2.5pt 2.8pt;">70.57%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.8.4" style="padding:2.5pt 2.8pt;">68.30%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.8.5" style="padding:2.5pt 2.8pt;">62.77%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.8.6" style="padding:2.5pt 2.8pt;">72.23%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.8.7" style="padding:2.5pt 2.8pt;">64.71%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.8.8" style="padding:2.5pt 2.8pt;">64.10%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.8.9" style="padding:2.5pt 2.8pt;">65.59%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.8.10" style="padding:2.5pt 2.8pt;">58.64%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.8.11" style="padding:2.5pt 2.8pt;">73.02%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.8.12" style="padding:2.5pt 2.8pt;">80.73%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.8.13" style="padding:2.5pt 2.8pt;">67.89%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.8.14" style="padding:2.5pt 2.8pt;">5</td></tr>
+<tr class="ltx_tr" id="S3.T2.4.9">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T2.4.9.1" style="padding:2.5pt 2.8pt;">LLaVA-1.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.9.2" style="padding:2.5pt 2.8pt;">53.85%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.9.3" style="padding:2.5pt 2.8pt;">70.16%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.9.4" style="padding:2.5pt 2.8pt;">67.40%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.9.5" style="padding:2.5pt 2.8pt;">59.93%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.9.6" style="padding:2.5pt 2.8pt;">69.10%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.9.7" style="padding:2.5pt 2.8pt;">65.71%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.9.8" style="padding:2.5pt 2.8pt;">62.37%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.9.9" style="padding:2.5pt 2.8pt;">62.36%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.9.10" style="padding:2.5pt 2.8pt;">58.92%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.9.11" style="padding:2.5pt 2.8pt;">70.71%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.9.12" style="padding:2.5pt 2.8pt;">81.22%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.9.13" style="padding:2.5pt 2.8pt;">66.32%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.9.14" style="padding:2.5pt 2.8pt;">6</td></tr>
+<tr class="ltx_tr" id="S3.T2.4.10">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T2.4.10.1" style="padding:2.5pt 2.8pt;">Qwen-VL</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.10.2" style="padding:2.5pt 2.8pt;">54.81%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.10.3" style="padding:2.5pt 2.8pt;">66.25%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.10.4" style="padding:2.5pt 2.8pt;">62.91%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.10.5" style="padding:2.5pt 2.8pt;">60.64%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.10.6" style="padding:2.5pt 2.8pt;">68.30%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.10.7" style="padding:2.5pt 2.8pt;">58.85%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.10.8" style="padding:2.5pt 2.8pt;">59.44%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.10.9" style="padding:2.5pt 2.8pt;">61.25%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.10.10" style="padding:2.5pt 2.8pt;">55.38%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.10.11" style="padding:2.5pt 2.8pt;">67.53%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.10.12" style="padding:2.5pt 2.8pt;">74.15%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.10.13" style="padding:2.5pt 2.8pt;">63.21%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.10.14" style="padding:2.5pt 2.8pt;">7</td></tr>
+<tr class="ltx_tr" id="S3.T2.4.11">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T2.4.11.1" style="padding:2.5pt 2.8pt;">LLaVA</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.11.2" style="padding:2.5pt 2.8pt;">46.79%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.11.3" style="padding:2.5pt 2.8pt;">63.59%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.11.4" style="padding:2.5pt 2.8pt;">65.30%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.11.5" style="padding:2.5pt 2.8pt;">64.54%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.11.6" style="padding:2.5pt 2.8pt;">64.29%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.11.7" style="padding:2.5pt 2.8pt;">61.10%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.11.8" style="padding:2.5pt 2.8pt;">60.77%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.11.9" style="padding:2.5pt 2.8pt;">65.39%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.11.10" style="padding:2.5pt 2.8pt;">52.27%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.11.11" style="padding:2.5pt 2.8pt;">61.18%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.11.12" style="padding:2.5pt 2.8pt;">74.88%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.11.13" style="padding:2.5pt 2.8pt;">62.43%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.11.14" style="padding:2.5pt 2.8pt;">8</td></tr>
+<tr class="ltx_tr" id="S3.T2.4.12">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T2.4.12.1" style="padding:2.5pt 2.8pt;">InstructBLIP</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.12.2" style="padding:2.5pt 2.8pt;">37.82%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.12.3" style="padding:2.5pt 2.8pt;">55.36%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.12.4" style="padding:2.5pt 2.8pt;">55.43%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.12.5" style="padding:2.5pt 2.8pt;">57.09%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.12.6" style="padding:2.5pt 2.8pt;">57.06%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.12.7" style="padding:2.5pt 2.8pt;">55.86%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.12.8" style="padding:2.5pt 2.8pt;">47.21%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.12.9" style="padding:2.5pt 2.8pt;">59.84%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.12.10" style="padding:2.5pt 2.8pt;">45.01%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.12.11" style="padding:2.5pt 2.8pt;">54.98%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.12.12" style="padding:2.5pt 2.8pt;">56.34%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.12.13" style="padding:2.5pt 2.8pt;">54.29%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.12.14" style="padding:2.5pt 2.8pt;">9</td></tr>
+<tr class="ltx_tr" id="S3.T2.4.13">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T2.4.13.1" style="padding:2.5pt 2.8pt;">MiniGPT-v2</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.13.2" style="padding:2.5pt 2.8pt;">56.73%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.13.3" style="padding:2.5pt 2.8pt;">56.44%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.13.4" style="padding:2.5pt 2.8pt;">51.74%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.13.5" style="padding:2.5pt 2.8pt;">50.00%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.13.6" style="padding:2.5pt 2.8pt;">56.74%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.13.7" style="padding:2.5pt 2.8pt;">53.24%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.13.8" style="padding:2.5pt 2.8pt;">50.93%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.13.9" style="padding:2.5pt 2.8pt;">53.99%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.13.10" style="padding:2.5pt 2.8pt;">43.06%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.13.11" style="padding:2.5pt 2.8pt;">58.73%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.13.12" style="padding:2.5pt 2.8pt;">66.10%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.13.13" style="padding:2.5pt 2.8pt;">54.18%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.13.14" style="padding:2.5pt 2.8pt;">10</td></tr>
+<tr class="ltx_tr" id="S3.T2.4.14">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T2.4.14.1" style="padding:2.5pt 2.8pt;">GLM</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.14.2" style="padding:2.5pt 2.8pt;">55.77%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.14.3" style="padding:2.5pt 2.8pt;">54.61%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.14.4" style="padding:2.5pt 2.8pt;">51.25%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.14.5" style="padding:2.5pt 2.8pt;">48.94%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.14.6" style="padding:2.5pt 2.8pt;">54.90%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.14.7" style="padding:2.5pt 2.8pt;">55.24%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.14.8" style="padding:2.5pt 2.8pt;">47.34%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.14.9" style="padding:2.5pt 2.8pt;">60.95%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.14.10" style="padding:2.5pt 2.8pt;">44.62%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.14.11" style="padding:2.5pt 2.8pt;">48.48%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.14.12" style="padding:2.5pt 2.8pt;">55.61%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.14.13" style="padding:2.5pt 2.8pt;">52.96%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.14.14" style="padding:2.5pt 2.8pt;">11</td></tr>
+<tr class="ltx_tr" id="S3.T2.4.15">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T2.4.15.1" style="padding:2.5pt 2.8pt;">Otter</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.15.2" style="padding:2.5pt 2.8pt;">35.90%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.15.3" style="padding:2.5pt 2.8pt;">54.28%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.15.4" style="padding:2.5pt 2.8pt;">51.65%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.15.5" style="padding:2.5pt 2.8pt;">51.06%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.15.6" style="padding:2.5pt 2.8pt;">51.04%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.15.7" style="padding:2.5pt 2.8pt;">50.62%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.15.8" style="padding:2.5pt 2.8pt;">51.20%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.15.9" style="padding:2.5pt 2.8pt;">56.10%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.15.10" style="padding:2.5pt 2.8pt;">44.48%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.15.11" style="padding:2.5pt 2.8pt;">51.37%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.15.12" style="padding:2.5pt 2.8pt;">49.02%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.15.13" style="padding:2.5pt 2.8pt;">50.96%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.15.14" style="padding:2.5pt 2.8pt;">12</td></tr>
+<tr class="ltx_tr" id="S3.T2.4.16">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T2.4.16.1" style="padding:2.5pt 2.8pt;">IDEFICS-Instruct</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.16.2" style="padding:2.5pt 2.8pt;">37.50%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.16.3" style="padding:2.5pt 2.8pt;">52.87%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.16.4" style="padding:2.5pt 2.8pt;">52.84%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.16.5" style="padding:2.5pt 2.8pt;">51.06%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.16.6" style="padding:2.5pt 2.8pt;">52.97%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.16.7" style="padding:2.5pt 2.8pt;">50.12%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.16.8" style="padding:2.5pt 2.8pt;">48.40%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.16.9" style="padding:2.5pt 2.8pt;">50.96%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.16.10" style="padding:2.5pt 2.8pt;">44.62%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.16.11" style="padding:2.5pt 2.8pt;">51.09%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.16.12" style="padding:2.5pt 2.8pt;">60.73%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.16.13" style="padding:2.5pt 2.8pt;">50.82%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.16.14" style="padding:2.5pt 2.8pt;">13</td></tr>
+<tr class="ltx_tr" id="S3.T2.4.17">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T2.4.17.1" style="padding:2.5pt 2.8pt;">MiniGPT-4</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.17.2" style="padding:2.5pt 2.8pt;">39.42%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.17.3" style="padding:2.5pt 2.8pt;">41.31%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.17.4" style="padding:2.5pt 2.8pt;">42.67%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.17.5" style="padding:2.5pt 2.8pt;">44.33%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.17.6" style="padding:2.5pt 2.8pt;">41.57%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.17.7" style="padding:2.5pt 2.8pt;">42.89%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.17.8" style="padding:2.5pt 2.8pt;">41.36%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.17.9" style="padding:2.5pt 2.8pt;">47.23%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.17.10" style="padding:2.5pt 2.8pt;">32.01%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.17.11" style="padding:2.5pt 2.8pt;">41.99%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.4.17.12" style="padding:2.5pt 2.8pt;">46.10%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.17.13" style="padding:2.5pt 2.8pt;">41.93%</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.4.17.14" style="padding:2.5pt 2.8pt;">14</td></tr>
+<tr class="ltx_tr" id="S3.T2.4.18">
+<td class="ltx_td ltx_align_left ltx_border_bb ltx_border_r" id="S3.T2.4.18.1" style="padding:2.5pt 2.8pt;">TinyGPT-V</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.4.18.2" style="padding:2.5pt 2.8pt;">21.79%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.4.18.3" style="padding:2.5pt 2.8pt;">24.52%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.4.18.4" style="padding:2.5pt 2.8pt;">22.13%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r" id="S3.T2.4.18.5" style="padding:2.5pt 2.8pt;">28.01%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.4.18.6" style="padding:2.5pt 2.8pt;">22.71%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.4.18.7" style="padding:2.5pt 2.8pt;">24.69%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r" id="S3.T2.4.18.8" style="padding:2.5pt 2.8pt;">24.34%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.4.18.9" style="padding:2.5pt 2.8pt;">32.39%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.4.18.10" style="padding:2.5pt 2.8pt;">17.99%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.4.18.11" style="padding:2.5pt 2.8pt;">19.77%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r" id="S3.T2.4.18.12" style="padding:2.5pt 2.8pt;">19.27%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.4.18.13" style="padding:2.5pt 2.8pt;">23.71%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.4.18.14" style="padding:2.5pt 2.8pt;">15</td></tr>
+</tbody>
+</table></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 3: </span>Evaluation results on the <span class="ltx_text ltx_font_bold" id="S3.T3.3">Aesthetic Empathy</span> ability.</figcaption></div><div class="zh"><p>表 3：美学共情能力的评测结果。</p></div></div>
+<div class="blk atomic"><div><table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T3.4">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T3.4.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_tt" id="S3.T3.4.1.1" rowspan="2" style="padding:2.5pt 2.6pt;"><span class="ltx_text" id="S3.T3.4.1.1.1">MLLM</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_tt" colspan="4" id="S3.T3.4.1.2" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.1.2.1">Empathy Dimensions</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_tt" colspan="3" id="S3.T3.4.1.3" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.1.3.1">Image Sources</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_tt" colspan="4" id="S3.T3.4.1.4" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.1.4.1">Question Types</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.4.1.5" rowspan="2" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.1.5.1">Overall</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.4.1.6" rowspan="2" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.1.6.1">Rank</span></th></tr>
+<tr class="ltx_tr" id="S3.T3.4.2">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.2.1" style="padding:2.5pt 2.6pt;"><em class="ltx_emph ltx_font_italic" id="S3.T3.4.2.1.1">Emotion</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.2.2" style="padding:2.5pt 2.6pt;"><em class="ltx_emph ltx_font_italic" id="S3.T3.4.2.2.1">Interest</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.2.3" style="padding:2.5pt 2.6pt;"><em class="ltx_emph ltx_font_italic" id="S3.T3.4.2.3.1">Uniqueness</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T3.4.2.4" style="padding:2.5pt 2.6pt;"><em class="ltx_emph ltx_font_italic" id="S3.T3.4.2.4.1">Vibe</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.2.5" style="padding:2.5pt 2.6pt;"><em class="ltx_emph ltx_font_italic" id="S3.T3.4.2.5.1">NIs</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.2.6" style="padding:2.5pt 2.6pt;"><em class="ltx_emph ltx_font_italic" id="S3.T3.4.2.6.1">AIs</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T3.4.2.7" style="padding:2.5pt 2.6pt;"><em class="ltx_emph ltx_font_italic" id="S3.T3.4.2.7.1">AGIs</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.2.8" style="padding:2.5pt 2.6pt;"><em class="ltx_emph ltx_font_italic" id="S3.T3.4.2.8.1">Yes-No</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.2.9" style="padding:2.5pt 2.6pt;"><em class="ltx_emph ltx_font_italic" id="S3.T3.4.2.9.1">What</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.2.10" style="padding:2.5pt 2.6pt;"><em class="ltx_emph ltx_font_italic" id="S3.T3.4.2.10.1">How</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T3.4.2.11" style="padding:2.5pt 2.6pt;"><em class="ltx_emph ltx_font_italic" id="S3.T3.4.2.11.1">Why</em></th></tr>
+<tr class="ltx_tr" id="S3.T3.4.3" style="--ltx-bg-color:#EFEFEF;">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T3.4.3.1" style="padding:2.5pt 2.6pt;"><em class="ltx_emph ltx_font_italic" id="S3.T3.4.3.1.1" style="--ltx-bg-color:#EFEFEF;">Random guess</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.3.2" style="padding:2.5pt 2.6pt;"><span class="ltx_text" id="S3.T3.4.3.2.1" style="--ltx-bg-color:#EFEFEF;">40.28%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.3.3" style="padding:2.5pt 2.6pt;"><span class="ltx_text" id="S3.T3.4.3.3.1" style="--ltx-bg-color:#EFEFEF;">37.80%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.3.4" style="padding:2.5pt 2.6pt;"><span class="ltx_text" id="S3.T3.4.3.4.1" style="--ltx-bg-color:#EFEFEF;">36.25%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T3.4.3.5" style="padding:2.5pt 2.6pt;"><span class="ltx_text" id="S3.T3.4.3.5.1" style="--ltx-bg-color:#EFEFEF;">42.12%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.3.6" style="padding:2.5pt 2.6pt;"><span class="ltx_text" id="S3.T3.4.3.6.1" style="--ltx-bg-color:#EFEFEF;">33.10%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.3.7" style="padding:2.5pt 2.6pt;"><span class="ltx_text" id="S3.T3.4.3.7.1" style="--ltx-bg-color:#EFEFEF;">30.62%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T3.4.3.8" style="padding:2.5pt 2.6pt;"><span class="ltx_text" id="S3.T3.4.3.8.1" style="--ltx-bg-color:#EFEFEF;">30.67%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.3.9" style="padding:2.5pt 2.6pt;"><span class="ltx_text" id="S3.T3.4.3.9.1" style="--ltx-bg-color:#EFEFEF;">50.00%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.3.10" style="padding:2.5pt 2.6pt;"><span class="ltx_text" id="S3.T3.4.3.10.1" style="--ltx-bg-color:#EFEFEF;">27.35%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.3.11" style="padding:2.5pt 2.6pt;"><span class="ltx_text" id="S3.T3.4.3.11.1" style="--ltx-bg-color:#EFEFEF;">27.32%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T3.4.3.12" style="padding:2.5pt 2.6pt;"><span class="ltx_text" id="S3.T3.4.3.12.1" style="--ltx-bg-color:#EFEFEF;">25.00%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.3.13" style="padding:2.5pt 2.6pt;"><span class="ltx_text" id="S3.T3.4.3.13.1" style="--ltx-bg-color:#EFEFEF;">34.98%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.3.14" style="padding:2.5pt 2.6pt;"><span class="ltx_text" id="S3.T3.4.3.14.1" style="--ltx-bg-color:#EFEFEF;">/</span></th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T3.4.4">
+<td class="ltx_td ltx_align_left ltx_border_r ltx_border_t" id="S3.T3.4.4.1" style="padding:2.5pt 2.6pt;">Q-Instruct</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.4.4.2" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.4.2.1">68.64%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.4.4.3" style="padding:2.5pt 2.6pt;">83.86%</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.4.4.4" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.4.4.1">75.86%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T3.4.4.5" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_underline" id="S3.T3.4.4.5.1">80.00%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.4.4.6" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.4.6.1">76.65%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.4.4.7" style="padding:2.5pt 2.6pt;">72.19%</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T3.4.4.8" style="padding:2.5pt 2.6pt;">66.62%</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.4.4.9" style="padding:2.5pt 2.6pt;">64.30%</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.4.4.10" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.4.10.1">67.42%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.4.4.11" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.4.11.1">81.57%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T3.4.4.12" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_underline" id="S3.T3.4.4.12.1">86.76%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.4.4.13" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.4.13.1">72.68%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.4.4.14" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.4.14.1">1</span></td></tr>
+<tr class="ltx_tr" id="S3.T3.4.5">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T3.4.5.1" style="padding:2.5pt 2.6pt;">Gemini Pro Vision</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.5.2" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_underline" id="S3.T3.4.5.2.1">66.87%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.5.3" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.5.3.1">87.50%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.5.4" style="padding:2.5pt 2.6pt;">70.00%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.5.5" style="padding:2.5pt 2.6pt;">79.09%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.5.6" style="padding:2.5pt 2.6pt;">70.60%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.5.7" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_underline" id="S3.T3.4.5.7.1">72.35%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.5.8" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.5.8.1">71.53%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.5.9" style="padding:2.5pt 2.6pt;">67.50%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.5.10" style="padding:2.5pt 2.6pt;">64.52%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.5.11" style="padding:2.5pt 2.6pt;">72.25%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.5.12" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.5.12.1">90.37%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.5.13" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_underline" id="S3.T3.4.5.13.1">71.37%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.5.14" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_underline" id="S3.T3.4.5.14.1">2</span></td></tr>
+<tr class="ltx_tr" id="S3.T3.4.6">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T3.4.6.1" style="padding:2.5pt 2.6pt;">ShareGPT4V</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.6.2" style="padding:2.5pt 2.6pt;">66.48%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.6.3" style="padding:2.5pt 2.6pt;">80.65%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.6.4" style="padding:2.5pt 2.6pt;">68.97%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.6.5" style="padding:2.5pt 2.6pt;">78.72%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.6.6" style="padding:2.5pt 2.6pt;">70.95%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.6.7" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.6.7.1">73.69%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.6.8" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_underline" id="S3.T3.4.6.8.1">67.29%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.6.9" style="padding:2.5pt 2.6pt;">67.75%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.6.10" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_underline" id="S3.T3.4.6.10.1">65.58%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.6.11" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_underline" id="S3.T3.4.6.11.1">72.71%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.6.12" style="padding:2.5pt 2.6pt;">83.58%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.6.13" style="padding:2.5pt 2.6pt;">70.75%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.6.14" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.6.14.1">3</span></td></tr>
+<tr class="ltx_tr" id="S3.T3.4.7">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T3.4.7.1" style="padding:2.5pt 2.6pt;">GPT-4V</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.7.2" style="padding:2.5pt 2.6pt;">65.06%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.7.3" style="padding:2.5pt 2.6pt;">72.41%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.7.4" style="padding:2.5pt 2.6pt;">62.07%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.7.5" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.7.5.1">80.15%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.7.6" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_underline" id="S3.T3.4.7.6.1">73.87%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.7.7" style="padding:2.5pt 2.6pt;">72.08%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.7.8" style="padding:2.5pt 2.6pt;">62.27%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.7.9" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.4.7.9.1">68.67%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.7.10" style="padding:2.5pt 2.6pt;">64.02%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.7.11" style="padding:2.5pt 2.6pt;">70.07%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.7.12" style="padding:2.5pt 2.6pt;">84.20%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.7.13" style="padding:2.5pt 2.6pt;">70.16%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.7.14" style="padding:2.5pt 2.6pt;">4</td></tr>
+<tr class="ltx_tr" id="S3.T3.4.8">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T3.4.8.1" style="padding:2.5pt 2.6pt;">mPLUG-Owl2</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.8.2" style="padding:2.5pt 2.6pt;">65.60%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.8.3" style="padding:2.5pt 2.6pt;">77.42%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.8.4" style="padding:2.5pt 2.6pt;">65.52%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.8.5" style="padding:2.5pt 2.6pt;">78.07%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.8.6" style="padding:2.5pt 2.6pt;">71.03%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.8.7" style="padding:2.5pt 2.6pt;">71.57%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.8.8" style="padding:2.5pt 2.6pt;">66.22%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.8.9" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_underline" id="S3.T3.4.8.9.1">68.05%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.8.10" style="padding:2.5pt 2.6pt;">64.16%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.8.11" style="padding:2.5pt 2.6pt;">70.14%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.8.12" style="padding:2.5pt 2.6pt;">83.82%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.8.13" style="padding:2.5pt 2.6pt;">69.89%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.8.14" style="padding:2.5pt 2.6pt;">5</td></tr>
+<tr class="ltx_tr" id="S3.T3.4.9">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T3.4.9.1" style="padding:2.5pt 2.6pt;">LLaVA-1.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.9.2" style="padding:2.5pt 2.6pt;">62.49%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.9.3" style="padding:2.5pt 2.6pt;">80.65%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.9.4" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_underline" id="S3.T3.4.9.4.1">75.85%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.9.5" style="padding:2.5pt 2.6pt;">78.93%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.9.6" style="padding:2.5pt 2.6pt;">69.26%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.9.7" style="padding:2.5pt 2.6pt;">69.58%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.9.8" style="padding:2.5pt 2.6pt;">65.43%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.9.9" style="padding:2.5pt 2.6pt;">62.37%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.9.10" style="padding:2.5pt 2.6pt;">64.16%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.9.11" style="padding:2.5pt 2.6pt;">71.71%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.9.12" style="padding:2.5pt 2.6pt;">84.07%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.9.13" style="padding:2.5pt 2.6pt;">68.32%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.9.14" style="padding:2.5pt 2.6pt;">6</td></tr>
+<tr class="ltx_tr" id="S3.T3.4.10">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T3.4.10.1" style="padding:2.5pt 2.6pt;">LLaVA</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.10.2" style="padding:2.5pt 2.6pt;">58.61%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.10.3" style="padding:2.5pt 2.6pt;">80.63%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.10.4" style="padding:2.5pt 2.6pt;">65.52%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.10.5" style="padding:2.5pt 2.6pt;">75.83%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.10.6" style="padding:2.5pt 2.6pt;">67.01%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.10.7" style="padding:2.5pt 2.6pt;">66.96%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.10.8" style="padding:2.5pt 2.6pt;">58.38%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.10.9" style="padding:2.5pt 2.6pt;">67.95%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.10.10" style="padding:2.5pt 2.6pt;">55.95%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.10.11" style="padding:2.5pt 2.6pt;">60.14%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.10.12" style="padding:2.5pt 2.6pt;">79.66%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.10.13" style="padding:2.5pt 2.6pt;">64.68%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.10.14" style="padding:2.5pt 2.6pt;">7</td></tr>
+<tr class="ltx_tr" id="S3.T3.4.11">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T3.4.11.1" style="padding:2.5pt 2.6pt;">Qwen-VL</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.11.2" style="padding:2.5pt 2.6pt;">58.67%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.11.3" style="padding:2.5pt 2.6pt;"><span class="ltx_text ltx_underline" id="S3.T3.4.11.3.1">83.87%</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.11.4" style="padding:2.5pt 2.6pt;">72.41%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.11.5" style="padding:2.5pt 2.6pt;">73.90%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.11.6" style="padding:2.5pt 2.6pt;">63.88%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.11.7" style="padding:2.5pt 2.6pt;">67.08%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.11.8" style="padding:2.5pt 2.6pt;">61.57%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.11.9" style="padding:2.5pt 2.6pt;">60.65%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.11.10" style="padding:2.5pt 2.6pt;">58.07%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.11.11" style="padding:2.5pt 2.6pt;">66.14%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.11.12" style="padding:2.5pt 2.6pt;">79.90%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.11.13" style="padding:2.5pt 2.6pt;">64.18%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.11.14" style="padding:2.5pt 2.6pt;">8</td></tr>
+<tr class="ltx_tr" id="S3.T3.4.12">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T3.4.12.1" style="padding:2.5pt 2.6pt;">MiniGPT-v2</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.12.2" style="padding:2.5pt 2.6pt;">52.52%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.12.3" style="padding:2.5pt 2.6pt;">58.06%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.12.4" style="padding:2.5pt 2.6pt;">44.83%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.12.5" style="padding:2.5pt 2.6pt;">58.07%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.12.6" style="padding:2.5pt 2.6pt;">55.86%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.12.7" style="padding:2.5pt 2.6pt;">55.85%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.12.8" style="padding:2.5pt 2.6pt;">50.27%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.12.9" style="padding:2.5pt 2.6pt;">57.81%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.12.10" style="padding:2.5pt 2.6pt;">43.48%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.12.11" style="padding:2.5pt 2.6pt;">53.43%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.12.12" style="padding:2.5pt 2.6pt;">66.42%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.12.13" style="padding:2.5pt 2.6pt;">54.36%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.12.14" style="padding:2.5pt 2.6pt;">9</td></tr>
+<tr class="ltx_tr" id="S3.T3.4.13">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T3.4.13.1" style="padding:2.5pt 2.6pt;">GLM</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.13.2" style="padding:2.5pt 2.6pt;">53.13%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.13.3" style="padding:2.5pt 2.6pt;">70.97%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.13.4" style="padding:2.5pt 2.6pt;">44.83%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.13.5" style="padding:2.5pt 2.6pt;">55.29%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.13.6" style="padding:2.5pt 2.6pt;">56.58%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.13.7" style="padding:2.5pt 2.6pt;">54.86%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.13.8" style="padding:2.5pt 2.6pt;">48.67%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.13.9" style="padding:2.5pt 2.6pt;">60.65%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.13.10" style="padding:2.5pt 2.6pt;">41.78%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.13.11" style="padding:2.5pt 2.6pt;">50.43%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.13.12" style="padding:2.5pt 2.6pt;">64.95%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.13.13" style="padding:2.5pt 2.6pt;">53.96%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.13.14" style="padding:2.5pt 2.6pt;">10</td></tr>
+<tr class="ltx_tr" id="S3.T3.4.14">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T3.4.14.1" style="padding:2.5pt 2.6pt;">InstructBLIP</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.14.2" style="padding:2.5pt 2.6pt;">49.64%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.14.3" style="padding:2.5pt 2.6pt;">58.06%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.14.4" style="padding:2.5pt 2.6pt;">51.72%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.14.5" style="padding:2.5pt 2.6pt;">61.50%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.14.6" style="padding:2.5pt 2.6pt;">55.06%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.14.7" style="padding:2.5pt 2.6pt;">55.24%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.14.8" style="padding:2.5pt 2.6pt;">48.94%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.14.9" style="padding:2.5pt 2.6pt;">55.88%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.14.10" style="padding:2.5pt 2.6pt;">50.99%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.14.11" style="padding:2.5pt 2.6pt;">51.43%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.14.12" style="padding:2.5pt 2.6pt;">58.33%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.14.13" style="padding:2.5pt 2.6pt;">53.89%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.14.14" style="padding:2.5pt 2.6pt;">11</td></tr>
+<tr class="ltx_tr" id="S3.T3.4.15">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T3.4.15.1" style="padding:2.5pt 2.6pt;">Otter</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.15.2" style="padding:2.5pt 2.6pt;">48.42%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.15.3" style="padding:2.5pt 2.6pt;">70.97%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.15.4" style="padding:2.5pt 2.6pt;">51.72%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.15.5" style="padding:2.5pt 2.6pt;">63.21%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.15.6" style="padding:2.5pt 2.6pt;">53.05%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.15.7" style="padding:2.5pt 2.6pt;">55.74%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.15.8" style="padding:2.5pt 2.6pt;">52.39%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.15.9" style="padding:2.5pt 2.6pt;">54.77%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.15.10" style="padding:2.5pt 2.6pt;">51.84%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.15.11" style="padding:2.5pt 2.6pt;">53.43%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.15.12" style="padding:2.5pt 2.6pt;">54.41%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.15.13" style="padding:2.5pt 2.6pt;">53.64%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.15.14" style="padding:2.5pt 2.6pt;">12</td></tr>
+<tr class="ltx_tr" id="S3.T3.4.16">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T3.4.16.1" style="padding:2.5pt 2.6pt;">IDEFICS-Instruct</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.16.2" style="padding:2.5pt 2.6pt;">43.93%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.16.3" style="padding:2.5pt 2.6pt;">64.52%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.16.4" style="padding:2.5pt 2.6pt;">62.07%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.16.5" style="padding:2.5pt 2.6pt;">64.06%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.16.6" style="padding:2.5pt 2.6pt;">50.72%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.16.7" style="padding:2.5pt 2.6pt;">53.12%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.16.8" style="padding:2.5pt 2.6pt;">49.07%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.16.9" style="padding:2.5pt 2.6pt;">50.20%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.16.10" style="padding:2.5pt 2.6pt;">41.08%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.16.11" style="padding:2.5pt 2.6pt;">52.43%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.16.12" style="padding:2.5pt 2.6pt;">66.42%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.16.13" style="padding:2.5pt 2.6pt;">50.82%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.16.14" style="padding:2.5pt 2.6pt;">13</td></tr>
+<tr class="ltx_tr" id="S3.T3.4.17">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S3.T3.4.17.1" style="padding:2.5pt 2.6pt;">MiniGPT-4</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.17.2" style="padding:2.5pt 2.6pt;">39.78%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.17.3" style="padding:2.5pt 2.6pt;">38.71%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.17.4" style="padding:2.5pt 2.6pt;">24.14%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.17.5" style="padding:2.5pt 2.6pt;">39.04%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.17.6" style="padding:2.5pt 2.6pt;">42.70%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.17.7" style="padding:2.5pt 2.6pt;">37.78%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.17.8" style="padding:2.5pt 2.6pt;">35.51%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.17.9" style="padding:2.5pt 2.6pt;">50.61%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.17.10" style="padding:2.5pt 2.6pt;">31.59%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.17.11" style="padding:2.5pt 2.6pt;">31.86%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.4.17.12" style="padding:2.5pt 2.6pt;">38.48%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.17.13" style="padding:2.5pt 2.6pt;">39.35%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.4.17.14" style="padding:2.5pt 2.6pt;">14</td></tr>
+<tr class="ltx_tr" id="S3.T3.4.18">
+<td class="ltx_td ltx_align_left ltx_border_bb ltx_border_r" id="S3.T3.4.18.1" style="padding:2.5pt 2.6pt;">TinyGPT-V</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.4.18.2" style="padding:2.5pt 2.6pt;">30.36%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.4.18.3" style="padding:2.5pt 2.6pt;">29.03%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.4.18.4" style="padding:2.5pt 2.6pt;">31.03%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r" id="S3.T3.4.18.5" style="padding:2.5pt 2.6pt;">35.40%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.4.18.6" style="padding:2.5pt 2.6pt;">32.50%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.4.18.7" style="padding:2.5pt 2.6pt;">36.03%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r" id="S3.T3.4.18.8" style="padding:2.5pt 2.6pt;">26.99%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.4.18.9" style="padding:2.5pt 2.6pt;">36.00%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.4.18.10" style="padding:2.5pt 2.6pt;">29.89%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.4.18.11" style="padding:2.5pt 2.6pt;">28.86%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r" id="S3.T3.4.18.12" style="padding:2.5pt 2.6pt;">31.62%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.4.18.13" style="padding:2.5pt 2.6pt;">32.04%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.4.18.14" style="padding:2.5pt 2.6pt;">15</td></tr>
+</tbody>
+</table></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.3 </span>Benchmark on Aesthetic Assessment</h3></div><div class="zh"><h3>3.3 美学评价基准</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS3.p1.1">In the third task of AesBench, the objective is to evaluate the abilities of MLLMs to quantify the aesthetic quality of images. Specifically, in the AesAQA subset, we collect three aesthetic ratings for 2,800 images from aesthetic experts, including <em class="ltx_emph ltx_font_italic" id="S3.SS3.p1.1.1">high</em>, <em class="ltx_emph ltx_font_italic" id="S3.SS3.p1.1.2">medium</em>, and <em class="ltx_emph ltx_font_italic" id="S3.SS3.p1.1.3">low</em>. Then, we feed the quality-related questions to various MLLMs to measure the simple task of <span class="ltx_text ltx_font_bold" id="S3.SS3.p1.1.4">aesthetic three-grade classification</span>, as illustrated in Figure <a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ 2.3 Subjective Experiments ‣ 2 Constructing the EAPD ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">2</span></a>. The input prompt is exemplified as:
+<em class="ltx_emph ltx_font_italic" id="S3.SS3.p1.1.5">#User: How is the aesthetic quality of this image?</em> [Image_token] <em class="ltx_emph ltx_font_italic" id="S3.SS3.p1.1.6">Choose one from the following options: A) High B) Medium C) Low. You should output the correct option without explanation.</em>
+Finally, we leverage the GPT-assisted evaluation strategy to calculate the accuracy rate of the responses generated by MLLMs.</p></div><div class="zh"><p>AesBench 的第三项任务旨在评估 MLLM 量化图像美学质量的能力。具体地，在 AesAQA 子集中，我们从美学专家处采集了 2800 张图像的三种美学评级，包括高、中、低。随后，我们把质量相关问题输入各个 MLLM，以衡量美学三档分类这一简单任务，如图 2 所示。输入提示示例为：#User: 这幅图像的美学质量如何？[Image_token] 从以下选项中选择其一：A) 高 B) 中 C) 低。你只需输出正确选项，不要解释。最后，我们借助 GPT 辅助评测策略计算 MLLM 所生成回答的准确率。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS3.p2.1">Although the numerical prediction of MLLMs is not the research focus in the community, we still try to explore the abilities of MLLMs to generate <span class="ltx_text ltx_font_bold" id="S3.SS3.p2.1.1">fine-grained aesthetic scores</span>. Generally, the outputs of MLLMs are usually verbal text rather than a definite numerical value, and the existing work indicates that the direct output of quality score does not apply to existing MLLMs <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib39" title="">Wu et al. (2024)</a></cite>. Therefore, how to collect quantifiable scores from MLLMs remains challenging. Inspired by recent studies on text-based aesthetic assessment <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib33" title="">Sheng et al. (2023)</a>; <a class="ltx_ref" href="#bib.bib48" title="">Zhong et al. (2023)</a></cite>, we introduce a text-to-score approach to convert aesthetic quality descriptions of MLLMs into aesthetic quality scores via a BERT-based regressor <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib9" title="">Devlin et al. (2019)</a></cite>. Technical details and results are provided in <span class="ltx_text" id="S3.SS3.p2.1.2" style="--ltx-fg-color:#808080;">Supplementary Sections 2 and 3</span>.</p></div><div class="zh"><p>尽管 MLLM 的数值预测并非学界的研究重点，我们仍尝试探索 MLLM 生成细粒度美学分数的能力。一般而言，MLLM 的输出通常是口头文本而非确定的数值，既有工作也表明直接输出质量分数并不适用于现有 MLLM（Wu et al., 2024）。因此，如何从 MLLM 收集可量化的分数仍具挑战。受近期基于文本的美学评估研究启发（Sheng et al., 2023; Zhong et al., 2023），我们引入一种文本转分数方法，通过基于 BERT 的回归器（Devlin et al., 2019）把 MLLM 的美学质量描述转换为美学质量分数。技术细节与结果见补充材料第 2 节与第 3 节。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.4 </span>Benchmark on Aesthetic Interpretation</h3></div><div class="zh"><h3>3.4 美学阐释基准</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS4.p1.1">Language interpretation ability is an important feature of MLLMs <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib28" title="">Liu et al. (2023b)</a></cite>. In the last task of AesBench, we examine whether current MLLMs can accurately interpret the reasons for the aesthetic quality. In the AesInter subset, we collect expert interpretations for each of the 2,800 images, as shown in Figure 2. Then, we feed the interpretation-related questions to MLLMs for evaluation. The input prompt is exemplified as:
+#User: <em class="ltx_emph ltx_font_italic" id="S3.SS4.p1.1.1">This is an image with [high] aesthetics, please explain the reasons that are related to the aesthetic quality</em>, where <em class="ltx_emph ltx_font_italic" id="S3.SS4.p1.1.2">[high]</em> is replaced by the actual aesthetic quality grades. The purpose of this is, in the case of known true aesthetic quality, to explore whether current MLLMs can give an aesthetic interpretation that is consistent with aesthetic experts. To evaluate this, we refer to recent works <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib47" title="">Zheng et al. (2023)</a>; <a class="ltx_ref" href="#bib.bib39" title="">Wu et al. (2024)</a></cite>, which have validated the efficacy of using a single-modal GPT as a reliable evaluation tool for pure language tasks. Leveraging this paradigm, this task is converted into a text-only evaluation by matching the MLLM outputs with the expert interpretations under three dimensions: <span class="ltx_text ltx_font_bold" id="S3.SS4.p1.1.3">Relevance</span>, <span class="ltx_text ltx_font_bold" id="S3.SS4.p1.1.4">Precision</span>, and <span class="ltx_text ltx_font_bold" id="S3.SS4.p1.1.5">Completeness</span>, ensuring a comprehensive benchmark on the aesthetic interpretation. The configurations of the GPT-based evaluation are delineated in <span class="ltx_text" id="S3.SS4.p1.1.6" style="--ltx-fg-color:#808080;">Supplementary Section 2</span>.</p></div><div class="zh"><p>语言阐释能力是 MLLM 的一项重要特征（Liu et al., 2023b）。在 AesBench 的最后一项任务中，我们考察现有 MLLM 能否准确阐释美学质量的成因。在 AesInter 子集中，我们为 2800 张图像中的每一张采集了专家阐释，如图 2 所示。随后，我们把阐释相关问题输入 MLLM 进行评测。输入提示示例为：#User: 这是一幅具有[高]美感的图像，请解释与美学质量相关的原因，其中[高]会被替换为实际的美学质量等级。这样做的目的是：在已知真实美学质量的前提下，探索现有 MLLM 能否给出与美学专家一致的阐释。为进行评测，我们参考近期工作（Zheng et al., 2023; Wu et al., 2024）——它们验证了用单模态 GPT 作为纯语言任务可靠评测工具的有效性。沿用这一范式，本任务被转化为纯文本评测：在相关性、精确性与完整性三个维度上把 MLLM 的输出与专家阐释相匹配，从而保证对美学阐释的全面评测。基于 GPT 的评测配置详见补充材料第 2 节。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">4 </span>Experiments on AesBench</h2></div><div class="zh"><h2>4 在 AesBench 上的实验</h2></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.1 </span>Experimental Setting</h3></div><div class="zh"><h3>4.1 实验设置</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS1.p1.1">In this section, we conduct extensive experiments with 15 different MLLMs to evaluate their abilities on image aesthetics perception, including the popular GPT-4V <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib41" title="">Yang et al. (2023)</a></cite> and Gemini Pro Vision <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib13" title="">Google (2023)</a></cite>, as well as 13 state-of-the-art variants with open sources, <em class="ltx_emph ltx_font_italic" id="S4.SS1.p1.1.1">i.e.</em> LLaVA (LLaMA-2-Chat-7B) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib28" title="">Liu et al. (2023b)</a></cite>, LLaVA-1.5 (Vicuna-v1.5-7B) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib27" title="">Liu et al. (2023a)</a></cite>, ShareGPT4V (Vicuna-v1.5-7B) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib6" title="">Chen et al. (2023b)</a></cite>, Q-Instruct (Vicuna-v1.5-7B) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib37" title="">Wu et al. (2023a)</a></cite>, mPLUG-Owl2 (LLaMA-2-7B) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib42" title="">Ye et al. (2023)</a></cite>, InstructBLIP (Vicuna-7B) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib8" title="">Dai et al. (2023)</a></cite>, MiniGPT-4 (Vicuna-7B) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib49" title="">Zhu et al. (2023)</a></cite>, MiniGPT-v2 (LLaMA-2-Chat-7B) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib5" title="">Chen et al. (2023a)</a></cite>, IDEFICS-Instruct (LLaMA-7B) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib19" title="">Huggingface (2023)</a></cite>, GLM (ChatGLM-6B) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib10" title="">Du et al. (2022)</a></cite> Otter (MPT-7B) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib24" title="">Li et al. (2023a)</a></cite>, TinyGPT-V (Phi-2) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib44" title="">Yuan et al. (2023)</a></cite> and Qwen-VL (QWen-7B) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib3" title="">Bai et al. (2023)</a></cite>. To ensure integrity and fairness, these MLLMs are evaluated using the original model weights as released by the authors without any dataset-specific tuning. It is worth noting that GPT-4V and Gemini Pro Vision have not been made available in the public domain as open-source entities. To facilitate experimental analysis, their capabilities are gauged through responses obtained via APIs. More experimental details and analyses are provided in <span class="ltx_text" id="S4.SS1.p1.1.2" style="--ltx-fg-color:#808080;">Supplementary Section 3</span>.</p></div><div class="zh"><p>本节我们用 15 个不同的 MLLM 开展大量实验，以评估它们的图像美学感知能力，其中包括流行的 GPT-4V（Yang et al., 2023）与 Gemini Pro Vision（Google, 2023），以及 13 个最先进的开源变体，即 LLaVA（LLaMA-2-Chat-7B）（Liu et al., 2023b）、LLaVA-1.5（Vicuna-v1.5-7B）（Liu et al., 2023a）、ShareGPT4V（Vicuna-v1.5-7B）（Chen et al., 2023b）、Q-Instruct（Vicuna-v1.5-7B）（Wu et al., 2023a）、mPLUG-Owl2（LLaMA-2-7B）（Ye et al., 2023）、InstructBLIP（Vicuna-7B）（Dai et al., 2023）、MiniGPT-4（Vicuna-7B）（Zhu et al., 2023）、MiniGPT-v2（LLaMA-2-Chat-7B）（Chen et al., 2023a）、IDEFICS-Instruct（LLaMA-7B）（Huggingface, 2023）、GLM（ChatGLM-6B）（Du et al., 2022）、Otter（MPT-7B）（Li et al., 2023a）、TinyGPT-V（Phi-2）（Yuan et al., 2023）与 Qwen-VL（QWen-7B）（Bai et al., 2023）。为保证完整性与公平性，这些 MLLM 均使用作者发布的原始模型权重进行评测，未针对任何数据集做调优。值得注意的是，GPT-4V 与 Gemini Pro Vision 并未以开源形式公开。为便于实验分析，我们通过 API 获取其回答来衡量其能力。更多实验细节与分析见补充材料第 3 节。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.2 </span>Evaluation on Aesthetic Perception</h3></div><div class="zh"><h3>4.2 美学感知评测</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS2.p1.1">To comprehensively evaluate the aesthetic perception abilities of current MLLMs, we measure the accuracy of responses produced by these MLLMs across various perceptual dimensions, image sources, and question types using the AesPQA subset. The results are listed in Table <a class="ltx_ref" href="#S3.T2" title="Table 2 ‣ 3.2 Benchmark on Aesthetic Empathy ‣ 3 Developing the Criteria ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">2</span></a>. Notably, Q-Instruct achieves superior overall performance in aesthetic perception. For different perceptual dimensions, GPT-4V performs best in terms of <em class="ltx_emph ltx_font_italic" id="S4.SS2.p1.1.1">Technical Quality</em> and <em class="ltx_emph ltx_font_italic" id="S4.SS2.p1.1.2">Color and Light</em>, while Q-Instruct outperforms other MLLMs in terms of <em class="ltx_emph ltx_font_italic" id="S4.SS2.p1.1.3">Composition</em> and <em class="ltx_emph ltx_font_italic" id="S4.SS2.p1.1.4">Content</em>. We also notice that most MLLMs perform best on natural images, followed by artistic images, and worst on artificial intelligence-generated images, which potentially correlates with the data composition in their training sets. In conclusion, AesBench can effectively discriminate among the aesthetic perception capabilities of MLLMs.</p></div><div class="zh"><p>为全面评估现有 MLLM 的美学感知能力，我们利用 AesPQA 子集衡量这些 MLLM 在各个感知维度、图像来源与问题类型上回答的准确率，结果列于表 2。值得注意的是，Q-Instruct 在美学感知上取得了最优的总体表现。就不同感知维度而言，GPT-4V 在技术质量与色彩光影上表现最好，而 Q-Instruct 在构图与内容上优于其他 MLLM。我们还注意到，多数 MLLM 在自然图像上表现最好，其次是艺术图像，在人工智能生成图像上最差，这可能与其训练集的数据构成有关。综上，AesBench 能有效区分各 MLLM 的美学感知能力。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.3 </span>Evaluation on Aesthetic Empathy</h3></div><div class="zh"><h3>4.3 美学共情评测</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS3.p1.1">For evaluating the aesthetic empathy capabilities of current MLLMs, we test their accuracy in generating responses across various empathy dimensions, image sources, and question types, utilizing the AesEQA subset. Table <a class="ltx_ref" href="#S3.T3" title="Table 3 ‣ 3.2 Benchmark on Aesthetic Empathy ‣ 3 Developing the Criteria ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">3</span></a> summarizes the experimental results. The results indicate that among the evaluated MLLMs, Q-Instruct exhibits the highest overall performance in aesthetic empathy, while Gemini Pro Vision achieves the second-best overall performance. For different empathy dimensions, Q-Instruct outperforms other MLLMs in terms of <em class="ltx_emph ltx_font_italic" id="S4.SS3.p1.1.1">Emotion</em> and <em class="ltx_emph ltx_font_italic" id="S4.SS3.p1.1.2">Uniqueness</em>; Gemini Pro Vision reaches the best accuracy on <em class="ltx_emph ltx_font_italic" id="S4.SS3.p1.1.3">Interest</em>, and GPT-4V performs best on <em class="ltx_emph ltx_font_italic" id="S4.SS3.p1.1.4">Vibe</em>. TinyGPT performs worst overall, even lower than the accuracy of random guesses. In summary, we comprehensively evaluate the strengths and weaknesses of current MLLMs in aesthetic empathy.</p></div><div class="zh"><p>为评估现有 MLLM 的美学共情能力，我们利用 AesEQA 子集测试它们在各个共情维度、图像来源与问题类型上生成回答的准确率。表 3 汇总了实验结果。结果表明，在所评测的 MLLM 中，Q-Instruct 在美学共情上总体表现最高，Gemini Pro Vision 总体位居第二。就不同共情维度而言，Q-Instruct 在情绪与独特性上优于其他 MLLM；Gemini Pro Vision 在兴趣上准确率最高；GPT-4V 在氛围上表现最好。TinyGPT 总体最差，甚至低于随机猜测的准确率。综上，我们全面评估了现有 MLLM 在美学共情上的长处与短板。</p></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 4: </span>Evaluation results on the <span class="ltx_text ltx_font_bold" id="S4.T4.3">Aesthetic Assessment</span> ability.</figcaption></div><div class="zh"><p>表 4：美学评价能力的评测结果。</p></div></div>
+<div class="blk atomic"><div><table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T4.4">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T4.4.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_tt" id="S4.T4.4.1.1" style="padding:3pt 3.7pt;">MLLM</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T4.4.1.2" style="padding:3pt 3.7pt;"><em class="ltx_emph ltx_font_italic" id="S4.T4.4.1.2.1">NIs</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T4.4.1.3" style="padding:3pt 3.7pt;"><em class="ltx_emph ltx_font_italic" id="S4.T4.4.1.3.1">AIs</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_tt" id="S4.T4.4.1.4" style="padding:3pt 3.7pt;"><em class="ltx_emph ltx_font_italic" id="S4.T4.4.1.4.1">AGIs</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T4.4.1.5" style="padding:3pt 3.7pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.4.1.5.1">Overall</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T4.4.1.6" style="padding:3pt 3.7pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.4.1.6.1">Rank</span></th></tr>
+<tr class="ltx_tr" id="S4.T4.4.2" style="--ltx-bg-color:#EFEFEF;">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S4.T4.4.2.1" style="padding:3pt 3.7pt;"><em class="ltx_emph ltx_font_italic" id="S4.T4.4.2.1.1" style="--ltx-bg-color:#EFEFEF;">Random guess</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T4.4.2.2" style="padding:3pt 3.7pt;"><span class="ltx_text" id="S4.T4.4.2.2.1" style="--ltx-bg-color:#EFEFEF;">33.33%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T4.4.2.3" style="padding:3pt 3.7pt;"><span class="ltx_text" id="S4.T4.4.2.3.1" style="--ltx-bg-color:#EFEFEF;">33.33%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S4.T4.4.2.4" style="padding:3pt 3.7pt;"><span class="ltx_text" id="S4.T4.4.2.4.1" style="--ltx-bg-color:#EFEFEF;">33.33%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T4.4.2.5" style="padding:3pt 3.7pt;"><span class="ltx_text" id="S4.T4.4.2.5.1" style="--ltx-bg-color:#EFEFEF;">33.33%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T4.4.2.6" style="padding:3pt 3.7pt;"><span class="ltx_text" id="S4.T4.4.2.6.1" style="--ltx-bg-color:#EFEFEF;">/</span></th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T4.4.3">
+<td class="ltx_td ltx_align_left ltx_border_r ltx_border_t" id="S4.T4.4.3.1" style="padding:3pt 3.7pt;">Q-Instruct</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.4.3.2" style="padding:3pt 3.7pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.4.3.2.1">62.20%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.4.3.3" style="padding:3pt 3.7pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.4.3.3.1">49.75%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T4.4.3.4" style="padding:3pt 3.7pt;">40.69%</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.4.3.5" style="padding:3pt 3.7pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.4.3.5.1">52.86%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.4.3.6" style="padding:3pt 3.7pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.4.3.6.1">1</span></td></tr>
+<tr class="ltx_tr" id="S4.T4.4.4">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T4.4.4.1" style="padding:3pt 3.7pt;">GPT-4V</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.4.2" style="padding:3pt 3.7pt;"><span class="ltx_text ltx_underline" id="S4.T4.4.4.2.1">59.98%</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.4.3" style="padding:3pt 3.7pt;">46.92%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.4.4.4" style="padding:3pt 3.7pt;">40.59%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.4.5" style="padding:3pt 3.7pt;"><span class="ltx_text ltx_underline" id="S4.T4.4.4.5.1">50.86%</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.4.6" style="padding:3pt 3.7pt;"><span class="ltx_text ltx_underline" id="S4.T4.4.4.6.1">2</span></td></tr>
+<tr class="ltx_tr" id="S4.T4.4.5">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T4.4.5.1" style="padding:3pt 3.7pt;">mPLUG-Owl2</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.5.2" style="padding:3pt 3.7pt;">57.78%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.5.3" style="padding:3pt 3.7pt;"><span class="ltx_text ltx_underline" id="S4.T4.4.5.3.1">49.50%</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.4.5.4" style="padding:3pt 3.7pt;"><span class="ltx_text ltx_underline" id="S4.T4.4.5.4.1">40.83%</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.5.5" style="padding:3pt 3.7pt;">50.57%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.5.6" style="padding:3pt 3.7pt;">3</td></tr>
+<tr class="ltx_tr" id="S4.T4.4.6">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T4.4.6.1" style="padding:3pt 3.7pt;">Gemini Pro Vision</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.6.2" style="padding:3pt 3.7pt;">54.17%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.6.3" style="padding:3pt 3.7pt;">48.39%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.4.6.4" style="padding:3pt 3.7pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.4.6.4.1">42.20%</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.6.5" style="padding:3pt 3.7pt;">49.38%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.6.6" style="padding:3pt 3.7pt;">4</td></tr>
+<tr class="ltx_tr" id="S4.T4.4.7">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T4.4.7.1" style="padding:3pt 3.7pt;">ShareGPT4V</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.7.2" style="padding:3pt 3.7pt;">54.65%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.7.3" style="padding:3pt 3.7pt;">48.38%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.4.7.4" style="padding:3pt 3.7pt;">35.90%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.7.5" style="padding:3pt 3.7pt;">47.82%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.7.6" style="padding:3pt 3.7pt;">5</td></tr>
+<tr class="ltx_tr" id="S4.T4.4.8">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T4.4.8.1" style="padding:3pt 3.7pt;">InstructBLIP</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.8.2" style="padding:3pt 3.7pt;">52.73%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.8.3" style="padding:3pt 3.7pt;">47.88%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.4.8.4" style="padding:3pt 3.7pt;">34.84%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.8.5" style="padding:3pt 3.7pt;">46.54%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.8.6" style="padding:3pt 3.7pt;">6</td></tr>
+<tr class="ltx_tr" id="S4.T4.4.9">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T4.4.9.1" style="padding:3pt 3.7pt;">Qwen-VL</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.9.2" style="padding:3pt 3.7pt;">54.25%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.9.3" style="padding:3pt 3.7pt;">39.28%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.4.9.4" style="padding:3pt 3.7pt;">40.43%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.9.5" style="padding:3pt 3.7pt;">46.25%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.9.6" style="padding:3pt 3.7pt;">7</td></tr>
+<tr class="ltx_tr" id="S4.T4.4.10">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T4.4.10.1" style="padding:3pt 3.7pt;">LLaVA</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.10.2" style="padding:3pt 3.7pt;">51.69%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.10.3" style="padding:3pt 3.7pt;">48.00%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.4.10.4" style="padding:3pt 3.7pt;">34.31%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.10.5" style="padding:3pt 3.7pt;">45.96%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.10.6" style="padding:3pt 3.7pt;">8</td></tr>
+<tr class="ltx_tr" id="S4.T4.4.11">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T4.4.11.1" style="padding:3pt 3.7pt;">LLaVA-1.5</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.11.2" style="padding:3pt 3.7pt;">50.08%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.11.3" style="padding:3pt 3.7pt;">48.13%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.4.11.4" style="padding:3pt 3.7pt;">34.97%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.11.5" style="padding:3pt 3.7pt;">45.46%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.11.6" style="padding:3pt 3.7pt;">9</td></tr>
+<tr class="ltx_tr" id="S4.T4.4.12">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T4.4.12.1" style="padding:3pt 3.7pt;">IDEFICS-Instruct</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.12.2" style="padding:3pt 3.7pt;">50.00%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.12.3" style="padding:3pt 3.7pt;">47.76%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.4.12.4" style="padding:3pt 3.7pt;">33.78%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.12.5" style="padding:3pt 3.7pt;">45.00%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.12.6" style="padding:3pt 3.7pt;">10</td></tr>
+<tr class="ltx_tr" id="S4.T4.4.13">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T4.4.13.1" style="padding:3pt 3.7pt;">Otter</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.13.2" style="padding:3pt 3.7pt;">49.20%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.13.3" style="padding:3pt 3.7pt;">48.25%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.4.13.4" style="padding:3pt 3.7pt;">34.04%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.13.5" style="padding:3pt 3.7pt;">44.86%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.13.6" style="padding:3pt 3.7pt;">11</td></tr>
+<tr class="ltx_tr" id="S4.T4.4.14">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T4.4.14.1" style="padding:3pt 3.7pt;">TinyGPT-V</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.14.2" style="padding:3pt 3.7pt;">44.06%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.14.3" style="padding:3pt 3.7pt;">41.65%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.4.14.4" style="padding:3pt 3.7pt;">44.81%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.14.5" style="padding:3pt 3.7pt;">43.57%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.14.6" style="padding:3pt 3.7pt;">12</td></tr>
+<tr class="ltx_tr" id="S4.T4.4.15">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T4.4.15.1" style="padding:3pt 3.7pt;">MiniGPT-4</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.15.2" style="padding:3pt 3.7pt;">41.65%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.15.3" style="padding:3pt 3.7pt;">36.28%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.4.15.4" style="padding:3pt 3.7pt;">35.90%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.15.5" style="padding:3pt 3.7pt;">38.57%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.15.6" style="padding:3pt 3.7pt;">13</td></tr>
+<tr class="ltx_tr" id="S4.T4.4.16">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T4.4.16.1" style="padding:3pt 3.7pt;">GLM</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.16.2" style="padding:3pt 3.7pt;">38.92%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.16.3" style="padding:3pt 3.7pt;">37.78%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.4.16.4" style="padding:3pt 3.7pt;">35.90%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.16.5" style="padding:3pt 3.7pt;">37.79%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.4.16.6" style="padding:3pt 3.7pt;">14</td></tr>
+<tr class="ltx_tr" id="S4.T4.4.17">
+<td class="ltx_td ltx_align_left ltx_border_bb ltx_border_r" id="S4.T4.4.17.1" style="padding:3pt 3.7pt;">MiniGPT-v2</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.4.17.2" style="padding:3pt 3.7pt;">27.05%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.4.17.3" style="padding:3pt 3.7pt;">31.92%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r" id="S4.T4.4.17.4" style="padding:3pt 3.7pt;">36.97%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.4.17.5" style="padding:3pt 3.7pt;">31.11%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.4.17.6" style="padding:3pt 3.7pt;">15</td></tr>
+</tbody>
+</table></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 5: </span>Evaluation results on the <span class="ltx_text ltx_font_bold" id="S4.T5.3">Aesthetic Interpretation</span> ability.</figcaption></div><div class="zh"><p>表 5：美学阐释能力的评测结果。</p></div></div>
+<div class="blk atomic"><div><table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T5.4">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T5.4.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_tt" id="S4.T5.4.1.1" style="padding:3pt 5.4pt;">MLLM</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T5.4.1.2" style="padding:3pt 5.4pt;"><em class="ltx_emph ltx_font_italic" id="S4.T5.4.1.2.1">Rele.</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T5.4.1.3" style="padding:3pt 5.4pt;"><em class="ltx_emph ltx_font_italic" id="S4.T5.4.1.3.1">Prec.</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_tt" id="S4.T5.4.1.4" style="padding:3pt 5.4pt;"><em class="ltx_emph ltx_font_italic" id="S4.T5.4.1.4.1">Comp.</em></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T5.4.1.5" style="padding:3pt 5.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.4.1.5.1">Overall</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T5.4.1.6" style="padding:3pt 5.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.4.1.6.1">Rank</span></th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T5.4.2">
+<td class="ltx_td ltx_align_left ltx_border_r ltx_border_t" id="S4.T5.4.2.1" style="padding:3pt 5.4pt;">GPT-4V</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.4.2.2" style="padding:3pt 5.4pt;">1.385</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.4.2.3" style="padding:3pt 5.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.4.2.3.1">1.151</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T5.4.2.4" style="padding:3pt 5.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.4.2.4.1">1.366</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.4.2.5" style="padding:3pt 5.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.4.2.5.1">1.301</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.4.2.6" style="padding:3pt 5.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.4.2.6.1">1</span></td></tr>
+<tr class="ltx_tr" id="S4.T5.4.3">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T5.4.3.1" style="padding:3pt 5.4pt;">ShareGPT4V</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.3.2" style="padding:3pt 5.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.4.3.2.1">1.440</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.3.3" style="padding:3pt 5.4pt;"><span class="ltx_text ltx_underline" id="S4.T5.4.3.3.1">1.117</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T5.4.3.4" style="padding:3pt 5.4pt;"><span class="ltx_text ltx_underline" id="S4.T5.4.3.4.1">1.331</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.3.5" style="padding:3pt 5.4pt;"><span class="ltx_text ltx_underline" id="S4.T5.4.3.5.1">1.296</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.3.6" style="padding:3pt 5.4pt;"><span class="ltx_text ltx_underline" id="S4.T5.4.3.6.1">2</span></td></tr>
+<tr class="ltx_tr" id="S4.T5.4.4">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T5.4.4.1" style="padding:3pt 5.4pt;">Gemini Pro Vision</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.4.2" style="padding:3pt 5.4pt;"><span class="ltx_text ltx_underline" id="S4.T5.4.4.2.1">1.416</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.4.3" style="padding:3pt 5.4pt;">1.087</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T5.4.4.4" style="padding:3pt 5.4pt;">1.164</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.4.5" style="padding:3pt 5.4pt;">1.222</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.4.6" style="padding:3pt 5.4pt;">3</td></tr>
+<tr class="ltx_tr" id="S4.T5.4.5">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T5.4.5.1" style="padding:3pt 5.4pt;">Qwen-VL</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.5.2" style="padding:3pt 5.4pt;">1.393</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.5.3" style="padding:3pt 5.4pt;">1.006</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T5.4.5.4" style="padding:3pt 5.4pt;">1.175</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.5.5" style="padding:3pt 5.4pt;">1.192</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.5.6" style="padding:3pt 5.4pt;">4</td></tr>
+<tr class="ltx_tr" id="S4.T5.4.6">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T5.4.6.1" style="padding:3pt 5.4pt;">mPLUG-Owl2</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.6.2" style="padding:3pt 5.4pt;">1.402</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.6.3" style="padding:3pt 5.4pt;">1.016</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T5.4.6.4" style="padding:3pt 5.4pt;">1.130</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.6.5" style="padding:3pt 5.4pt;">1.182</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.6.6" style="padding:3pt 5.4pt;">5</td></tr>
+<tr class="ltx_tr" id="S4.T5.4.7">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T5.4.7.1" style="padding:3pt 5.4pt;">IDEFICS-Instruct</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.7.2" style="padding:3pt 5.4pt;">1.406</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.7.3" style="padding:3pt 5.4pt;">1.007</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T5.4.7.4" style="padding:3pt 5.4pt;">1.126</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.7.5" style="padding:3pt 5.4pt;">1.180</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.7.6" style="padding:3pt 5.4pt;">6</td></tr>
+<tr class="ltx_tr" id="S4.T5.4.8">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T5.4.8.1" style="padding:3pt 5.4pt;">LLaVA-1.5</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.8.2" style="padding:3pt 5.4pt;">1.397</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.8.3" style="padding:3pt 5.4pt;">0.953</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T5.4.8.4" style="padding:3pt 5.4pt;">1.120</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.8.5" style="padding:3pt 5.4pt;">1.157</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.8.6" style="padding:3pt 5.4pt;">7</td></tr>
+<tr class="ltx_tr" id="S4.T5.4.9">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T5.4.9.1" style="padding:3pt 5.4pt;">InstructBLIP</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.9.2" style="padding:3pt 5.4pt;">1.372</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.9.3" style="padding:3pt 5.4pt;">0.863</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T5.4.9.4" style="padding:3pt 5.4pt;">1.144</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.9.5" style="padding:3pt 5.4pt;">1.126</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.9.6" style="padding:3pt 5.4pt;">8</td></tr>
+<tr class="ltx_tr" id="S4.T5.4.10">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T5.4.10.1" style="padding:3pt 5.4pt;">LLaVA</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.10.2" style="padding:3pt 5.4pt;">1.374</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.10.3" style="padding:3pt 5.4pt;">0.918</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T5.4.10.4" style="padding:3pt 5.4pt;">1.084</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.10.5" style="padding:3pt 5.4pt;">1.125</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.10.6" style="padding:3pt 5.4pt;">9</td></tr>
+<tr class="ltx_tr" id="S4.T5.4.11">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T5.4.11.1" style="padding:3pt 5.4pt;">Otter</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.11.2" style="padding:3pt 5.4pt;">1.242</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.11.3" style="padding:3pt 5.4pt;">0.848</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T5.4.11.4" style="padding:3pt 5.4pt;">0.989</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.11.5" style="padding:3pt 5.4pt;">1.027</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.11.6" style="padding:3pt 5.4pt;">10</td></tr>
+<tr class="ltx_tr" id="S4.T5.4.12">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T5.4.12.1" style="padding:3pt 5.4pt;">Q-Instruct</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.12.2" style="padding:3pt 5.4pt;">1.222</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.12.3" style="padding:3pt 5.4pt;">0.939</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T5.4.12.4" style="padding:3pt 5.4pt;">0.898</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.12.5" style="padding:3pt 5.4pt;">1.020</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.12.6" style="padding:3pt 5.4pt;">11</td></tr>
+<tr class="ltx_tr" id="S4.T5.4.13">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T5.4.13.1" style="padding:3pt 5.4pt;">MiniGPT-v2</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.13.2" style="padding:3pt 5.4pt;">1.191</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.13.3" style="padding:3pt 5.4pt;">0.868</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T5.4.13.4" style="padding:3pt 5.4pt;">0.948</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.13.5" style="padding:3pt 5.4pt;">1.003</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.13.6" style="padding:3pt 5.4pt;">12</td></tr>
+<tr class="ltx_tr" id="S4.T5.4.14">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T5.4.14.1" style="padding:3pt 5.4pt;">MiniGPT-4</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.14.2" style="padding:3pt 5.4pt;">1.158</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.14.3" style="padding:3pt 5.4pt;">0.823</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T5.4.14.4" style="padding:3pt 5.4pt;">1.016</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.14.5" style="padding:3pt 5.4pt;">0.999</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.14.6" style="padding:3pt 5.4pt;">13</td></tr>
+<tr class="ltx_tr" id="S4.T5.4.15">
+<td class="ltx_td ltx_align_left ltx_border_r" id="S4.T5.4.15.1" style="padding:3pt 5.4pt;">GLM</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.15.2" style="padding:3pt 5.4pt;">1.122</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.15.3" style="padding:3pt 5.4pt;">0.729</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T5.4.15.4" style="padding:3pt 5.4pt;">0.944</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.15.5" style="padding:3pt 5.4pt;">0.932</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.4.15.6" style="padding:3pt 5.4pt;">14</td></tr>
+<tr class="ltx_tr" id="S4.T5.4.16">
+<td class="ltx_td ltx_align_left ltx_border_bb ltx_border_r" id="S4.T5.4.16.1" style="padding:3pt 5.4pt;">TinyGPT-V</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.4.16.2" style="padding:3pt 5.4pt;">0.871</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.4.16.3" style="padding:3pt 5.4pt;">0.511</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r" id="S4.T5.4.16.4" style="padding:3pt 5.4pt;">0.720</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.4.16.5" style="padding:3pt 5.4pt;">0.701</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.4.16.6" style="padding:3pt 5.4pt;">15</td></tr>
+</tbody>
+</table></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.4 </span>Evaluation on Aesthetic Assessment</h3></div><div class="zh"><h3>4.4 美学评价评测</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS4.p1.1">To benchmark the aesthetic assessment capabilities, we evaluate the performance of existing MLLMs on the AesAQA subset. The experimental results are reported in Table <a class="ltx_ref" href="#S4.T4" title="Table 4 ‣ 4.3 Evaluation on Aesthetic Empathy ‣ 4 Experiments on AesBench ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">4</span></a>. The results indicate that Q-Instruct achieves superior performance in overall accuracy for aesthetic classification. However, it is notable that the highest recorded prediction accuracy is only 52.86%, underscoring the limitations of even the most advanced MLLMs in accurately assessing aesthetic quality. Additionally, GPT-4V emerges as the model with the second-highest prediction accuracy, at 50.86%. An interesting observation from this table is the varying performance of MLLMs across different image types: the models are most effective with natural images, moderately effective with artistic images, and least effective with images generated by artificial intelligence. Furthermore, we also try to explore the abilities of MLLMs to generate fine-grained aesthetic scores, and results are provided in <span class="ltx_text" id="S4.SS4.p1.1.1" style="--ltx-fg-color:#808080;">Supplementary Section 3</span>. These experiments demonstrate that the aesthetic assessment abilities of MLLMs still need to be further strengthened in the future.</p></div><div class="zh"><p>为对美学评价能力建立基准，我们在 AesAQA 子集上评测了现有 MLLM 的表现，实验结果报告于表 4。结果表明，Q-Instruct 在美学分类的总体准确率上表现最优。但值得注意的是，最高的预测准确率仅为 52.86%，这说明即便是最先进的 MLLM，在准确评价美学质量上仍存在局限。此外，GPT-4V 以 50.86% 的预测准确率位居第二。从表中还能观察到一个有趣现象：MLLM 在不同图像类型上的表现各异——模型在自然图像上最有效，在艺术图像上效果中等，在人工智能生成图像上最差。此外，我们还尝试探索 MLLM 生成细粒度美学分数的能力，结果见补充材料第 3 节。这些实验表明，MLLM 的美学评价能力在未来仍需进一步加强。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.5 </span>Evaluation on Aesthetic Interpretation</h3></div><div class="zh"><h3>4.5 美学阐释评测</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS5.p1.1">We benchmark the interpretation abilities of current MLLMs in Table <a class="ltx_ref" href="#S4.T5" title="Table 5 ‣ 4.3 Evaluation on Aesthetic Empathy ‣ 4 Experiments on AesBench ‣ AesBench: An Expert Benchmark for Multimodal Large Language Models on Image Aesthetics Perception"><span class="ltx_text ltx_ref_tag">5</span></a>, where the values range from [0, 2], and the higher the value, the better the performance. From the table, GPT-4V is superior to other MLLMs in overall performance, while ShareGPT obtains the second-best overall performance. For the three different dimensions, we can find that almost all models suffer from <em class="ltx_emph ltx_font_italic" id="S4.SS5.p1.1.1">unsatisfactory Precision</em>, significantly less than the other dimensions (<em class="ltx_emph ltx_font_italic" id="S4.SS5.p1.1.2">Relevance</em> and <em class="ltx_emph ltx_font_italic" id="S4.SS5.p1.1.3">Completeness</em>). The significantly lower precision highlights the strong <span class="ltx_text ltx_font_bold" id="S4.SS5.p1.1.4">hallucination</span> in the context of aesthetic interpretation, which underscores the crucial research for enhancing the aesthetic interpretation abilities of MLLMs, especially on language precision.</p></div><div class="zh"><p>我们在表 5 中对现有 MLLM 的阐释能力建立基准，取值区间为 [0, 2]，数值越高表现越好。从表中可见，GPT-4V 在总体表现上优于其他 MLLM，ShareGPT 取得总体第二的成绩。就三个不同维度而言，我们发现几乎所有模型的精确性都不理想，明显低于另外两个维度（相关性与完整性）。精确性显著偏低凸显了美学阐释场景中的严重幻觉问题，这也说明提升 MLLM 美学阐释能力——尤其是语言精确性——是一项关键研究课题。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">5 </span>Conclusion</h2></div><div class="zh"><h2>5 结论</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S5.p1.1">In this work, we introduce AesBench, an expert benchmark to comprehensively evaluate the aesthetic perception capacities of the current MLLMs. AesBench comprises two main components. First, the Expert-labeled Aesthetics Perception Database (EAPD), a high-quality dataset that serves as a gold standard for evaluating MLLMs in image aesthetics perception. Second, a four-dimensional evaluation framework is proposed, which consists of a set of comprehensive criteria across four key dimensions: Perception (AesP), Empathy (AesE), Assessment (AesA), and Interpretation (AesI). Experimental evaluations on AesBench demonstrate that most MLLMs are still weak in aesthetic perception capabilities. This also highlights that future development of MLLMs needs to consider more aesthetic dimensions.</p></div><div class="zh"><p>本文提出 AesBench，一个用于全面评估当前 MLLM 美学感知能力的专家基准。AesBench 包含两个主要组成部分：其一是专家标注美学感知数据库（EAPD），这是一个高质量数据集，可作为评测 MLLM 图像美学感知能力的黄金标准；其二是一个四维评测框架，由覆盖感知（AesP）、共情（AesE）、评价（AesA）与阐释（AesI）四个关键维度的一整套综合准则构成。在 AesBench 上的实验评测表明，多数 MLLM 的美学感知能力仍然薄弱。这也提示未来 MLLM 的发展需要纳入更多美学维度。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_bibliography">References</h2></div><div class="zh"><h2>参考文献</h2></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib1"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Achlioptas <span class="ltx_text ltx_font_italic" id="bib.bib1.2">et al.</span> [2021]</span>
+<span class="ltx_bibblock">
+Panos Achlioptas, Maks Ovsjanikov, Kilichbek Haydarov, Mohamed Elhoseiny, and Leonidas Guibas.
+
+</span>
+<span class="ltx_bibblock">Artemis: Affective language for visual art.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib1.3">Proc. IEEE Conf. Comput. Vis. Pattern Recognit.</span>, pages 11564–11574, 2021.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib2"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Antol <span class="ltx_text ltx_font_italic" id="bib.bib2.2">et al.</span> [2015]</span>
+<span class="ltx_bibblock">
+Stanislaw Antol, Aishwarya Agrawal, Jiasen Lu, Margaret Mitchell, Dhruv Batra, C. Lawrence Zitnick, and Devi Parikh.
+
+</span>
+<span class="ltx_bibblock">VQA: Visual question answering.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib2.3">Proc. IEEE Int. Conf. on Comput. Vis.</span>, December 2015.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib3"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bai <span class="ltx_text ltx_font_italic" id="bib.bib3.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Jinze Bai, Shuai Bai, Shusheng Yang, Shijie Wang, Sinan Tan, Peng Wang, Junyang Lin, Chang Zhou, and Jingren Zhou.
+
+</span>
+<span class="ltx_bibblock">Qwen-VL: A versatile vision-language model for understanding, localization, text reading, and beyond.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib3.3">arXiv preprint arXiv:2308.12966</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib4"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Cai <span class="ltx_text ltx_font_italic" id="bib.bib4.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Rizhao Cai, Zirui Song, Dayan Guan, Zhenhao Chen, Xing Luo, Chenyu Yi, and Alex Kot.
+
+</span>
+<span class="ltx_bibblock">BenchLMM: Benchmarking cross-style visual capability of large multimodal models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib4.3">arXiv preprint arXiv:2312.02896</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib5"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen <span class="ltx_text ltx_font_italic" id="bib.bib5.2">et al.</span> [2023a]</span>
+<span class="ltx_bibblock">
+Jun Chen, Deyao Zhu, Xiaoqian Shen, Xiang Li, Zechu Liu, Pengchuan Zhang, Raghuraman Krishnamoorthi, Vikas Chandra, Yunyang Xiong, and Mohamed Elhoseiny.
+
+</span>
+<span class="ltx_bibblock">MiniGPT-v2: large language model as a unified interface for vision-language multi-task learning.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib5.3">arXiv preprint arXiv:2310.09478</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib6"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen <span class="ltx_text ltx_font_italic" id="bib.bib6.2">et al.</span> [2023b]</span>
+<span class="ltx_bibblock">
+Lin Chen, Jisong Li, Xiaoyi Dong, Pan Zhang, Conghui He, Jiaqi Wang, Feng Zhao, and Dahua Lin.
+
+</span>
+<span class="ltx_bibblock">ShareGPT4V: Improving large multi-modal models with better captions.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib6.3">arXiv preprint arXiv:2311.12793</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib7"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen <span class="ltx_text ltx_font_italic" id="bib.bib7.2">et al.</span> [2023c]</span>
+<span class="ltx_bibblock">
+Yi Chen, Yuying Ge, Yixiao Ge, Mingyu Ding, Bohao Li, Rui Wang, Ruifeng Xu, Ying Shan, and Xihui Liu.
+
+</span>
+<span class="ltx_bibblock">EgoPlan-Bench: Benchmarking egocentric embodied planning with multimodal large language models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib7.3">arXiv preprint arXiv:2312.06722</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib8"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dai <span class="ltx_text ltx_font_italic" id="bib.bib8.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Wenliang Dai, Junnan Li, Dongxu Li, Anthony Meng Huat Tiong, Junqi Zhao, Weisheng Wang, Boyang Li, Pascale Fung, and Steven Hoi.
+
+</span>
+<span class="ltx_bibblock">InstructBLIP: Towards general-purpose vision-language models with instruction tuning.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib8.3">arXiv preprint arXiv:2305.06500</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib9"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Devlin <span class="ltx_text ltx_font_italic" id="bib.bib9.2">et al.</span> [2019]</span>
+<span class="ltx_bibblock">
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova.
+
+</span>
+<span class="ltx_bibblock">BERT: Pre-training of deep bidirectional transformers for language understanding.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib9.3">arXiv preprint arXiv:1810.04805</span>, 2019.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib10"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Du <span class="ltx_text ltx_font_italic" id="bib.bib10.2">et al.</span> [2022]</span>
+<span class="ltx_bibblock">
+Zhengxiao Du, Yujie Qian, Xiao Liu, Ming Ding, Jiezhong Qiu, Zhilin Yang, and Jie Tang.
+
+</span>
+<span class="ltx_bibblock">GLM: General language model pretraining with autoregressive blank infilling.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib10.3">arXiv preprint arXiv:2103.10360</span>, 2022.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib11"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Fang <span class="ltx_text ltx_font_italic" id="bib.bib11.2">et al.</span> [2020]</span>
+<span class="ltx_bibblock">
+Yuming Fang, Hanwei Zhu, Yan Zeng, Kede Ma, and Zhou Wang.
+
+</span>
+<span class="ltx_bibblock">Perceptual quality assessment of smartphone photography.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib11.3">Proc. IEEE Conf. Comput. Vis. Pattern Recognit.</span>, pages 3674–3683, June 2020.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib12"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Feng <span class="ltx_text ltx_font_italic" id="bib.bib12.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Tinglei Feng, Jiaxuan Liu, and Jufeng Yang.
+
+</span>
+<span class="ltx_bibblock">Probing sentiment-oriented pretraining inspired by human sentiment perception mechanism.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib12.3">Proc. IEEE Conf. Comput. Vis. Pattern Recognit.</span>, pages 2850–2860, Jun. 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib13"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Google [2023]</span>
+<span class="ltx_bibblock">
+Google.
+
+</span>
+<span class="ltx_bibblock">Build with gemini, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib14"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">He <span class="ltx_text ltx_font_italic" id="bib.bib14.2">et al.</span> [2022]</span>
+<span class="ltx_bibblock">
+Shuai He, Yongchang Zhang, Rui Xie, Dongxiang Jiang, and Anlong Ming.
+
+</span>
+<span class="ltx_bibblock">Rethinking image aesthetics assessment: Models, datasets and benchmarks.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib14.3">Proc. Int. Joint Conf. Artif. Intell.</span>, Jul. 2022.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib15"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hossain <span class="ltx_text ltx_font_italic" id="bib.bib15.2">et al.</span> [2019]</span>
+<span class="ltx_bibblock">
+MD Zakir Hossain, Ferdous Sohel, Mohd Fairuz Shiratuddin, and Hamid Laga.
+
+</span>
+<span class="ltx_bibblock">A comprehensive survey of deep learning for image captioning.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib15.3">ACM Computing Surveys (CsUR)</span>, 51(6):1–36, 2019.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib16"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hosu <span class="ltx_text ltx_font_italic" id="bib.bib16.2">et al.</span> [2020]</span>
+<span class="ltx_bibblock">
+Vlad Hosu, Hanhe Lin, Tamas Sziranyi, and Dietmar Saupe.
+
+</span>
+<span class="ltx_bibblock">KonIQ-10k: An ecologically valid database for deep learning of blind image quality assessment.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib16.3">IEEE Trans. Image Process.</span>, 29:4041–4056, Jan. 2020.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib17"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Huang <span class="ltx_text ltx_font_italic" id="bib.bib17.2">et al.</span> [2020]</span>
+<span class="ltx_bibblock">
+Yipo Huang, Leida Li, Hancheng Zhu, and Bo Hu.
+
+</span>
+<span class="ltx_bibblock">Blind quality index of depth images based on structural statistics for view synthesis.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib17.3">IEEE Signal Process. Lett.</span>, 27:685–689, Apr. 2020.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib18"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Huang <span class="ltx_text ltx_font_italic" id="bib.bib18.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Yipo Huang, Leida Li, Yuzhe Yang, Yaqian Li, and Yandong Guo.
+
+</span>
+<span class="ltx_bibblock">Explainable and generalizable blind image quality assessment via semantic attribute reasoning.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib18.3">IEEE Trans. Multimedia</span>, 25:7672–7685, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib19"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Huggingface [2023]</span>
+<span class="ltx_bibblock">
+Huggingface.
+
+</span>
+<span class="ltx_bibblock">Introducing idefics: An open reproduction of state-of-the-art visual language model, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib20"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kong <span class="ltx_text ltx_font_italic" id="bib.bib20.2">et al.</span> [2016]</span>
+<span class="ltx_bibblock">
+S. Kong, X. Shen, Z. Lin, R. Mech, and C. Fowlkes.
+
+</span>
+<span class="ltx_bibblock">Photo aesthetics ranking network with attributes and content adaptation.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib20.3">Proc. Eur. Conf. Comput. Vis.</span>, pages 662–679, Sep. 2016.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib21"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kruk <span class="ltx_text ltx_font_italic" id="bib.bib21.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Julia Kruk, Caleb Ziems, and Diyi Yang.
+
+</span>
+<span class="ltx_bibblock">Impressions: Understanding visual semiotics and aesthetic impact.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib21.3">arXiv preprint arXiv:2310.17887</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib22"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lai <span class="ltx_text ltx_font_italic" id="bib.bib22.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Xin Lai, Zhuotao Tian, Yukang Chen, Yanwei Li, Yuhui Yuan, Shu Liu, and Jiaya Jia.
+
+</span>
+<span class="ltx_bibblock">LISA: Reasoning segmentation via large language model.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib22.3">arXiv preprint arXiv:2308.00692</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib23"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Li <span class="ltx_text ltx_font_italic" id="bib.bib23.2">et al.</span> [2018]</span>
+<span class="ltx_bibblock">
+Bo Li, Caiming Xiong, Tianfu Wu, Yu Zhou, Lun Zhang, and Rufeng Chu.
+
+</span>
+<span class="ltx_bibblock">Neural abstract style transfer for chinese traditional painting.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib23.3">arXiv preprint arXiv:1812.03264</span>, 2018.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib24"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Li <span class="ltx_text ltx_font_italic" id="bib.bib24.2">et al.</span> [2023a]</span>
+<span class="ltx_bibblock">
+Bo Li, Yuanhan Zhang, Liangyu Chen, Jinghao Wang, Jingkang Yang, and Ziwei Liu.
+
+</span>
+<span class="ltx_bibblock">Otter: A multi-modal model with in-context instruction tuning.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib24.3">arXiv preprint arXiv:2305.03726</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib25"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Li <span class="ltx_text ltx_font_italic" id="bib.bib25.2">et al.</span> [2023b]</span>
+<span class="ltx_bibblock">
+Chunyi Li, Zicheng Zhang, Haoning Wu, Wei Sun, Xiongkuo Min, Xiaohong Liu, Guangtao Zhai, and Weisi Lin.
+
+</span>
+<span class="ltx_bibblock">AGIQA-3K: An open database for ai-generated image quality assessment.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib25.3">arXiv preprint arXiv:2306.04717</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib26"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Li <span class="ltx_text ltx_font_italic" id="bib.bib26.2">et al.</span> [2023c]</span>
+<span class="ltx_bibblock">
+Leida Li, Yipo Huang, Jinjian Wu, Yuzhe Yang, Yaqian Li, Yandong Guo, and Guangming Shi.
+
+</span>
+<span class="ltx_bibblock">Theme-aware visual attribute reasoning for image aesthetics assessment.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib26.3">IEEE Trans. Circuits and Syst. Video Technol.</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib27"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu <span class="ltx_text ltx_font_italic" id="bib.bib27.2">et al.</span> [2023a]</span>
+<span class="ltx_bibblock">
+Haotian Liu, Chunyuan Li, Yuheng Li, and Yong Jae Lee.
+
+</span>
+<span class="ltx_bibblock">Improved baselines with visual instruction tuning.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib27.3">arXiv preprint arXiv:2310.03744</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib28"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu <span class="ltx_text ltx_font_italic" id="bib.bib28.2">et al.</span> [2023b]</span>
+<span class="ltx_bibblock">
+Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee.
+
+</span>
+<span class="ltx_bibblock">Visual instruction tuning.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib28.3">arXiv preprint arXiv:2304.08485</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib29"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lu <span class="ltx_text ltx_font_italic" id="bib.bib29.2">et al.</span> [2021]</span>
+<span class="ltx_bibblock">
+Peng Lu, Hao Zhang, Xujun Peng, and Xiaofu Jin.
+
+</span>
+<span class="ltx_bibblock">Learning the relation between interested objects and aesthetic region for image cropping.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib29.3">IEEE Trans. Multimedia</span>, 23:3618–3630, Oct. 2021.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib30"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">OpenAI [2023]</span>
+<span class="ltx_bibblock">
+OpenAI.
+
+</span>
+<span class="ltx_bibblock">Introducing chatgpt, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib31"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Radford <span class="ltx_text ltx_font_italic" id="bib.bib31.2">et al.</span> [2021]</span>
+<span class="ltx_bibblock">
+Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, Gretchen Krueger, and Ilya Sutskever.
+
+</span>
+<span class="ltx_bibblock">Learning transferable visual models from natural language supervision.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib31.3">arXiv preprint arXiv:2103.00020</span>, 2021.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib32"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sheikh <span class="ltx_text ltx_font_italic" id="bib.bib32.2">et al.</span> [2006]</span>
+<span class="ltx_bibblock">
+H.R. Sheikh, M.F. Sabir, and A.C. Bovik.
+
+</span>
+<span class="ltx_bibblock">A statistical evaluation of recent full reference image quality assessment algorithms.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib32.3">IEEE Trans. Image Process.</span>, 15(11):3440–3451, Nov. 2006.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib33"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sheng <span class="ltx_text ltx_font_italic" id="bib.bib33.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Xiangfei Sheng, Leida Li, Pengfei Chen, Jinjian Wu, Weisheng Dong, Yuzhe Yang, Liwu Xu, Yaqian Li, and Guangming Shi.
+
+</span>
+<span class="ltx_bibblock">Aesclip: Multi-attribute contrastive learning for image aesthetics assessment.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib33.3">Proc. ACM Int. Conf. Multimedia</span>, page 1117–1126, Oct. 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib34"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Touvron <span class="ltx_text ltx_font_italic" id="bib.bib34.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, Aurelien Rodriguez, Armand Joulin, Edouard Grave, and Guillaume Lample.
+
+</span>
+<span class="ltx_bibblock">LLaMA: Open and efficient foundation language models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib34.3">arXiv preprint arXiv:2302.13971</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib35"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Unsplash [2023]</span>
+<span class="ltx_bibblock">
+Unsplash.
+
+</span>
+<span class="ltx_bibblock">Access the world’s largest open library dataset, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib36"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wang <span class="ltx_text ltx_font_italic" id="bib.bib36.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Zijie J. Wang, Evan Montoya, David Munechika, Haoyang Yang, Benjamin Hoover, and Duen Horng Chau.
+
+</span>
+<span class="ltx_bibblock">DiffusionDB: A large-scale prompt gallery dataset for text-to-image generative models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib36.3">arXiv preprint arXiv:2210.14896</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib37"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wu <span class="ltx_text ltx_font_italic" id="bib.bib37.2">et al.</span> [2023a]</span>
+<span class="ltx_bibblock">
+Haoning Wu, Zicheng Zhang, Erli Zhang, Chaofeng Chen, Liang Liao, Annan Wang, Kaixin Xu, Chunyi Li, Jingwen Hou, Guangtao Zhai, Geng Xue, Wenxiu Sun, Qiong Yan, and Weisi Lin.
+
+</span>
+<span class="ltx_bibblock">Q-Instruct: Improving low-level visual abilities for multi-modality foundation models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib37.3">arXiv preprint arXiv:2311.06783</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib38"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wu <span class="ltx_text ltx_font_italic" id="bib.bib38.2">et al.</span> [2023b]</span>
+<span class="ltx_bibblock">
+Haoning Wu, Zicheng Zhang, Weixia Zhang, Chaofeng Chen, Liang Liao, Chunyi Li, Yixuan Gao, Annan Wang, Erli Zhang, Wenxiu Sun, Qiong Yan, Xiongkuo Min, Guangtao Zhai, and Weisi Lin.
+
+</span>
+<span class="ltx_bibblock">Q-align: Teaching lmms for visual scoring via discrete text-defined levels.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib38.3">arXiv preprint arXiv:2312.17090</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib39"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wu <span class="ltx_text ltx_font_italic" id="bib.bib39.2">et al.</span> [2024]</span>
+<span class="ltx_bibblock">
+Haoning Wu, Zicheng Zhang, Erli Zhang, Chaofeng Chen, Liang Liao, Annan Wang, Chunyi Li, Wenxiu Sun, Qiong Yan, Guangtao Zhai, and Weisi Lin.
+
+</span>
+<span class="ltx_bibblock">Q-Bench: A benchmark for general-purpose foundation models on low-level vision.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib39.3">arXiv preprint arXiv:2309.14181</span>, 2024.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib40"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang <span class="ltx_text ltx_font_italic" id="bib.bib40.2">et al.</span> [2022]</span>
+<span class="ltx_bibblock">
+Y. Yang, L. Xu, L. Li, N. Qie, Y. Li, P. Zhang, and Y. Guo.
+
+</span>
+<span class="ltx_bibblock">Personalized image aesthetics assessment with rich attributes.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib40.3">Proc. IEEE Conf. Comput. Vis. Pattern Recog.</span>, pages 19861–19869, Jun. 2022.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib41"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang <span class="ltx_text ltx_font_italic" id="bib.bib41.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Zhengyuan Yang, Linjie Li, Kevin Lin, Jianfeng Wang, Chung-Ching Lin, Zicheng Liu, and Lijuan Wang.
+
+</span>
+<span class="ltx_bibblock">The dawn of lmms: Preliminary explorations with gpt-4v(ision).
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib41.3">arXiv preprint arXiv:2309.17421</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib42"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ye <span class="ltx_text ltx_font_italic" id="bib.bib42.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Qinghao Ye, Haiyang Xu, Jiabo Ye, Ming Yan, Anwen Hu, Haowei Liu, Qi Qian, Ji Zhang, Fei Huang, and Jingren Zhou.
+
+</span>
+<span class="ltx_bibblock">mPLUG-Owl2: Revolutionizing multi-modal large language model with modality collaboration.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib42.3">arXiv preprint arXiv:2311.04257</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib43"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yi <span class="ltx_text ltx_font_italic" id="bib.bib43.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Ran Yi, Haoyuan Tian, Zhihao Gu, Yu-Kun Lai, and Paul L. Rosin.
+
+</span>
+<span class="ltx_bibblock">Towards artistic image aesthetics assessment: a large-scale dataset and a new method.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib43.3">Proc. IEEE Conf. Comput. Vis. Pattern Recognit.</span>, pages 22388–22397, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib44"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yuan <span class="ltx_text ltx_font_italic" id="bib.bib44.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Zhengqing Yuan, Zhaoxu Li, and Lichao Sun.
+
+</span>
+<span class="ltx_bibblock">TinyGPT-V: Efficient multimodal large language model via small backbones.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib44.3">arXiv preprint arXiv:2312.16862</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib45"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang <span class="ltx_text ltx_font_italic" id="bib.bib45.2">et al.</span> [2023a]</span>
+<span class="ltx_bibblock">
+Zicheng Zhang, Chunyi Li, Wei Sun, Xiaohong Liu, Xiongkuo Min, and Guangtao Zhai.
+
+</span>
+<span class="ltx_bibblock">A perceptual quality assessment exploration for aigc images.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib45.3">arXiv preprint arXiv:2303.12618</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib46"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang <span class="ltx_text ltx_font_italic" id="bib.bib46.2">et al.</span> [2023b]</span>
+<span class="ltx_bibblock">
+Zicheng Zhang, Haoning Wu, Zhongpeng Ji, Chunyi Li, Erli Zhang, Wei Sun, Xiaohong Liu, Xiongkuo Min, Fengyu Sun, Shangling Jui, Weisi Lin, and Guangtao Zhai.
+
+</span>
+<span class="ltx_bibblock">Q-boost: On visual quality assessment ability of low-level multi-modality foundation models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib46.3">arXiv preprint arXiv:2312.15300</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib47"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zheng <span class="ltx_text ltx_font_italic" id="bib.bib47.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric P. Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica.
+
+</span>
+<span class="ltx_bibblock">Judging llm-as-a-judge with mt-bench and chatbot arena.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib47.3">arXiv preprint arXiv:2306.05685</span>, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib48"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhong <span class="ltx_text ltx_font_italic" id="bib.bib48.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Zhipeng Zhong, Fei Zhou, and Guoping Qiu.
+
+</span>
+<span class="ltx_bibblock">Aesthetically relevant image captioning.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib48.3">Proc. AAAI</span>, volume 37, pages 3733–3741, 2023.
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib49"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhu <span class="ltx_text ltx_font_italic" id="bib.bib49.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Deyao Zhu, Jun Chen, Xiaoqian Shen, Xiang Li, and Mohamed Elhoseiny.
+
+</span>
+<span class="ltx_bibblock">MiniGPT-4: Enhancing vision-language understanding with advanced large language models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib49.3">arXiv preprint arXiv:2304.10592</span>, 2023.
+
+</span></li></div></div>
+</div></div>
+<script>
+document.querySelectorAll('.toolbar button').forEach(function(b){{
+  b.addEventListener('click',function(){{
+    document.querySelectorAll('.toolbar button').forEach(function(x){{x.classList.remove('on');}});
+    b.classList.add('on');
+    document.body.className=b.dataset.v;
+  }});
+}});
+</script>
+</body></html>

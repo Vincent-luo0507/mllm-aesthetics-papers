@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>039_confronting-reward-overoptimization-for-</title>
+<script>
+window.MathJax={
+  tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']],processEscapes:true},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+body{max-width:1180px;margin:0 auto;padding:24px 20px;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+color:#1f2937;line-height:1.8;font-size:15.5px;background:#fff;}
+img{max-width:100%;height:auto;display:block;margin:12px auto;}
+table{border-collapse:collapse;margin:14px 0;font-size:14px;} td,th{border:1px solid #d8dee6;padding:6px 9px;}
+h1,h2,h3,h4{color:#1e3a8a;}
+</style></head><body>
+<html><body><h1 class="ltx_title ltx_title_document">Confronting Reward Overoptimization for Diffusion Models: 
+<br class="ltx_break"/>A Perspective of Inductive and Primacy Biases</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Ziyi Zhang
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Institute of Artificial Intelligence, School of Computer Science, Wuhan University, China
+</span>
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Hubei Luojia Laboratory, Wuhan, China
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Sen Zhang
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>The University of Sydney, Australia
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Yibing Zhan
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>JD Explore Academy, Beijing, China
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Yong Luo
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Institute of Artificial Intelligence, School of Computer Science, Wuhan University, China
+</span>
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Hubei Luojia Laboratory, Wuhan, China
+</span>
+<span class="ltx_contact ltx_role_email"><span class="ltx_contact_name">Correspondence to: </span><a href="mailto:luoyong@whu.edu.cn">luoyong@whu.edu.cn</a>
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Yonggang Wen
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Nanyang Technological University, Singapore
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Dacheng Tao
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Nanyang Technological University, Singapore
+</span></span></span></span></div>
+<div class="ltx_abstract" id="abstract1"><h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p class="ltx_p" id="abstract1.1">Bridging the gap between diffusion models and human preferences is crucial for their integration into practical generative workflows. While optimizing downstream reward models has emerged as a promising alignment strategy, concerns arise regarding the risk of excessive optimization with learned reward models, which potentially compromises ground-truth performance. In this work, we confront the reward overoptimization problem in diffusion model alignment through the lenses of both inductive and primacy biases. We first identify a mismatch between current methods and the temporal inductive bias inherent in the multi-step denoising process of diffusion models, as a potential source of reward overoptimization. Then, we surprisingly discover that dormant neurons in our critic model act as a regularization against reward overoptimization while active neurons reflect primacy bias. Motivated by these observations, we propose Temporal Diffusion Policy Optimization with critic active neuron Reset (TDPO-R), a policy gradient algorithm that exploits the temporal inductive bias of diffusion models and mitigates the primacy bias stemming from active neurons. Empirical results demonstrate the superior efficacy of our methods in mitigating reward overoptimization. Code is avaliable at <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/ZiyiZhang27/tdpo" title="">https://github.com/ZiyiZhang27/tdpo</a>.</p>
+</div>
+<div class="ltx_keywords">
+<h6 class="ltx_title ltx_title_keywords">Keywords: </h6>diffusion models, text-to-image models, alignment, reinforcement learning, reward overoptimization
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1">Diffusion models <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib36" title="">Sohl-Dickstein et al., 2015</a>)</cite> represent the state-of-the-art in generative modeling for continuous data, particularly excelling in text-to-image generation <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib30" title="">Rombach et al., 2022</a>)</cite>. Traditional training methodologies for diffusion models predominantly adhere to a maximum likelihood objective. However, such approaches may not inherently prioritize the optimization of downstream objectives, such as image aesthetic quality <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib32" title="">Schuhmann et al., 2022</a>)</cite> or human preferences <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib42" title="">Xu et al., 2023</a>; <a class="ltx_ref" href="#bib.bib40" title="">Wu et al., 2023a</a>)</cite>. To align pre-trained diffusion models with downstream objectives, researchers have explored using learned or handcrafted reward functions to finetune these models. Typical solutions along this research direction can be categorized into supervised learning <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib19" title="">Lee et al., 2023</a>; <a class="ltx_ref" href="#bib.bib41" title="">Wu et al., 2023b</a>; <a class="ltx_ref" href="#bib.bib7" title="">Dong et al., 2023</a>)</cite>, reinforcement learning (RL) <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib9" title="">Fan et al., 2023</a>; <a class="ltx_ref" href="#bib.bib4" title="">Black et al., 2024</a>)</cite>, and backpropagation through sampling <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib5" title="">Clark et al., 2024</a>; <a class="ltx_ref" href="#bib.bib28" title="">Prabhudesai et al., 2023</a>)</cite>.</p>
+</div>
+<figure class="ltx_figure" id="S1.F1">
+<p class="ltx_p ltx_align_center ltx_align_center" id="S1.F1.2"><span class="ltx_text" id="S1.F1.2.1">
+<img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="219" id="S1.F1.g1" src="figures/tdpo.png" style="aspect-ratio:476/219;" width="476"/></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>TDPO-R first samples trajectories <math alttext="(x_{T},x_{T-1},...,x_{0})" class="ltx_Math" display="inline" id="S1.F1.m11" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>T</mi></msub><mo>,</mo><msub><mi>x</mi><mrow><mi>T</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>x</mi><mn>0</mn></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(x_{T},x_{T-1},...,x_{0})</annotation></semantics></math> from the denoising process of a fixed diffusion model parameterized by <math alttext="\theta_{\mathrm{old}}" class="ltx_Math" display="inline" id="S1.F1.m12" intent=":literal"><semantics><msub><mi>θ</mi><mi>old</mi></msub><annotation encoding="application/x-tex">\theta_{\mathrm{old}}</annotation></semantics></math> for each epoch. At each timestep <math alttext="t" class="ltx_Math" display="inline" id="S1.F1.m13" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>, it performs a one-step denoising using the current diffusion model parameterized by <math alttext="\theta" class="ltx_Math" display="inline" id="S1.F1.m14" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>, estimates a temporal reward <math alttext="\mathcal{T}_{\phi}(x_{t})" class="ltx_Math" display="inline" id="S1.F1.m15" intent=":literal"><semantics><mrow><msub><mi class="ltx_font_mathcaligraphic">𝒯</mi><mi>ϕ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{T}_{\phi}(x_{t})</annotation></semantics></math> using a temporal critic parameterized by <math alttext="\phi" class="ltx_Math" display="inline" id="S1.F1.m16" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>, and updates the gradients for both <math alttext="\theta" class="ltx_Math" display="inline" id="S1.F1.m17" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math> and <math alttext="\phi" class="ltx_Math" display="inline" id="S1.F1.m18" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math> according to the corresponding objective functions. Additionally, TDPO-R resets active neurons of <math alttext="\phi" class="ltx_Math" display="inline" id="S1.F1.m19" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math> at the end of every <math alttext="F" class="ltx_Math" display="inline" id="S1.F1.m20" intent=":literal"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math> epochs.</figcaption>
+</figure>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1">Despite the promise of reward-driven approaches, reward overoptimization remains a fundamental and under-researched challenge. This phenomenon, characterized by overfitting learned or handcrafted reward models, stems from the inherent limitations of these models in capturing the full spectrum of human intent. In image generation, reward overoptimization typically manifests as fidelity deterioration or continual degradation in cross-reward generalization against out-of-domain reward functions. Additionally, sample efficiency further complicates this issue. Notably, while RL-based methods <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib9" title="">Fan et al., 2023</a>; <a class="ltx_ref" href="#bib.bib4" title="">Black et al., 2024</a>)</cite> exhibit relatively lower susceptibility to reward overoptimization, this advantage comes at the expense of diminished sample efficiency due to the extra sampling process isolated from training. This further entails a trade-off between sample efficiency and reward overoptimization.</p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1">Regrettably, the underlying causes of reward overoptimization in diffusion model alignment remain unclear, which is the primary concern of this work. To this end, we systematically investigate this problem from the perspective of both inductive and primacy biases. Firstly, within the context of deep RL, the consistency between the inductive bias of an algorithm and the solving task plays a crucial role in achieving robust generalization <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib43" title="">Zhang et al., 2018</a>)</cite>. However, current reward-driven alignment approaches for diffusion models exclusively focus on maximizing rewards computed from the final generated images, while overlooking the sequential nature of diffusion models and valuable intermediate information within the multi-step denoising process. This mismatch between the reward structure and the model’s inherent temporal inductive bias potentially leads to overfitting and misalignment between the desired outcome (high reward) and the actual quality of the generation process.</p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1">Secondly, primacy bias <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib26" title="">Nikishin et al., 2022</a>)</cite>, the tendency of deep RL agents to overfit early training experiences, poses another potential source of reward overoptimization. To this end, we investigate the neuron states as internal indicators of primacy bias. Although <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib37" title="">Sokar et al. (2023)</a></cite> suggest that dormant neurons in deep RL agents have a negative effect on the model capacity and resetting dormant neurons reduces this effect, we surprisingly discover that dormant neurons instead act as an adaptive regularization against reward overoptimization, while active neurons appear to be susceptible to the primacy bias towards this phenomenon.</p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1">Motivated by the above observations, we propose Temporal Diffusion Policy Optimization with critic active neuron Reset (TDPO-R), a novel policy gradient algorithm that exploits the temporal inductive bias inherent in the denoising process of diffusion models and mitigates the primacy bias stemming from active neurons. As illustrated in Figure <a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">1</span></a>, to exploit the temporal inductive bias, TDPO-R assigns each intermediate denoising timestep a temporal reward, which is derived by learning a temporal critic function. The diffusion model and the temporal critic are then optimized simultaneously via gradient descent with a per-timestep update strategy. Accordingly, the consistent temporal granularity between the temporal rewards and the per-timestep gradient updates not only mitigates reward overoptimization, but also improves sample efficiency by striking a balance between update frequency and stability. To counteract the primacy bias, TDPO-R employs a periodic reset strategy that specifically targets active neurons within the critic, further alleviating the reward overoptimization problem.</p>
+</div>
+<div class="ltx_para" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1">We deploy the proposed TDPO-R with Stable Diffusion v1.4 <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib30" title="">Rombach et al., 2022</a>)</cite> and conduct empirical evaluations using multiple reward functions over a variety of prompt sets. We first employ individual reward functions to quantitatively measure the sample efficiency and model performance per task. Then we introduce a novel metric of cross-reward generalization as a proxy for the quantitative evaluation of reward overoptimization. Evaluation results demonstrate the superior efficacy of our algorithms in the trade-off between sample efficiency and cross-reward generalization compared to state-of-the-art methods. In addition, we show that our critic active neuron reset strategy significantly contributes to a further mitigation of reward overoptimization during the RL process of our general training framework (i.e., TDPO), as evidenced by the outstanding performance in cross-reward generalization, as well as the fidelity and diversity observed in high-reward qualitative results. The main contributions of this paper are summarized as follows:</p>
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1">To the best of our knowledge, this is the first work that investigates the underlying causes of reward overoptimization in diffusion model alignment from the perspective of inductive and primacy biases.</p>
+</div></li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1">We exploit the temporal inductive bias of diffusion models to design TDPO, an RL-based diffusion alignment framework with consistent temporal granularity of rewards and gradients, not only mitigating reward overoptimization but also improving sample efficiency.</p>
+</div></li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1">Building on TDPO, we identify the susceptibility of the critic’s active neurons to primacy bias, which contributes to overoptimization, and address it with TDPO-R, which enhances TDPO with a periodic neuron reset strategy to further mitigate reward overoptimization.</p>
+</div></li>
+<li class="ltx_item" id="S1.I1.i4" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i4.p1">
+<p class="ltx_p" id="S1.I1.i4.p1.1">We develop a quantitative metric of cross-reward generalization as a proxy for the evaluation of reward overoptimization, and demonstrate the superior efficacy of our methods in trading off efficiency and generalization.</p>
+</div></li>
+</ul>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="ltx_text ltx_font_bold" id="S2.p1.1.1">Reward finetuning of diffusion models.</span> <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib19" title="">Lee et al. (2023)</a></cite> and <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib41" title="">Wu et al. (2023b)</a></cite> finetune diffusion models on rewards using supervised learning. <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib7" title="">Dong et al. (2023)</a></cite> present an online variant of these supervised learning-based methods. <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib9" title="">Fan et al. (2023)</a></cite> and <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib4" title="">Black et al. (2024)</a></cite> explore using policy gradient-based RL algorithms to align diffusion models with arbitrary rewards. <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib5" title="">Clark et al. (2024)</a></cite> and <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib28" title="">Prabhudesai et al. (2023)</a></cite> finetune diffusion models by backpropagating gradients of differentiable reward functions and truncate backpropagation to a few sampling steps. All these works use timestep-independent rewards based on fully-generated images, precluding intermediate samples in the denoising process. In contrast, we introduce timestep-dependent rewards for intermediate samples, and optimize diffusion models on these rewards at temporal granularity. More importantly, none of these works explicitly address reward overoptimization, which is the main focus of our work.</p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="ltx_text ltx_font_bold" id="S2.p2.1.1">Reward hacking and overoptimization.</span> Reward overoptimization <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib10" title="">Gao et al., 2023</a>; <a class="ltx_ref" href="#bib.bib25" title="">Moskovitz et al., 2024</a>)</cite>, also termed “reward hacking” <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib35" title="">Skalse et al., 2022</a>; <a class="ltx_ref" href="#bib.bib24" title="">Miao et al., 2024</a>)</cite>, refers to the detrimental phenomenon where optimizing too much on imperfect reward functions hinders the model performance on the true objectives. To address this issue, two widely employed strategies are early stopping <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib4" title="">Black et al., 2024</a>)</cite> and Kullback-Leibler (KL) regularization <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib9" title="">Fan et al., 2023</a>)</cite>. However, there still exists a lack of statistical evidence and understanding of their efficacy in reducing overoptimization. In this work, we investigate the underlying causes of reward overoptimization from the perspective of inductive and primacy biases. In addition, we are the first to design large-scale quantitative evaluations based on the cross-reward generalization metric for reward overoptimization in diffusion model alignment.</p>
+</div>
+<div class="ltx_para" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1"><span class="ltx_text ltx_font_bold" id="S2.p3.1.1">Primacy bias and plasticity loss.</span> Primacy bias <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib26" title="">Nikishin et al., 2022</a>)</cite> is also identified by a variety of other terminologies, including implicit under-parameterization <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib17" title="">Kumar et al., 2020</a>)</cite>, capacity loss <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib20" title="">Lyle et al., 2021</a>)</cite>, and dormant neuron phenomenon <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib37" title="">Sokar et al., 2023</a>)</cite>. All of these can be generalized as plasticity loss <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib21" title="">Lyle et al., 2023</a>; <a class="ltx_ref" href="#bib.bib18" title="">Kumar et al., 2023</a>; <a class="ltx_ref" href="#bib.bib22" title="">Ma et al., 2024</a>)</cite>, i.e., loss of ability to learn and generalize. Resetting the last layer of an agent network <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib26" title="">Nikishin et al., 2022</a>)</cite> retrieves plasticity, but may cause knowledge forgetting. <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib37" title="">Sokar et al. (2023)</a></cite> suggest that dormant neurons in agent networks have a negative effect on model plasticity, which can be mitigated by resetting these neurons. However, our empirical findings present a surprising twist in the context of reward overoptimization, which reveals that dormant neurons act as an adaptive regularization that benefits our model, offering a novel perspective on understanding neuron states and overcoming primacy bias.</p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">3 </span>Preliminaries</h2>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.1 </span>Denoising Diffusion Probabilistic Models</h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1">This work is built upon Denoising Diffusion Probabilistic Model (DDPM) <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib13" title="">Ho et al., 2020</a>)</cite>, a well-established diffusion backbone that learns to model a probability distribution <math alttext="p(x_{0})" class="ltx_Math" display="inline" id="S3.SS1.p1.m1" intent=":literal"><semantics><mrow><mi>p</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mn>0</mn></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">p(x_{0})</annotation></semantics></math> by reversing a Markovian forward process <math alttext="q(x_{t}|x_{t-1})" class="ltx_Math" display="inline" id="S3.SS1.p1.m2" intent=":literal"><semantics><mrow><mi>q</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo lspace="0em" rspace="0em">|</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">q(x_{t}|x_{t-1})</annotation></semantics></math> that iteratively adds Gaussian noise towards the desired sample <math alttext="x_{0}" class="ltx_Math" display="inline" id="S3.SS1.p1.m3" intent=":literal"><semantics><msub><mi>x</mi><mn>0</mn></msub><annotation encoding="application/x-tex">x_{0}</annotation></semantics></math> at each diffusion timestep <math alttext="t" class="ltx_Math" display="inline" id="S3.SS1.p1.m4" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>. The reverse process is modeled by a denoising neural network <math alttext="\mu_{\theta}(x_{t},t)" class="ltx_Math" display="inline" id="S3.SS1.p1.m5" intent=":literal"><semantics><mrow><msub><mi>μ</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu_{\theta}(x_{t},t)</annotation></semantics></math> to predict its posterior mean <math alttext="\tilde{\mu}(x_{0},x_{t})" class="ltx_Math" display="inline" id="S3.SS1.p1.m6" intent=":literal"><semantics><mrow><mover accent="true"><mi>μ</mi><mo>~</mo></mover><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\tilde{\mu}(x_{0},x_{t})</annotation></semantics></math>, which is a weighted average of <math alttext="x_{0}" class="ltx_Math" display="inline" id="S3.SS1.p1.m7" intent=":literal"><semantics><msub><mi>x</mi><mn>0</mn></msub><annotation encoding="application/x-tex">x_{0}</annotation></semantics></math> and <math alttext="x_{t}" class="ltx_Math" display="inline" id="S3.SS1.p1.m8" intent=":literal"><semantics><msub><mi>x</mi><mi>t</mi></msub><annotation encoding="application/x-tex">x_{t}</annotation></semantics></math>. The network is parameterized by <math alttext="\theta" class="ltx_Math" display="inline" id="S3.SS1.p1.m9" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math> and trained using the following objective:</p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center">
+<div class="ltx_inline-block ltx_markedasmath ltx_transformed_outer" id="S3.E1.2" style="width:314.0pt;height:16.7pt;vertical-align:-5.1pt;"><span class="ltx_transformed_inner" style="transform:translate(47.2pt,-2.5pt) scale(1.4299576435953,1.4299576435953) ;">
+<p class="ltx_p" id="S3.E1.2.1"><math alttext="\mathbb{E}_{x_{0}\sim p(x_{0}),t\sim[1,T],x_{t}\sim q(x_{t}|x_{0})}\left[\|\tilde{\mu}(x_{0},x_{t})-\mu_{\theta}(x_{t},t)\|^{2}\right]." class="ltx_Math" display="inline" id="S3.E1.m1.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>𝔼</mi><mrow><mrow><msub><mi>x</mi><mn>0</mn></msub><mo>∼</mo><mrow><mi>p</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mn>0</mn></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>,</mo><mrow><mi>t</mi><mo>∼</mo><mrow><mo stretchy="false">[</mo><mrow><mn>1</mn><mo>,</mo><mi>T</mi></mrow><mo stretchy="false">]</mo></mrow></mrow><mo>,</mo><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>∼</mo><mrow><mi>q</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo lspace="0em" rspace="0em">|</mo><msub><mi>x</mi><mn>0</mn></msub><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo>[</mo><msup><mrow><mo stretchy="false">‖</mo><mrow><mrow><mover accent="true"><mi>μ</mi><mo>~</mo></mover><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>−</mo><mrow><msub><mi>μ</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo stretchy="false">‖</mo></mrow><mn>2</mn></msup><mo>]</mo></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathbb{E}_{x_{0}\sim p(x_{0}),t\sim[1,T],x_{t}\sim q(x_{t}|x_{0})}\left[\|\tilde{\mu}(x_{0},x_{t})-\mu_{\theta}(x_{t},t)\|^{2}\right].</annotation></semantics></math></p>
+</span></div></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="0"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td></tr></tbody>
+</table>
+</div>
+<div class="ltx_para" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.1">Additionally, DDPM is readily extended to the conditional generative modeling of <math alttext="p(x_{0}|c)" class="ltx_Math" display="inline" id="S3.SS1.p2.m1" intent=":literal"><semantics><mrow><mi>p</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mn>0</mn></msub><mo lspace="0em" rspace="0em">|</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">p(x_{0}|c)</annotation></semantics></math>, where <math alttext="c" class="ltx_Math" display="inline" id="S3.SS1.p2.m2" intent=":literal"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math> is a conditional signal, such as a text prompt, processed by a conditional denoising network <math alttext="\mu_{\theta}(x_{t},t,c)" class="ltx_Math" display="inline" id="S3.SS1.p2.m3" intent=":literal"><semantics><mrow><msub><mi>μ</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>t</mi><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu_{\theta}(x_{t},t,c)</annotation></semantics></math>. To sample from a learned denoising process <math alttext="p_{\theta}(x_{t-1}|x_{t},c)" class="ltx_Math" display="inline" id="S3.SS1.p2.m4" intent=":literal"><semantics><mrow><msub><mi>p</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo lspace="0em" rspace="0em">|</mo><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">p_{\theta}(x_{t-1}|x_{t},c)</annotation></semantics></math>, one begins by drawing a Gaussian noisy sample <math alttext="x_{T}\sim\mathcal{N}(0,I)" class="ltx_Math" display="inline" id="S3.SS1.p2.m5" intent=":literal"><semantics><mrow><msub><mi>x</mi><mi>T</mi></msub><mo>∼</mo><mrow><mi class="ltx_font_mathcaligraphic">𝒩</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mi>I</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">x_{T}\sim\mathcal{N}(0,I)</annotation></semantics></math>, and then employs a specific sampling scheduler <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib13" title="">Ho et al., 2020</a>; <a class="ltx_ref" href="#bib.bib38" title="">Song et al., 2021</a>)</cite>, which iteratively generates subsequent samples <math alttext="x_{T-1},...,x_{0}" class="ltx_Math" display="inline" id="S3.SS1.p2.m6" intent=":literal"><semantics><mrow><msub><mi>x</mi><mrow><mi>T</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>x</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">x_{T-1},...,x_{0}</annotation></semantics></math> according to outputs from the denoising network <math alttext="\mu_{\theta}" class="ltx_Math" display="inline" id="S3.SS1.p2.m7" intent=":literal"><semantics><msub><mi>μ</mi><mi>θ</mi></msub><annotation encoding="application/x-tex">\mu_{\theta}</annotation></semantics></math>. An intermediate timestep of the denoising process with the noise variance <math alttext="\sigma^{2}_{t}" class="ltx_Math" display="inline" id="S3.SS1.p2.m8" intent=":literal"><semantics><msubsup><mi>σ</mi><mi>t</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma^{2}_{t}</annotation></semantics></math> can be written as:</p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="p_{\theta}(x_{t-1}|x_{t},c)=\mathcal{N}(x_{t-1};\mu_{\theta}(x_{t},t,c),\sigma^{2}_{t}I)." class="ltx_Math" display="block" id="S3.E2.m1" intent=":literal"><semantics><mrow><mrow><mrow><msub><mi>p</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo lspace="0em" rspace="0em">|</mo><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mi class="ltx_font_mathcaligraphic">𝒩</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>,</mo><mrow><msub><mi>μ</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>t</mi><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><mo>,</mo><mrow><msubsup><mi>σ</mi><mi>t</mi><mn>2</mn></msubsup><mo lspace="0em" rspace="0em">​</mo><mi>I</mi></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">p_{\theta}(x_{t-1}|x_{t},c)=\mathcal{N}(x_{t-1};\mu_{\theta}(x_{t},t,c),\sigma^{2}_{t}I).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td></tr></tbody>
+</table>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.2 </span>Reinforcement Learning</h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.SS2.p1.1.1">Markov Decision Process (MDP).</span> MDP provides a mathematical framework for modeling decision-making problems. We consider finite MDP in this work, where the agent acts iteratively at each of a sequence of discrete timesteps <math alttext="t\in(0,1,2,...)" class="ltx_Math" display="inline" id="S3.SS2.p1.m1" intent=":literal"><semantics><mrow><mi>t</mi><mo>∈</mo><mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mi mathvariant="normal">…</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">t\in(0,1,2,...)</annotation></semantics></math>, up to a maximum timestep <math alttext="T" class="ltx_Math" display="inline" id="S3.SS2.p1.m2" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>. At each timestep <math alttext="t" class="ltx_Math" display="inline" id="S3.SS2.p1.m3" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>, the agent perceives a state <math alttext="s_{t}\in S" class="ltx_Math" display="inline" id="S3.SS2.p1.m4" intent=":literal"><semantics><mrow><msub><mi>s</mi><mi>t</mi></msub><mo>∈</mo><mi>S</mi></mrow><annotation encoding="application/x-tex">s_{t}\in S</annotation></semantics></math>, and selects an action <math alttext="a_{t}\in A" class="ltx_Math" display="inline" id="S3.SS2.p1.m5" intent=":literal"><semantics><mrow><msub><mi>a</mi><mi>t</mi></msub><mo>∈</mo><mi>A</mi></mrow><annotation encoding="application/x-tex">a_{t}\in A</annotation></semantics></math> by a policy <math alttext="\pi(a_{t}|s_{t})" class="ltx_Math" display="inline" id="S3.SS2.p1.m6" intent=":literal"><semantics><mrow><mi>π</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>a</mi><mi>t</mi></msub><mo lspace="0em" rspace="0em">|</mo><msub><mi>s</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\pi(a_{t}|s_{t})</annotation></semantics></math>, where <math alttext="S,A" class="ltx_Math" display="inline" id="S3.SS2.p1.m7" intent=":literal"><semantics><mrow><mi>S</mi><mo>,</mo><mi>A</mi></mrow><annotation encoding="application/x-tex">S,A</annotation></semantics></math> are state and action spaces respectively. One timestep later, the agent receives a numerical reward <math alttext="r(s_{t},a_{t})" class="ltx_Math" display="inline" id="S3.SS2.p1.m8" intent=":literal"><semantics><mrow><mi>r</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">r(s_{t},a_{t})</annotation></semantics></math> as a consequence of its action, and finds itself in a new state <math alttext="s_{t+1}\sim P(s_{t+1}|s_{t},a_{t})" class="ltx_Math" display="inline" id="S3.SS2.p1.m9" intent=":literal"><semantics><mrow><msub><mi>s</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>∼</mo><mrow><mi>P</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo lspace="0em" rspace="0em">|</mo><mrow><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">s_{t+1}\sim P(s_{t+1}|s_{t},a_{t})</annotation></semantics></math>, where <math alttext="P" class="ltx_Math" display="inline" id="S3.SS2.p1.m10" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math> denotes the transition probability function.</p>
+</div>
+<div class="ltx_para" id="S3.SS2.p2">
+<p class="ltx_p" id="S3.SS2.p2.1"><span class="ltx_text ltx_font_bold" id="S3.SS2.p2.1.1">RL objective.</span> Within the MDP framework, the interaction between the agent and the environment give rise to trajectories <math alttext="\tau=(s_{0},a_{0},s_{1},a_{1},...,s_{T},a_{T})" class="ltx_Math" display="inline" id="S3.SS2.p2.m1" intent=":literal"><semantics><mrow><mi>τ</mi><mo>=</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mn>0</mn></msub><mo>,</mo><msub><mi>a</mi><mn>0</mn></msub><mo>,</mo><msub><mi>s</mi><mn>1</mn></msub><mo>,</mo><msub><mi>a</mi><mn>1</mn></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>s</mi><mi>T</mi></msub><mo>,</mo><msub><mi>a</mi><mi>T</mi></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\tau=(s_{0},a_{0},s_{1},a_{1},...,s_{T},a_{T})</annotation></semantics></math>, where each element represents a state-action pair at a specific timestep. Then the RL objective under this formulation is to find the policy that maximizes the expected accumulation of trajectory rewards:</p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\max\limits_{\pi}\mathbb{E}_{\tau\sim p(\tau|\pi)}\left[\sum_{t=0}^{T}r(s_{t},a_{t})\right]." class="ltx_Math" display="block" id="S3.E3.m1" intent=":literal"><semantics><mrow><mrow><mrow><munder><mi>max</mi><mi>π</mi></munder><mo lspace="0.167em">⁡</mo><msub><mi>𝔼</mi><mrow><mi>τ</mi><mo>∼</mo><mrow><mi>p</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mi>τ</mi><mo lspace="0em" rspace="0em">|</mo><mi>π</mi><mo stretchy="false">)</mo></mrow></mrow></mrow></msub></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo>[</mo><mrow><munderover><mo lspace="0em" movablelimits="false">∑</mo><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><mi>T</mi></munderover><mrow><mi>r</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>]</mo></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\max\limits_{\pi}\mathbb{E}_{\tau\sim p(\tau|\pi)}\left[\sum_{t=0}^{T}r(s_{t},a_{t})\right].</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td></tr></tbody>
+</table>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">4 </span>Method</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1">Now we delve into our approaches to addressing the reward overoptimization problem in diffusion model alignment, focusing on the exploration of both inductive and primacy biases. First, we will address the general concern of inductive bias mismatch for reward-driven diffusion model alignment methods, by introducing a novel RL-based training framework, i.e., TDPO. Subsequently, we will investigate the primacy bias, a more specific issue within TDPO that may also contribute to reward overoptimization, and further tackle this issue by incorporating a novel periodic reset strategy for active neurons within our critic model, leading to an enhanced version of TDPO, i.e., TDPO-R.</p>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.1 </span>Temporal Diffusion Policy Optimization</h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1">In this section, we aim to address the mismatch between current reward-driven alignment approaches for diffusion models and the temporal inductive bias inherent in the multi-step denoising process of diffusion models. We first extend the standard multi-step MDP formulation of the denoising process as in <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib9" title="">Fan et al., 2023</a>; <a class="ltx_ref" href="#bib.bib4" title="">Black et al., 2024</a>)</cite> by introducing timestep-dependent rewards for each denoising operation, along with an efficient approach to approximate these temporal rewards during diffusion model alignment. Building upon this new MDP formulation, we develop a novel RL framework for diffusion model alignment, i.e., Temporal Diffusion Policy Optimization (TDPO), which exploits the temporal inductive bias of the multi-step denoising process to perform temporal reward-driven optimization of diffusion polices via a per-timestep gradient update strategy.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p2.1.1">Temporal inductive bias.</span> To perform RL-based diffusion model alignment, <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib9" title="">Fan et al. (2023)</a></cite> and <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib4" title="">Black et al. (2024)</a></cite> map the denoising process of diffusion models to a multi-step MDP, in which the trajectories <math alttext="(x_{T},x_{T-1},...,x_{0})" class="ltx_Math" display="inline" id="S4.SS1.p2.m1" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>T</mi></msub><mo>,</mo><msub><mi>x</mi><mrow><mi>T</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>x</mi><mn>0</mn></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(x_{T},x_{T-1},...,x_{0})</annotation></semantics></math> correspond to the intermediate images sampled during the denoising process. In their settings, the cumulative rewards for all trajectories are condensed into a singular value <math alttext="R(x_{0},c)" class="ltx_Math" display="inline" id="S4.SS1.p2.m2" intent=":literal"><semantics><mrow><mi>R</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">R(x_{0},c)</annotation></semantics></math>, which is exclusively computed on the final sample <math alttext="x_{0}" class="ltx_Math" display="inline" id="S4.SS1.p2.m3" intent=":literal"><semantics><msub><mi>x</mi><mn>0</mn></msub><annotation encoding="application/x-tex">x_{0}</annotation></semantics></math>, precluding the noisy samples <math alttext="x_{t}" class="ltx_Math" display="inline" id="S4.SS1.p2.m4" intent=":literal"><semantics><msub><mi>x</mi><mi>t</mi></msub><annotation encoding="application/x-tex">x_{t}</annotation></semantics></math> obtained at each intermediate timestep <math alttext="t" class="ltx_Math" display="inline" id="S4.SS1.p2.m5" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>. This timestep-independent reward definition creates a mismatch with the temporal inductive bias inherent in the multi-step denoising process of diffusion models, thereby posing a potential risk of overfitting to <math alttext="R(x_{0},c)" class="ltx_Math" display="inline" id="S4.SS1.p2.m6" intent=":literal"><semantics><mrow><mi>R</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">R(x_{0},c)</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p3">
+<p class="ltx_p" id="S4.SS1.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p3.1.1">Denoising as MDP with temporal rewards.</span> To inherit and exploit the temporal inductive bias within the denoising process, we characterize this process as a multi-step MDP with timestep-dependent trajectory rewards <math alttext="\mathcal{T}(x_{t},c)" class="ltx_Math" display="inline" id="S4.SS1.p3.m1" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{T}(x_{t},c)</annotation></semantics></math>:</p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E4">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center">
+<div class="ltx_inline-block ltx_markedasmath ltx_transformed_outer" id="S4.E4.2" style="width:314.0pt;height:52.5pt;vertical-align:-22.7pt;"><span class="ltx_transformed_inner" style="transform:translate(45.8pt,-7.7pt) scale(1.41182682552693,1.41182682552693) ;">
+<p class="ltx_p" id="S4.E4.2.1"><math alttext="\begin{aligned} &amp;s_{t}\triangleq(x_{T-t},t,c),&amp;\rho_{0}(s_{0})\triangleq(p(c),\delta_{0},\mathcal{N}(0,I)),&amp;\\
+&amp;a_{t}\triangleq x_{T-t-1},&amp;P(s_{t+1}|s_{t},a_{t})\triangleq(\delta_{c},\delta_{t+1},\delta_{x_{T-t-1}}),&amp;\\
+&amp;r(s_{t},a_{t})\triangleq\mathcal{T}(x_{T-t-1},c),&amp;\pi(a_{t}|s_{t})\triangleq p_{\theta}(x_{T-t-1}|x_{T-t},c),&amp;\end{aligned}" class="ltx_Math" display="inline" id="S4.E4.m1.m1" intent=":literal"><semantics><mtable columnspacing="0pt" rowspacing="0pt"><mtr><mtd></mtd><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><msub><mi>s</mi><mi>t</mi></msub><mo>≜</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>T</mi><mo>−</mo><mi>t</mi></mrow></msub><mo>,</mo><mi>t</mi><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><mo>,</mo></mrow></mtd><mtd class="ltx_align_right" columnalign="right"><mrow><mrow><mrow><msub><mi>ρ</mi><mn>0</mn></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mn>0</mn></msub><mo stretchy="false">)</mo></mrow></mrow><mo>≜</mo><mrow><mo stretchy="false">(</mo><mrow><mi>p</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><mo>,</mo><msub><mi>δ</mi><mn>0</mn></msub><mo>,</mo><mrow><mi class="ltx_font_mathcaligraphic">𝒩</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mi>I</mi><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">)</mo></mrow></mrow><mo>,</mo></mrow></mtd><mtd></mtd></mtr><mtr><mtd></mtd><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><msub><mi>a</mi><mi>t</mi></msub><mo>≜</mo><msub><mi>x</mi><mrow><mi>T</mi><mo>−</mo><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><mo>,</mo></mrow></mtd><mtd class="ltx_align_right" columnalign="right"><mrow><mrow><mrow><mi>P</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo lspace="0em" rspace="0em">|</mo><mrow><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub></mrow><mo stretchy="false">)</mo></mrow></mrow><mo>≜</mo><mrow><mo stretchy="false">(</mo><msub><mi>δ</mi><mi>c</mi></msub><mo>,</mo><msub><mi>δ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>,</mo><msub><mi>δ</mi><msub><mi>x</mi><mrow><mi>T</mi><mo>−</mo><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></msub><mo stretchy="false">)</mo></mrow></mrow><mo>,</mo></mrow></mtd><mtd></mtd></mtr><mtr><mtd></mtd><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mrow><mi>r</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>≜</mo><mrow><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>T</mi><mo>−</mo><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>,</mo></mrow></mtd><mtd class="ltx_align_right" columnalign="right"><mrow><mrow><mrow><mi>π</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>a</mi><mi>t</mi></msub><mo lspace="0em" rspace="0em">|</mo><msub><mi>s</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>≜</mo><mrow><msub><mi>p</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>T</mi><mo>−</mo><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo lspace="0em" rspace="0em">|</mo><mrow><msub><mi>x</mi><mrow><mi>T</mi><mo>−</mo><mi>t</mi></mrow></msub><mo>,</mo><mi>c</mi></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>,</mo></mrow></mtd><mtd></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned} &amp;s_{t}\triangleq(x_{T-t},t,c),&amp;\rho_{0}(s_{0})\triangleq(p(c),\delta_{0},\mathcal{N}(0,I)),&amp;\\
+&amp;a_{t}\triangleq x_{T-t-1},&amp;P(s_{t+1}|s_{t},a_{t})\triangleq(\delta_{c},\delta_{t+1},\delta_{x_{T-t-1}}),&amp;\\
+&amp;r(s_{t},a_{t})\triangleq\mathcal{T}(x_{T-t-1},c),&amp;\pi(a_{t}|s_{t})\triangleq p_{\theta}(x_{T-t-1}|x_{T-t},c),&amp;\end{aligned}</annotation></semantics></math></p>
+</span></div></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="0"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td></tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS1.p3.2">where <math alttext="\rho_{0}" class="ltx_Math" display="inline" id="S4.SS1.p3.m2" intent=":literal"><semantics><msub><mi>ρ</mi><mn>0</mn></msub><annotation encoding="application/x-tex">\rho_{0}</annotation></semantics></math> is the initial state distribution, <math alttext="\delta_{z}" class="ltx_Math" display="inline" id="S4.SS1.p3.m3" intent=":literal"><semantics><msub><mi>δ</mi><mi>z</mi></msub><annotation encoding="application/x-tex">\delta_{z}</annotation></semantics></math> is the Dirac delta distribution at <math alttext="z" class="ltx_Math" display="inline" id="S4.SS1.p3.m4" intent=":literal"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>, and optimizing the policy <math alttext="\pi" class="ltx_Math" display="inline" id="S4.SS1.p3.m5" intent=":literal"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math> is equivalent to finetuning the diffusion model parameterized by <math alttext="\theta" class="ltx_Math" display="inline" id="S4.SS1.p3.m6" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>. This formulation diverges from the ones presented in <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib9" title="">Fan et al., 2023</a>; <a class="ltx_ref" href="#bib.bib4" title="">Black et al., 2024</a>)</cite>, in terms of the timestep-dependent definition of trajectory rewards. We refer <math alttext="\mathcal{T}(x_{t},c)" class="ltx_Math" display="inline" id="S4.SS1.p3.m7" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{T}(x_{t},c)</annotation></semantics></math> to the intermediate reward w.r.t. the noisy image <math alttext="x_{t}" class="ltx_Math" display="inline" id="S4.SS1.p3.m8" intent=":literal"><semantics><msub><mi>x</mi><mi>t</mi></msub><annotation encoding="application/x-tex">x_{t}</annotation></semantics></math> from each timestep <math alttext="t" class="ltx_Math" display="inline" id="S4.SS1.p3.m9" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> of the denoising process.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p4">
+<p class="ltx_p" id="S4.SS1.p4.1">This new MDP formulation leads to a temporal reward-driven optimization of the diffusion policy, and thus exploits the aforementioned temporal inductive bias. This optimization procedure is driven by the objective of maximizing the expected temporal rewards at each denoising timestep, i.e.,</p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E5">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\max\limits_{\theta}\mathbb{E}_{p(c)}\mathbb{E}_{p_{\theta}(x_{0:T}|c)}\left[\mathcal{T}(x_{t},c)\right]." class="ltx_math_unparsed" display="block" id="S4.E5.m1" intent=":literal"><semantics><mrow><munder><mi>max</mi><mi>θ</mi></munder><msub><mi>𝔼</mi><mrow><mi>p</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow></msub><msub><mi>𝔼</mi><mrow><mi>p</mi><msub><mrow></mrow><mi>θ</mi></msub><mo stretchy="false">(</mo><mi>x</mi><msub><mrow></mrow><mrow><mn>0</mn><mo lspace="0.278em" rspace="0.278em">:</mo><mi>T</mi></mrow></msub><mo fence="false" rspace="0.167em" stretchy="false">|</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></msub><mrow><mo>[</mo><mi class="ltx_font_mathcaligraphic">𝒯</mi><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow><mo>]</mo></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\max\limits_{\theta}\mathbb{E}_{p(c)}\mathbb{E}_{p_{\theta}(x_{0:T}|c)}\left[\mathcal{T}(x_{t},c)\right].</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(5)</span></td></tr></tbody>
+</table>
+</div>
+<div class="ltx_para" id="S4.SS1.p5">
+<p class="ltx_p" id="S4.SS1.p5.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p5.1.1">Temporal reward approximation.</span>
+Prevalent reward models such as aesthetic predictor <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib32" title="">Schuhmann et al., 2022</a>)</cite> and ImageReward <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib42" title="">Xu et al., 2023</a>)</cite> are usually trained on the distributions of the final clean images rather than intermediate noisy samples within the denoising process. Consequently, it is not feasible to derive the temporal rewards directly from these reward models. An intuitive solution for this problem involves retraining reward models on noisy images, but it restricts the direct utilization of off-the-shelf reward models and imposes excessive additional training overhead.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p6">
+<p class="ltx_p" id="S4.SS1.p6.1">To address this issue, we present an efficient approach in this section. In particular, we first utilize off-the-shelf reward models to compute the reward function for each final clean image <math alttext="x_{0}" class="ltx_Math" display="inline" id="S4.SS1.p6.m1" intent=":literal"><semantics><msub><mi>x</mi><mn>0</mn></msub><annotation encoding="application/x-tex">x_{0}</annotation></semantics></math>, denoted as <math alttext="R(x_{0},c)" class="ltx_Math" display="inline" id="S4.SS1.p6.m2" intent=":literal"><semantics><mrow><mi>R</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">R(x_{0},c)</annotation></semantics></math>. Then we approximate the temporal reward <math alttext="\mathcal{T}(x_{t},c)" class="ltx_Math" display="inline" id="S4.SS1.p6.m3" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{T}(x_{t},c)</annotation></semantics></math> for each intermediate noisy image <math alttext="x_{t}" class="ltx_Math" display="inline" id="S4.SS1.p6.m4" intent=":literal"><semantics><msub><mi>x</mi><mi>t</mi></msub><annotation encoding="application/x-tex">x_{t}</annotation></semantics></math> by learning a temporal critic function <math alttext="\mathcal{T}_{\phi}(x_{t},c)" class="ltx_Math" display="inline" id="S4.SS1.p6.m5" intent=":literal"><semantics><mrow><msub><mi class="ltx_font_mathcaligraphic">𝒯</mi><mi>ϕ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{T}_{\phi}(x_{t},c)</annotation></semantics></math> parameterized by <math alttext="\phi" class="ltx_Math" display="inline" id="S4.SS1.p6.m6" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>. To facilitate the learning process, we further use <math alttext="R(x_{0},c)" class="ltx_Math" display="inline" id="S4.SS1.p6.m7" intent=":literal"><semantics><mrow><mi>R</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">R(x_{0},c)</annotation></semantics></math> as an anchor and compute <math alttext="\mathcal{T}_{\phi}(x_{t},c)" class="ltx_Math" display="inline" id="S4.SS1.p6.m8" intent=":literal"><semantics><mrow><msub><mi class="ltx_font_mathcaligraphic">𝒯</mi><mi>ϕ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{T}_{\phi}(x_{t},c)</annotation></semantics></math> as:</p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E6">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{T}(x_{t},c)\approx\mathcal{T}_{\phi}(x_{t},c)\triangleq R(x_{0},c)-\mathcal{R}_{\phi}(x_{t},c)." class="ltx_Math" display="block" id="S4.E6.m1" intent=":literal"><semantics><mrow><mrow><mrow><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><mo>≈</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">𝒯</mi><mi>ϕ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><mo>≜</mo><mrow><mrow><mi>R</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><mo>−</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">ℛ</mi><mi>ϕ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathcal{T}(x_{t},c)\approx\mathcal{T}_{\phi}(x_{t},c)\triangleq R(x_{0},c)-\mathcal{R}_{\phi}(x_{t},c).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(6)</span></td></tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS1.p6.2">where <math alttext="\mathcal{R}_{\phi}(x_{t},c)" class="ltx_Math" display="inline" id="S4.SS1.p6.m9" intent=":literal"><semantics><mrow><msub><mi class="ltx_font_mathcaligraphic">ℛ</mi><mi>ϕ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{R}_{\phi}(x_{t},c)</annotation></semantics></math> is the prediction function of a temporal residual for each temporal reward, which is trained in conjunction with the policy over all denoising timesteps.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p7">
+<p class="ltx_p" id="S4.SS1.p7.1">Nonetheless, learning <math alttext="\mathcal{R}_{\phi}(x_{t},c)" class="ltx_Math" display="inline" id="S4.SS1.p7.m1" intent=":literal"><semantics><mrow><msub><mi class="ltx_font_mathcaligraphic">ℛ</mi><mi>ϕ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{R}_{\phi}(x_{t},c)</annotation></semantics></math> presents a non-trivial challenge, since we need to evaluate temporal rewards at each timestep. A naive implementation of the temporal critic with a comparable number of training parameters as the reward model can incur significant training complexity. To address this challenge, we leverage the encoders of target reward models to extract embeddings from the decoded images w.r.t. each intermediate latent feature across all timesteps of the denoising process. These embeddings serve as the input to a lightweight Multi-Layer Perceptron (MLP) with only 5 linear layers, of which the final output forms the residual prediction for each temporal reward, i.e.,</p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E7">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{R}_{\phi}(x_{t},c)=\mathrm{MLP}_{\phi}\Big(\mathrm{Encoder}_{R}(x_{t},c)\Big)." class="ltx_Math" display="block" id="S4.E7.m1" intent=":literal"><semantics><mrow><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">ℛ</mi><mi>ϕ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><msub><mi>MLP</mi><mi>ϕ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="1.600em" minsize="1.600em">(</mo><mrow><msub><mi>Encoder</mi><mi>R</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><mo maxsize="1.600em" minsize="1.600em">)</mo></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathcal{R}_{\phi}(x_{t},c)=\mathrm{MLP}_{\phi}\Big(\mathrm{Encoder}_{R}(x_{t},c)\Big).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(7)</span></td></tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS1.p7.2"><span class="ltx_text ltx_font_bold" id="S4.SS1.p7.2.1">Encoder alignment.</span> This practice of reusing encoders establishes an alignment between the encoders of both the reward model and the temporal critic. This alignment tends to be critical for overall performance, as it ensures consistency in feature representations and enables the temporal critic to inherit the inductive bias of the reward model during initial training. This inductive bias is further dynamically refined during subsequent training, adapting to the evolving intermediate states encountered during the denoising process. Beyond performance gains, encoder alignment also offers a compelling advantage in memory efficiency, as the need to store a separate encoder for the temporal critic is eliminated. Implementation details and extended analysis of encoder alignment are provided in Appendix <a class="ltx_ref" href="#A5" title="Appendix E Extended Analysis of Encoder Alignment in Temporal Critic ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">E</span></a>.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p8">
+<p class="ltx_p" id="S4.SS1.p8.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p8.1.1">Temporal gradient estimation.</span> Given the temporal rewards in Eq. (<a class="ltx_ref" href="#S4.E6" title="Equation 6 ‣ 4.1 Temporal Diffusion Policy Optimization ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">6</span></a>) and (<a class="ltx_ref" href="#S4.E7" title="Equation 7 ‣ 4.1 Temporal Diffusion Policy Optimization ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">7</span></a>), we can estimate the gradient of the objective in Eq. (<a class="ltx_ref" href="#S4.E5" title="Equation 5 ‣ 4.1 Temporal Diffusion Policy Optimization ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">5</span></a>) w.r.t. the policy parameters <math alttext="\theta" class="ltx_Math" display="inline" id="S4.SS1.p8.m1" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math> at temporal granularity. We first sample trajectories <math alttext="(x_{T},x_{T-1},...,x_{0})" class="ltx_Math" display="inline" id="S4.SS1.p8.m2" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>T</mi></msub><mo>,</mo><msub><mi>x</mi><mrow><mi>T</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>x</mi><mn>0</mn></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(x_{T},x_{T-1},...,x_{0})</annotation></semantics></math> from the denoising process <math alttext="p_{\theta}(x_{0:T}|c)" class="ltx_math_unparsed" display="inline" id="S4.SS1.p8.m3" intent=":literal"><semantics><mrow><msub><mi>p</mi><mi>θ</mi></msub><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mn>0</mn><mo lspace="0.278em" rspace="0.278em">:</mo><mi>T</mi></mrow></msub><mo fence="false" rspace="0.167em" stretchy="false">|</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">p_{\theta}(x_{0:T}|c)</annotation></semantics></math>, and collect the likelihood gradients with respect to <math alttext="\theta" class="ltx_Math" display="inline" id="S4.SS1.p8.m4" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>, i.e., <math alttext="\nabla_{\theta}{p_{\theta}(x_{t-1}|x_{t},c)}" class="ltx_Math" display="inline" id="S4.SS1.p8.m5" intent=":literal"><semantics><mrow><mrow><msub><mo>∇</mo><mi>θ</mi></msub><msub><mi>p</mi><mi>θ</mi></msub></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo lspace="0em" rspace="0em">|</mo><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\nabla_{\theta}{p_{\theta}(x_{t-1}|x_{t},c)}</annotation></semantics></math>. To reuse the trajectories sampled by an old policy parameterized by <math alttext="\theta_{\mathrm{old}}" class="ltx_Math" display="inline" id="S4.SS1.p8.m6" intent=":literal"><semantics><msub><mi>θ</mi><mi>old</mi></msub><annotation encoding="application/x-tex">\theta_{\mathrm{old}}</annotation></semantics></math>, we employ importance sampling <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib15" title="">Kakade &amp; Langford, 2002</a>)</cite>, which reweights the temporal rewards by the corresponding probability ratio. Then the temporal gradient at each denoising timestep reads:</p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E8">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathbb{E}_{p(c)}\mathbb{E}_{p_{\theta}(x_{0:t}|c)}\left[-\mathcal{T}_{\phi}(x_{t},c)\nabla_{\theta}\frac{p_{\theta}(x_{t-1}|x_{t},c)}{p_{\theta_{\mathrm{old}}}(x_{t-1}|x_{t},c)}\right]." class="ltx_math_unparsed" display="block" id="S4.E8.m1" intent=":literal"><semantics><mrow><msub><mi>𝔼</mi><mrow><mi>p</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow></msub><msub><mi>𝔼</mi><mrow><mi>p</mi><msub><mrow></mrow><mi>θ</mi></msub><mo stretchy="false">(</mo><mi>x</mi><msub><mrow></mrow><mrow><mn>0</mn><mo lspace="0.278em" rspace="0.278em">:</mo><mi>t</mi></mrow></msub><mo fence="false" rspace="0.167em" stretchy="false">|</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></msub><mrow><mo>[</mo><mo lspace="0em">−</mo><msub><mi class="ltx_font_mathcaligraphic">𝒯</mi><mi>ϕ</mi></msub><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo rspace="0.167em" stretchy="false">)</mo></mrow><msub><mo rspace="0.167em">∇</mo><mi>θ</mi></msub><mfrac><mrow><msub><mi>p</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo lspace="0em" rspace="0em">|</mo><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><mrow><msub><mi>p</mi><msub><mi>θ</mi><mi>old</mi></msub></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo lspace="0em" rspace="0em">|</mo><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi></mrow><mo stretchy="false">)</mo></mrow></mrow></mfrac><mo>]</mo></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathbb{E}_{p(c)}\mathbb{E}_{p_{\theta}(x_{0:t}|c)}\left[-\mathcal{T}_{\phi}(x_{t},c)\nabla_{\theta}\frac{p_{\theta}(x_{t-1}|x_{t},c)}{p_{\theta_{\mathrm{old}}}(x_{t-1}|x_{t},c)}\right].</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(8)</span></td></tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS1.p8.2">The temporal critic is optimized by the objective below:</p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E9">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathbb{E}_{p(c)}\mathbb{E}_{p_{\theta}(x_{0:t}|c)}\left[\left(\hat{\mathcal{R}}_{\phi}(x_{t},c)-R(x_{0},c)\right)^{2}\right]," class="ltx_math_unparsed" display="block" id="S4.E9.m1" intent=":literal"><semantics><mrow><msub><mi>𝔼</mi><mrow><mi>p</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow></msub><msub><mi>𝔼</mi><mrow><mi>p</mi><msub><mrow></mrow><mi>θ</mi></msub><mo stretchy="false">(</mo><mi>x</mi><msub><mrow></mrow><mrow><mn>0</mn><mo lspace="0.278em" rspace="0.278em">:</mo><mi>t</mi></mrow></msub><mo fence="false" rspace="0.167em" stretchy="false">|</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></msub><mrow><mo>[</mo><msup><mrow><mo>(</mo><msub><mover accent="true"><mi class="ltx_font_mathcaligraphic">ℛ</mi><mo>^</mo></mover><mi>ϕ</mi></msub><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow><mo>−</mo><mi>R</mi><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow><mo>)</mo></mrow><mn>2</mn></msup><mo>]</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathbb{E}_{p(c)}\mathbb{E}_{p_{\theta}(x_{0:t}|c)}\left[\left(\hat{\mathcal{R}}_{\phi}(x_{t},c)-R(x_{0},c)\right)^{2}\right],</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(9)</span></td></tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS1.p8.3">where <math alttext="\hat{\mathcal{R}}" class="ltx_Math" display="inline" id="S4.SS1.p8.m7" intent=":literal"><semantics><mover accent="true"><mi class="ltx_font_mathcaligraphic">ℛ</mi><mo>^</mo></mover><annotation encoding="application/x-tex">\hat{\mathcal{R}}</annotation></semantics></math> denotes the new residual prediction computed during the training phase and is used to estimate gradients for the critic model, while the old residual prediction <math alttext="\mathcal{R}" class="ltx_Math" display="inline" id="S4.SS1.p8.m8" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">ℛ</mi><annotation encoding="application/x-tex">\mathcal{R}</annotation></semantics></math> in Eq. (<a class="ltx_ref" href="#S4.E6" title="Equation 6 ‣ 4.1 Temporal Diffusion Policy Optimization ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">6</span></a>) is computed during the sampling phase with no gradient and is used to estimate temporal rewards.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p9">
+<p class="ltx_p" id="S4.SS1.p9.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p9.1.1">Per-timestep gradient update.</span> We concurrently update the policy parameters <math alttext="\theta" class="ltx_Math" display="inline" id="S4.SS1.p9.m1" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math> and the critic parameters <math alttext="\phi" class="ltx_Math" display="inline" id="S4.SS1.p9.m2" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math> via gradient descent. In particular, we perform each update in a per-timestep manner, in contrast to other methods that employ per-batch updates, emphasizing the temporal granularity of our approach. A per-timestep gradient update for <math alttext="\theta" class="ltx_Math" display="inline" id="S4.SS1.p9.m3" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math> or <math alttext="\phi" class="ltx_Math" display="inline" id="S4.SS1.p9.m4" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math> within our general RL-based training framework (i.e., TDPO) is performed via the averaged batch gradient below:</p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E10">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\frac{1}{B}\sum_{i=1}^{B}\nabla_{\alpha}\mathrm{G}_{\alpha}(x^{i}_{t},c_{i}),\alpha\in\{\theta,\phi\}." class="ltx_Math" display="block" id="S4.E10.m1" intent=":literal"><semantics><mrow><mrow><mrow><mfrac><mn>1</mn><mi>B</mi></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munderover><mo movablelimits="false">∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover><mrow><mrow><msub><mo rspace="0.167em">∇</mo><mi>α</mi></msub><msub><mi>G</mi><mi>α</mi></msub></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msubsup><mi>x</mi><mi>t</mi><mi>i</mi></msubsup><mo>,</mo><msub><mi>c</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo>,</mo><mrow><mi>α</mi><mo>∈</mo><mrow><mo stretchy="false">{</mo><mi>θ</mi><mo>,</mo><mi>ϕ</mi><mo stretchy="false">}</mo></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\frac{1}{B}\sum_{i=1}^{B}\nabla_{\alpha}\mathrm{G}_{\alpha}(x^{i}_{t},c_{i}),\alpha\in\{\theta,\phi\}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(10)</span></td></tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS1.p9.2">where <math alttext="B" class="ltx_Math" display="inline" id="S4.SS1.p9.m5" intent=":literal"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math> is the batch size, and <math alttext="\nabla_{\alpha}\mathrm{G}_{\alpha}(x^{i}_{t},c_{i})" class="ltx_Math" display="inline" id="S4.SS1.p9.m6" intent=":literal"><semantics><mrow><mrow><msub><mo>∇</mo><mi>α</mi></msub><msub><mi>G</mi><mi>α</mi></msub></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msubsup><mi>x</mi><mi>t</mi><mi>i</mi></msubsup><mo>,</mo><msub><mi>c</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\nabla_{\alpha}\mathrm{G}_{\alpha}(x^{i}_{t},c_{i})</annotation></semantics></math> is the objective gradient estimate with respect to <math alttext="\theta" class="ltx_Math" display="inline" id="S4.SS1.p9.m7" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math> or <math alttext="\phi" class="ltx_Math" display="inline" id="S4.SS1.p9.m8" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math> at each timestep <math alttext="t" class="ltx_Math" display="inline" id="S4.SS1.p9.m9" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> in each mini-batch <math alttext="i" class="ltx_Math" display="inline" id="S4.SS1.p9.m10" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>. The motivation and advantages of this per-timestep update strategy are described as follows:</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p10">
+<p class="ltx_p" id="S4.SS1.p10.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p10.1.1">Remark on per-timestep update.</span> In most cases of deep RL, a higher gradient update frequency often results in faster convergence but worse stability. In our settings, we operate on samples spanning two dimensions: timesteps and mini-batches, allowing us to elevate the gradient update frequency by reducing the sizes of these dimensions. However, reducing the dimension sizes introduces lower variance in sample distributions, potentially leading to overfitting. Intuitively, the variance of sample distributions within a per-timestep context (encompassing all mini-batches) exceeds that within a per-minibatch context (covering all timesteps derived from a shared Gaussian distribution). This suggests that reducing the number of timesteps per update represents a relatively secure approach for expediting convergence, while it still poses a risk of overfitting to the timestep-independent reward exclusively based on the final image. To mitigate this risk, our TDPO incorporates the temporal rewards as fine-grained guidance for the per-timestep updates, thereby improving sample efficiency while ensuring overall stability.</p>
+</div>
+<figure class="ltx_figure" id="S4.F2">
+<p class="ltx_p ltx_align_center ltx_align_center" id="S4.F2.2"><span class="ltx_text" id="S4.F2.2.1">
+<img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="171" id="S4.F2.g1" src="figures/vis.jpg" style="aspect-ratio:419/171;" width="419"/></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Image generation results sampled from models that are either pre-trained or further finetuned on Aesthetic Score via AlignProp, DDPO-2, DDPO-100, as well as our TDPO and TDPO-R. For a fair comparison, all images are generated using a fixed random seed of 42. Additionally, for the fine-tuned models, the aesthetic scores of the generated images achieve similar values around 7 <math alttext="\pm" class="ltx_Math" display="inline" id="S4.F2.m2" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math> 0.1.</figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.2 </span>Primacy Bias within TDPO</h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1">While TDPO mitigates reward overoptimization by incorporating the temporal inductive bias of diffusion models, primacy bias, a more specific factor contributing to reward overoptimization, may arise due to the limited model capacity of the temporal critic in the TDPO framework. In this section, we investigate how the state of neurons in our model reflects such primacy bias and how it contributes to reward overoptimization during diffusion model alignment.</p>
+</div>
+<figure class="ltx_float ltx_float_algorithm ltx_framed ltx_framed_top" id="alg1">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_float"><span class="ltx_text ltx_font_bold" id="alg1.3">Algorithm 1</span> </span> TDPO-R: Temporal diffusion policy optimization (with critic active neuron reset)</figcaption>
+<div class="ltx_listing ltx_framed ltx_framed_topbottom ltx_listing" id="alg1.4">
+<div class="ltx_listingline" id="alg1.l1">
+              
+              
+             <span class="ltx_text ltx_font_bold" id="alg1.l1.2">Input:</span> Diffusion model parameters <math alttext="\theta" class="ltx_Math" display="inline" id="alg1.l1.m1" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>, critic model parameters <math alttext="\phi" class="ltx_Math" display="inline" id="alg1.l1.m2" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>, context distribution <math alttext="p(c)" class="ltx_Math" display="inline" id="alg1.l1.m3" intent=":literal"><semantics><mrow><mi>p</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">p(c)</annotation></semantics></math>, epochs <math alttext="E" class="ltx_Math" display="inline" id="alg1.l1.m4" intent=":literal"><semantics><mi>E</mi><annotation encoding="application/x-tex">E</annotation></semantics></math>, denoising timesteps <math alttext="T" class="ltx_Math" display="inline" id="alg1.l1.m5" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>, batch size <math alttext="B" class="ltx_Math" display="inline" id="alg1.l1.m6" intent=":literal"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>, and neuron reset frequency <math alttext="F" class="ltx_Math" display="inline" id="alg1.l1.m7" intent=":literal"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l2">
+              
+              
+             <span class="ltx_text ltx_font_bold" id="alg1.l2.2">for</span> <math alttext="e=1,...,E" class="ltx_Math" display="inline" id="alg1.l2.m1" intent=":literal"><semantics><mrow><mrow><mi>e</mi><mo>=</mo><mn>1</mn></mrow><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><mi>E</mi></mrow><annotation encoding="application/x-tex">e=1,...,E</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l2.3">do</span>
+</div>
+<div class="ltx_listingline" id="alg1.l3">
+              
+              
+              Obtain samples <math alttext="\{c_{i}\sim p(c)" class="ltx_math_unparsed" display="inline" id="alg1.l3.m1" intent=":literal"><semantics><mrow><mo stretchy="false">{</mo><msub><mi>c</mi><mi>i</mi></msub><mo>∼</mo><mi>p</mi><mrow><mo stretchy="false">(</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\{c_{i}\sim p(c)</annotation></semantics></math>, <math alttext="x_{0:T}^{i}\sim p_{\theta}(x_{0:T}|c_{i})\}_{i=1}^{B}" class="ltx_math_unparsed" display="inline" id="alg1.l3.m2" intent=":literal"><semantics><msubsup><mrow><msubsup><mi>x</mi><mrow><mn>0</mn><mo lspace="0.278em" rspace="0.278em">:</mo><mi>T</mi></mrow><mi>i</mi></msubsup><mo>∼</mo><msub><mi>p</mi><mi>θ</mi></msub><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mn>0</mn><mo lspace="0.278em" rspace="0.278em">:</mo><mi>T</mi></mrow></msub><mo fence="false" rspace="0.167em" stretchy="false">|</mo><msub><mi>c</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow><mo stretchy="false">}</mo></mrow><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></msubsup><annotation encoding="application/x-tex">x_{0:T}^{i}\sim p_{\theta}(x_{0:T}|c_{i})\}_{i=1}^{B}</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l4">
+              
+              
+              Compute temporal rewards according to Eq. (<a class="ltx_ref" href="#S4.E6" title="Equation 6 ‣ 4.1 Temporal Diffusion Policy Optimization ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">6</span></a>)
+
+</div>
+<div class="ltx_listingline" id="alg1.l5">
+              
+              
+              <span class="ltx_text ltx_font_bold" id="alg1.l5.2">for</span> <math alttext="t=T,...,1" class="ltx_Math" display="inline" id="alg1.l5.m1" intent=":literal"><semantics><mrow><mrow><mi>t</mi><mo>=</mo><mi>T</mi></mrow><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">t=T,...,1</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l5.3">do</span>
+</div>
+<div class="ltx_listingline" id="alg1.l6">
+              
+              
+               Update <math alttext="\theta,\phi" class="ltx_Math" display="inline" id="alg1.l6.m1" intent=":literal"><semantics><mrow><mi>θ</mi><mo>,</mo><mi>ϕ</mi></mrow><annotation encoding="application/x-tex">\theta,\phi</annotation></semantics></math> at timestep <math alttext="t" class="ltx_Math" display="inline" id="alg1.l6.m2" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math> according to Eq. (<a class="ltx_ref" href="#S4.E10" title="Equation 10 ‣ 4.1 Temporal Diffusion Policy Optimization ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">10</span></a>)
+
+</div>
+<div class="ltx_listingline" id="alg1.l7">
+              
+              
+              <span class="ltx_text ltx_font_bold" id="alg1.l7.2">end</span> <span class="ltx_text ltx_font_bold" id="alg1.l7.3">for</span>
+</div>
+<div class="ltx_listingline" id="alg1.l8">
+              
+              
+              <span class="ltx_text ltx_font_bold" id="alg1.l8.2">if</span> <math alttext="e\mod F==0" class="ltx_Math" display="inline" id="alg1.l8.m1" intent=":literal"><semantics><mrow><mrow><mi>e</mi><mo>mod</mo><mi>F</mi></mrow><mo>=</mo><mphantom></mphantom><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">e\mod F==0</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l8.3">then</span>
+</div>
+<div class="ltx_listingline" id="alg1.l9">
+              
+              
+               Obtain neuron masks for <math alttext="\phi" class="ltx_Math" display="inline" id="alg1.l9.m1" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math> according to Eq. (<a class="ltx_ref" href="#S4.E12" title="Equation 12 ‣ 4.2 Primacy Bias within TDPO ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">12</span></a>)
+
+</div>
+<div class="ltx_listingline" id="alg1.l10">
+              
+              
+               Reinitialize <math alttext="\phi" class="ltx_Math" display="inline" id="alg1.l10.m1" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math> where the neuron mask is <math alttext="true" class="ltx_Math" display="inline" id="alg1.l10.m2" intent=":literal"><semantics><mrow><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>u</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><annotation encoding="application/x-tex">true</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l11">
+              
+              
+              <span class="ltx_text ltx_font_bold" id="alg1.l11.2">end</span> <span class="ltx_text ltx_font_bold" id="alg1.l11.3">if</span>
+</div>
+<div class="ltx_listingline" id="alg1.l12">
+              
+              
+             <span class="ltx_text ltx_font_bold" id="alg1.l12.2">end</span> <span class="ltx_text ltx_font_bold" id="alg1.l12.3">for</span>
+</div>
+<div class="ltx_listingline" id="alg1.l13">
+              
+              
+             <span class="ltx_text ltx_font_bold" id="alg1.l13.2">Output:</span> Optimized diffusion model parameters <math alttext="\theta" class="ltx_Math" display="inline" id="alg1.l13.m1" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+</div>
+</div>
+</figure>
+<div class="ltx_para" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p2.1.1">Neuron activations and states.</span> Following <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib37" title="">Sokar et al. (2023)</a></cite>, we use neuron activation in deep neural networks to categorize the states of neurons. We first consider each feature map between two layers within a network module as the state of a neuron. For an input <math alttext="x" class="ltx_Math" display="inline" id="S4.SS2.p2.m1" intent=":literal"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math> of distribution <math alttext="\mathcal{D}" class="ltx_Math" display="inline" id="S4.SS2.p2.m2" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒟</mi><annotation encoding="application/x-tex">\mathcal{D}</annotation></semantics></math>, we denote the activation of a neuron <math alttext="n" class="ltx_Math" display="inline" id="S4.SS2.p2.m3" intent=":literal"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> in a module <math alttext="m" class="ltx_Math" display="inline" id="S4.SS2.p2.m4" intent=":literal"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> as <math alttext="a_{n}^{m}(x)" class="ltx_Math" display="inline" id="S4.SS2.p2.m5" intent=":literal"><semantics><mrow><msubsup><mi>a</mi><mi>n</mi><mi>m</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">a_{n}^{m}(x)</annotation></semantics></math>, and compute an activation score <math alttext="\mathcal{A}_{n}^{m}" class="ltx_Math" display="inline" id="S4.SS2.p2.m6" intent=":literal"><semantics><msubsup><mi class="ltx_font_mathcaligraphic">𝒜</mi><mi>n</mi><mi>m</mi></msubsup><annotation encoding="application/x-tex">\mathcal{A}_{n}^{m}</annotation></semantics></math> for each neuron <math alttext="n" class="ltx_Math" display="inline" id="S4.SS2.p2.m7" intent=":literal"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> in the module <math alttext="m" class="ltx_Math" display="inline" id="S4.SS2.p2.m8" intent=":literal"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> as:</p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E11">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{A}_{n}^{m}=\frac{\mathbb{E}_{x\in\mathcal{D}}|a_{n}^{m}(x)|}{\frac{1}{N^{m}}\sum_{n\in N^{m}}\mathbb{E}_{x\in\mathcal{D}}|a_{n}^{m}(x)|}," class="ltx_Math" display="block" id="S4.E11.m1" intent=":literal"><semantics><mrow><mrow><msubsup><mi class="ltx_font_mathcaligraphic">𝒜</mi><mi>n</mi><mi>m</mi></msubsup><mo>=</mo><mfrac><mrow><msub><mi>𝔼</mi><mrow><mi>x</mi><mo>∈</mo><mi class="ltx_font_mathcaligraphic">𝒟</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">|</mo><mrow><msubsup><mi>a</mi><mi>n</mi><mi>m</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">|</mo></mrow></mrow><mrow><mfrac><mn>1</mn><msup><mi>N</mi><mi>m</mi></msup></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><msub><mo>∑</mo><mrow><mi>n</mi><mo>∈</mo><msup><mi>N</mi><mi>m</mi></msup></mrow></msub><mrow><msub><mi>𝔼</mi><mrow><mi>x</mi><mo>∈</mo><mi class="ltx_font_mathcaligraphic">𝒟</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">|</mo><mrow><msubsup><mi>a</mi><mi>n</mi><mi>m</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">|</mo></mrow></mrow></mrow></mrow></mfrac></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathcal{A}_{n}^{m}=\frac{\mathbb{E}_{x\in\mathcal{D}}|a_{n}^{m}(x)|}{\frac{1}{N^{m}}\sum_{n\in N^{m}}\mathbb{E}_{x\in\mathcal{D}}|a_{n}^{m}(x)|},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(11)</span></td></tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS2.p2.2">where <math alttext="N^{m}" class="ltx_Math" display="inline" id="S4.SS2.p2.m9" intent=":literal"><semantics><msup><mi>N</mi><mi>m</mi></msup><annotation encoding="application/x-tex">N^{m}</annotation></semantics></math> is the number of neurons in the module <math alttext="m" class="ltx_Math" display="inline" id="S4.SS2.p2.m10" intent=":literal"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>, and the expected activation over <math alttext="\mathcal{D}" class="ltx_Math" display="inline" id="S4.SS2.p2.m11" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒟</mi><annotation encoding="application/x-tex">\mathcal{D}</annotation></semantics></math> is normalized by the average of all activations. Then we set a threshold for this activation score to categorize all neurons in our models into two opposite states. If the activation score of a neuron is above the threshold, we say the neuron is active, otherwise it is regarded as dormant.</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p3">
+<p class="ltx_p" id="S4.SS2.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p3.1.1">Dormant neurons are indispensable.</span> Accordingly, we conduct empirical evaluations to investigate the effects of different neuron states on reward overoptimizaiton during the training process of TDPO. We detect the percentage of dormant neurons in our critic model, and observe a slow ascent of this percentage during training.
+To directly influence the neuron states during training, we periodically reset neurons of a given state by reinitializing its parameters to the original distributions. Surprisingly, we find that while resetting dormant neurons periodically reduces the dormant percentage at all training steps, it actually exacerbates reward overoptimizaiton. This deviates from the conclusion in <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib37" title="">Sokar et al., 2023</a>)</cite> where dormant neurons in deep RL were found to hinder model capacity and necessitate resets.</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p4">
+<p class="ltx_p" id="S4.SS2.p4.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p4.1.1">Active neurons reflect primacy bias.</span> We further explore resetting active neurons in the critic. Although this does not reduce the dormant percentage, it effectively mitigates reward overoptimizaiton. Interestingly, resetting all neurons in the critic also exacerbates reward overoptimization, albeit to a lesser degree compared to solely resetting dormant neurons. We posit that dormant neurons in the critic model act as an adaptive regularization mechanism against overoptimization to imperfect rewards, which suggests resetting dormant neurons may damage this implicit regularization. Our findings imply that, within the context of reward overoptimization, primacy bias manifests primarily in active neurons. Consequently, periodically resetting these neurons offers a potential mitigation strategy, encouraging the model to learn new regularization patterns without forgetting crucial past regularization. Further details and analyses supporting this observation are provided in Section <a class="ltx_ref" href="#S5.SS3" title="5.3 Reward Overoptimization and Generalization ‣ 5 Empirical Evaluations ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">5.3</span></a> and Appendix <a class="ltx_ref" href="#A2" title="Appendix B Extended Analyses of Neuron States ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">B</span></a>.</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p5">
+<p class="ltx_p" id="S4.SS2.p5.1">We further analyze the effect of the neuron states in the policy model. Since we adopt Low-Rank Adaptation (LoRA) <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib14" title="">Hu et al., 2022</a>)</cite> for the policy, only neurons within the LoRA layers can be reset. We detect very few dormant neurons, and resetting them makes no significant difference to the results. In this case, resetting active neurons causes catastrophic forgetting and heavily hinders learning.</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p6">
+<p class="ltx_p" id="S4.SS2.p6.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p6.1.1">TDPO with critic active neuron Reset (TDPO-R).</span>
+Motivated by the above analyses, we present TDPO-R, a variant of TDPO that periodically resets the active neurons in the critic model with a frequency <math alttext="F" class="ltx_Math" display="inline" id="S4.SS2.p6.m1" intent=":literal"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>. In practice, to reinitialize the model parameters <math alttext="\phi_{a}" class="ltx_Math" display="inline" id="S4.SS2.p6.m2" intent=":literal"><semantics><msub><mi>ϕ</mi><mi>a</mi></msub><annotation encoding="application/x-tex">\phi_{a}</annotation></semantics></math> corresponding to the active neurons, we compute a neuron mask for each module <math alttext="m" class="ltx_Math" display="inline" id="S4.SS2.p6.m3" intent=":literal"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>:</p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E12">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathrm{Mask}^{m}=\left[\mathcal{A}_{n}^{m}&gt;0\right]_{n=1}^{N^{m}}," class="ltx_math_unparsed" display="block" id="S4.E12.m1" intent=":literal"><semantics><mrow><msup><mi>Mask</mi><mi>m</mi></msup><mo>=</mo><msubsup><mrow><mo>[</mo><msubsup><mi class="ltx_font_mathcaligraphic">𝒜</mi><mi>n</mi><mi>m</mi></msubsup><mo>&gt;</mo><mn>0</mn><mo>]</mo></mrow><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><msup><mi>N</mi><mi>m</mi></msup></msubsup><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathrm{Mask}^{m}=\left[\mathcal{A}_{n}^{m}&gt;0\right]_{n=1}^{N^{m}},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(12)</span></td></tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS2.p6.2">where each boolean value in it is set to true if the corresponding activation score <math alttext="\mathcal{A}_{n}^{m}&gt;0" class="ltx_Math" display="inline" id="S4.SS2.p6.m4" intent=":literal"><semantics><mrow><msubsup><mi class="ltx_font_mathcaligraphic">𝒜</mi><mi>n</mi><mi>m</mi></msubsup><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\mathcal{A}_{n}^{m}&gt;0</annotation></semantics></math>. This neuron mask is used to reinitialize the weights of both the incoming and outgoing layers corresponding to the active neurons in module <math alttext="m" class="ltx_Math" display="inline" id="S4.SS2.p6.m5" intent=":literal"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>. The pseudo-code of TDPO-R is summarized in Algorithm <a class="ltx_ref" href="#alg1" title="Algorithm 1 ‣ 4.2 Primacy Bias within TDPO ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p7">
+<p class="ltx_p" id="S4.SS2.p7.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p7.1.1">In neuroscience,</span> there are several studies <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib31" title="">Rotheneichner et al., 2018</a>; <a class="ltx_ref" href="#bib.bib27" title="">Ovsepian, 2019</a>; <a class="ltx_ref" href="#bib.bib3" title="">Benedetti &amp; Couillard-Despres, 2022</a>)</cite> investigating the function of dormant neurons. According to <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib27" title="">Ovsepian (2019)</a></cite>, most neurons in the brain do not fire action potentials and remain dormant for a long time. These dormant neurons are formed during evolution, but are far from the scope of natural selection as they avoid regular functional tasks. However, under the influence of stress and disease, they occasionally become active, which can lead to various neurological and psychological disease symptoms and behavioral abnormalities. Interestingly, this conclusion mirrors our observation that resetting dormant neurons could be harmful for mitigating reward overoptimization.</p>
+</div>
+<figure class="ltx_figure" id="S4.F3">
+<p class="ltx_p ltx_align_center ltx_align_center" id="S4.F3.2"><span class="ltx_text" id="S4.F3.2.1">
+<object class="ltx_graphics ltx_img_landscape" data="figures/aes_img_crop.svg" height="113" id="S4.F3.g1" style="aspect-ratio:150/113;" type="image/svg+xml" width="150"></object>
+ <object class="ltx_graphics ltx_img_landscape" data="figures/hps_pick_crop.svg" height="114" id="S4.F3.g2" style="aspect-ratio:160/114;" type="image/svg+xml" width="160"></object>
+<object class="ltx_graphics ltx_img_landscape" data="figures/pick_hps_crop.svg" height="114" id="S4.F3.g3" style="aspect-ratio:160/114;" type="image/svg+xml" width="160"></object></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Out-of-domain evaluation results via cross-reward generalization against ImageReward (left), PickScore (middle), and HPSv2 (right) when finetuning the diffusion model on Aesthetic Score (left), HPSv2 (middle), and PickScore (right), respectively.</figcaption>
+</figure>
+<figure class="ltx_figure" id="S4.F4">
+<p class="ltx_p ltx_align_center ltx_align_center" id="S4.F4.2"><span class="ltx_text" id="S4.F4.2.1">
+<object class="ltx_graphics ltx_img_landscape" data="figures/sample_pick_crop.svg" height="113" id="S4.F4.g1" style="aspect-ratio:162/113;" type="image/svg+xml" width="162"></object>
+<object class="ltx_graphics ltx_img_landscape" data="figures/sample_hps_crop.svg" height="114" id="S4.F4.g2" style="aspect-ratio:160/114;" type="image/svg+xml" width="160"></object>
+<object class="ltx_graphics ltx_img_landscape" data="figures/sample_aes_crop.svg" height="112" id="S4.F4.g3" style="aspect-ratio:153/112;" type="image/svg+xml" width="153"></object></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Quantitative evaluation results for the efficacy of our TDPO and TDPO-R in improving sample efficiency when finetuning the diffusion model on the reward functions of PickScore (left), HPSv2 (middle), and Aesthetic Score (right), compared to DDPO with the update frequencies of 2 (DDPO-2) and 100 (DDPO-100) per epoch.</figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">5 </span>Empirical Evaluations</h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1">We conduct comprehensive experiments to validate the efficacy of our algorithms on both sample efficiency and reward overoptimization alleviation when aligning text-to-image diffusion models with diverse reward functions.</p>
+</div>
+<section class="ltx_subsection" id="S5.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">5.1 </span>Implementation Details</h3>
+<div class="ltx_para" id="S5.SS1.p1">
+<p class="ltx_p" id="S5.SS1.p1.1"><span class="ltx_text ltx_font_bold" id="S5.SS1.p1.1.1">Baselines.</span> We compare our algorithms with state-of-the-art baselines<span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup>
+<span class="ltx_tag ltx_tag_note">1</span>
+              
+              
+              
+              
+              
+              
+              
+            Additional baselines, including DRaFT <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib5" title="">Clark et al., 2024</a>)</cite> that lacks open-source code, and DPOK<cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib9" title="">Fan et al., 2023</a>)</cite> and ReFL<cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib42" title="">Xu et al., 2023</a>)</cite> that underperform DDPO and AlignProp, are omitted in our reproductions due to the resource constraints.</span></span></span>, including pre-trained Stable Diffusion <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib30" title="">Rombach et al., 2022</a>)</cite>, Denoising Diffusion Policy Optimization (DDPO) <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib4" title="">Black et al., 2024</a>)</cite>, and AlignProp <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib28" title="">Prabhudesai et al., 2023</a>)</cite>. We use the official PyTorch codebase of DDPO for result reproduction. Following DDPO, we use Stable Diffusion v1.4 as the base generative model. For a fair comparison, we reproduce AlignProp using Stable Diffusion v1.4, while their reported results are based on v1.5.</p>
+</div>
+<div class="ltx_para" id="S5.SS1.p2">
+<p class="ltx_p" id="S5.SS1.p2.1"><span class="ltx_text ltx_font_bold" id="S5.SS1.p2.1.1">Reward functions.</span> To demonstrate the generalizability of our method, we perform training and evaluation on diverse reward functions, in which
+<span class="ltx_text ltx_font_bold" id="S5.SS1.p2.1.2">(a) Aesthetic Score</span> is computed using the LAION aesthetic predictor <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib32" title="">Schuhmann et al., 2022</a>)</cite> and a text prompt set consisting of 45 animal names consistent with that in <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib4" title="">Black et al., 2024</a>)</cite>;
+<span class="ltx_text ltx_font_bold" id="S5.SS1.p2.1.3">(b) PickScore</span> <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib16" title="">Kirstain et al., 2023</a>)</cite> is employed as an objective reward function for human preference learning, using the same prompt set as for Aesthetic Score;
+<span class="ltx_text ltx_font_bold" id="S5.SS1.p2.1.4">(c) Human Preference Score v2</span> (HPSv2) <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib40" title="">Wu et al., 2023a</a>)</cite> presents another reward function for human preference learning, along with 802 prompts drawn from Human Preference Dataset v2;
+<span class="ltx_text ltx_font_bold" id="S5.SS1.p2.1.5">(d) ImageReward</span> <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib42" title="">Xu et al., 2023</a>)</cite> is employed as an evaluation score function for cross-reward generalization.</p>
+</div>
+<div class="ltx_para" id="S5.SS1.p3">
+<p class="ltx_p" id="S5.SS1.p3.1">To establish a consistent benchmark, the training procedures and configurations of our algorithms are based on the official PyTorch implementation of DDPO, which adopts LoRA <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib14" title="">Hu et al., 2022</a>)</cite> to reduce memory and computation cost.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS2">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">5.2 </span>Sample Efficiency in Diffusion Model Alignment</h3>
+<div class="ltx_para" id="S5.SS2.p1">
+<p class="ltx_p" id="S5.SS2.p1.1">We employ TDPO and TDPO-R to separately finetune Stable Diffusion v1.4 on Aesthetic Score, PickScore, and HPSv2. We report the average reward over samples at each training interval w.r.t. specific number of reward queries, as the indicator of sample efficiency. TDPO(-R) performs each gradient update in a per-timestep manner with all batch samples averaged, resulting in a higher update frequency (100 gradient updates per epoch) compared to the original DDPO implementation (2 gradient updates per epoch). Thus, for a direct comparison, we further reproduce DDPO using the same update frequency as ours. Figure <a class="ltx_ref" href="#S4.F4" title="Figure 4 ‣ 4.2 Primacy Bias within TDPO ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">4</span></a> shows that our algorithms consistently outperform both implementations of DDPO on each of the three rewards, demonstrating their effectiveness in improving sample efficiency. Notably, the high-frequency updates also accelerate training for DDPO, albeit at the cost of exacerbating reward overoptimization, as highlighted in Figure <a class="ltx_ref" href="#S4.F3" title="Figure 3 ‣ 4.2 Primacy Bias within TDPO ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">3</span></a> and further discussed in Section <a class="ltx_ref" href="#S5.SS3" title="5.3 Reward Overoptimization and Generalization ‣ 5 Empirical Evaluations ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">5.3</span></a>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS3">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">5.3 </span>Reward Overoptimization and Generalization</h3>
+<div class="ltx_para" id="S5.SS3.p1">
+<p class="ltx_p" id="S5.SS3.p1.1"><span class="ltx_text ltx_font_bold" id="S5.SS3.p1.1.1">Cross-reward generalization.</span> To quantitatively assess reward overoptimization, we introduce cross-reward generalization, where the model is evaluated against out-of-domain reward functions after being finetuned on a specific reward function. As shown in Figure <a class="ltx_ref" href="#S4.F3" title="Figure 3 ‣ 4.2 Primacy Bias within TDPO ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">3</span></a>, the X-axis represents the training objective reward, while the Y-axis represents the evaluation score calculated by out-of-domain reward functions. Reward overoptimization typically leads to a decline or slow rise in the evaluation score as the training reward increases. In Figure <a class="ltx_ref" href="#S4.F3" title="Figure 3 ‣ 4.2 Primacy Bias within TDPO ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">3</span></a>, TDPO and TDPO-R exhibit superior performance in three sets of cross-reward evaluations compared to DDPO and AlignProp, demonstrating the effectiveness of our methods in mitigating reward overoptimization.</p>
+</div>
+<div class="ltx_para" id="S5.SS3.p2">
+<p class="ltx_p" id="S5.SS3.p2.1"><span class="ltx_text ltx_font_bold" id="S5.SS3.p2.1.1">Generalization to unseen prompts.</span>
+As shown in Figure <a class="ltx_ref" href="#S5.F5" title="Figure 5 ‣ 5.3 Reward Overoptimization and Generalization ‣ 5 Empirical Evaluations ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">5</span></a>, TDPO and TDPO-R maintain their superior performance of cross-reward generalization even on novel text prompts unseen during the finetuning process, which further emphasizes their effectiveness and robustness against reward overoptimization. Implementation details and more evaluation results on unseen prompts are provided in Appendix <a class="ltx_ref" href="#A3" title="Appendix C Generalization to Unseen Prompts ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">C</span></a>.</p>
+</div>
+<figure class="ltx_figure" id="S5.F5">
+<p class="ltx_p ltx_align_center ltx_align_center" id="S5.F5.2"><span class="ltx_text" id="S5.F5.2.1">
+<object class="ltx_graphics ltx_img_landscape" data="figures/unseen_main_crop.svg" height="316" id="S5.F5.g1" style="aspect-ratio:476/316;" type="image/svg+xml" width="476"></object></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Cross-reward generalization results evaluated on a text prompt set of unseen animals when finetuning the diffusion model on Aesthetic Score.</figcaption>
+</figure>
+<div class="ltx_para" id="S5.SS3.p3">
+<p class="ltx_p" id="S5.SS3.p3.1"><span class="ltx_text ltx_font_bold" id="S5.SS3.p3.1.1">Effects of neuron states.</span> As mentioned in Section <a class="ltx_ref" href="#S4.SS2" title="4.2 Primacy Bias within TDPO ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">4.2</span></a>, we investigate the effects of neuron states on reward overoptimizaiton by comparing TDPO and its variants with different reset strategies. In Figure <a class="ltx_ref" href="#S5.F6" title="Figure 6 ‣ 5.3 Reward Overoptimization and Generalization ‣ 5 Empirical Evaluations ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">6</span></a>, we present the results of cross-reward generalization to ImageReward for the variants that reset all, dormant, and active neurons in our critic model with the activation score threshold set to 0. For the variant that resets dormant neurons in our policy model, we set the threshold to 0.1, as using a threshold of 0 shows negligible differences from the standard TDPO. The results are consistent with the effects discussed in Section <a class="ltx_ref" href="#S4.SS2" title="4.2 Primacy Bias within TDPO ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">4.2</span></a>. Further analyses and evaluation results are provided in Appendix <a class="ltx_ref" href="#A2" title="Appendix B Extended Analyses of Neuron States ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">B</span></a>.</p>
+</div>
+<div class="ltx_para" id="S5.SS3.p4">
+<p class="ltx_p" id="S5.SS3.p4.1"><span class="ltx_text ltx_font_bold" id="S5.SS3.p4.1.1">Alternate strategies for overoptimization.</span> Both DDPO and AlignProp apply early stopping to prevent overoptimization, but the reliance on interactive inspection hinders its scalability. <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib9" title="">Fan et al. (2023)</a></cite> conduct an analysis of KL regularization in diffusion model alignment, while the quantitative evaluation on reward overoptimization is lacking. We also report the cross-reward generalization results of using KL regularization in Figure <a class="ltx_ref" href="#S5.F6" title="Figure 6 ‣ 5.3 Reward Overoptimization and Generalization ‣ 5 Empirical Evaluations ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">6</span></a>, which indicates that our neuron reset strategy is more effective for mitigating reward overoptimization compared to KL regularization.</p>
+</div>
+<figure class="ltx_figure" id="S5.F6">
+<p class="ltx_p ltx_align_center ltx_align_center" id="S5.F6.2"><span class="ltx_text" id="S5.F6.2.1">
+<object class="ltx_graphics ltx_img_landscape" data="figures/aes_img_reset_crop.svg" height="364" id="S5.F6.g1" style="aspect-ratio:476/364;" type="image/svg+xml" width="476"></object></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Evaluation results of cross-reward generalization to ImageReward when finetuning the diffusion model on Aesthetic Score, comparing different variants of TDPO.</figcaption>
+</figure>
+<figure class="ltx_figure" id="S5.F7">
+<p class="ltx_p ltx_align_center ltx_align_center" id="S5.F7.2"><span class="ltx_text" id="S5.F7.2.1">
+<img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="227" id="S5.F7.g1" src="figures/vis_complex.jpg" style="aspect-ratio:476/227;" width="476"/></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 7: </span>Image generation results for unseen text prompts involving color (“A green colored rabbit”), count (“Four wolves in the park”), composition (“A cat and a dog”), and location (“A dog on the moon”) from models either pre-trained or further finetuned on Aesthetic Score. For a fair comparison, all images are generated using a fixed random seed of 42. Additionally, for the fine-tuned models, the aesthetic scores of the generated images achieve similar values around 7 <math alttext="\pm" class="ltx_Math" display="inline" id="S5.F7.m2" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math> 0.1.</figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S5.SS4">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">5.4 </span>Qualitative Comparison</h3>
+<div class="ltx_para" id="S5.SS4.p1">
+<p class="ltx_p" id="S5.SS4.p1.1">In Figure <a class="ltx_ref" href="#S4.F2" title="Figure 2 ‣ 4.1 Temporal Diffusion Policy Optimization ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">2</span></a>, we compare the high-reward image results of the alignment methods when optimizing rewards to the same degree. The results from AlignProp and DDPO show notable saturation in terms of style, background, and sunlight, while our results manifest greater diversity in these aspects and exhibit higher fidelity, which highlights the effectiveness of our methods in mitigating reward overoptimization. Furthermore, we also provide additional qualitative results for unseen text prompts in Figure <a class="ltx_ref" href="#S5.F7" title="Figure 7 ‣ 5.3 Reward Overoptimization and Generalization ‣ 5 Empirical Evaluations ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">7</span></a>. In comparison with other methods, our results are better aligned with the prompts in terms of color, count, composition, and location, and also exhibit higher image fidelity, indicating a lower degree of reward overoptimization.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">6 </span>Conclusion</h2>
+<div class="ltx_para" id="S6.p1">
+<p class="ltx_p" id="S6.p1.1">In this work, we confront reward overoptimization in diffusion model alignment from the perspective of inductive and primacy biases. Specifically, we identify the temporal inductive bias of diffusion models and surprisingly discover that active neurons in our proposed temporal critic reflect the primacy bias. Inspired by these findings, we present TDPO-R, which exploits the temporal inductive bias of diffusion models and addresses the primacy bias during its RL training process. Empirical evaluations validate the effectiveness of the proposed methods in mitigating reward overoptimization.</p>
+</div>
+<div class="ltx_para" id="S6.p2">
+<p class="ltx_p" id="S6.p2.1"><span class="ltx_text ltx_font_bold" id="S6.p2.1.1">Limitations and future work.</span> To address computational limitations, our TDPO-R adopts LoRA finetuning instead of full model finetuning for diffusion models, precluding a comprehensive analysis of the diffusion model’s internal neuron states in this case. However, this work opens avenues for follow-up research on reward overoptimization of diffusion models. Moreover, the potential of multi-reward learning for diffusion models remains under-explored, highlighting a significant gap for future work. We hope that our work will also inspire further exploration of potential reward overoptimization in this new domain of multi-reward learning for diffusion models.</p>
+</div>
+</section>
+<section class="ltx_section" id="Sx1">
+<h2 class="ltx_title ltx_title_section">Acknowledgements</h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1">This work is supported in part by the Major Science and Technology Innovation 2030 “New Generation Artificial Intelligence” key project (No. 2021ZD0111700), the National Natural Science Foundation of China (Grant No. U23A20318 and 62276195), the Special Fund of Hubei Luojia Laboratory under Grant 220100014, and the National Research Foundation Singapore and DSO National Laboratories under the AI Singapore Programme (AISG Award No: AISG2-GC-2023-006).
+Dr. Tao’s research is partially supported by NTU RSR and Start Up Grants.</p>
+</div>
+</section>
+<section class="ltx_section" id="Sx2">
+<h2 class="ltx_title ltx_title_section">Impact Statement</h2>
+<div class="ltx_para" id="Sx2.p1">
+<p class="ltx_p" id="Sx2.p1.1">This work contributes to the advancement of diffusion model alignment, with the potential to impact various aspects of society. Here, we highlight the key positive impacts:</p>
+</div>
+<div class="ltx_para" id="Sx2.p2">
+<p class="ltx_p" id="Sx2.p2.1"><span class="ltx_text ltx_font_bold" id="Sx2.p2.1.1">Improved alignment of diffusion models.</span> This work confronts the issue of reward overoptimization, which hinders the effective alignment of diffusion models with downstream applications. By mitigating this issue, we pave the way for the development of more reliable and trustworthy diffusion models that reflect human preferences, which empowers individuals and businesses to leverage the powerful capabilities of diffusion models for various creative applications.</p>
+</div>
+<div class="ltx_para" id="Sx2.p3">
+<p class="ltx_p" id="Sx2.p3.1"><span class="ltx_text ltx_font_bold" id="Sx2.p3.1.1">Potential for broader applications.</span> Beyond their direct impacts on diffusion models, the insights and techniques presented in this work, such as exploiting temporal inductive bias and addressing primacy bias through active neuron reset, may hold broader applicability in other domains of deep reinforcement learning, where similar challenges of overoptimization and bias hinder effective learning.</p>
+</div>
+<div class="ltx_para" id="Sx2.p4">
+<p class="ltx_p" id="Sx2.p4.1">Furthermore, it is also essential to acknowledge potential societal concerns associated with this technology, such as:</p>
+</div>
+<div class="ltx_para" id="Sx2.p5">
+<p class="ltx_p" id="Sx2.p5.1"><span class="ltx_text ltx_font_bold" id="Sx2.p5.1.1">Misuse of diffusion models.</span> As diffusion models evolve towards enhanced alignment with human preferences and increased controllability, concerns regarding their potential misuse for malicious purposes, such as generating discriminatory or harmful contents, become increasingly salient. It is crucial to develop safeguards and ethical guidelines alongside technological advancements to mitigate these risks.</p>
+</div>
+<div class="ltx_para" id="Sx2.p6">
+<p class="ltx_p" id="Sx2.p6.1"><span class="ltx_text ltx_font_bold" id="Sx2.p6.1.1">Unintended biases in reward learning.</span> The effectiveness of diffusion model alignment relies on accurately capturing human preferences from reward models. However, human preferences can be subjective and biased. It’s crucial to consider and mitigate potentially unintended biases in the data used to train the reward model to avoid exploiting and amplifying such biases in the generated outputs.</p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bib1"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bansal et al. (2023)</span>
+<span class="ltx_bibblock">
+Bansal, A., Chu, H., Schwarzschild, A., Sengupta, S., Goldblum, M., Geiping, J., and Goldstein, T.
+
+</span>
+<span class="ltx_bibblock">Universal guidance for diffusion models.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib1.1">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</em>, pp.  843–852, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib2"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Beaumont et al. (2022)</span>
+<span class="ltx_bibblock">
+Beaumont, R., Wightman, R., Wang, P., Dayma, B., Wortsman, M., Blinkdl, Schuhmann, C., Jitsev, J., Ludwig, S., Cherti, M., and Mostaque, E.
+
+</span>
+<span class="ltx_bibblock">Large scale OpenCLIP: L/14, H/14 and G/14 trained on LAION-2B.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib2.1">laion.ai</em>, 2022.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib3"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Benedetti &amp; Couillard-Despres (2022)</span>
+<span class="ltx_bibblock">
+Benedetti, B. and Couillard-Despres, S.
+
+</span>
+<span class="ltx_bibblock">Why would the brain need dormant neuronal precursors?
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib3.1">Frontiers in Neuroscience</em>, 16, 2022.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib4"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Black et al. (2024)</span>
+<span class="ltx_bibblock">
+Black, K., Janner, M., Du, Y., Kostrikov, I., and Levine, S.
+
+</span>
+<span class="ltx_bibblock">Training diffusion models with reinforcement learning.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib4.1">International Conference on Learning Representations</em>, 2024.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib5"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Clark et al. (2024)</span>
+<span class="ltx_bibblock">
+Clark, K., Vicol, P., Swersky, K., and Fleet, D. J.
+
+</span>
+<span class="ltx_bibblock">Directly fine-tuning diffusion models on differentiable rewards.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib5.1">International Conference on Learning Representations</em>, 2024.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib6"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dhariwal &amp; Nichol (2021)</span>
+<span class="ltx_bibblock">
+Dhariwal, P. and Nichol, A. Q.
+
+</span>
+<span class="ltx_bibblock">Diffusion models beat GANs on image synthesis.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib6.1">Advances in Neural Information Processing Systems</em>, 34:8780–8794, 2021.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib7"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dong et al. (2023)</span>
+<span class="ltx_bibblock">
+Dong, H., Xiong, W., Goyal, D., Zhang, Y., Chow, W., Pan, R., Diao, S., Zhang, J., SHUM, K., and Zhang, T.
+
+</span>
+<span class="ltx_bibblock">RAFT: Reward ranked finetuning for generative foundation model alignment.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib7.1">Transactions on Machine Learning Research</em>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib8"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Fan &amp; Lee (2023)</span>
+<span class="ltx_bibblock">
+Fan, Y. and Lee, K.
+
+</span>
+<span class="ltx_bibblock">Optimizing DDPM sampling with shortcut fine-tuning.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib8.1">International Conference on Machine Learning</em>, pp.  9623–9639, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib9"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Fan et al. (2023)</span>
+<span class="ltx_bibblock">
+Fan, Y., Watkins, O., Du, Y., Liu, H., Ryu, M., Boutilier, C., Abbeel, P., Ghavamzadeh, M., Lee, K., , and Lee, K.
+
+</span>
+<span class="ltx_bibblock">DPOK: Reinforcement learning for fine-tuning text-to-image diffusion models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib9.1">Advances in Neural Information Processing Systems</em>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib10"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gao et al. (2023)</span>
+<span class="ltx_bibblock">
+Gao, L., Schulman, J., and Hilton, J.
+
+</span>
+<span class="ltx_bibblock">Scaling laws for reward model overoptimization.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib10.1">International Conference on Machine Learning</em>, pp.  10835–10866, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib11"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hao et al. (2023)</span>
+<span class="ltx_bibblock">
+Hao, Y., Chi, Z., Dong, L., and Wei, F.
+
+</span>
+<span class="ltx_bibblock">Optimizing prompts for text-to-image generation.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib11.1">Advances in Neural Information Processing Systems</em>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib12"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ho &amp; Salimans (2021)</span>
+<span class="ltx_bibblock">
+Ho, J. and Salimans, T.
+
+</span>
+<span class="ltx_bibblock">Classifier-free diffusion guidance.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib12.1">NeurIPS Workshop on Deep Generative Models and Downstream Applications</em>, 2021.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib13"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ho et al. (2020)</span>
+<span class="ltx_bibblock">
+Ho, J., Jain, A., and Abbeel, P.
+
+</span>
+<span class="ltx_bibblock">Denoising diffusion probabilistic models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib13.1">Advances in Neural Information Processing Systems</em>, 33:6840–6851, 2020.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib14"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hu et al. (2022)</span>
+<span class="ltx_bibblock">
+Hu, E. J., Shen, Y., Wallis, P., Allen-Zhu, Z., Li, Y., Wang, S., Wang, L., and Chen, W.
+
+</span>
+<span class="ltx_bibblock">LoRA: Low-rank adaptation of large language models.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib14.1">International Conference on Learning Representations</em>, 2022.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib15"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kakade &amp; Langford (2002)</span>
+<span class="ltx_bibblock">
+Kakade, S. and Langford, J.
+
+</span>
+<span class="ltx_bibblock">Approximately optimal approximate reinforcement learning.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib15.1">International Conference on Machine Learning</em>, pp.  267–274, 2002.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib16"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kirstain et al. (2023)</span>
+<span class="ltx_bibblock">
+Kirstain, Y., Polyak, A., Singer, U., Matiana, S., Penna, J., and Levy, O.
+
+</span>
+<span class="ltx_bibblock">Pick-a-pic: An open dataset of user preferences for text-to-image generation.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib16.1">Advances in Neural Information Processing Systems</em>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib17"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kumar et al. (2020)</span>
+<span class="ltx_bibblock">
+Kumar, A., Agarwal, R., Ghosh, D., and Levine, S.
+
+</span>
+<span class="ltx_bibblock">Implicit under-parameterization inhibits data-efficient deep reinforcement learning.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib17.1">International Conference on Learning Representations</em>, 2020.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib18"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kumar et al. (2023)</span>
+<span class="ltx_bibblock">
+Kumar, S., Marklund, H., and Roy, B. V.
+
+</span>
+<span class="ltx_bibblock">Maintaining plasticity via regenerative regularization.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib18.1">arXiv preprint arXiv:2308.11958</em>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib19"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lee et al. (2023)</span>
+<span class="ltx_bibblock">
+Lee, K., Liu, H., Ryu, M., Watkins, O., Du, Y., Boutilier, C., Abbeel, P., Ghavamzadeh, M., and Gu, S. S.
+
+</span>
+<span class="ltx_bibblock">Aligning text-to-image models using human feedback.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib19.1">arXiv preprint arXiv:2302.12192</em>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib20"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lyle et al. (2021)</span>
+<span class="ltx_bibblock">
+Lyle, C., Rowland, M., and Dabney, W.
+
+</span>
+<span class="ltx_bibblock">Understanding and preventing capacity loss in reinforcement learning.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib20.1">International Conference on Learning Representations</em>, 2021.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib21"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lyle et al. (2023)</span>
+<span class="ltx_bibblock">
+Lyle, C., Zheng, Z., Nikishin, E., Pires, B. Á., Pascanu, R., and Dabney, W.
+
+</span>
+<span class="ltx_bibblock">Understanding plasticity in neural networks.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib21.1">International Conference on Machine Learning</em>, pp.  23190–23211, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib22"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ma et al. (2024)</span>
+<span class="ltx_bibblock">
+Ma, G., Li, L., Zhang, S., Liu, Z., Wang, Z., Chen, Y., Shen, L., Wang, X., and Tao, D.
+
+</span>
+<span class="ltx_bibblock">Revisiting plasticity in visual reinforcement learning: Data, modules and training stages.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib22.1">International Conference on Learning Representations</em>, 2024.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib23"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Maas et al. (2013)</span>
+<span class="ltx_bibblock">
+Maas, A. L., Hannun, A. Y., and Ng, A. Y.
+
+</span>
+<span class="ltx_bibblock">Rectifier nonlinearities improve neural network acoustic models.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib23.1">International Conference on Machine Learning</em>, 2013.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib24"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Miao et al. (2024)</span>
+<span class="ltx_bibblock">
+Miao, Y., Zhang, S., Ding, L., Bao, R., Zhang, L., and Tao, D.
+
+</span>
+<span class="ltx_bibblock">Inform: Mitigating reward hacking in rlhf via information-theoretic reward modeling.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib24.1">arXiv preprint arXiv:2402.09345</em>, 2024.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib25"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Moskovitz et al. (2024)</span>
+<span class="ltx_bibblock">
+Moskovitz, T., Singh, A. K., Strouse, D., Sandholm, T., Salakhutdinov, R., Dragan, A. D., and McAleer, S.
+
+</span>
+<span class="ltx_bibblock">Confronting reward model overoptimization with constrained RLHF.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib25.1">International Conference on Learning Representations</em>, 2024.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib26"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Nikishin et al. (2022)</span>
+<span class="ltx_bibblock">
+Nikishin, E., Schwarzer, M., D’Oro, P., Bacon, P.-L., and Courville, A.
+
+</span>
+<span class="ltx_bibblock">The primacy bias in deep reinforcement learning.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib26.1">International Conference on Machine Learning</em>, pp.  16828–16847, 2022.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib27"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ovsepian (2019)</span>
+<span class="ltx_bibblock">
+Ovsepian, S. V.
+
+</span>
+<span class="ltx_bibblock">The dark matter of the brain.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib27.1">Brain Structure and Function</em>, 224:973–983, 2019.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib28"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Prabhudesai et al. (2023)</span>
+<span class="ltx_bibblock">
+Prabhudesai, M., Goyal, A., Pathak, D., and Fragkiadaki, K.
+
+</span>
+<span class="ltx_bibblock">Aligning text-to-image diffusion models with reward backpropagation.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib28.1">arXiv preprint arXiv:2310.03739</em>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib29"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Radford et al. (2021)</span>
+<span class="ltx_bibblock">
+Radford, A., Kim, J. W., Hallacy, C., Ramesh, A., Goh, G., Agarwal, S., Sastry, G., Askell, A., Mishkin, P., Clark, J., Krueger, G., and Sutskever, I.
+
+</span>
+<span class="ltx_bibblock">Learning transferable visual models from natural language supervision.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib29.1">International Conference on Machine Learning</em>, pp.  8748–8763, 2021.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib30"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Rombach et al. (2022)</span>
+<span class="ltx_bibblock">
+Rombach, R., Blattmann, A., Lorenz, D., Esser, P., and Ommer, B.
+
+</span>
+<span class="ltx_bibblock">High-resolution image synthesis with latent diffusion models.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib30.1">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</em>, pp.  10684–10695, 2022.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib31"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Rotheneichner et al. (2018)</span>
+<span class="ltx_bibblock">
+Rotheneichner, P., Belles, M., Benedetti, B., König, R., Dannehl, D., Kreutzer, C., Zaunmair, P., Engelhardt, M., Aigner, L., Nacher, J., and Couillard-Despres, S.
+
+</span>
+<span class="ltx_bibblock">Cellular plasticity in the adult murine piriform cortex: Continuous maturation of dormant precursors into excitatory neurons.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib31.1">Cerebral Cortex</em>, 28:2610–2621, 2018.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib32"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Schuhmann et al. (2022)</span>
+<span class="ltx_bibblock">
+Schuhmann, C., Beaumont, R., Vencu, R., Gordon, C. W., Wightman, R., Cherti, M., Coombes, T., Katta, A., Mullis, C., Wortsman, M., Schramowski, P., Kundurthy, S. R., Crowson, K., Schmidt, L., Kaczmarczyk, R., and Jitsev, J.
+
+</span>
+<span class="ltx_bibblock">LAION-5B: An open large-scale dataset for training next generation image-text models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib32.1">Advances in Neural Information Processing Systems</em>, 35:25278–25294, 2022.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib33"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Schulman et al. (2016)</span>
+<span class="ltx_bibblock">
+Schulman, J., Moritz, P., Levine, S., Jordan, M. I., and Abbeel, P.
+
+</span>
+<span class="ltx_bibblock">High-dimensional continuous control using generalized advantage estimation.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib33.1">International Conference on Learning Representations</em>, 2016.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib34"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Schulman et al. (2017)</span>
+<span class="ltx_bibblock">
+Schulman, J., Wolski, F., Dhariwal, P., Radford, A., and Klimov, O.
+
+</span>
+<span class="ltx_bibblock">Proximal policy optimization algorithms.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib34.1">arXiv preprint arXiv:1707.06347</em>, 2017.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib35"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Skalse et al. (2022)</span>
+<span class="ltx_bibblock">
+Skalse, J., Howe, N., Krasheninnikov, D., and Krueger, D.
+
+</span>
+<span class="ltx_bibblock">Defining and characterizing reward gaming.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib35.1">Advances in Neural Information Processing Systems</em>, 35:9460–9471, 2022.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib36"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sohl-Dickstein et al. (2015)</span>
+<span class="ltx_bibblock">
+Sohl-Dickstein, J., Weiss, E., Maheswaranathan, N., and Ganguli, S.
+
+</span>
+<span class="ltx_bibblock">Deep unsupervised learning using nonequilibrium thermodynamics.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib36.1">International Conference on Machine Learning</em>, pp.  2256–2265, 2015.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib37"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sokar et al. (2023)</span>
+<span class="ltx_bibblock">
+Sokar, G., Agarwal, R., Castro, P. S., and Evci, U.
+
+</span>
+<span class="ltx_bibblock">The dormant neuron phenomenon in deep reinforcement learning.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib37.1">International Conference on Machine Learning</em>, pp.  32145–32168, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib38"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Song et al. (2021)</span>
+<span class="ltx_bibblock">
+Song, J., Meng, C., and Ermon, S.
+
+</span>
+<span class="ltx_bibblock">Denoising diffusion implicit models.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib38.1">International Conference on Learning Representations</em>, 2021.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib39"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wang et al. (2023)</span>
+<span class="ltx_bibblock">
+Wang, Z., Hunt, J. J., and Zhou, M.
+
+</span>
+<span class="ltx_bibblock">Diffusion policies as an expressive policy class for offline reinforcement learning.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib39.1">International Conference on Learning Representations</em>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib40"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wu et al. (2023a)</span>
+<span class="ltx_bibblock">
+Wu, X., Hao, Y., Sun, K., Chen, Y., Zhu, F., Zhao, R., and Li, H.
+
+</span>
+<span class="ltx_bibblock">Human Preference Score v2: A solid benchmark for evaluating human preferences of text-to-image synthesis.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib40.1">arXiv preprint arXiv:2306.09341</em>, 2023a.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib41"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wu et al. (2023b)</span>
+<span class="ltx_bibblock">
+Wu, X., Sun, K., Zhu, F., Zhao, R., and Li, H.
+
+</span>
+<span class="ltx_bibblock">Human preference score: Better aligning text-to-image models with human preference.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib41.1">Proceedings of the IEEE/CVF International Conference on Computer Vision</em>, pp.  2096–2105, 2023b.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib42"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Xu et al. (2023)</span>
+<span class="ltx_bibblock">
+Xu, J., Liu, X., Wu, Y., Tong, Y., Li, Q., Ding, M., Tang, J., and Dong, Y.
+
+</span>
+<span class="ltx_bibblock">ImageReward: Learning and evaluating human preferences for text-to-image generation.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib42.1">Advances in Neural Information Processing Systems</em>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib43"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang et al. (2018)</span>
+<span class="ltx_bibblock">
+Zhang, C., Vinyals, O., Munos, R., and Bengio, S.
+
+</span>
+<span class="ltx_bibblock">A study on overfitting in deep reinforcement learning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib43.1">arXiv preprint arXiv:1804.06893</em>, 2018.
+
+</span></li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+<section class="ltx_appendix" id="A1">
+<h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix A </span>Additional Implementation Details</h2>
+<div class="ltx_para" id="A1.p1">
+<p class="ltx_p" id="A1.p1.1">In all experiments, we use Stable Diffusion v1.4 <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib30" title="">Rombach et al., 2022</a>)</cite> as the base generative model, which ensures consistency with DDPO <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib4" title="">Black et al., 2024</a>)</cite> and allows for a direct comparison with AlignProp <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib28" title="">Prabhudesai et al., 2023</a>)</cite>, despite their use of v1.5 in AlignProp. In addition, we conduct diffusion model alignment on the LoRA weights <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib14" title="">Hu et al., 2022</a>)</cite> of the U-Net architecture instead of the full parameter set to reduce memory and computation overheads, following established practices and aligning with official implementations of both DDPO and AlignProp.</p>
+</div>
+<div class="ltx_para" id="A1.p2">
+<p class="ltx_p" id="A1.p2.1"><span class="ltx_text ltx_font_bold" id="A1.p2.1.1">DDPO implementations.</span> We use the official PyTorch codebase of DDPO for result reproduction. As discussed in Section <a class="ltx_ref" href="#S5.SS2" title="5.2 Sample Efficiency in Diffusion Model Alignment ‣ 5 Empirical Evaluations ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">5.2</span></a>, our TDPO(-R) performs each gradient update in a per-timestep manner with all batch samples averaged, resulting in a higher update frequency (100 gradient updates per epoch) compared to the original DDPO implementation (2 gradient updates per epoch). For a fair comparison, we further reproduce DDPO using the same update frequency (100) and learning rate (1e-4) as ours. Since the PyTorch implementation of DDPO adopts gradient accumulation to reach larger effective batch sizes without requiring additional memory, we adjust its update frequency by reducing the gradient accumulation steps per epoch from 16<math alttext="\times T" class="ltx_Math" display="inline" id="A1.p2.m1" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">\times T</annotation></semantics></math> to 16, where <math alttext="T" class="ltx_Math" display="inline" id="A1.p2.m2" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math> denotes the number of denoising timesteps with a default value of 50. This leads to two variants of DDPO implementation: DDPO-2 and DDPO-100, differing exclusively in the hyperparameters governing the update frequency and the learning rate. All experiments were conducted on a system equipped with 8 NVIDIA A100 GPUs with 40GB of memory each.</p>
+</div>
+<div class="ltx_para" id="A1.p3">
+<p class="ltx_p" id="A1.p3.1"><span class="ltx_text ltx_font_bold" id="A1.p3.1.1">AlignProp implementation.</span> To facilitate a direct comparison, we reproduce AlignProp using Stable Diffusion v1.4, while their reported results are based on v1.5. All experiments were conducted on a system equipped with 4 NVIDIA A100 GPUs with 40GB of memory each, adhering to their default configurations, with an exception of the base model version.</p>
+</div>
+<div class="ltx_para" id="A1.p4">
+<p class="ltx_p" id="A1.p4.1"><span class="ltx_text ltx_font_bold" id="A1.p4.1.1">TDPO and TDPO-R implementations.</span> For consistency, the training procedures and configurations of our TDPO are based on the implementation of DDPO-100. Additionally, due to the relatively small parameter size of our temporal critic, we opt for direct training on its entire parameter set. To isolate the effects of our neuron reset strategy, our TDPO-R mirrors TDPO in terms of concurrent components and configurations. All experiments were conducted on a system equipped with 8 NVIDIA A100 GPUs with 40GB of memory each.</p>
+</div>
+<div class="ltx_para" id="A1.p5">
+<p class="ltx_p" id="A1.p5.1"><span class="ltx_text ltx_font_bold" id="A1.p5.1.1">Hyperparameter configurations.</span> In Table <a class="ltx_ref" href="#A1.T1" title="Table 1 ‣ Appendix A Additional Implementation Details ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">1</span></a>, we list the hyperparameter configurations for all implementations.</p>
+</div>
+<figure class="ltx_table" id="A1.T1">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 1: </span>List of hyperparameter configurations for DDPO-2, DDPO-100, TDPO, and TDPO-R.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="A1.T1.2">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="A1.T1.2.1">
+<td class="ltx_td ltx_align_left ltx_border_r ltx_border_tt" id="A1.T1.2.1.1">Hyperparameters</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_tt" id="A1.T1.2.1.2">DDPO-2</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_tt" id="A1.T1.2.1.3">DDPO-100</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_tt" id="A1.T1.2.1.4">TDPO</td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="A1.T1.2.1.5">TDPO-R</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.2">
+<td class="ltx_td ltx_align_left ltx_border_r ltx_border_t" id="A1.T1.2.2.1">Random seed</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="A1.T1.2.2.2">42</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="A1.T1.2.2.3">42</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="A1.T1.2.2.4">42</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A1.T1.2.2.5">42</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.3">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.3.1">Denoising timesteps (<math alttext="T" class="ltx_Math" display="inline" id="A1.T1.m1" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.3.2">50</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.3.3">50</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.3.4">50</td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.3.5">50</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.4">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.4.1">Guidance scale</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.4.2">5.0</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.4.3">5.0</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.4.4">5.0</td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.4.5">5.0</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.5">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.5.1">Policy learning rate</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.5.2">3e-4</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.5.3">1e-4</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.5.4">1e-4</td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.5.5">1e-4</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.6">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.6.1">Policy clipping range</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.6.2">1e-4</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.6.3">1e-4</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.6.4">1e-4</td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.6.5">1e-4</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.7">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.7.1">Maximum gradient norm</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.7.2">1.0</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.7.3">1.0</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.7.4">1.0</td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.7.5">1.0</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.8">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.8.1">Optimizer</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.8.2">AdamW</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.8.3">AdamW</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.8.4">AdamW</td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.8.5">AdamW</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.9">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.9.1">Optimizer weight decay</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.9.2">1e-4</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.9.3">1e-4</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.9.4">1e-4</td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.9.5">1e-4</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.10">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.10.1">Optimizer <math alttext="\beta_{1}" class="ltx_Math" display="inline" id="A1.T1.m2" intent=":literal"><semantics><msub><mi>β</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\beta_{1}</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.10.2">0.9</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.10.3">0.9</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.10.4">0.9</td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.10.5">0.9</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.11">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.11.1">Optimizer <math alttext="\beta_{2}" class="ltx_Math" display="inline" id="A1.T1.m3" intent=":literal"><semantics><msub><mi>β</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\beta_{2}</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.11.2">0.999</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.11.3">0.999</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.11.4">0.999</td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.11.5">0.999</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.12">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.12.1">Optimizer <math alttext="\epsilon" class="ltx_Math" display="inline" id="A1.T1.m4" intent=":literal"><semantics><mi>ϵ</mi><annotation encoding="application/x-tex">\epsilon</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.12.2">1e-8</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.12.3">1e-8</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.12.4">1e-8</td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.12.5">1e-8</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.13">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.13.1">Samples per epoch</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.13.2">256<math alttext="\times T" class="ltx_Math" display="inline" id="A1.T1.m5" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">\times T</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.13.3">256<math alttext="\times T" class="ltx_Math" display="inline" id="A1.T1.m6" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">\times T</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.13.4">256<math alttext="\times T" class="ltx_Math" display="inline" id="A1.T1.m7" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">\times T</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.13.5">256<math alttext="\times T" class="ltx_Math" display="inline" id="A1.T1.m8" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">\times T</annotation></semantics></math></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.14">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.14.1">Training batch size</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.14.2">8</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.14.3">8</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.14.4">8</td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.14.5">8</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.15">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.15.1">Training steps per epoch</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.15.2">32<math alttext="\times T" class="ltx_Math" display="inline" id="A1.T1.m9" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">\times T</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.15.3">32<math alttext="\times T" class="ltx_Math" display="inline" id="A1.T1.m10" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">\times T</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.15.4">32<math alttext="\times T" class="ltx_Math" display="inline" id="A1.T1.m11" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">\times T</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.15.5">32<math alttext="\times T" class="ltx_Math" display="inline" id="A1.T1.m12" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">\times T</annotation></semantics></math></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.16">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.16.1">Gradient accumulation steps</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.16.2">16<math alttext="\times T" class="ltx_Math" display="inline" id="A1.T1.m13" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">\times T</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.16.3">16</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.16.4">16</td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.16.5">16</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.17">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.17.1">Gradient updates per epoch</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.17.2">2</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.17.3">2<math alttext="\times T" class="ltx_Math" display="inline" id="A1.T1.m14" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">\times T</annotation></semantics></math> (100)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.17.4">2<math alttext="\times T" class="ltx_Math" display="inline" id="A1.T1.m15" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">\times T</annotation></semantics></math> (100)</td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.17.5">2<math alttext="\times T" class="ltx_Math" display="inline" id="A1.T1.m16" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">\times T</annotation></semantics></math> (100)</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.18">
+<td class="ltx_td ltx_align_left ltx_border_r ltx_border_t" id="A1.T1.2.18.1">Critic learning rate</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="A1.T1.2.18.2">-</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="A1.T1.2.18.3">-</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="A1.T1.2.18.4">1e-4</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A1.T1.2.18.5">1e-4</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.19">
+<td class="ltx_td ltx_align_left ltx_border_r" id="A1.T1.2.19.1">Critic clipping range</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.19.2">-</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.19.3">-</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="A1.T1.2.19.4">0.2</td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.19.5">0.2</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.20">
+<td class="ltx_td ltx_align_left ltx_border_r ltx_border_t" id="A1.T1.2.20.1">Neuron dormant threshold</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="A1.T1.2.20.2">-</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="A1.T1.2.20.3">-</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="A1.T1.2.20.4">-</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A1.T1.2.20.5">0</td></tr>
+<tr class="ltx_tr" id="A1.T1.2.21">
+<td class="ltx_td ltx_align_left ltx_border_bb ltx_border_r" id="A1.T1.2.21.1">Neuron reset frequency (<math alttext="F" class="ltx_Math" display="inline" id="A1.T1.m17" intent=":literal"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math> / epochs)</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r" id="A1.T1.2.21.2">-</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r" id="A1.T1.2.21.3">-</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r" id="A1.T1.2.21.4">-</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="A1.T1.2.21.5">10</td></tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section class="ltx_appendix" id="A2">
+<h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix B </span>Extended Analyses of Neuron States</h2>
+<div class="ltx_para" id="A2.p1">
+<p class="ltx_p" id="A2.p1.1">The following is an extension of the analyses regarding neuron states discussed in Section <a class="ltx_ref" href="#S4.SS2" title="4.2 Primacy Bias within TDPO ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">4.2</span></a>.</p>
+</div>
+<div class="ltx_para" id="A2.p2">
+<p class="ltx_p" id="A2.p2.1"><span class="ltx_text ltx_font_bold" id="A2.p2.1.1">Critic dormant neuron percentage.</span> In Section <a class="ltx_ref" href="#S4.SS2" title="4.2 Primacy Bias within TDPO ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">4.2</span></a>, we described the effects of resetting different neurons in our critic model on the percentage of dormant neurons. Here we present the experimental results regarding these effects. The left plot in Figure <a class="ltx_ref" href="#A2.F8" title="Figure 8 ‣ Appendix B Extended Analyses of Neuron States ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">8</span></a> shows the percentage of dormant neurons in our critic model when finetuning the diffusion model on Aesthetic Score. As discussed in Section <a class="ltx_ref" href="#S4.SS2" title="4.2 Primacy Bias within TDPO ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">4.2</span></a>, there is a slow ascent of the dormant percentage of neurons in our critic model during training. Resetting dormant neurons consistently reduces the dormant percentage, while resetting active neurons increases it significantly. This further substantiates a conclusion that resetting dormant neurons discourages the presence of dormant neurons, while resetting active neurons discourages the presence of active neurons.</p>
+</div>
+<div class="ltx_para" id="A2.p3">
+<p class="ltx_p" id="A2.p3.1"><span class="ltx_text ltx_font_bold" id="A2.p3.1.1">Overlap of dormant neurons.</span>
+To validate the persistence of dormant neurons throughout training, we track the overlap percentage between dormant neurons identified in current and previous training iterations.
+The right plot in Figure <a class="ltx_ref" href="#A2.F8" title="Figure 8 ‣ Appendix B Extended Analyses of Neuron States ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">8</span></a> shows that the overlap percentage of dormant neurons in our critic model remains a value of 100 through the finetuning process. This indicates that, once a regularization with respect to dormant neurons is learned, then it will continuously affect subsequent training process. Combining this phenomenon with the empirical result we discussed in Section <a class="ltx_ref" href="#S4.SS2" title="4.2 Primacy Bias within TDPO ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">4.2</span></a>, which is that resetting dormant neurons in our critic model exacerbates overoptimization, we can further extrapolate that dormant neurons in the critic model act as a adaptive regularization mechanism against overoptimization to imperfect rewards. While resetting dormant neurons may damage this implicit regularization, periodically resetting active neurons offers a potential mitigation strategy, encouraging the model to learn new regularization patterns without forgetting crucial past regularization.</p>
+</div>
+<figure class="ltx_figure" id="A2.F8">
+<p class="ltx_p ltx_align_center ltx_align_center" id="A2.F8.2"><span class="ltx_text" id="A2.F8.2.1">
+<object class="ltx_graphics ltx_img_landscape" data="figures/dorm_c.svg" height="163" id="A2.F8.g1" style="aspect-ratio:215/163;" type="image/svg+xml" width="215"></object>
+   <object class="ltx_graphics ltx_img_landscape" data="figures/overlap.svg" height="164" id="A2.F8.g2" style="aspect-ratio:219/164;" type="image/svg+xml" width="219"></object></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 8: </span>The dormant percentage of neurons (left) and the overlap percentage between dormant neurons of current and previous training iterations (right) in our critic model when finetuning the diffusion model on Aesthetic Score.</figcaption>
+</figure>
+<div class="ltx_para" id="A2.p4">
+<p class="ltx_p" id="A2.p4.1"><span class="ltx_text ltx_font_bold" id="A2.p4.1.1">Policy dormant neuron percentage.</span> In Section <a class="ltx_ref" href="#S4.SS2" title="4.2 Primacy Bias within TDPO ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">4.2</span></a>, we outlined the observation that a minimal number of dormant neurons is identified within the LoRA layers of our policy model. Accordingly, the left plot in Figure <a class="ltx_ref" href="#A2.F9" title="Figure 9 ‣ Appendix B Extended Analyses of Neuron States ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">9</span></a> shows the dormant percentage of neurons in the LoRA layers of our policy when finetuned on Aesthetic Score. Notably, the plot indicates that the dormant percentage remains in close proximity to zero throughout the entire training duration when employing a dormant threshold of 0. Consequently, to discern a more pronounced proportion of dormant neurons, we elevated the threshold to 0.1, leading to higher dormant percentages during training. Despite the reduction in dormant neurons following the resets with the threshold of 0.1, discernible effects on cross-reward generalization are not prominently evident, as depicted in Figure <a class="ltx_ref" href="#S5.F6" title="Figure 6 ‣ 5.3 Reward Overoptimization and Generalization ‣ 5 Empirical Evaluations ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">6</span></a>.</p>
+</div>
+<div class="ltx_para" id="A2.p5">
+<p class="ltx_p" id="A2.p5.1"><span class="ltx_text ltx_font_bold" id="A2.p5.1.1">Policy neuron reset.</span> In Section <a class="ltx_ref" href="#S4.SS2" title="4.2 Primacy Bias within TDPO ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">4.2</span></a>, we described an effect that resetting active neurons in our policy model causes catastrophic forgetting and heavily hinders learning. Here we present the experimental result regarding this effect. The right plot in Figure <a class="ltx_ref" href="#A2.F9" title="Figure 9 ‣ Appendix B Extended Analyses of Neuron States ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">9</span></a> shows the effect of periodic resets of policy active neurons on the sample efficiency of TDPO when finetuning on Aesthetic Score. Compared to the original TDPO, the TDPO variant incorporating periodic resets of policy active neurons encounters substantial difficulty in optimizing the reward function, due to the fact that the resets of the overwhelming majority of the model parameters result in the loss of pre-learned knowledge. This unsatisfactory effect can be mitigated by replacing the online-updating scheme with an offline-updating scheme that incorporates a replay buffer to preserve prior knowledge and experiences. We highlight this replacement as an extension of our work for future research.</p>
+</div>
+<figure class="ltx_figure" id="A2.F9">
+<p class="ltx_p ltx_align_center ltx_align_center" id="A2.F9.2"><span class="ltx_text" id="A2.F9.2.1">
+<object class="ltx_graphics ltx_img_landscape" data="figures/dorm_p.svg" height="167" id="A2.F9.g1" style="aspect-ratio:219/167;" type="image/svg+xml" width="219"></object>
+   <object class="ltx_graphics ltx_img_landscape" data="figures/p_active.svg" height="166" id="A2.F9.g2" style="aspect-ratio:219/166;" type="image/svg+xml" width="219"></object></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 9: </span>The dormant percentage of neurons in the LoRA layers of our policy (left) and the effect of periodic resets of policy active neurons on the sample efficiency of TDPO (right) when finetuning the diffusion model on Aesthetic Score.</figcaption>
+</figure>
+<div class="ltx_para" id="A2.p6">
+<p class="ltx_p" id="A2.p6.1"><span class="ltx_text ltx_font_bold" id="A2.p6.1.1">Additional results of cross-reward generalization.</span> Here is an extension of the cross-reward generalization results for different variants of TDPO presented by Figure <a class="ltx_ref" href="#S5.F6" title="Figure 6 ‣ 5.3 Reward Overoptimization and Generalization ‣ 5 Empirical Evaluations ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">6</span></a> in Section <a class="ltx_ref" href="#S5.SS3" title="5.3 Reward Overoptimization and Generalization ‣ 5 Empirical Evaluations ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">5.3</span></a>. In Figure <a class="ltx_ref" href="#A2.F10" title="Figure 10 ‣ Appendix B Extended Analyses of Neuron States ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">10</span></a>, we show more cross-reward generalization results for TDPO variants with different neuron reset strategies or the KL regularization mechanism. The diffusion models in all variants are finetuned on Aesthetic Score and evaluated on HPSv2 and PickScore. We further investigate the cross-reward generalization capability of TDPO-R by employing an alternative evaluation with leaky ReLU <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib23" title="">Maas et al., 2013</a>)</cite> instead of the standard ReLU, achieving an even superior performance when evaluating cross-reward generalization against PickScore.</p>
+</div>
+<figure class="ltx_figure" id="A2.F10">
+<p class="ltx_p ltx_align_center ltx_align_center" id="A2.F10.2"><span class="ltx_text" id="A2.F10.2.1">
+<object class="ltx_graphics ltx_img_landscape" data="figures/aes_hps_reset_crop.svg" height="170" id="A2.F10.g1" style="aspect-ratio:229/170;" type="image/svg+xml" width="229"></object>
+   <object class="ltx_graphics ltx_img_landscape" data="figures/aes_pick_reset_crop.svg" height="170" id="A2.F10.g2" style="aspect-ratio:229/170;" type="image/svg+xml" width="229"></object></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 10: </span>Additional results of cross-reward generalization against HPSv2 (left) and PickScore (right) when finetuning the diffusion model on Aesthetic Score, comparing different variants of TDPO.</figcaption>
+</figure>
+</section>
+<section class="ltx_appendix" id="A3">
+<h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix C </span>Generalization to Unseen Prompts</h2>
+<div class="ltx_para" id="A3.p1">
+<p class="ltx_p" id="A3.p1.1">In order to further validate the effectiveness and robustness of our methods, here we extend the cross-reward evaluation to new text prompts that are not previously seen by models during the finetuning process.</p>
+</div>
+<div class="ltx_para" id="A3.p2">
+<p class="ltx_p" id="A3.p2.1"><span class="ltx_text ltx_font_bold" id="A3.p2.1.1">Unseen animals.</span> We first employ a novel text prompt set consisting of 8 unseen animal names, including “snail”, “hippopotamus”, “cheetah”, “crocodile”, “lobster”, “octopus”, “elephant”, and “jellyfish”. We conduct evaluations of cross-reward generalization over samples generated using these unseen animal prompts during the finetuning process. In Figure <a class="ltx_ref" href="#A3.F11" title="Figure 11 ‣ Appendix C Generalization to Unseen Prompts ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">11</span></a>, we show the evaluation results when finetuning the diffusion model on Aesthetic Score via AlignProp, DDPO-2, DDPO-100, as well as our TDPO and TDPO-R. Notably, our TDPO and TDPO-R still maintain superior performance in cross-reward generalization compared to DDPO and AlignProp. These out-of-domain evaluations demonstrate the robust capabilities of TDPO-R in mitigating reward overoptimization, generalizing effectively to out-of-domain prompts.</p>
+</div>
+<figure class="ltx_figure" id="A3.F11">
+<p class="ltx_p ltx_align_center ltx_align_center" id="A3.F11.2"><span class="ltx_text" id="A3.F11.2.1">
+<object class="ltx_graphics ltx_img_square" data="figures/unseen_aes_img_crop.svg" height="129" id="A3.F11.g1" style="aspect-ratio:155/129;" type="image/svg+xml" width="155"></object>
+ <object class="ltx_graphics ltx_img_square" data="figures/unseen_aes_pick_crop.svg" height="130" id="A3.F11.g2" style="aspect-ratio:155/130;" type="image/svg+xml" width="155"></object>
+ <object class="ltx_graphics ltx_img_square" data="figures/unseen_aes_hps_crop.svg" height="130" id="A3.F11.g3" style="aspect-ratio:155/130;" type="image/svg+xml" width="155"></object></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 11: </span>Cross-reward generalization results evaluated on a text prompt set of unseen animals when finetuning the diffusion model on Aesthetic Score.</figcaption>
+</figure>
+<div class="ltx_para" id="A3.p3">
+<p class="ltx_p" id="A3.p3.1"><span class="ltx_text ltx_font_bold" id="A3.p3.1.1">Color, count, composition, and location.</span> Furthermore, we adopt a set of complex text prompts involving specific color (“A green colored rabbit”), count (“Four wolves in the park”), composition (“A cat and a dog”), and location (“A dog on the moon”) as introduced in <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib9" title="">Fan et al., 2023</a>)</cite>. In <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib9" title="">Fan et al., 2023</a>)</cite>, these prompts are originally used as training text prompts, meaning that they are seen by models during the finetuning process. In contrast, we utilize them as unseen prompts for cross-reward evaluations while finetuning models on Aesthetic Score, as illustrated in Figure <a class="ltx_ref" href="#A3.F12" title="Figure 12 ‣ Appendix C Generalization to Unseen Prompts ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">12</span></a>.</p>
+</div>
+<figure class="ltx_figure" id="A3.F12">
+<p class="ltx_p ltx_align_center ltx_align_center" id="A3.F12.2"><span class="ltx_text" id="A3.F12.2.1">
+<object class="ltx_graphics ltx_img_square" data="figures/complex_aes_img_crop.svg" height="128" id="A3.F12.g1" style="aspect-ratio:153/128;" type="image/svg+xml" width="153"></object>
+ <object class="ltx_graphics ltx_img_square" data="figures/complex_aes_pick_crop.svg" height="128" id="A3.F12.g2" style="aspect-ratio:157/128;" type="image/svg+xml" width="157"></object>
+ <object class="ltx_graphics ltx_img_square" data="figures/complex_aes_hps_crop.svg" height="128" id="A3.F12.g3" style="aspect-ratio:155/128;" type="image/svg+xml" width="155"></object></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 12: </span>Cross-reward generalization results evaluated over unseen text prompts involving color (“A green colored rabbit”), count (“Four wolves in the park”), composition (“A cat and a dog”), and location (“A dog on the moon”) while finetuning on Aesthetic Score.</figcaption>
+</figure>
+</section>
+<section class="ltx_appendix" id="A4">
+<h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix D </span>Additional Qualitative Results</h2>
+<div class="ltx_para" id="A4.p1">
+<p class="ltx_p" id="A4.p1.1">Here is an extension of the qualitative results presented by Figure <a class="ltx_ref" href="#S4.F2" title="Figure 2 ‣ 4.1 Temporal Diffusion Policy Optimization ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">2</span></a> in Section <a class="ltx_ref" href="#S5.SS4" title="5.4 Qualitative Comparison ‣ 5 Empirical Evaluations ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">5.4</span></a>. In Figure <a class="ltx_ref" href="#A4.F13" title="Figure 13 ‣ Appendix D Additional Qualitative Results ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">13</span></a>, we present additional qualitative results with high-reward images on Aesthetic Score. The results from AlignProp and DDPO show notable saturation in terms of style, background, and sunlight, while our generation results manifest greater diversity in these aspects. Specifically, AlignProp generates images characterized by a fixed painting style, while the results from DDPO exhibit a photographic style with similar sunlight angles and similar grassy backgrounds, even in response to prompts like “shark” and “fish”. Conversely, our TDPO and TDPO-R demonstrate the capacity to generate images encompassing both painting and photographic styles, and exhibit an enhanced proficiency in generating diverse and coherent backgrounds aligned with given prompts. In our interpretation, Aesthetic Score characterizes a preference for images that exhibit a stylistic amalgamation, comprising elements reminiscent of both painting and photography. Accordingly, our algorithms ensure effective optimization towards this preference against overfitting a fixed style.</p>
+</div>
+<figure class="ltx_figure" id="A4.F13">
+<p class="ltx_p ltx_align_center ltx_align_center" id="A4.F13.2"><span class="ltx_text" id="A4.F13.2.1">
+<img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="238" id="A4.F13.g1" src="figures/vis_appendix.jpg" style="aspect-ratio:476/238;" width="476"/></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 13: </span>Additional qualitative results sampled from models that are either pre-trained or further finetuned on Aesthetic Score via AlignProp, DDPO-2, DDPO-100, as well as our TDPO and TDPO-R. For a fair comparison, all images are generated using a fixed random seed of 42. Additionally, for the fine-tuned models, the aesthetic scores of the generated images achieve similar values around 7 <math alttext="\pm" class="ltx_Math" display="inline" id="A4.F13.m2" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math> 0.1.</figcaption>
+</figure>
+</section>
+<section class="ltx_appendix" id="A5">
+<h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix E </span>Extended Analysis of Encoder Alignment in Temporal Critic</h2>
+<div class="ltx_para" id="A5.p1">
+<p class="ltx_p" id="A5.p1.1"><span class="ltx_text ltx_font_bold" id="A5.p1.1.1">Reward model encoders.</span> Following established practices <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib32" title="">Schuhmann et al., 2022</a>; <a class="ltx_ref" href="#bib.bib4" title="">Black et al., 2024</a>)</cite>, we leverage a pre-trained CLIP model <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib29" title="">Radford et al., 2021</a>)</cite> as the encoder of the reward model for Aesthetic Score. For the HPSv2 and PickScore reward models, we adopt their official PyTorch implementations, each of which utilizes a customized OpenCLIP-H model <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib2" title="">Beaumont et al., 2022</a>)</cite> finetuned on their specific preference data as the encoder. This ensures consistency with the established rewarding procedures associated with these models.</p>
+</div>
+<div class="ltx_para" id="A5.p2">
+<p class="ltx_p" id="A5.p2.1"><span class="ltx_text ltx_font_bold" id="A5.p2.1.1">Temporal critic encoders.</span> As introduced in <a class="ltx_ref" href="#S4.SS1" title="4.1 Temporal Diffusion Policy Optimization ‣ 4 Method ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">4.1</span></a>, while finetuning on a specific reward function (Aesthetic Score, HPSv2, or PickScore), we incorporate the corresponding encoder from the respective reward model into our temporal critic. This encoder extracts embeddings from the decoded images w.r.t. each intermediate latent feature across all timesteps of the denoising process. These embeddings serve as the input to a lightweight Multi-Layer Perceptron (MLP) containing only 5 linear layers, with progressively decreasing output dimensionalities of 1024, 128, 64, 16, and 1 unit in the final layer. Crucially, this practice of reusing encoders establishes an alignment between the encoders of both the reward model and the temporal critic. This alignment tends to be critical for overall performance, as it ensures consistency in feature representations and enables the temporal critic to inherit the inductive bias of the reward model during initial training. Beyond performance gains, encoder alignment also offers a compelling advantage in memory efficiency, as the need to store a separate encoder for the temporal critic is eliminated, especially for large pre-trained models like CLIP <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib29" title="">Radford et al., 2021</a>)</cite> and OpenCLIP-H<cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib2" title="">Beaumont et al., 2022</a>)</cite>.</p>
+</div>
+<div class="ltx_para" id="A5.p3">
+<p class="ltx_p" id="A5.p3.1"><span class="ltx_text ltx_font_bold" id="A5.p3.1.1">Impact of misaligned encoders.</span> To delve deeper into the impact of misaligned encoders, we conduct an additional experiment where we replace the HPSv2 encoder in the temporal critic with a misaligned encoder from Aesthetic Score while finetuning the diffusion model on HPSv2. As illustrated in Figure <a class="ltx_ref" href="#A5.F14" title="Figure 14 ‣ Appendix E Extended Analysis of Encoder Alignment in Temporal Critic ‣ Confronting Reward Overoptimization for Diffusion Models: A Perspective of Inductive and Primacy Biases"><span class="ltx_text ltx_ref_tag">14</span></a>, this misalignment of the encoders lead to a significant decline in TDPO’s reward optimization performance. This finding highlights the critical role of encoder alignment between the reward model and the temporal critic for effective reward finetuning, as discrepancies in feature representations can hinder the critic’s ability to guide optimization towards the desired reward.</p>
+</div>
+<figure class="ltx_figure" id="A5.F14">
+<p class="ltx_p ltx_align_center ltx_align_center" id="A5.F14.2"><span class="ltx_text" id="A5.F14.2.1">
+<object class="ltx_graphics ltx_img_landscape" data="figures/encoder_hps_crop.svg" height="114" id="A5.F14.g1" style="aspect-ratio:157/114;" type="image/svg+xml" width="157"></object>
+<object class="ltx_graphics ltx_img_landscape" data="figures/encoder_pick_crop.svg" height="114" id="A5.F14.g2" style="aspect-ratio:157/114;" type="image/svg+xml" width="157"></object>
+<object class="ltx_graphics ltx_img_landscape" data="figures/encoder_img_crop.svg" height="115" id="A5.F14.g3" style="aspect-ratio:157/115;" type="image/svg+xml" width="157"></object></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 14: </span>Evaluation results of TDPO’s reward optimization performance when finetuning the diffusion model on HPSv2 and replacing the HPSv2 encoder in the temporal critic with a misaligned encoder from Aesthetic Score.</figcaption>
+</figure>
+</section>
+<section class="ltx_appendix" id="A6">
+<h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix F </span>Extended Related Work</h2>
+<div class="ltx_para" id="A6.p1">
+<p class="ltx_p" id="A6.p1.1"><span class="ltx_text ltx_font_bold" id="A6.p1.1.1">Generation control of diffusion models.</span> Following prior works <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib4" title="">Black et al., 2024</a>; <a class="ltx_ref" href="#bib.bib5" title="">Clark et al., 2024</a>)</cite> on diffusion model alignment, we incorporate Classifier-Free Guidance (CFG) <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib12" title="">Ho &amp; Salimans, 2021</a>)</cite> to perform conditional generation of diffusion models. Prior works <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib4" title="">Black et al., 2024</a>; <a class="ltx_ref" href="#bib.bib5" title="">Clark et al., 2024</a>)</cite> provided compelling evidence that the alignment methods with CFG-based generation control outperform other approaches including prompt engineering and classifier guidance <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib6" title="">Dhariwal &amp; Nichol, 2021</a>; <a class="ltx_ref" href="#bib.bib1" title="">Bansal et al., 2023</a>)</cite>. Accordingly, to maintain clarity and emphasize our improvements in diffusion model alignment, we refrain from conducting comparative analyses on various generation control techniques.</p>
+</div>
+<div class="ltx_para" id="A6.p2">
+<p class="ltx_p" id="A6.p2.1"><span class="ltx_text ltx_font_bold" id="A6.p2.1.1">Reinforcement learning for diffusion models.</span> <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib8" title="">Fan &amp; Lee (2023)</a></cite> first utilize reinforcement learning to train diffusion models. Subsequent studies by <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib9" title="">Fan et al. (2023)</a></cite> and <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib4" title="">Black et al. (2024)</a></cite> delve into the utilization of policy gradient-based algorithms to align text-to-image diffusion models with arbitrary reward functions. Instead of finetuning model parameters, <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib11" title="">Hao et al. (2023)</a></cite> apply reinforcement learning to optimize prompts for text-to-image diffusion models. <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib39" title="">Wang et al. (2023)</a></cite> leverage diffusion models to create policies for offline reinforcement learning beyond the context of text-to-image generation.</p>
+</div>
+<div class="ltx_para" id="A6.p3">
+<p class="ltx_p" id="A6.p3.1"><cite class="ltx_cite"><a class="ltx_ref" href="#bib.bib33" title="">33</a></cite><cite class="ltx_cite"><a class="ltx_ref" href="#bib.bib34" title="">34</a></cite></p>
+</div>
+</section>
+</body></html>
+</body></html>

@@ -1,0 +1,1372 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jury Duty: Calibration and Orientation Failures in MLLM-as-a-Judge Under Cultural Ambiguity"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "MLLM-as-a-Judge is conventionally validated by agreement with human annotations, but agreement against a culturally heterogeneous pool is pool-dependent: it silently conditions on whose judgments the "
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "LLM-as-a-Judge Zheng et al. (2023), along with multimodal adaptations such as MLLM-as-a-Judge Chen et al. (2024a) and fine-tuned judge models Xu et al. (2026); Wang et al. (2025); Zhu et al. (2025); Kim et al. (2024), has become a widely used framework for evaluating open-ended generation, summarization, image generation, and other tasks where reference-based metrics are limited. These approaches are cost-effective and scalable Dubois et al. (2024), and are conventionally validated by measuring agreement with human annotations or preferences Liu et al. (2023)."
+  },
+  {
+   "id": "b0006",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Illustrative concept-paired stimuli: each pair shares one evaluative prompt applied to a U.S.-aligned and a mainland-Chinese-aligned image across the Food and Beverage and Fashion and Human Characteristics categories."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "Validation by human agreement, however, does not specify whose judgments a model approximates Santurkar et al. (2023); DURMUS et al. (2024). The distinction is consequential in preference-sensitive settings, where evaluations turn on plausibility, appropriateness, or desirability Ye et al. (2024) rather than verifiable correctness. Unlike tasks like code generation that is evaluated against unit tests Chen et al. (2021), such judgments admit multiple defensible answers, and cross-annotator differences may reflect distinct norms or values rather than error Pavlick and Kwiatkowski (2019)."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Consider a culturally ambiguous case: U.S. contexts associate convenience-store food with low quality, while mainland Chinese contexts treat it as a source of fresh, reliable prepared meals. A judge evaluating such a scene draws on culturally situated expectations of plausibility and desirability, not just factual knowledge. Evaluations that appear culturally neutral are not: they reflect cultural assumptions the judge does not declare and the metric does not surface."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "Prior work on cultural bias in multimodal models has largely documented misrepresentation in generation Naous et al. (2024); Liu et al. (2025); whether such biases also shape evaluation, where model preferences are not visible as outputs but folded into scalar scores, has received less attention. The setting is structurally consequential: judge outputs propagate as training signal in RLAIF and judge-distilled benchmarks, and as ground truth in leaderboards, so cultural lean in a judge becomes cultural lean in a metric for the next training cycle. The concern is amplified for MLLMs developed in distinct regional markets (e.g., Claude, GPT, Llama in the U.S.; Qwen, Kimi, GLM in mainland China) and for multimodal evaluation, where culturally specific meanings are conveyed through visual cues Nayak et al. (2024); Li et al. (2024c); Kim et al. (2025)."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "We investigate this through VOIR DIRE,11 1 Named after the legal process of questioning prospective jurors to uncover hidden bias before trial. a multimodal benchmark comparing MLLM-as-a-Judge alignment with culturally distinct human reference pools. Our contributions are threefold. (1) We release VOIR DIRE, a benchmark of 626 culturally paired image–prompt items spanning U.S. and mainland Chinese contexts, with a construction protocol and validity argument that establish cultural ambiguity as a property of items rather than asserting it. (2) We analyze MLLM-as-a-Judge alignment against culturally distinct reference pools, varying language, cultural persona, model origin, and reference-pool in-context demonstrations. (3) We argue that alignment under cultural ambiguity should be reported against multiple reference pools, with cross-pool divergence (which neither persona prompting nor reference-pool ICL removes) treated as a property of the judge rather than as noise."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0013",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Mean Q1 Rating by Judge Type and Image Culture (1–5; ⟦SLOT_0⟧). The MLLM mean aligns with the U.S. consensus on American Imagery and with the Chinese consensus on Chinese Imagery."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 LLMs and MLLMs as Judges"
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "Using language models as evaluators has become a common technique for tasks where reference-based metrics fall short. Zheng et al. (2023) introduced the LLM-as-a-Judge framework with MT-Bench and Chatbot Arena, showing that strong models like GPT-4 OpenAI et al. (2024) approximate human pairwise preferences across conversational tasks. The paradigm has since been extended to tasks like summarization, instruction following, and long-form QA Fu et al. (2024); Pradeep et al. (2024); Dubois et al. (2023); Min et al. (2023), and is now embedded in major leaderboards Chiang et al. (2024) and RLHF pipelines Lee et al. (2024)."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "Multimodal extensions Chen et al. (2024a) target outputs where metrics like CIDEr Vedantam et al. (2015) and CLIPScore Hessel et al. (2021) miss higher-level qualities such as grounding and instruction following. MLLM-as-a-Judge benchmarks frontier models on scoring, pairwise, and ranking tasks, while LLaVA-Critic Xiong et al. (2024) and VLFeedback Li et al. (2024b) train open multimodal critics. A parallel line fine-tunes open judges on synthetic or human preference data, including Auto-J Li et al. (2024a), JudgeLM Zhu et al. (2025) and FARE Xu et al. (2026), and a third uses in-context demonstrations as a calibration mechanism for evaluator models. Across all three settings, judges are predominantly validated against aggregate human agreement, without specifying which population is being approximated."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Cultural Bias in Multimodal Models"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "Despite high aggregate agreement with humans, judges exhibit systematic biases including position Wang et al. (2024), length Panickssery et al. (2024), self-preference Panickssery et al. (2024), and stylistic sensitivity Chen et al. (2024b). More broadly, language and multimodal models display social biases along gender, race, and political axes Gallegos et al. (2024), and reproduce stereotypes in generated images, captions, and visual reasoning Bianchi et al. (2023)."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "Cultural bias is also well documented: LLMs disproportionately reflect WEIRD Henrich et al. (2010), English-language, and U.S.-centric perspectives Ramezani and Xu (2023), with measurable gaps in cross-country opinion representation Santurkar et al. (2023) and inconsistent alignment across languages AlKhamissi et al. (2024). Text-to-image systems underrepresent non-Western geographies and stereotype cultural concepts Basu et al. (2023); Lee et al. (2025), while VLMs perform unevenly on culturally grounded VQA Romero et al. (2024). Benchmarks such as CulturalBench Chiu et al. (2025) and BLEnD Myung et al. (2024) formalize this line of evaluation across varying cultural regions."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "Most of this work examines what models produce rather than how they evaluate. A small but growing body of work probes judge behavior along non-cultural social axes and across languages Hada et al. (2024). We extend this inquiry to multimodal judgment in culturally ambiguous, preference-sensitive scenarios, comparing judges associated with different cultural contexts against culturally aligned human annotations."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "h2",
+   "en": "3 VOIR DIRE"
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "We introduce VOIR DIRE, a multimodal benchmark that quantifies the divergence between MLLM-as-a-Judge alignment and culturally distinct human reference pools under preference-sensitive ambiguity. Each item pairs an image with an evaluation prompt whose appropriate response hinges not on verifiable ground truth but on culturally situated evaluative expectations widely shared within one cultural context but not the other. We evaluate MLLMs under various conditions (Section 3.2) and benchmark their judgments against culturally matched annotations from independent U.S. and Chinese annotator pools."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Benchmark Construction"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "h4",
+   "en": "3.1.1 Benchmark Composition"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "VOIR DIRE comprises 626 items balanced between U.S.- and mainland-Chinese-aligned concepts (313 each), spanning two cultural contexts each represented by frontier MLLMs developed for a distinct linguistic and regional market (Section 3.2). Within each context, items span three categories in culturally specific cues Kim et al. (2025); Nayak et al. (2024): food and beverage (147 per culture), fashion and human characteristics (64 per culture), and architecture and symbols (102 per culture). Items are concept-paired: each U.S.-aligned item has a mainland-Chinese counterpart with a matching referent (e.g., U.S. and mainland-Chinese realizations of a celebratory meal; Figure 1)."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "h4",
+   "en": "3.1.2 Image Sourcing"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "All images in VOIR DIRE are produced with Gemini 3 Pro Image (Google DeepMind, 2026a). We use generated rather than naturalistic imagery because real photographs vary in aesthetic quality, lighting, composition, and learned human-preference signatures that influence evaluative ratings independently of the depicted subject (Murray et al., 2012; Kong et al., 2016; Kirstain et al., 2023; Xu et al., 2023). Each concept-paired generation uses matched parameters (same model, aspect ratio, lighting and composition register), so the only visual variable that differs across a pair is the cultural cue. Generator-imprinted signatures cannot drive the cross-pool divergence reported in Section 4: such signatures would elicit shared rather than divergent responses across pools. A 30-pair naturalistic-photo replication reproduces the cross-pool Q1 divergence and the asymmetric judge bias at attenuated magnitudes (Appendix A). We observe agreement on depicted content (Q2 placement at ⟦SLOT_1⟧ to ⟦SLOT_2⟧, or ⟦SLOT_3⟧–⟦SLOT_4⟧ of the ⟦SLOT_5⟧ scale maximum) and disagreement on evaluation (cross-cultural Pearson ⟦SLOT_6⟧ on Q1)."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "h4",
+   "en": "3.1.3 Question Creation"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "Prompts are authored by three bicultural expert annotators on a construction pool disjoint from the evaluation pool (Section 3.1.4), under a rotating author/reviewer protocol. Iterative refinement ensures that prompts (i) elicit evaluative judgments rather than factual lookups, (ii) are plausibly contestable across cultures, and (iii) avoid surface-level stereotypes (Appendix G)."
+  },
+  {
+   "id": "b0031",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: The cross-pool tilt ⟦SLOT_7⟧ concentrates on Food and Beverage and on Fashion and Human Characteristics within Chinese Imagery; Architecture and Symbols is near-neutral."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "h4",
+   "en": "3.1.4 Task Design and Human Annotation"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "Items in VOIR DIRE were annotated by five U.S. and five mainland-Chinese bicultural-fluent annotators (ten total), compensated at $20 per hour. The bicultural-fluency requirement makes Q2 cultural placement informative for both pools and likely attenuates the cross-pool Q1 divergence relative to a monocultural design. For each task, annotators answer four questions (Appendix D):"
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "li",
+   "en": "Q1. Evaluative response. Respond to the prompt about the image on a 5-point ordinal scale."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "li",
+   "en": "Q2. Cultural alignment. Rate the item on a 5-point Chinese to American scale."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "li",
+   "en": "Q3. Subjectivity. Rate the Q1 prompt on a 5-point scale based on subjectivity."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "li",
+   "en": "Q4. Cross-cultural recognizability. Rate on a 5-point scale how likely someone from the other cultural context is to understand the rationale behind the Q1 answer."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "Q4 proxies how widely a cultural reference has diffused across contexts, and how likely it might appear in training corpora. We use it to contextualize judge behavior across model origins."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Models and Prompt Conditions"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate six MLLMs: claude-opus-4.7, gpt-5.5, and llama-4-scout from U.S. developers; glm-5, kimi-k2.6, and qwen-3-vl-flash from mainland-Chinese developers Anthropic (2026); OpenAI (2026); Meta AI (2025); Z.ai (2026); Moonshot AI (2026); Qwen (2025). Each model rates every item under ten prompt conditions: two neutral (no persona; English and simplified Chinese) and eight persona conditions crossing persona detail (basic vs. advanced), persona culture (American vs. Chinese), and prompt language (English vs. Simplified Chinese), yielding ⟦SLOT_8⟧ judgment cells. Simplified Chinese prompts were translated with Gemini 3.1 Pro and verified by a bilingual member of the construction pool Google DeepMind (2026b). Full prompt and model details are in Appendices F and E."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "h5",
+   "en": "In-context learning conditions."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "We additionally evaluate four in-context learning (ICL) conditions, formed by crossing demonstration annotator pool (U.S. vs. mainland-Chinese) with example imagery (American- vs. mainland-Chinese-aligned). Each ICL call prepends five (image, rating) demonstrations sampled one per Likert level 1–5 from a held-out pool disjoint from the 626 test items, then applies the baseline prompt. The four designs add ⟦SLOT_9⟧ cells (187,800 total)."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Validating Cultural Ambiguity"
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "VOIR DIRE’s central validity claim is that items are within-pool reliable but cross-pool divergent in evaluation, with the corpus splitting into anchors and contested probes used in Section 4 to separate cultural bias from item difficulty."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "h5",
+   "en": "(a) Within-pool reliability."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "Krippendorff’s ⟦SLOT_10⟧ on Q1 (ordinal distance) is ⟦SLOT_11⟧ (U.S.) and ⟦SLOT_12⟧ (Chinese), exceeding the ⟦SLOT_13⟧ and ⟦SLOT_14⟧ thresholds for definitive and tentative conclusions."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "h5",
+   "en": "(b) Cross-pool disagreement."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "Per-image Pearson on Q1 between U.S. and Chinese consensus is ⟦SLOT_15⟧ (95% CI ⟦SLOT_16⟧); mean absolute difference is ⟦SLOT_17⟧ on the 1–5 scale, reaching ⟦SLOT_18⟧ in the highest-divergence stratum (Chinese food items). The slight negative sign is informative: items rated higher by the U.S. pool are rated slightly lower by the Chinese pool, rather than the two pools being merely unrelated. Reliable within-pool agreement does not translate into cross-pool agreement. Because contested items are sampled to split the pools, on each one pool’s reading is more permissive than the other’s; the corpus-independent claim of this paper is the existence of an orientation residual after calibration is corrected (§4.3), while the sign of the residual on this corpus reflects which pool is the more-permissive on the contested majority of items."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "h5",
+   "en": "(c) Disagreement is over evaluation, not recognition."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "On Q2, American items are placed at ⟦SLOT_19⟧ (U.S.) / ⟦SLOT_20⟧ (Chinese) and Chinese items at ⟦SLOT_21⟧ / ⟦SLOT_22⟧—sign-identical, with the smallest absolute placement (⟦SLOT_23⟧) at ⟦SLOT_24⟧ of scale maximum. Q3 confirms items as evaluative: ⟦SLOT_25⟧ (U.S.) and ⟦SLOT_26⟧ (Chinese) received Q3 ⟦SLOT_27⟧ (subjective on the 1–5 scale where 1 is most subjective). The cross-pool Q1 disagreement cannot be attributed to either pool failing to recognize content."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "h5",
+   "en": "(d) Anchors and contested probes."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "Ambiguity is graded rather than uniform: within-stratum cross-pool Pearson ranges from ⟦SLOT_28⟧ to ⟦SLOT_29⟧. Defining an item as a cultural anchor if both pool consensuses are ⟦SLOT_30⟧ (high anchor) or both ⟦SLOT_31⟧ (low anchor), and a contested probe otherwise, yields 227 high anchors, 39 low anchors, and 360 contested probes. Combining both within a single instrument is what allows Section 4 to attribute judge behavior to cultural bias rather than item difficulty."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Results"
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "We characterize how the six MLLM judges align with the U.S. and Chinese reference pools. Four claims structure the analysis: a positivity-floor calibration failure that, on this corpus, manifests as a Chinese-leaning lean (§4.1), a variance decomposition with a small origin tilt (§4.2), persona prompts that steer asymmetrically and leave a residual (§4.3), and reference-pool demonstrations that deepen rather than correct it (§4.4). For each model and condition we compute alignment with each pool (us-Pearson, us-MAE; cn-Pearson, cn-MAE) together with two tilt measures. The MAE-based tilt ⟦SLOT_32⟧ summarizes alignment-error asymmetry; positive values indicate that the judge fits the Chinese reference more closely. The normalized cultural tilt ⟦SLOT_33⟧ summarizes placement on the ordinal rating scale itself, anchored at ⟦SLOT_34⟧ for the Chinese human consensus and ⟦SLOT_35⟧ for the U.S. consensus. ⟦SLOT_36⟧ asks which pool the judge approximates with smaller error; ⟦SLOT_37⟧ asks where on the cultural axis the judge places the item."
+  },
+  {
+   "id": "b0056",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Persona prompts shift judges asymmetrically. Normalized cultural tilt ⟦SLOT_38⟧ per model under three persona conditions (T=-1 Chinese consensus, T=+1 U.S. consensus). On Chinese imagery, five of six judges remain below the midpoint under every persona; only llama-4-scout crosses, reaching ⟦SLOT_39⟧."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 A Positivity Floor with Asymmetric Cultural Manifestation"
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "h5",
+   "en": "Aggregate verdict, localized on Chinese imagery."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "Across the full set of judgment cells, mean us-MAE ⟦SLOT_40⟧ and mean cn-MAE ⟦SLOT_41⟧, yielding ⟦SLOT_42⟧ (paired Wilcoxon over images, ⟦SLOT_43⟧). The model-mean ⟦SLOT_44⟧ is positive for every system. The aggregate tilt masks a sharp asymmetry across image culture: on American imagery, model error against U.S. humans is ⟦SLOT_45⟧ and against Chinese humans is ⟦SLOT_46⟧ (a slight U.S. lean); on Chinese imagery the comparison flips and widens, to ⟦SLOT_47⟧ and ⟦SLOT_48⟧ respectively. Figure 2 contrasts the three juries, and Figure 3 localizes the bias by image culture and category, showing that within Chinese imagery it concentrates on food and fashion rather than architecture."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "h5",
+   "en": "Mechanism: a positivity floor."
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "A rating-distribution view illuminates why the asymmetry exists. Models almost never produce 1s or 2s (⟦SLOT_49⟧ to ⟦SLOT_50⟧ of rating cells across systems). On the ⟦SLOT_51⟧ items where the U.S. consensus is ⟦SLOT_52⟧, only ⟦SLOT_53⟧ to ⟦SLOT_54⟧ of model cells fall that low; even the most aggressive U.S.-persona condition lifts this rate only to ⟦SLOT_55⟧ to ⟦SLOT_56⟧. The bias is therefore anchored to a calibration floor: models do not occupy the lower end of the ordinal range, and the floor they do produce (⟦SLOT_57⟧) coincides mechanically with the more-permissive cultural reading."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "h5",
+   "en": "Noise and cosmopolitan defaults."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "Two natural alternative accounts fail. First, the bias is not noise driven: per-image Pearson between ⟦SLOT_58⟧ and the signed (U.S. minus CN) human gap is ⟦SLOT_59⟧ (⟦SLOT_60⟧, ⟦SLOT_61⟧). Items the two pools agree on do not generate bias; items they disagree on do, and they do so by validating the more-permissive cultural reading. Second, judges are not retreating to globally-cosmopolitan defaults. Q4 establishes that Chinese references are systematically less recognizable cross-culturally (U.S. annotators rate ⟦SLOT_62⟧ in the symmetric direction; Chinese annotators rate ⟦SLOT_63⟧; paired Wilcoxon ⟦SLOT_64⟧), yet stratifying Chinese-imagery items by Q4 bin gives normalized tilt ⟦SLOT_65⟧ at low recognizability and ⟦SLOT_66⟧ at high recognizability. The bias is strongest where Western audiences are least likely to know the reference, ruling out the globally-recognized-default account."
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Image Dominates; Origin Adds a Tilt"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "To isolate where the bias lives in the experimental design, we regress per-cell ⟦SLOT_67⟧ on item, model, condition, and origin terms. Image fixed effects dominate (⟦SLOT_68⟧); model, condition, and origin contribute only marginal additional explanatory power (Table 1). Most of the variance is in the items, not the judges."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "h5",
+   "en": "A small but present origin effect."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "Despite explaining little aggregate variance, model origin survives as a coefficient under image and condition fixed effects: the U.S.-origin coefficient on per-cell ⟦SLOT_69⟧ is ⟦SLOT_70⟧ (⟦SLOT_71⟧, item-clustered standard errors). Eight of ten conditions favor CN-origin and none are significantly reversed. On Chinese imagery, both U.S.- and CN-origin systems lean toward Chinese humans (the orientation residual of Section 4.1), with U.S.-origin error against Chinese vs. U.S. humans at ⟦SLOT_72⟧ vs. ⟦SLOT_73⟧ and CN-origin at ⟦SLOT_74⟧ vs. ⟦SLOT_75⟧—both origins lean Chinese, with CN-origin leaning more. On American imagery, the lean is near-zero regardless of origin. Origin is thus a small additive tilt on top of a much larger calibration and orientation residual (robust in MAE space; not significant in Pearson space, ⟦SLOT_76⟧), and the gap is approximately invariant under reference-pool ICL (⟦SLOT_77⟧ in ⟦SLOT_78⟧-units of its baseline ⟦SLOT_79⟧; Section 4.4)."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Persona Prompts Leave a Residual"
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "Across the ten prompt conditions, personas pull tilt in the expected direction (Figure 4): five of six models move further toward Chinese humans than toward Americans, and none reverses direction."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "h5",
+   "en": "Steerability is bounded."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "Only one model crosses ⟦SLOT_80⟧ on Chinese imagery (Figure 4); the five most-steerable models all show CN-pull ⟦SLOT_81⟧ US-pull. On Chinese food-and-beverage items where U.S. consensus is lowest, even the strongest U.S.-persona condition leaves model ratings more than a full ordinal point above the U.S. human floor. Within this bounded range, the dominant lever is the persona’s cultural label: prompt-language variation (⟦SLOT_82⟧) and persona detail level (⟦SLOT_83⟧) contribute negligibly. ICL pushes in the opposite direction of the persona: under American-persona conditions on Chinese imagery, the persona-driven ⟦SLOT_84⟧ collapses to ⟦SLOT_85⟧ to ⟦SLOT_86⟧ once any reference-pool ICL setting is added, and llama-4-scout’s only crossing of ⟦SLOT_87⟧ in the baseline design (⟦SLOT_88⟧) does not survive any tested ICL design (Section 4.4)."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "h5",
+   "en": "The residual asymmetry."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "Per-image-culture alignment is best when the persona matches the image culture: own-MAE drops from ⟦SLOT_89⟧ on mismatched personas to ⟦SLOT_90⟧ on matched ones. Yet after exhaustive per-target-culture optimization over models, conditions, and prompt languages, a cross-cultural asymmetry persists. The tightest fit obtainable on the Chinese-imagery ⟦SLOT_91⟧ U.S. cell is ⟦SLOT_92⟧ MAE, against best same-pool fits of ⟦SLOT_93⟧ on American ⟦SLOT_94⟧ U.S. and ⟦SLOT_95⟧ on Chinese ⟦SLOT_96⟧ CN, and a best cross-pool counterpart of ⟦SLOT_97⟧ on American ⟦SLOT_98⟧ CN."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "h3",
+   "en": "4.4 In-context Demonstrations Do Not Recalibrate"
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "p",
+   "en": "Persona prompts manipulate one elicitation surface; in-context demonstrations manipulate another. We tested whether reference-pool demonstrations close the residual by crossing demonstration annotator pool (U.S. vs. mainland-Chinese) with example imagery (American vs. Chinese), giving four ICL designs (aa, ac, ca, cc) evaluated alongside the ten baseline prompt conditions for all six judges (⟦SLOT_99⟧ ICL judgment cells)."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "h5",
+   "en": "Calibration is not restored."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "On Chinese imagery the share of cells rated 1 or 2 stays between 10.9% and 12.7% across all four ICL designs (vs. 12.7% at baseline), while the share rated 5 rises by 4 to 7 percentage points; demonstrations widen the rating window upward, not downward. On items where the U.S. consensus is ⟦SLOT_100⟧ and imagery is Chinese, the floor-recovery rate is 14.2–16.6% under ICL versus 16.5% at baseline."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "h5",
+   "en": "Orientation is deepened, not corrected."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "p",
+   "en": "The Chinese-imagery normalized tilt ⟦SLOT_101⟧ moves from ⟦SLOT_102⟧ (baseline) to between ⟦SLOT_103⟧ and ⟦SLOT_104⟧ across all four ICL designs. Paired Wilcoxon tests on per-image absolute error against the U.S. pool are significant for every design (⟦SLOT_105⟧ each; mean ⟦SLOT_106⟧ from ⟦SLOT_107⟧ to ⟦SLOT_108⟧; ⟦SLOT_109⟧ in every case, ⟦SLOT_110⟧ in three of four). The matched gain against the CN pool is of opposite sign and approximately equal magnitude, so per-target-pool ICL trades alignment with one pool for misalignment with the other in nearly equal magnitudes."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "h5",
+   "en": "Source of demonstrations minimally matter."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "Holding example imagery fixed, switching from U.S. to Chinese demonstration annotators moves ⟦SLOT_111⟧ by ⟦SLOT_112⟧; holding annotator pool fixed, switching example imagery moves ⟦SLOT_113⟧ by ⟦SLOT_114⟧. Whose demonstrations a judge sees barely matters; the presence of any reference-pool demonstrations sharpens the same orientation residual. The single exception is glm-5 under the ac design (⟦SLOT_115⟧), which is also the only judge whose origin and demonstration imagery cross. The best Chinese-imagery ⟦SLOT_116⟧ U.S.-pool MAE per model averages 1.49 (baseline only) versus 1.48 (any configuration). The residual asymmetry of Section 4.3 is therefore unremovable by content-grounded calibration anchors as well as by content-free persona prompts."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Findings and Discussion"
+  },
+  {
+   "id": "b0084",
+   "t": "keep",
+   "w": "table",
+   "en": "American Imagery n = 313 n{=}313 Chinese Imagery n = 313 n{=}313 Model → \\to U.S. → \\to CN → \\to U.S. → \\to CN claude-opus-4.7 US 0.61 [44%] EN/– 0.97 [70%] EN/CN 1.26 [58%] ZH/US 0.78 [36%] EN/– gpt-"
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Best MAE per (Image Culture, Target Pool) over 10 Conditions; cells show MAE / Condition / [%] of human MAE. Column floors highlighted: ⟦SLOT_117⟧ U.S. , ⟦SLOT_118⟧ CN ."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 Alignment is a Profile, Not a Scalar"
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "VOIR DIRE items are within-pool reliable but cross-pool divergent (Section 3.3), so any single “agreement with humans” number silently conditions on a cultural reference pool before the score is computed. A judge with us-Pearson ⟦SLOT_119⟧ and cn-Pearson ⟦SLOT_120⟧ is not “a good judge of human preference”; it is a U.S.-leaning judge that performs poorly on the Chinese reference. Best-model-to-human quadratic-weighted ⟦SLOT_121⟧ reaches ⟦SLOT_122⟧ on the better-aligned pool while inter-cultural human-to-human ⟦SLOT_123⟧ is below zero: models exceed inter-cultural human agreement by silently picking the Chinese side, not by capturing both. We therefore recommend (R1, below) that alignment be reported against each reference pool, with divergence treated as a property of the judge rather than absorbed as noise. The point generalizes to any preference-sensitive evaluation with a heterogeneous human pool: regional dialects, age cohorts, expertise levels, communities of practice (Pavlick and Kwiatkowski, 2019)."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2 Calibration and Orientation"
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "Models register a faint cultural signal in the human-correct direction: the model raw rating gap (American minus Chinese imagery) is ⟦SLOT_124⟧, sign-matched to U.S. humans (⟦SLOT_125⟧) and opposite to CN humans (⟦SLOT_126⟧). But the magnitude is compressed, so the practical effect is near-flat treatment of both image cultures. That compression and the residual sign are, respectively, the calibration and orientation story."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "Calibration failure is the inability to produce low-end ratings (Section 4). Orientation failure is what remains after calibration is partially recovered: even under U.S. persona, the residual sign of the cultural tilt ⟦SLOT_127⟧ stays negative on Chinese imagery."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "p",
+   "en": "Persona prompts touch orientation (they reweight which cultural reading the judge defaults to) but do not, on their own, fix calibration (they do not teach the judge that a Chinese-aligned item rated by U.S. taste lives at the bottom of the ordinal scale). De-biasing must therefore address both failures, and Section 4.4 shows that the most natural candidate—pairing prompt elicitation with reference-pool calibration anchors—does not: demonstrations widen the rating window upward without restoring use of the low end, deepen the orientation tilt, and trade alignment with one pool for misalignment with the other in approximately equal magnitudes. Calibration and orientation therefore appear to be properties of the judges’ rating distributions, not of the tested regimes."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "h3",
+   "en": "5.3 Origin is not Competence"
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "The ⟦SLOT_128⟧ origin coefficient documented in Section 4.2 places the origin effect in a ⟦SLOT_129⟧ MAE band, well below the ⟦SLOT_130⟧ MAE band of persona effects, which itself sits well below the ⟦SLOT_131⟧ MAE inter-cultural human gap. The hierarchy is one-directional: choosing model origin matters less than choosing prompt configuration, and choosing prompt configuration matters less than recognizing inherent cultural multiplicity in the items."
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "The shape of the origin effect is also informative. A pure-competence account (CN-origin models simply know Chinese culture better) predicts origin-conditional symmetry: CN-origin matches Chinese humans better, U.S.-origin matches American humans better. We do not observe symmetry. On Chinese imagery, all six systems lean toward Chinese humans regardless of origin (Section 4.1); the competence account predicts a crossed pattern that does not appear. We therefore treat origin as a covariate worth reporting alongside model identity (R2, below), not as a primary lever for de-biasing."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "h3",
+   "en": "5.4 Recommendations"
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "h5",
+   "en": "(R1) Multi-pool reporting."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "When items are preference-sensitive or culturally loaded, report alignment against each available reference pool and treat divergence between those numbers as a property of the judge. A single Pearson or MAE against a single pool is, on these items, a category error. The recommendation holds even when the judge is conditioned on reference-pool demonstrations: Section 4.4 shows that target-pool ICL can be made arbitrarily favorable to one pool without the underlying judge changing."
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "h5",
+   "en": "(R2) Origin as covariate."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "p",
+   "en": "When comparing judges by “human alignment” on culturally loaded benchmarks, treat model origin as a covariate to report alongside model identity. Origin-blind comparisons systematically advantage one cultural alignment over the other (Section 5.3). The effect is small (⟦SLOT_132⟧ MAE) but robust under image and condition fixed effects; not disclosing it allows leaderboards to inherit cultural lean silently."
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Conclusion"
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "p",
+   "en": "We introduced VOIR DIRE, a multimodal benchmark that measures how MLLM-as-Judge alignment splits across culturally distinct human reference pools under preference-sensitive ambiguity. We find two failures: a positivity-floor calibration failure (models refuse to produce low-end ratings) and an orientation failure (default to one cultural norm). On this corpus, where contested items split the two pools, the floor mechanically validates the more-permissive Chinese reading; persona prompting partially recovers calibration, but the orientation residual survives. Neither persona prompting nor reference-pool in-context demonstrations close it. These findings motivate a methodological shift: when evaluation items are culturally loaded, report alignment against each reference pool separately and treat divergence as judge-level information about which cultural norm the model encodes."
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "h2",
+   "en": "Limitations"
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "h5",
+   "en": "Scope."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "p",
+   "en": "We restrict the cultural investigation to U.S. and mainland Chinese evaluative norms across three visual categories (food and beverage, fashion and human characteristics, architecture and symbols). “American” and “mainland Chinese” function as construct labels for the annotator pools, not as claims about monolithic national groups. Extension to additional cultural pairings and categories is left to future work."
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "h5",
+   "en": "Annotator pool and stimulus type."
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "p",
+   "en": "Reference judgments come from ten bicultural-fluent expert annotators (five per culture). All images are produced with Gemini 3 Pro Image; a 30-pair naturalistic-photography probe (Appendix A) reproduces the cross-pool divergence at attenuated magnitudes."
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "h5",
+   "en": "Model origin as proxy."
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "p",
+   "en": "We group models by developer geography and treat this as a proxy for sociotechnical factors (training-data composition, alignment-annotator demographics, preference-modeling pipelines). We do not have access to training corpora or RLHF annotator pools of any evaluated system and cannot attribute the origin effect to any single factor. We frame origin as a covariate worth disclosing, not as a mechanistic explanation."
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "h5",
+   "en": "Purpose of work."
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "p",
+   "en": "The benchmark is descriptive, not normative: both annotator pools are reliable within-pool, and the cross-cultural gap is itself the finding. It should not be used to rank cultural perspectives by correctness, select evaluator models on the basis of cultural alignment as a proxy for quality, or exclude minority-pool perspectives on the grounds of divergence."
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "AlKhamissi et al. (2024) B. AlKhamissi, M. ElNokrashy, M. Alkhamissi, and M. Diab Investigating cultural alignment of large language models . In Proceedings of the 62nd Annual Meeting of the Associati"
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Anthropic (2026) Anthropic Claude Opus 4.7 . Note: https://www.anthropic.com/news/claude-opus-4-7 Accessed: 2026-05-10 Cited by: §3.2 ."
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Basu et al. (2023) A. Basu, R. V. Babu, and D. Pruthi Inspecting the geographical representativeness of images from text-to-image models . External Links: 2305.11080 , Link Cited by: §2.2 ."
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bianchi et al. (2023) F. Bianchi, P. Kalluri, E. Durmus, F. Ladhak, M. Cheng, D. Nozza, T. Hashimoto, D. Jurafsky, J. Zou, and A. Caliskan Easily accessible text-to-image generation amplifies demograp"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024a) D. Chen, R. Chen, S. Zhang, Y. Wang, Y. Liu, H. Zhou, Q. Zhang, Y. Wan, P. Zhou, and L. Sun MLLM-as-a-judge: assessing multimodal llm-as-a-judge with vision-language benchmark . In"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024b) G. H. Chen, S. Chen, Z. Liu, F. Jiang, and B. Wang Humans or LLMs as the judge? a study on judgement bias . In Proceedings of the 2024 Conference on Empirical Methods in Natural La"
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2021) M. Chen, J. Tworek, H. Jun, Q. Yuan, H. Pondé, J. Kaplan, H. Edwards, Y. Burda, N. Joseph, G. Brockman, A. Ray, R. Puri, G. Krueger, M. Petrov, H. Khlaaf, G. Sastry, P. Mishkin, B. "
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chiang et al. (2024) W. Chiang, L. Zheng, Y. Sheng, A. N. Angelopoulos, T. Li, D. Li, B. Zhu, H. Zhang, M. I. Jordan, J. E. Gonzalez, and I. Stoica Chatbot arena: an open platform for evaluating llms "
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chiu et al. (2025) Y. Y. Chiu, L. Jiang, B. Y. Lin, C. Y. Park, S. S. Li, S. Ravi, M. Bhatia, M. Antoniak, Y. Tsvetkov, V. Shwartz, and Y. Choi CulturalBench: a robust, diverse and challenging benchma"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dubois et al. (2023) Y. Dubois, X. Li, R. Taori, T. Zhang, I. Gulrajani, J. Ba, C. Guestrin, P. Liang, and T. Hashimoto AlpacaFarm: a simulation framework for methods that learn from human feedback . "
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dubois et al. (2024) Y. Dubois, P. Liang, and T. Hashimoto Length-controlled alpacaeval: a simple debiasing of automatic evaluators . In First Conference on Language Modeling , External Links: Link Ci"
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "DURMUS et al. (2024) E. DURMUS, K. Nguyen, T. Liao, N. Schiefer, A. Askell, A. Bakhtin, C. Chen, Z. Hatfield-Dodds, D. Hernandez, N. Joseph, L. Lovitt, S. McCandlish, O. Sikder, A. Tamkin, J. Thamkul,"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fu et al. (2024) J. Fu, S. Ng, Z. Jiang, and P. Liu GPTScore: evaluate as you desire . In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguist"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gallegos et al. (2024) I. O. Gallegos, R. A. Rossi, J. Barrow, M. M. Tanjim, S. Kim, F. Dernoncourt, T. Yu, R. Zhang, and N. K. Ahmed Bias and fairness in large language models: a survey . Computation"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Google DeepMind (2026a) Google DeepMind Gemini 3 Pro Image . Note: https://deepmind.google/models/gemini-image/pro/ Accessed: 2026-05-10 Cited by: §3.1.2 ."
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Google DeepMind (2026b) Google DeepMind Gemini 3.1 Pro . Note: https://deepmind.google/models/gemini/pro// Accessed: 2026-05-10 Cited by: §3.2 ."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hada et al. (2024) R. Hada, V. Gumma, M. Ahmed, K. Bali, and S. Sitaram METAL: towards multilingual meta-evaluation . In Findings of the Association for Computational Linguistics: NAACL 2024 , K. Duh,"
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Henrich et al. (2010) J. Henrich, S. Heine, and A. Norenzayan The weirdest people in the world? . Behavioral and Brain Sciences 33 ( 2-3 ), pp. 61–83 ( eng ). External Links: ISBN 1469-1825 Cited by: "
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hessel et al. (2021) J. Hessel, A. Holtzman, M. Forbes, R. Le Bras, and Y. Choi CLIPScore: a reference-free evaluation metric for image captioning . In Proceedings of the 2021 Conference on Empirical "
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kim et al. (2025) J. S. Kim, K. Y. Thu, J. Ismayilzada, J. Park, E. Kim, H. Ahmad, N. M. An, J. Thorne, and A. Oh WHEN TOM EATS KIMCHI: evaluating cultural awareness of multimodal large language model"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kim et al. (2024) S. Kim, J. Shin, Y. Cho, J. Jang, S. Longpre, H. Lee, S. Yun, S. Shin, S. Kim, J. Thorne, and M. Seo Prometheus: inducing fine-grained evaluation capability in language models . In T"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kirstain et al. (2023) Y. Kirstain, A. Polyak, U. Singer, S. Matiana, J. Penna, and O. Levy Pick-a-pic: an open dataset of user preferences for text-to-image generation . In Thirty-seventh Conference "
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kong et al. (2016) S. Kong, X. Shen, Z. Lin, R. Mech, and C. C. Fowlkes Photo aesthetics ranking network with attributes and content adaptation . CoRR abs/1606.01621 . External Links: Link , 1606.0162"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lee et al. (2025) D. Lee, A. Chandra, Y. Zhou, Y. Li, and S. Conia Rewind and render: towards factually accurate text-to-video generation with distilled knowledge retrieval . Proceedings of the AAAI C"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lee et al. (2024) H. Lee, S. Phatale, H. Mansoor, T. Mesnard, J. Ferret, K. Lu, C. Bishop, E. Hall, V. Carbune, A. Rastogi, and S. Prakash RLAIF vs. rlhf: scaling reinforcement learning from human fee"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024a) J. Li, S. Sun, W. Yuan, R. Fan, hai zhao, and P. Liu Generative judge for evaluating alignment . In The Twelfth International Conference on Learning Representations , External Links:"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024b) L. Li, Z. Xie, M. Li, S. Chen, P. Wang, L. Chen, Y. Yang, B. Wang, L. Kong, and Q. Liu VLFeedback: a large-scale AI feedback dataset for large vision-language models alignment . In P"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024c) W. Li, C. Zhang, J. Li, Q. Peng, R. Tang, L. Zhou, W. Zhang, G. Hu, Y. Yuan, A. Søgaard, D. Hershcovich, and D. Elliott FoodieQA: a multimodal dataset for fine-grained understanding "
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2025) S. Liu, Y. Jin, C. Li, D. F. Wong, Q. Wen, L. Sun, H. Chen, X. Xie, and J. Wang CultureVLM: characterizing and improving cultural understanding of vision-language models for over 100"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023) Y. Liu, D. Iter, Y. Xu, S. Wang, R. Xu, and C. Zhu G-eval: NLG evaluation using gpt-4 with better human alignment . In Proceedings of the 2023 Conference on Empirical Methods in Natu"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Meta AI (2025) Meta AI The Llama 4 Herd: The Beginning of a New Era of Natively Multimodal AI Innovation . Note: https://ai.meta.com/blog/llama-4-multimodal-intelligence/ Published: 2025-04-05. Access"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Min et al. (2023) S. Min, K. Krishna, X. Lyu, M. Lewis, W. Yih, P. Koh, M. Iyyer, L. Zettlemoyer, and H. Hajishirzi FActScore: fine-grained atomic evaluation of factual precision in long form text gen"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Moonshot AI (2026) Moonshot AI Kimi K2.6: From Code to Creation, From One to Many . Note: https://www.kimi.com/ai-models/kimi-k2-6 Accessed: 2026-05-10 Cited by: §3.2 ."
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Murray et al. (2012) N. Murray, L. Marchesotti, and F. Perronnin AVA: a large-scale database for aesthetic visual analysis . In 2012 IEEE Conference on Computer Vision and Pattern Recognition , Vol. ,"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Myung et al. (2024) J. Myung, N. Lee, Y. Zhou, J. Jin, R. A. Putri, D. Antypas, H. Borkakoty, E. Kim, C. Perez-Almendros, A. A. Ayele, V. G. Basulto, Y. Ibanez-Garcia, H. Lee, S. H. Muhammad, K. Park,"
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Naous et al. (2024) T. Naous, M. J. Ryan, A. Ritter, and W. Xu Having beer after prayer? measuring cultural bias in large language models . In Proceedings of the 62nd Annual Meeting of the Association"
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Nayak et al. (2024) S. Nayak, K. Jain, R. Awal, S. Reddy, S. V. Steenkiste, L. A. Hendricks, K. Stanczak, and A. Agrawal Benchmarking vision language models for cultural understanding . In Proceedings"
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI et al. (2024) OpenAI, J. Achiam, S. Adler, S. Agarwal, L. Ahmad, I. Akkaya, F. L. Aleman, D. Almeida, J. Altenschmidt, S. Altman, S. Anadkat, R. Avila, I. Babuschkin, S. Balaji, V. Balcom, P. B"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2026) OpenAI Introducing GPT-5.5 . Note: https://openai.com/index/introducing-gpt-5-5/ Published: 2026-04-23. Accessed: 2026-05-10 Cited by: §3.2 ."
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Panickssery et al. (2024) A. Panickssery, S. R. Bowman, and S. Feng LLM evaluators recognize and favor their own generations . In The Thirty-eighth Annual Conference on Neural Information Processing S"
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Pavlick and Kwiatkowski (2019) E. Pavlick and T. Kwiatkowski Inherent disagreements in human textual inferences . Transactions of the Association for Computational Linguistics 7 , pp. 677–694 . Extern"
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Pradeep et al. (2024) R. Pradeep, D. Lee, A. Mousavi, J. Pound, Y. Sang, J. Lin, I. Ilyas, S. Potdar, M. Arefiyan, and Y. Li ConvKGYarn: spinning configurable and scalable conversational knowledge gra"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qwen (2025) Qwen Qwen3-VL: Sharper Vision, Deeper Thought, Broader Action . Note: https://qwen.ai/blog?id=99f0335c4ad9ff6153e517418d48535ab6d8afef&from=research.latest-advancements-list Published: 202"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ramezani and Xu (2023) A. Ramezani and Y. Xu Knowledge of cultural moral norms in large language models . In Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Vo"
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Romero et al. (2024) D. Romero, C. Lyu, H. A. Wibowo, T. Lynn, I. Hamed, A. N. Kishore, A. Mandal, A. Dragonetti, A. Abzaliev, A. L. Tonja, B. F. Balcha, C. Whitehouse, C. Salamea, D. J. Velasco, D. I"
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Santurkar et al. (2023) S. Santurkar, E. Durmus, F. Ladhak, C. Lee, P. Liang, and T. Hashimoto Whose opinions do language models reflect? . In Proceedings of the 40th International Conference on Machi"
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Vedantam et al. (2015) R. Vedantam, C. Lawrence Zitnick, and D. Parikh CIDEr: consensus-based image description evaluation . In Proceedings of the IEEE Conference on Computer Vision and Pattern Recogn"
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2025) P. Wang, A. Xu, Y. Zhou, C. Xiong, and S. Joty Direct judgement preference optimization . In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing ,"
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2024) P. Wang, L. Li, L. Chen, Z. Cai, D. Zhu, B. Lin, Y. Cao, L. Kong, Q. Liu, T. Liu, and Z. Sui Large language models are not fair evaluators . In Proceedings of the 62nd Annual Meetin"
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xiong et al. (2024) T. Xiong, X. Wang, D. Guo, Q. Ye, H. Fan, Q. Gu, H. Huang, and C. Li LLaVA-critic: learning to evaluate multimodal models . External Links: Link Cited by: §2.1 ."
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xu et al. (2026) A. Xu, X. Nguyen, Y. Zhou, C. Wu, C. Xiong, and S. Joty Foundational automatic evaluators: scaling multi-task generative evaluator training for reasoning-centric domains . In The Four"
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xu et al. (2023) J. Xu, X. Liu, Y. Wu, Y. Tong, Q. Li, M. Ding, J. Tang, and Y. Dong ImageReward: learning and evaluating human preferences for text-to-image generation . In Thirty-seventh Conference "
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ye et al. (2024) S. Ye, D. Kim, S. Kim, H. Hwang, S. Kim, Y. Jo, J. Thorne, J. Kim, and M. Seo FLASK: fine-grained language model evaluation based on alignment skill sets . In The Twelfth Internationa"
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Z.ai (2026) Z.ai GLM-5: From Vibe Coding to Agentic Engineering . Note: https://z.ai/blog/glm-5 Published: 2026-02-12. Accessed: 2026-05-10 Cited by: §3.2 ."
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zheng et al. (2023) L. Zheng, W. Chiang, Y. Sheng, S. Zhuang, Z. Wu, Y. Zhuang, Z. Lin, Z. Li, D. Li, E. Xing, H. Zhang, J. E. Gonzalez, and I. Stoica Judging LLM-as-a-judge with MT-bench and chatbot "
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2025) L. Zhu, X. Wang, and X. Wang JudgeLM: fine-tuned large language models are scalable judges . In The Thirteenth International Conference on Learning Representations , External Links: "
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Verifying with Real Images"
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "p",
+   "en": "To verify that this divergence is not an item of generated imagery, we collected a 30-pair ablation (60 photographs) of naturalistic U.S. and mainland Chinese images for concepts that already appear in VOIR DIRE, ran the same six MLLM judges under all ten prompt conditions, and re-annotated Q1–Q4 in each cultural pool with a five-annotator consensus following the protocol of Section 3. On the matched 60-image subset, the cross-pool Pearson on Q1 is ⟦SLOT_133⟧ for real photographs and ⟦SLOT_134⟧ for the synthetic counterparts (full-corpus reference: ⟦SLOT_135⟧). Per-item signed cross-pool gaps are highly correlated across regimes (⟦SLOT_136⟧), and a Wilcoxon paired test on the ⟦SLOT_137⟧ gap finds no significant difference between regimes (⟦SLOT_138⟧, ⟦SLOT_139⟧). Both pools continue to agree on Q2 cultural placement on real photos (American items at ⟦SLOT_140⟧ / ⟦SLOT_141⟧; Chinese items at ⟦SLOT_142⟧ / ⟦SLOT_143⟧; sign concordant on ⟦SLOT_144⟧ of items), confirming that the Q1 disagreement is not driven by either pool failing to recognize the depicted culture. The asymmetric judge bias central to Section 4 (tilt toward Chinese humans on Chinese items with no symmetric tilt on American items) also reproduces on real photographs: across the ⟦SLOT_145⟧ (model ⟦SLOT_146⟧ condition) cells, mean tilt-to-CN is ⟦SLOT_147⟧ on Chinese items and ⟦SLOT_148⟧ on American items, with the sign of the asymmetry preserved in ⟦SLOT_149⟧ of ⟦SLOT_150⟧ cells and a cell-level Pearson of ⟦SLOT_151⟧ between the real and synthetic asymmetry vectors. Magnitudes are mildly attenuated on real photos (cross-pool MAE ⟦SLOT_152⟧ vs. ⟦SLOT_153⟧; tilt-to-CN on Chinese items ⟦SLOT_154⟧ vs. ⟦SLOT_155⟧), in the direction predicted by the present argument: naturalistic photos add aesthetic and compositional variance orthogonal to the cultural cue. We treat this ablation as a validity probe at ⟦SLOT_156⟧ concept pairs rather than a powered replication; the relevant claim is qualitative preservation of the cross-pool divergence and the asymmetric judge bias on real photographs of the matched concepts."
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Human Annotation"
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "p",
+   "en": "We recruited 10 annotators using three criteria intended to capture sustained engagement with the target culture: (i) self-identified cultural and ethnic affiliation with the target group; (ii) regular engagement with that country’s social media (10+ hours a week), as a proxy for ongoing cultural participation; and (iii) fluency in the target language(s). All annotators are between 24 and 30 years old to control for generational variation in cultural reference points. Annotators were recruited through university-affiliated social media groups and compensated at $20 per hour, a rate exceeding the local government-mandated minimum wage. All annotators were informed that their ratings would be used in a research paper."
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Dataset Release"
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "p",
+   "en": "The dataset will be released under CC BY 4.0."
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D Human Annotation Interface"
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 5 shows the interface that each annotator used while rating items."
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: The human annotation interface, shown for a U.S. food item. Annotators see the image and prompt on the left and answer Q1–Q4 on the right; the Q2 cultural-placement scale uses a five-point slider with anchored labels (Chinese through American)."
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix E Models"
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "h3",
+   "en": "E.1 Image Generation"
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "p",
+   "en": "All 626 paired stimuli were generated with Google’s gemini-3-pro-image-preview model via the google-genai Python SDK. Generation was performed in a single batch on April 18, 2026."
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "table",
+   "en": "Model gemini-3-pro-image-preview Provider Google SDK / call google-genai · client.models.generate_content Modality IMAGE (image-only response) Aspect ratio 1 : 1 1{:}1 Image size 1K Access date April "
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Image generation configuration. Identical parameters across all U.S./Chinese concept pairs hold photographic confounds fixed."
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "h3",
+   "en": "E.2 Judge Models"
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate six MLLMs spanning three capability tiers and two model-origin contexts (three U.S. and three mainland-Chinese). Every model is queried under all ten prompt conditions on every item, yielding ⟦SLOT_157⟧ baseline judgment cells. The four in-context demonstration conditions of Section 4.4 add a further ⟦SLOT_158⟧ cells. The baseline evaluation ran from April 18 through April 25, 2026; the demonstration conditions ran May 16–18, 2026."
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Provider API model ID Endpoint / SDK Mode Image Generation Model Gemini 3 Pro Image Google gemini-3-pro-image-preview google-genai SDK ( generate_content ) Image Thinking tier GPT-5.5 OpenAI (US"
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Model providers, API identifiers, endpoints, and operating mode. Total usage of these models cost approximately $1700 USD."
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "h5",
+   "en": "Strict output parsing."
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "p",
+   "en": "Each judge call requires a single integer rating in ⟦SLOT_159⟧ as the entire reply. We apply strict pattern matching to ensure consistency and, on a malformed reply, retry up to five times while progressively tightening the instruction."
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix F Prompts"
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "p",
+   "en": "Each judgment cell comprises three fields: an optional persona prefix, the item’s evaluative question, and a language-matched rating instruction."
+  },
+  {
+   "id": "b0191",
+   "t": "keep",
+   "w": "table",
+   "en": "[Persona prefix] ⏟ optional + {question} ⏟ per item + [Rating prompt] ⏟ language-matched \\underbrace{\\text{[Persona prefix]}}_{\\text{optional}}\\;+\\;\\underbrace{\\text{\\lx@text@lbrace question\\lx@text@r"
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "h3",
+   "en": "F.1 Rating Instructions"
+  },
+  {
+   "id": "b0193",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "h3",
+   "en": "F.2 Neutral Prompts"
+  },
+  {
+   "id": "b0195",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "h3",
+   "en": "F.3 Basic Persona Prompts"
+  },
+  {
+   "id": "b0197",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0198",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "h3",
+   "en": "F.4 Advanced Persona Prompts"
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0201",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix G Authored Prompt-Image Failures"
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "p",
+   "en": "During stimulus construction we iteratively pruned prompt–image pairs that did not satisfy the design requirements laid out in Section 3: the pair must (i) elicit a genuinely evaluative judgment on a ⟦SLOT_160⟧–⟦SLOT_161⟧ scale rather than a factual or definitional one, (ii) be plausibly contestable across cultures, so that the U.S. and Chinese annotator pools have grounds to diverge, and (iii) probe culturally contingent norms rather than ostentatious cultural iconography. One representative pair for each is illustrated in Figure 6."
+  },
+  {
+   "id": "b0204",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Three failure modes encountered while authoring prompt–image pairs. Left: the prompt has a factual answer rather than eliciting an evaluative judgment. Middle: the prompt is too generic to be culturally contestable, and both pools converge. Right: the image is saturated with stereotypical cultural iconography, collapsing the prompt into a tautology. Pairs of this kind were excluded from the released benchmark."
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "h5",
+   "en": "Failure Mode 1: the prompt does not elicit an evaluative judgment."
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "p",
+   "en": "The left panel of Figure 6 pairs a tailored navy suit with “How appropriate is this outfit for a law firm?” A dark suit is the canonical law-firm garment in both U.S. and Chinese white-collar contexts, so the answer is equal regardless of culture; pilot ratings piled at the ceiling in both pools. The pair fails requirement (i): it probes factual convention rather than evaluative judgment. We exclude pairs whose answer is recoverable from a dress-code manual."
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "h5",
+   "en": "Failure Mode 2: the answer is not plausibly contestable across cultures."
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "The middle panel pairs an instant-noodle cup with “How good does this look?” Instant ramen is globally diffused, sold in near-identical formats and carrying the same low-prestige connotation in both pools, so the two have no grounds to diverge, and pilot ratings converged on a mid-high score. We exclude items whose referent has been absorbed into both cultures under a single de facto norm, preferring concept pairs whose realizations remain culturally distinctive."
+  },
+  {
+   "id": "b0210",
+   "t": "text",
+   "w": "h5",
+   "en": "Failure Mode 3: cultural cues reduce to surface-level stereotypes."
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "p",
+   "en": "The right panel pairs a man with a U.S. flag, bald eagle, red pickup, and suburban houses with “How proud of their culture is this person?” The image is composed almost entirely of stock shorthand for “America,” so the prompt asks annotators to evaluate what the image is reading off prop density rather than making a normative judgment. The pair fails requirement (iii): the construct is carried by iconography rather than norms. We exclude stimuli built on saturated symbolic props, requiring lower-iconicity cues (everyday clothing, food presentation, posture, domestic setting) that leave room for divergent normative readings."
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix H In-Context Demonstration Conditions"
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "h3",
+   "en": "H.1 Design"
+  },
+  {
+   "id": "b0214",
+   "t": "text",
+   "w": "p",
+   "en": "Each in-context demonstration cell is defined by (i) the demonstration annotator pool, U.S. or mainland-Chinese, and (ii) the demonstration image culture, American-aligned or Chinese-aligned, yielding four designs labeled aa, ac, ca, cc (annotator–image). Each call prepends 5 (image, rating) demonstrations to the standard prompt template, then queries the judge under the same parsing protocol. Demonstrations are sampled with one demonstration at each Likert rating level 1–5 and from a held-out demonstration pool disjoint from the 626 test items; the same demonstration set is used across the six judges within a (design, prompt-condition, item) cell to isolate judge-side variance. We hold demonstration count, sampling protocol, and instruction text fixed across the four designs so the only experimental factors are the cultural source of the demonstrations and the image culture they were drawn from."
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "h3",
+   "en": "H.2 Rating Distributions"
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "p",
+   "en": "The 1- or 2-rating share on Chinese imagery is 10.9% to 12.7% under ICL versus 12.7% at baseline; the 5-rating share rises by 4–7 percentage points. The mean rating on Chinese imagery rises from 3.84 to between 3.90 and 3.98."
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "h3",
+   "en": "H.3 Best per-target-pool MAE under the full design"
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "p",
+   "en": "The Chinese-imagery ⟦SLOT_162⟧ U.S.-pool best-MAE per-model average is 1.486 (baseline) versus 1.480 (any configuration), an improvement of 0.4%. No model improves the Chinese-imagery ⟦SLOT_163⟧ U.S.-pool fit by more than 0.32 MAE under any ICL design."
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "h3",
+   "en": "H.4 Per-model Normalized Cultural Tilt ⟦SLOT_164⟧ under ICL"
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "p",
+   "en": "The five most CN-leaning judges all become more CN-leaning under at least three of the four designs; llama-4-scout, the only judge whose persona-conditioned ⟦SLOT_165⟧ crosses zero on Chinese imagery in the baseline design, does not cross zero under any ICL design (max ⟦SLOT_166⟧). glm-5 under ac is the only (model, design) cell where ⟦SLOT_167⟧ moves toward zero by more than ⟦SLOT_168⟧ (⟦SLOT_169⟧)."
+  },
+  {
+   "id": "b0221",
+   "t": "text",
+   "w": "h3",
+   "en": "H.5 Persona ⟦SLOT_170⟧ ICL Interaction"
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "p",
+   "en": "On Chinese imagery, restricted to American-persona conditions only, baseline ⟦SLOT_171⟧ collapses to ⟦SLOT_172⟧ (aa), ⟦SLOT_173⟧ (ac), ⟦SLOT_174⟧ (ca), ⟦SLOT_175⟧ (cc). Demonstrations erase roughly half of the persona-driven correction toward the U.S. pool."
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "h3",
+   "en": "H.6 Origin ⟦SLOT_176⟧ ICL"
+  },
+  {
+   "id": "b0224",
+   "t": "text",
+   "w": "p",
+   "en": "The origin gap on Chinese imagery (US-origin ⟦SLOT_177⟧ minus CN-origin ⟦SLOT_178⟧) is ⟦SLOT_179⟧ at baseline and ⟦SLOT_180⟧, ⟦SLOT_181⟧, ⟦SLOT_182⟧, ⟦SLOT_183⟧ under aa, ac, ca, cc respectively. The gap is preserved under ICL within ⟦SLOT_184⟧."
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "h3",
+   "en": "H.7 Category Breakdown"
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "p",
+   "en": "The food ⟦SLOT_185⟧ Chinese imagery cell is the worst at baseline (⟦SLOT_186⟧) and the worst under all four ICL designs (⟦SLOT_187⟧ ranges from ⟦SLOT_188⟧ to ⟦SLOT_189⟧). The architecture ⟦SLOT_190⟧ Chinese imagery cell—near-neutral at baseline (⟦SLOT_191⟧)—gains the largest absolute increase under ICL (⟦SLOT_192⟧ ranges from ⟦SLOT_193⟧ to ⟦SLOT_194⟧) the demonstrations convert ambiguity into commitment in the same direction the model already leans."
+  },
+  {
+   "id": "b0227",
+   "t": "text",
+   "w": "h3",
+   "en": "H.8 Statistical Tests"
+  },
+  {
+   "id": "b0228",
+   "t": "text",
+   "w": "p",
+   "en": "Per-image absolute-error paired Wilcoxon tests on Chinese imagery (⟦SLOT_195⟧ per cell) yield ⟦SLOT_196⟧ for every (ICL design ⟦SLOT_197⟧ target pool) combination, with mean differences of opposite sign for the U.S. and CN pools and approximately equal magnitudes (e.g., aa: U.S. mean ⟦SLOT_198⟧, CN mean ⟦SLOT_199⟧)."
+  }
+ ]
+}

@@ -1,0 +1,1408 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "VIEScore: Towards Explainable Metrics for Conditional Image Synthesis Evaluation"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "In the rapidly advancing field of conditional image generation research, challenges such as limited explainability lie in effectively evaluating the performance and capabilities of various models. Thi"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "p",
+   "en": "https://tiger-ai-lab.github.io/VIEScore/"
+  },
+  {
+   "id": "b0005",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Which method (VIEScore or traditional metrics) is “closer” to the human perspectives? Metrics in the future would provide not just the score but also the rationale, enabling the understanding of each judgment."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "Diffusion models have become a focal point in AI research for image synthesis. Over the past year, several new models (Kumari et al., 2023; Ruiz et al., 2023; Li et al., 2023c; Zhang and Agrawala, 2023) have been introduced to enhance control over image generation. However, comprehensively evaluating AI-synthesized images remains a challenging and unresolved issue. While metrics like LPIPS (Zhang et al., 2018), CLIP-Score (Hessel et al., 2021), and DreamSim (Fu et al., 2023b) were proposed, they have certain limitations: (1) these metrics are agnostic the end task, which can fail to measure the desired aspects of the generated images, (2) the score is opaque with limited explainability. These limitations heavily restrict their effectiveness in assessing conditional image generation. Some research work (Denton et al., 2015; Isola et al., 2017; Meng et al., 2021; Chen et al., 2023; Sheynin et al., 2023) relied on human-driven evaluation methods. While humans excel at understanding and interpreting visual content, such methods in the context are facing challenges such as scalability limits and preference subjectivity issues. This reliance on human judgment highlights the need for more uniform evaluation methods in the field. To solve the mentioned issues, we formulate the problem definition with our desired properties, as presented in equation 1. The function ⟦SLOT_0⟧ takes an instruction ⟦SLOT_1⟧, a synthesized image ⟦SLOT_2⟧, and ⟦SLOT_3⟧ which is a set of conditions (e.g. style, subject, background, canny-edge, etc). The score function should produce the intermediate rationale in the form of natural language before generating the final score according to the prompt instruction ⟦SLOT_4⟧:"
+  },
+  {
+   "id": "b0009",
+   "t": "keep",
+   "w": "table",
+   "en": "f VIE ​ ( I , O , C ∗ ) = ( rationale , score ) f_{\\text{VIE}}(I,O,C^{*})=(\\text{rationale},\\text{score}) (1)"
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "The function ⟦SLOT_5⟧ can be any Multimodal Large Language Model (MLLM) such as GPT-4 OpenAI (2023) and LLaVA (Liu et al., 2023a), which can take input images to generate human-like text responses. Unlike the automatic metrics, MLLM can receive human instructions and produce rationale. With such motivation, we introduce VIEScore (Visual Instruction-guided Explainable Score), a framework to assess synthetic images in different conditional image generation tasks. VIEScore has multiple advantages compared to auto-metrics and human evaluation. It includes:"
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "Task Awareness. Existing metrics were often designed to measure a certain aspect of generated images. For example, LPIPS measures the perceptual similarity of a pair of images, while CLIP-Score measures the text alignment of one single image. As a consequence, these metrics cannot be adapted to evaluate other tasks. VIEScore acts as a silver bullet to tackle all conditional image generation evaluation processes due to its instruction-guiding property. It can be carefully adjusted with different instruction requirements."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "Explainability. The existing metrics normally output a single float-point score, which cannot offer detailed insights into the ’rationale’ behind its evaluations. Such a score makes it difficult to interpret the decisions from the metric output. Instead, VIEScore can offer the rationale in the form of natural languages to help humans understand the reasoning process. As depicted in Figure 1, the rationale can significantly improve the trustworthiness of VIEScore."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "While the ultimate goal is to derive an MLLM that can rate images like humans, in this paper we also explore how well MLLMs can assess synthetic images compared to human evaluation and present insights and challenges on state-of-the-art MLLMs towards human evaluators, as shown in Figure 2."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Works"
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Conditional Image Synthesis"
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "With recent advancements in Image Synthesis research (Goodfellow et al., 2016; Ho et al., 2020; Dhariwal and Nichol, 2021), researchers proposed different methods and contributed a large amount of controllable image synthesis models with conditional inputs. Conditional image synthesis can be categorized into conditional image generation and conditional image editing tasks. Prevalent tasks include Text-To-Image generation Saharia et al. (2022); Rombach et al. (2022); stability.ai (2023) (known as text-guided image generation), Inpainting (Avrahami et al., 2022; Lugmayr et al., 2022) (known as mask-guided image editing) and Text-guided image editing (Brooks et al., 2023; Couairon et al., 2022; Wu and la Torre, 2023)."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "More recent works proposed new tasks such as Subject-driven image generation and editing (Gal et al., 2022; Ruiz et al., 2023; Li et al., 2023c) to inject one specific subject into a synthesized image, while Multi-concept image composition (Kumari et al., 2023; Liu et al., 2023b) allows multiple specific subjects into the synthesized image. Control-guided image generation (Zhang and Agrawala, 2023; Qin et al., 2023) allows additional conditions alongside the text prompt to guide the image synthesis. Our work uses MLLM to access all the discussed tasks on synthetic image evaluation."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 Synthetic Images Evaluation"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "Various metrics are proposed to evaluate the quality of AI-generated images. Traditional measures like the Inception Score (IS) (Salimans et al., 2016) and the Frechet Inception Distance (FID) (Heusel et al., 2017) are commonly employed to measure image fidelity. On the other hand, to measure the alignment between the generated image and the text prompt, several metrics (Kim et al., 2022; Kynkäänniemi et al., 2019; Park et al., 2021; Sajjadi et al., 2018) have been introduced. The CLIP score (Hessel et al., 2021) and BLIP score (Li et al., 2022) are the most commonly used. Recently, approaches such as (Cho et al., 2023) and (Lu et al., 2023c) aim to provide a fine-grained evaluation framework, while the HEIM-benchmark (Lee et al., 2023) assesses text-to-image models across multiple aspects, such as toxicity and safety. Other methods, such as projective-geometry (Sarkar et al., 2023), evaluate images’ physical and geometric realism. However, these metrics are primarily focused on text-to-image generation and remain narrow in scope. General image generation tasks like subject-driven image generation and image editing (Ruiz et al., 2023; Li et al., 2023c) still lack effective automatic metrics. One traditional, yet effective method to evaluate AI-generated image performance is to have human annotators assess visual quality. Recent works like ImagenHub (Ku et al., 2023), and HEIM Lee et al. (2023) attempt to standardize human evaluation across various image generation tasks, though scalability remains a challenge. Our research aims to identify the challenges in mimicking human perception in synthetic image evaluation and address these gaps by developing auto-metrics that align with human judgment across common image evaluation tasks."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "h3",
+   "en": "2.3 Large Language Models as Evaluators"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "Large language models (LLMs) are often used to evaluate the quality of model-generated outputs. Recent works used LLMs as an evaluator demonstrating their great ability in text generation evaluation (Zheng et al., 2023; Dubois et al., 2023). This ability for evaluation naturally emerges (Fu et al., 2023a) and stems from LLM’s great reasoning ability and instruction-following ability. Recent works also tried to devise a smaller but explicitly fine-tuned LLM(Touvron et al., 2023) that achieves similar evaluation results on natural language generation (Xu et al., 2023; Jiang et al., 2023; Li et al., 2023b). Besides text evaluation, LLMs with visual features have been used as evaluators on images (Lu et al., 2023d; Huang et al., 2023; Lee et al., 2020; Inan et al., 2021; Hu et al., 2023), mainly focused on evaluating text-to-image task. GPT-4v, regarded as the state-of-the-art LLM with visual features, also reported a decent ability on image evaluation, especially in text-image alignment (Zhang et al., 2023b). However, the GPT-4v is not perfect for image evaluation. A comprehensive study on GPT-4v’s vision ability reported that GPT-4v makes mistakes on image evaluation tasks (Yang et al., 2023). For example, it failed to provide proper reasonings for spotting the difference between two similar images."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Preliminary"
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Evaluation Benchmark"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "ImagenHub (Ku et al., 2023) is a standardized benchmark for evaluating conditional image generation models with human raters. The framework covered mainstream tasks, including image generation, editing, and several conditioned tasks. In this section, we visit how humans assess images in the ImagenHub framework. Images are rated in two aspects: (1) Semantic Consistency (SC) assesses how well the generated image aligns with the given conditions, such as prompts and subject tokens, ensuring coherence and relevance to the specified criteria according to the task. (2) Perceptual Quality (PQ) evaluates the extent to which the generated image appears visually authentic and conveys a sense of naturalness."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "ImagenHub curated a human evaluation dataset for each task, in which the dataset contains around 100 to 200 conditional inputs for generating synthesized images. Then each image was rated by three human raters according to the guidelines of the defined task, and a final score in the range [0.0, 1.0] was reported for the average score in semantic consistency (SC) and perceptual quality (PQ) respectively, with another overall score (O) derived from the geometric mean of semantic consistency and perceptual quality at the instance level. ImagenHub covered 30 image synthesis models and reported 0.4 Krippendorff’s alpha on the inter-worker agreement of their human rating."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Multimodal Large Language Models"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "Multimodal Large Language Models (MLLMs) typically denote LLMs with integrated visual capabilities (Yin et al., 2023). This visual proficiency opens up the potential to perform image analysis and evaluation. However, for a comprehensive assessment of synthetic images, multiple images may be examined in one pass due to complex conditions. The prompt will also be extensive to comprehensively describe the rating process. Therefore, the MLLM candidate should possess specific capabilities: (1) The model must efficiently process and interpret multiple images simultaneously. (2) The model needs to comprehend and respond to lengthy text prompts while matching all requirements."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "Recent popular open-source MLLMs, including LLaVA (Liu et al., 2023a), InstructBLIP (Dai et al., 2023), Fuyu (Bavishi et al., 2023), and CogVLM (Wang et al., 2023), can only accept a single image as input along with text instruction. To feed multiple images, a workaround is to merge and concatenate multiple images horizontally and feed as one image. More recent MLLMs such as Open-Flamingo (Awadalla et al., 2023), Kosmos-2 (Peng et al., 2023), and QwenVL (Bai et al., 2023) can accept multiple images in an interleaved image-text format. For closed-source MLLMs, OpenAI’s GPT-4v (OpenAI, 2023), GPT-4o (OpenAI, 2023) and Google’s Gemini (Team et al., 2024) are the most popular MLLMs that perform exceptionally."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Existing Auto-metrics"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "Here we list some prominent automatic metrics:"
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "Image-Text Alignment. CLIP-Score (Hessel et al., 2021) computes the average cosine similarities between prompt and generated image CLIP embeddings. One disadvantage of CLIP-Score is that the score is biased towards the training distribution (Kim et al., 2023). Moreover, in practical evaluation, the average CLIP-Score result of a decent method will always fall in the range [0.25, 0.35] even though a single CLIP-Score is within [0, 1]. Such a narrow range may not offer enough differentiation to know which model is better. Moreover, image-text alignment is not the only considered aspect of semantic consistency. For example, it cannot examine the degree of overediting in text or mask-guided image editing tasks."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "Perceptual Distance. LPIPS (Zhang et al., 2018) measures the resemblance between two images in a manner that aligns with human perception. With its sensitivity to distortions, it is an often used metric in image synthesis research such as image editing tasks and control-guided Image Generation task (Meng et al., 2021; Qin et al., 2023), to measure between the input (or ground truth) and the generated image. However, in the image editing context, the image’s naturalness (e.g. shadow, lighting, sense of distance) is often required in the human perspective of perceptual quality, which is missed in the LPIPS metric. It is also difficult to access a model’s performance by distortion level, as in the current state of research the models often can process high-quality editing without artifacts."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "Subject Fidelity. CLIP-I computes the average pairwise cosine similarities between CLIP embeddings of generated and real images, first proposed in Textual-Inversion (Gal et al., 2022). However, CLIP-I cannot distinguish between different subjects that may have highly similar text descriptions, and it is less sensitive to shape consistency as it compares the semantic similarity between images. DINO metric was proposed in DreamBooth Ruiz et al. (2023). The metric is computed by the mean cosine similarities calculated pairwise between the DINO embeddings of ViT-S/16 (Caron et al., 2021) for both synthesized and authentic images. In contrast to CLIP-I, the DINO metric is sensitive to differences between subjects of the same class due to the self-supervised training objective of DINO. These two became popular metrics reported in research on subject-driven image generation and editing tasks (Li et al., 2023c; Lu et al., 2023a)."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Method"
+  },
+  {
+   "id": "b0035",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: We study the correlation between MLLMs and human perspectives on rating images."
+  },
+  {
+   "id": "b0037",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Process of MLLM evaluation on one synthetic image. All input conditions, synthesized images, and rating instructions are fed together to the MLLM in one pass. Multi-concept image composition task is used here as an example. The final overall score of the image is derived with equation 2."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "During the experiment, we select 29 models evaluated in ImagenHub (Ku et al., 2023) to compare the correlations with human ratings. See Appendix B for the listed models."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "Rating instructions. In ImagenHub, each image in one rating aspect is rated by picking an option from List[0, 0.5, 1] by three human raters. While such simple rating instruction is human-friendly and offers enough granularity, the simplicity of the scale can lead to less accurate representations of opinions, as given the broad spectrum covered by the rating aspects of semantic consistency (SC) and perceptual quality (PQ). We propose a more rigorous rating instruction toward comprehensive evaluation for each type of task. We split the rating of semantic consistency (SC) and perceptual quality (PQ) into multiple sub-scores, which SC contains multiple scores according to the tasks."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "For example, in the multi-concept image composition task as shown in Figure 3, two images (known as concepts) and a text prompt are provided as input, and the desired synthesized image will contain the two concept objects in the image in actions according to the text prompt. Thus SC will be split into 3 sub-scores: (1) Is the image aligning with the prompt? (2) Does the object in the image resemble the first concept? (3) Does the object in the image resemble the second concept? For PQ, the naturalness level and distortion level will be accessed separately, resulting in 2 sub-scores: (i) Does the image give an unnatural feeling such as a wrong sense of distance, wrong shadow, or wrong lighting? (ii) Does the image contain a portion of distortion, watermark, scratches, etc.? Our proposed rating system enhances the evaluation of tasks by dividing SC and PQ into distinct sub-scores. The details of prompt templates are available in Appendix A."
+  },
+  {
+   "id": "b0042",
+   "t": "keep",
+   "w": "table",
+   "en": "O = [ min ⁡ ( α 1 , … , α i ) ​ min ⁡ ( β 1 , … , β i ) ] 1 2 O=[\\min(\\alpha_{1},...,\\alpha_{i})\\min(\\beta_{1},...,\\beta_{i})]^{\\frac{1}{2}} (2)"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "Our overall score is derived as shown in equation 2. We assume each sub-score weights the same and used ⟦SLOT_6⟧ operation to emphasize the importance of meeting all criteria without exception. ⟦SLOT_7⟧ is a sub-score in SC and ⟦SLOT_8⟧ is a sub-score in PQ. The final rating scores of SC and PQ provided by MLLMs are on a scale of 0 to 10. The design rationale is that in ImagenHub’s human rating method, the possible results when the answers of three human raters, each picking an option from List[0, 0.5, 1], are added together and then divided by 3, will fall into one of the options: List[0.0, 0.17, 0.33, 0.5, 0.67, 0.83, 1.0]. Thus we simply use a scale of 0 to 10 and normalized in the range [0.0, 1.0] when comparing with human ratings. Input conditions and synthetic image are fed into the MLLM together during the rating process of SC, while in the PQ rating process, only the synthetic image is fed into the MLLM. This is to avoid the model getting confused by the input conditions in the PQ rating process, as to be discussed in section 5.1."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Experimental Results"
+  },
+  {
+   "id": "b0045",
+   "t": "keep",
+   "w": "table",
+   "en": "Backbone M-H corr S ​ C {}^{SC}_{\\text{corr}} M-H corr P ​ Q {}^{PQ}_{\\text{corr}} M-H corr O {}^{O}_{\\text{corr}} Across All 7 Tasks Human Raters 0.4700 0.4124 0.4558 VIEScore GPT-4o 0shot {}_{\\text{"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Correlations across all tasks with different backbone models. We highlight the highest correlation numbers in green. See Appendix C for details."
+  },
+  {
+   "id": "b0047",
+   "t": "keep",
+   "w": "table",
+   "en": "Method M-H corr S ​ C {}^{SC}_{\\text{corr}} M-H corr P ​ Q {}^{PQ}_{\\text{corr}} M-H corr O {}^{O}_{\\text{corr}} Text-guided Image Generation (5 models) Human Raters 0.5044 0.3640 0.4652 CLIP-Score -0"
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Correlations comparison of available methods on the most common tasks. We highlight the best method and the correlation numbers closest to human raters. Continue in Table 3 and 4."
+  },
+  {
+   "id": "b0049",
+   "t": "keep",
+   "w": "table",
+   "en": "Method M-H corr S ​ C {}^{SC}_{\\text{corr}} M-H corr P ​ Q {}^{PQ}_{\\text{corr}} M-H corr O {}^{O}_{\\text{corr}} Subject-driven Image Generation (4 models) Human Raters 0.4780 0.3565 0.4653 DINO 0.416"
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Correlations comparison of available methods on the subject-driven tasks."
+  },
+  {
+   "id": "b0051",
+   "t": "keep",
+   "w": "table",
+   "en": "Method M-H corr S ​ C {}^{SC}_{\\text{corr}} M-H corr P ​ Q {}^{PQ}_{\\text{corr}} M-H corr O {}^{O}_{\\text{corr}} Multi-concept Image Composition (3 models) Human Raters 0.5927 0.5145 0.5919 DINO 0.097"
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Correlations comparison of available methods on the control-guided and multi-concept tasks."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 Correlation Study"
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "For all presented correlations, we applied Fisher Z-transformation to estimate the average Spearman correlation ⟦SLOT_9⟧ across models and tasks."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "Metric-to-Human (M-H) correlations. In Table 2 and 3, we first verified the reliability of ImagenHub human ratings by computing the Human-to-Human (H-H) correlation, as the correlation goes around 0.5, expected to be the highest value compared to MLLMs. Then we benchmark the MLLMs according to our designed method to compute the Metric-to-Human (M-H) correlation. We noticed only GPT-4v, GPT4o, Gemini, and LLaVA were able to follow our instructions clearly while other MLLMs were not able to produce any meaningful results according to our setup. For example, BLIP-2, while able to output the correct format, the scores provided are constant zeros. Qwen-VL and InstructBLIP could only produce a portion of responses for semantic consistency but failed to generate any results for perceptual quality evaluation. From overall performance, we found that GPT-4o reports a significantly higher correlation than all other MLLMs, while LLaVA’s correlation is much less than human raters. It seems that LLaVA is less effective in these specific tasks compared to close-sourced MLLMs like GPT-4v. It is worth mentioning that GPT-4o achieves a very high correlation with human raters on different image generation and editing tasks. GPT-4v and Gemini also show satisfactory performance on nearly all tasks with a difference of less than 0.2 towards human correlations, even on par with humans in text-guide image generation tasks. Both GPT-4v, Gemini, and LLaVA demonstrated the weakest performance in the text-guided editing task and subject-driven image editing task."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "Extra visuals resulted in a decline in performance. Numerous studies (Brown et al., 2020; Parnami and Lee, 2022; Liu et al., 2021) have highlighted that In-Context Learning (ICL) allows LLMs to tackle novel tasks effectively without requiring the traditional fine-tuning process. We applied In-Context Learning in our prompting method with the expectation of increasing the correlation scores, but we observed the opposite. In Table 2 and 3, there is an observable general trend of diminishing correlation scores. The overall correlation score in subject-driven image generation and editing, and the multi-concept image composition task dropped significantly. Only the mask-guided image editing task and control-guided image generation task reported a subtle increase in correlation score."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "Looking into the rationale, we found that the MLLMs tend to get confused by the example images, as illustrated in Figure 4. Such behavior is observed in both GPT-4v, GPT-4o, Gemini, and LLaVA rationale. Another recent work (Lu et al., 2023b) also reported a similar issue where the model attempted to consider the example when answering the visual question. This explains the deterioration of the correlation on both GPT-4v, GPT-4o, Gemini, and LLaVA when the ICL prompting technique is used. This also implied the low correlation scores on image editing tasks were due to the limited capability of state-of-the-art MLLMs for multiple image understanding."
+  },
+  {
+   "id": "b0058",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: MLLM making mistakes on rationale when prompted with extra images as examples."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "Ablation study on PQ rating setting. As providing multiple images could potentially decrease the performance, we attempt to minimize the workload of MLLM by only providing the synthetic image in the PQ rating process instead of including the input conditions. We report the correlation score in the two different settings with GPT-4v in Table 5 to examine the impact. We spotted a significant improvement in correlation after taking away the inputs in the PQ rating process."
+  },
+  {
+   "id": "b0061",
+   "t": "keep",
+   "w": "table",
+   "en": "TIE MCIC PQ Prompting Method M-H corr P ​ Q {}^{PQ}_{\\text{corr}} M-H corr P ​ Q {}^{PQ}_{\\text{corr}} Human (with inputs) 0.5052 0.5145 without inputs 0.4274 0.3025 with inputs 0.2256 0.0731"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Correlations of GPT-4v when including inputs in the PQ prompt in TIE (Text-guided Image Editing) and MCIC (Multi-concept Image Composition) task. See 7 for detailed comparison in Appendix."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "Ranking image models. Besides rating score correlations, we also compared the model ranking from the ImagenHub human evaluation leaderboard and the model ranking suggested by the MLLMs, shown in Table 6. We computed Spearman’s footrule ⟦SLOT_10⟧ and Spearman’s rho ⟦SLOT_11⟧ to examine the ranking correlation. Both GPT-4v and LLaVA can align to ImagenHub rankings on the multi-concept image composition task and control-guided image generation task, and with only one model difference in the subject-driven image editing task. While the results vary significantly across other tasks, GPT-4v generally maintains a stronger alignment with the ImagenHub rankings compared to LLaVA."
+  },
+  {
+   "id": "b0064",
+   "t": "keep",
+   "w": "table",
+   "en": "d S ​ F ​ ( r Human , r Method ) d_{SF}(r_{\\text{Human}},r_{\\text{Method}}) ↓ ρ S ​ ( r Human , r Method ) \\rho_{S}(r_{\\text{Human}},r_{\\text{Method}}) ↑ Task (Total number of Models) GPT-4v LLaVA LPI"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Ranking judgment from each metric method. ⟦SLOT_12⟧ is the Spearman’s footrule and ⟦SLOT_13⟧ is the Spearman’s rho (correlation). LPIPS is not available for the first task because there are no reference images."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2 Insights and Challenges on VIEScore"
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "MLLMs are weak at capturing image nuances in edited images. From Table 2, we noticed the correlation scores on editing tasks are generally lower than generation tasks. Upon investigation, it was found that MLLMs often fail to detect minor changes made in image editing, such as small patch edits. Consequently, MLLMs might perceive two images as identical even when humans recognize the edits as successful. This issue may stem from MLLMs focusing on high-level image features while overlooking finer details like color and texture differences, as illustrated in Figure 5. This limitation is apparent in both GPT-4v, GPT-4o, Gemini, and LLaVA, highlighting a challenge in synthetic image evaluation accuracy on image editing tasks."
+  },
+  {
+   "id": "b0068",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: Representative pairs that MLLMs misunderstood as identical images. Images in the first row are the inputs and in the second row are the edited."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "Both MLLMs and human evaluators display a broader range of views regarding perceptual quality compared to semantic consistency. From Table 2 and Table 3, we can observe that the correlation scores of PQ are generally lower than the correlation scores of SC and Overall, even on human raters. This suggests the human raters’ perspective on evaluating perceptual quality is more diverse. Possible impacting factors include the rater’s eyesight condition, screen resolution, rating leniency, etc. In the context of MLLMs, we found that MLLMs while being able to correctly recognize the naturalness and artifacts of the image, the rating scores are as diverse as human rating scores even though we have provided a marking rubric."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "h3",
+   "en": "5.3 VIEScore and Auto-metrics vs Human"
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "We report the human correlations in Table 2 and 3 to compare the performance between our VIEScore and popular auto-metrics. To ensure a fair comparison, we only included automatic metrics that have been previously reported in related research for the specific tasks under consideration."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "DINO is an effective metric in subject-driven tasks. The DINO metric demonstrates sensitivity to variations within the same class of subjects, making it an effective metric for measuring whether the subject in the synthesized image aligns with the token subject. Our correlation result shows that DINO outperforms GPT-4v and CLIP-I on subject-driven image generation and editing tasks, suggesting that DINO highly aligns with human’s perspective on semantic consistency where subject fidelity is considered. However, multi-subject fidelity remains a challenge as DINO and CLIP-I only consider single subjects. However, GPT-4o still achieves the highest correlation to human annotations."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "LPIPS metric proves to be effective in control-guided tasks, but less effective in image editing tasks. As discussed in section 3.3, LPIPS has great ability in detecting distortions. Since the control-guided task is a less mature research direction compared to image editing tasks, distortions are often found in the synthetic images from the control-guided task. On the other hand, current image editing models can synthesize images with less distortions. This explains the high correlation in the control-guided task. While GPT-4o still achieves the highest correlation to human annotations, LPIPS outperforms GPT-4v, Gemini, and LLaVA on this task."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "p",
+   "en": "CLIP-Score has a much weaker correlation with human ratings in the text-guided image generation task than GPT-4v. We also noticed none of the synthetic images achieved higher than 0.3 CLIP-Score, even though most of the images are regarded as having high semantic consistency by human raters. This can be due to different evaluation focuses, as humans tend to grab the abstract idea from the prompt to access the image, but CLIP-Score considers the whole text prompt."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "p",
+   "en": "GPT-4v outperforms other auto-metrics with its correlation to the ImagenHub leaderboard rankings. The correlation of model rankings on ImagenHub was evaluated against CLIP Score and LPIPS metrics, as shown in Table 6, and compared with MLLMs in the VIEScore. We found that GPT-4v can achieve a positive correlation with the model rankings on every task. This shows the sign of capability for MLLMs as evaluators for image synthesis research."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Conclusion"
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we propose the VIEScore for synthetic image evaluation across seven popular image synthesis tasks and comprehensively access the efficacy using human ratings from ImagenHub. Our experiment reported that VIEScore with close-source MLLMs backbones like GPT-4o and GPT-4v are significantly more effective than other open-source MLLMs in assessing synthetic images, achieving a correlation of over 0.4 to human ratings most of the tasks. However, it notes a lower correlation in image editing tasks for most of the MLLMs, including GPT-4v. We also noticed Gemini has similar performance as GPT-4v, while GPT-4o stands superior. Comparing our VIEScore to existing auto-metrics, we found that GPT-4o is more effective than auto-metrics in all tasks, while DINO is more effective in subject-driven image generation and editing tasks than GPT-4v. GPT-4v also shows a higher ranking correlation with the ImagenHub leaderboard than other automatic metrics. This marked a milestone towards explainable metrics for conditional image synthesis evaluation. Our future research will focus on investigating the use of distillation models to replicate human-like performance in evaluating synthetic images."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "h2",
+   "en": "7 Limitations"
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "p",
+   "en": "OpenAI Security and Privacy Policy. Due to ChatGPT’s security and privacy policy, AI-generated images that resemble a real person or photograph will be refused by GPT-4v for evaluation. The model will return results similar to \"I am sorry, but I cannot process these images as they contain real people.\". We simply drop those results by keyword matching."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "OpenAI Playground vs API. While GPT-4v Playground allows the user to keep a session, the OpenAI API does not provide such a function. While we believe using GPT-4v playground might yield better performance, especially in an In-Context learning setting, we can only rely on API due to the large scale of the experiment."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "h2",
+   "en": "8 Potential Risks"
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "Multimodal models can inadvertently perpetuate or amplify biases present in their training data. The interpretation and evaluation of synthetic images depend heavily on context. A multimodal model might not fully grasp certain images’ nuances or cultural sensitivities, leading to inappropriate or offensive outputs."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "h2",
+   "en": "9 Artifacts"
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "p",
+   "en": "All datasets and models are publicly accessible for academic use, and the official OpenAI API is available for academic purposes."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "h2",
+   "en": "10 Computational Experiments"
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "All open-source model experiments were conducted on an NVIDIA RTX A6000 GPU. Approximately 500 US dollars were spent on an OpenAI API call for GPT-4v and GPT-4o experiments."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "h2",
+   "en": "11 Acknowledgement"
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "We thank Kai Zhang, Yujie Lu, and Tianle Li for the discussion. We also thank Xueguang Ma and Tianle Li for sharing the quotas of GPT-4v and GPT-4o API calls from OpenAI."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0091",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Avrahami et al. (2022) Omri Avrahami, Dani Lischinski, and Ohad Fried. 2022. Blended diffusion for text-driven editing of natural images. In Proceedings of the IEEE/CVF Conference on Computer Vision a"
+  },
+  {
+   "id": "b0092",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Awadalla et al. (2023) Anas Awadalla, Irena Gao, Josh Gardner, Jack Hessel, Yusuf Hanafy, Wanrong Zhu, Kalyani Marathe, Yonatan Bitton, Samir Gadre, Shiori Sagawa, Jenia Jitsev, Simon Kornblith, Pang "
+  },
+  {
+   "id": "b0093",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al. (2023) Jinze Bai, Shuai Bai, Shusheng Yang, Shijie Wang, Sinan Tan, Peng Wang, Junyang Lin, Chang Zhou, and Jingren Zhou. 2023. Qwen-vl: A versatile vision-language model for understanding,"
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bar-Tal et al. (2022) Omer Bar-Tal, Dolev Ofri-Amar, Rafail Fridman, Yoni Kasten, and Tali Dekel. 2022. Text2live: Text-driven layered image and video editing. In European Conference on Computer Visio"
+  },
+  {
+   "id": "b0095",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bavishi et al. (2023) Rohan Bavishi, Erich Elsen, Curtis Hawthorne, Maxwell Nye, Augustus Odena, Arushi Somani, and Sağnak Taşırlar. 2023. Introducing our multimodal models ."
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Brooks et al. (2023) Tim Brooks, Aleksander Holynski, and Alexei A. Efros. 2023. Instructpix2pix: Learning to follow image editing instructions. In CVPR ."
+  },
+  {
+   "id": "b0097",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Brown et al. (2020) Tom B. Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, Sandhini Agarwal, Ariel H"
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Caron et al. (2021) Mathilde Caron, Hugo Touvron, Ishan Misra, Herv’e J’egou, Julien Mairal, Piotr Bojanowski, and Armand Joulin. 2021. Emerging properties in self-supervised vision transformers . 202"
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2023) Wenhu Chen, Hexiang Hu, Yandong Li, Nataniel Rui, Xuhui Jia, Ming-Wei Chang, and William W Cohen. 2023. Subject-driven text-to-image generation via apprenticeship learning. arXiv pr"
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cho et al. (2023) Jaemin Cho, Yushi Hu, Roopal Garg, Peter Anderson, Ranjay Krishna, Jason Baldridge, Mohit Bansal, Jordi Pont-Tuset, and Su Wang. 2023. Davidsonian scene graph: Improving reliability "
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Couairon et al. (2022) Guillaume Couairon, Jakob Verbeek, Holger Schwenk, and Matthieu Cord. 2022. Diffedit: Diffusion-based semantic image editing with mask guidance. In The Eleventh International Co"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dai et al. (2023) Wenliang Dai, Junnan Li, Dongxu Li, Anthony Meng Huat Tiong, Junqi Zhao, Weisheng Wang, Boyang Albert Li, Pascale Fung, and Steven C. H. Hoi. 2023. Instructblip: Towards general-purp"
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "deep floyd.ai (2023) deep floyd.ai. 2023. If by deepfloyd lab at stabilityai ."
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Denton et al. (2015) Emily L Denton, Soumith Chintala, Rob Fergus, et al. 2015. Deep generative image models using a laplacian pyramid of adversarial networks. Advances in neural information processin"
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dhariwal and Nichol (2021) Prafulla Dhariwal and Alexander Nichol. 2021. Diffusion models beat gans on image synthesis . In Advances in Neural Information Processing Systems , volume 34, pages 8780–87"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dubois et al. (2023) Yann Dubois, Xuechen Li, Rohan Taori, Tianyi Zhang, Ishaan Gulrajani, Jimmy Ba, Carlos Guestrin, Percy Liang, and Tatsunori B. Hashimoto. 2023. Alpacafarm: A simulation framework "
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fu et al. (2023a) Jinlan Fu, See-Kiong Ng, Zhengbao Jiang, and Pengfei Liu. 2023a. Gptscore: Evaluate as you desire . ArXiv , abs/2302.04166."
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fu et al. (2023b) Stephanie Fu, Netanel Tamir, Shobhita Sundaram, Lucy Chai, Richard Zhang, Tali Dekel, and Phillip Isola. 2023b. Dreamsim: Learning new dimensions of human visual similarity using syn"
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gal et al. (2022) Rinon Gal, Yuval Alaluf, Yuval Atzmon, Or Patashnik, Amit Haim Bermano, Gal Chechik, and Daniel Cohen-or. 2022. An image is worth one word: Personalizing text-to-image generation usi"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Goodfellow et al. (2016) Ian Goodfellow, Yoshua Bengio, Aaron Courville, and Yoshua Bengio. 2016. Deep learning , volume 1. MIT Press."
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gu et al. (2023) Jing Gu, Yilin Wang, Nanxuan Zhao, Tsu-Jui Fu, Wei Xiong, Qing Liu, Zhifei Zhang, He Zhang, Jianming Zhang, HyunJoon Jung, et al. 2023. Photoswap: Personalized subject swapping in ima"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hessel et al. (2021) Jack Hessel, Ari Holtzman, Maxwell Forbes, Ronan Le Bras, and Yejin Choi. 2021. Clipscore: A reference-free evaluation metric for image captioning. In Proceedings of the 2021 Conf"
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Heusel et al. (2017) Martin Heusel, Hubert Ramsauer, Thomas Unterthiner, Bernhard Nessler, and Sepp Hochreiter. 2017. Gans trained by a two time-scale update rule converge to a local nash equilibrium."
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ho et al. (2020) Jonathan Ho, Ajay Jain, and Pieter Abbeel. 2020. Denoising diffusion probabilistic models . In Advances in Neural Information Processing Systems , volume 33, pages 6840–6851. Curran A"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hu et al. (2021) Edward J Hu, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen, et al. 2021. Lora: Low-rank adaptation of large language models. In International Conferen"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hu et al. (2023) Yushi Hu, Benlin Liu, Jungo Kasai, Yizhong Wang, Mari Ostendorf, Ranjay Krishna, and Noah A Smith. 2023. Tifa: Accurate and interpretable text-to-image faithfulness evaluation with qu"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2023) Kaiyi Huang, Kaiyue Sun, Enze Xie, Zhenguo Li, and Xihui Liu. 2023. T2i-compbench: A comprehensive benchmark for open-world compositional text-to-image generation . ArXiv , abs/230"
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Inan et al. (2021) Mert Inan, Piyush Sharma, Baber Khalid, Radu Soricut, Matthew Stone, and Malihe Alikhani. 2021. COSMic: A coherence-aware generation metric for image descriptions . In Findings of t"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Isola et al. (2017) Phillip Isola, Jun-Yan Zhu, Tinghui Zhou, and Alexei A Efros. 2017. Image-to-image translation with conditional adversarial networks. In Proceedings of the IEEE conference on compu"
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jiang et al. (2023) Dongfu Jiang, Yishan Li, Ge Zhang, Wenhao Huang, Bill Yuchen Lin, and Wenhu Chen. 2023. Tigerscore: Towards building explainable metric for all text generation tasks. arXiv preprin"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kim et al. (2022) Jin-Hwa Kim, Yunji Kim, Jiyoung Lee, Kang Min Yoo, and Sang-Woo Lee. 2022. Mutual information divergence: A unified metric for multimodal generative models. Advances in Neural Inform"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kim et al. (2023) Younghyun Kim, Sangwoo Mo, Min-Kyung Kim, Kyungmin Lee, Jaeho Lee, and Jinwoo Shin. 2023. Bias-to-text: Debiasing unknown visual biases through language interpretation . ArXiv ."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ku et al. (2023) Max Ku, Tianle Li, Kai Zhang, Yujie Lu, Xingyu Fu, Wenwen Zhuang, and Wenhu Chen. 2023. Imagenhub: Standardizing the evaluation of conditional image generation models. arXiv preprint "
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kumari et al. (2023) Nupur Kumari, Bingliang Zhang, Richard Zhang, Eli Shechtman, and Jun-Yan Zhu. 2023. Multi-concept customization of text-to-image diffusion. In Proceedings of the IEEE/CVF Conferen"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kynkäänniemi et al. (2019) Tuomas Kynkäänniemi, Tero Karras, Samuli Laine, Jaakko Lehtinen, and Timo Aila. 2019. Improved precision and recall metric for assessing generative models. Advances in Neura"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lee et al. (2020) Hwanhee Lee, Seunghyun Yoon, Franck Dernoncourt, Doo Soon Kim, Trung Bui, and Kyomin Jung. 2020. ViLBERTScore: Evaluating image caption using vision-and-language BERT . In Proceeding"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lee et al. (2023) Tony Lee, Michihiro Yasunaga, Chenlin Meng, Yifan Mai, Joon Sung Park, Agrim Gupta, Yunzhi Zhang, Deepak Narayanan, Hannah Benita Teufel, Marco Bellagente, et al. 2023. Holistic eval"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023a) Dongxu Li, Junnan Li, and Steven CH Hoi. 2023a. Blip-diffusion: Pre-trained subject representation for controllable text-to-image generation and editing. arXiv preprint arXiv:2305.14"
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023b) Junlong Li, Shichao Sun, Weizhe Yuan, Run-Ze Fan, Hai Zhao, and Pengfei Liu. 2023b. Generative judge for evaluating alignment. arXiv preprint arXiv:2310.05470 ."
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2022) Junnan Li, Dongxu Li, Caiming Xiong, and Steven Hoi. 2022. Blip: Bootstrapping language-image pre-training for unified vision-language understanding and generation. In International C"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023c) Tianle Li, Max Ku, Cong Wei, and Wenhu Chen. 2023c. Dreamedit: Subject-driven image editing. arXiv preprint arXiv:2306.12624 ."
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023a) Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. 2023a. Visual instruction tuning . ArXiv , abs/2304.08485."
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2021) Jiachang Liu, Dinghan Shen, Yizhe Zhang, Bill Dolan, Lawrence Carin, and Weizhu Chen. 2021. What makes good in-context examples for gpt-3? In Workshop on Knowledge Extraction and Int"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023b) Zhiheng Liu, Yifei Zhang, Yujun Shen, Kecheng Zheng, Kai Zhu, Ruili Feng, Yu Liu, Deli Zhao, Jingren Zhou, and Yang Cao. 2023b. Cones 2: Customizable image synthesis with multiple s"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lu et al. (2023a) Lingxiao Lu, Bo Zhang, and Li Niu. 2023a. Dreamcom: Finetuning text-guided inpainting model for image composition . ArXiv , abs/2309.15508."
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lu et al. (2023b) Yujie Lu, Xiujun Li, William Yang Wang, and Yejin Choi. 2023b. Vim: Probing multimodal large language models for visual embedded instruction following . ArXiv , abs/2311.17647."
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lu et al. (2023c) Yujie Lu, Xianjun Yang, Xiujun Li, Xin Eric Wang, and William Yang Wang. 2023c. Llmscore: Unveiling the power of large language models in text-to-image synthesis evaluation. arXiv pr"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lu et al. (2023d) Yujie Lu, Xianjun Yang, Xiujun Li, Xin Eric Wang, and William Yang Wang. 2023d. Llmscore: Unveiling the power of large language models in text-to-image synthesis evaluation . ArXiv ,"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lugmayr et al. (2022) Andreas Lugmayr, Martin Danelljan, Andrés Romero, Fisher Yu, Radu Timofte, and Luc Van Gool. 2022. Repaint: Inpainting using denoising diffusion probabilistic models . 2022 IEEE/"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Meng et al. (2021) Chenlin Meng, Yutong He, Yang Song, Jiaming Song, Jiajun Wu, Jun-Yan Zhu, and Stefano Ermon. 2021. Sdedit: Guided image synthesis and editing with stochastic differential equations."
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mokady et al. (2023) Ron Mokady, Amir Hertz, Kfir Aberman, Yael Pritch, and Daniel Cohen-Or. 2023. Null-text inversion for editing real images using guided diffusion models. In Proceedings of the IEEE"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2023) OpenAI. 2023. Gpt-4 technical report ."
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "openjourney.ai (2023) openjourney.ai. 2023. Openjourney is an open source stable diffusion fine tuned model on midjourney images ."
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Park et al. (2021) Dong Huk Park, Samaneh Azadi, Xihui Liu, Trevor Darrell, and Anna Rohrbach. 2021. Benchmark for compositional text-to-image synthesis. In Thirty-fifth Conference on Neural Informati"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Parmar et al. (2023) Gaurav Parmar, Krishna Kumar Singh, Richard Zhang, Yijun Li, Jingwan Lu, and Jun-Yan Zhu. 2023. Zero-shot image-to-image translation. In ACM SIGGRAPH 2023 Conference Proceedings ,"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Parnami and Lee (2022) Archit Parnami and Minwoo Lee. 2022. Learning from few examples: A summary of approaches to few-shot learning . ArXiv , abs/2203.04291."
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Peng et al. (2023) Zhiliang Peng, Wenhui Wang, Li Dong, Yaru Hao, Shaohan Huang, Shuming Ma, and Furu Wei. 2023. Kosmos-2: Grounding multimodal large language models to the world . ArXiv , abs/2306.14"
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qin et al. (2023) Can Qin, Shu Zhang, Ning Yu, Yihao Feng, Xinyi Yang, Yingbo Zhou, Huan Wang, Juan Carlos Niebles, Caiming Xiong, Silvio Savarese, et al. 2023. Unicontrol: A unified diffusion model f"
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ramesh et al. (2022) Aditya Ramesh, Prafulla Dhariwal, Alex Nichol, Casey Chu, and Mark Chen. 2022. Hierarchical text-conditional image generation with clip latents. arXiv preprint arXiv:2204.06125 , "
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Rombach et al. (2022) Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn Ommer. 2022. High-resolution image synthesis with latent diffusion models. In Proceedings of the IEEE/C"
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ruiz et al. (2023) Nataniel Ruiz, Yuanzhen Li, Varun Jampani, Yael Pritch, Michael Rubinstein, and Kfir Aberman. 2023. Dreambooth: Fine tuning text-to-image diffusion models for subject-driven generat"
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "runwayml (2023) runwayml. 2023. Stable diffusion inpainting ."
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Saharia et al. (2022) Chitwan Saharia, William Chan, Saurabh Saxena, Lala Li, Jay Whang, Emily L Denton, Kamyar Ghasemipour, Raphael Gontijo Lopes, Burcu Karagol Ayan, Tim Salimans, et al. 2022. Photo"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sajjadi et al. (2018) Mehdi SM Sajjadi, Olivier Bachem, Mario Lucic, Olivier Bousquet, and Sylvain Gelly. 2018. Assessing generative models via precision and recall. Advances in neural information pro"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Salimans et al. (2016) Tim Salimans, Ian Goodfellow, Wojciech Zaremba, Vicki Cheung, Alec Radford, and Xi Chen. 2016. Improved techniques for training gans. Advances in neural information processing s"
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sarkar et al. (2023) Ayush Sarkar, Hanlin Mai, Amitabh Mahapatra, Svetlana Lazebnik, David Forsyth, and Anand Bhattad. 2023. Shadows don’t lie and lines can’t bend! generative models don’t know projec"
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sheynin et al. (2023) Shelly Sheynin, Adam Polyak, Uriel Singer, Yuval Kirstain, Amit Zohar, Oron Ashual, Devi Parikh, and Yaniv Taigman. 2023. Emu edit: Precise image editing via recognition and gene"
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "stability.ai (2023) stability.ai. 2023. Stable diffusion xl ."
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Team et al. (2024) Gemini Team, Machel Reid, Nikolay Savinov, Denis Teplyashin, Dmitry, Lepikhin, Timothy Lillicrap, Jean baptiste Alayrac, Radu Soricut, Angeliki Lazaridou, Orhan Firat, Julian Schrit"
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Touvron et al. (2023) Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, Aurelien Rodriguez"
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2023) Weihan Wang, Qingsong Lv, Wenmeng Yu, Wenyi Hong, Ji Qi, Yan Wang, Junhui Ji, Zhuoyi Yang, Lei Zhao, Xixuan Song, Jiazheng Xu, Bin Xu, Juanzi Li, Yuxiao Dong, Ming Ding, and Jie Tan"
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu and la Torre (2023) Chen Henry Wu and Fernando De la Torre. 2023. A latent space of stochastic diffusion models for zero-shot image editing and guidance. In ICCV ."
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xu et al. (2023) Wenda Xu, Danqing Wang, Liangming Pan, Zhenqiao Song, Markus Freitag, William Yang Wang, and Lei Li. 2023. Instructscore: Towards explainable text generation evaluation with automatic"
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2023) Zhengyuan Yang, Linjie Li, Kevin Lin, Jianfeng Wang, Chung-Ching Lin, Zicheng Liu, and Lijuan Wang. 2023. The dawn of lmms: Preliminary explorations with gpt-4v(ision) ."
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yin et al. (2023) Shukang Yin, Chaoyou Fu, Sirui Zhao, Ke Li, Xing Sun, Tong Xu, and Enhong Chen. 2023. A survey on multimodal large language models . ArXiv , abs/2306.13549."
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2023a) Kai Zhang, Lingbo Mo, Wenhu Chen, Huan Sun, and Yu Su. 2023a. Magicbrush: A manually annotated dataset for instruction-guided image editing. NeurIPS dataset and benchmark track ."
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang and Agrawala (2023) Lvmin Zhang and Maneesh Agrawala. 2023. Adding conditional control to text-to-image diffusion models. arXiv preprint arXiv:2302.05543 ."
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2018) Richard Zhang, Phillip Isola, Alexei A Efros, Eli Shechtman, and Oliver Wang. 2018. The unreasonable effectiveness of deep features as a perceptual metric. In CVPR ."
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2023b) Xinlu Zhang, Yujie Lu, Weizhi Wang, An Yan, Jun Yan, Lianke Qin, Heng Wang, Xifeng Yan, William Yang Wang, and Linda Ruth Petzold. 2023b. Gpt-4v(ision) as a generalist evaluator f"
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zheng et al. (2023) Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric. P Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica. "
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Prompt Templates"
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "p",
+   "en": "Prompt Engineering. We found that not all MLLMs can fully understand our prompt to give a desired output format consistently. Thus we required MLLMs to output a JSON format, which is supposed to be capable for most MLLMs."
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "p",
+   "en": "Prompt Design. The prompt is divided into two segments: the ‘context prompt’ and the ‘rating prompt’. The ultimate prompt provided to the model is a combination of these two segments."
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0178",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Supplementary Information"
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "h3",
+   "en": "B.1 Human Correlation Study"
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "p",
+   "en": "In our paper content, we only reported the Spearman correlations. Here we included the Pearson and Kendall correlation in Table 8 for comparative analysis of Human-to-Human (H-H) correlation."
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "h3",
+   "en": "B.2 Zero-shot vs One-shot on VIE"
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "p",
+   "en": "We applied only zero-shot and one-shot experiments in this paper because not even GPT-4v can produce anything with few-shot setting in our context. We report full table of GPT-4v performance in Table 7 for zero-shot vs one-shot results."
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "h3",
+   "en": "B.3 Autometrics vs Human Detail results"
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "p",
+   "en": "See Table 9, 10, 11, 12 for detail statistics of CLIP-Score, LPIPS, DINO, and CLIP-I correlation with human ratings."
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "h3",
+   "en": "B.4 ImagenHub Models used"
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "li",
+   "en": "• Text-guided Image Generation: Stable Diffusion (SD) (Rombach et al., 2022), SDXL (stability.ai, 2023), DALLE-2 (Ramesh et al., 2022), DeepFloydIF (deep floyd.ai, 2023), OpenJourney (openjourney.ai, 2023)."
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "li",
+   "en": "• Mask-guided Image Editing: SD (runwayml, 2023), SDXL (stability.ai, 2023), GLIDE, BlendedDiffusion (Avrahami et al., 2022)"
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "li",
+   "en": "• Text-guided Image Editing: MagicBrush (Zhang et al., 2023a), InstructPix2Pix (Brooks et al., 2023), Prompt-to-Prompt (Mokady et al., 2023), CycleDiffusion (Wu and la Torre, 2023), SDEdit (Meng et al., 2021), Text2Live (Bar-Tal et al., 2022), DiffEdit (Couairon et al., 2022), Pix2PixZero (Parmar et al., 2023)."
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "li",
+   "en": "• Subject-driven Image Generation: DreamBooth (Ruiz et al., 2023), DreamBooth-Lora (Hu et al., 2021), BLIP-Diffusion (Li et al., 2023a), TextualInversion (Gal et al., 2022)."
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "li",
+   "en": "• Subject-driven Image Editing: PhotoSwap (Gu et al., 2023), DreamEdit (Li et al., 2023c), BLIP-Diffusion."
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "li",
+   "en": "• Multi-concept Image Composition: CustomDiffusion (Kumari et al., 2023), DreamBooth, TextualInversion."
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "li",
+   "en": "• Control-guided Image Generation: ControlNet (Zhang and Agrawala, 2023), UniControl (Qin et al., 2023)."
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "h3",
+   "en": "B.5 ImagenHub Human data information"
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "p",
+   "en": "We showed the total human rating data we used for each task in Table 13."
+  },
+  {
+   "id": "b0198",
+   "t": "keep",
+   "w": "table",
+   "en": "Backbone: GPT-4v Zero-Shot One-Shot Image Model M-H 0shot S ​ C {}^{SC}_{\\text{0shot}} M-H 0shot P ​ Q {}^{PQ}_{\\text{0shot}} M-H 0shot O {}^{O}_{\\text{0shot}} M-H 1shot S ​ C {}^{SC}_{\\text{1shot}} M"
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Comprehensive study on the Spearman correlation between GPT-4v-to-Human (GPT-4v-H) ratings across various models, in zero-shot (0shot) and one-shot (1shot) settings, across different test categories: Semantic Consistency (SC), Perceptual Quality (PQ), and Overall (O)."
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "table",
+   "en": "Image Model H-H pear S ​ C {}^{SC}_{\\text{pear}} H-H pear P ​ Q {}^{PQ}_{\\text{pear}} H-H pear O {}^{O}_{\\text{pear}} H-H spea S ​ C {}^{SC}_{\\text{spea}} H-H spea P ​ Q {}^{PQ}_{\\text{spea}} H-H spea"
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8: Comparative analysis of Human-to-Human (H-H) correlation ratings across various models. Metrics used include Pearson’s (pear), Spearman’s (spea), and Kendall’s (kend) correlation coefficients, across different test categories: Semantic Consistency (SC), Perceptual Quality (PQ), and Overall (O)."
+  },
+  {
+   "id": "b0202",
+   "t": "keep",
+   "w": "table",
+   "en": "Metric: CLIP-Score Image Model M-H corr S ​ C {}^{SC}_{\\text{corr}} M-H corr P ​ Q {}^{PQ}_{\\text{corr}} M-H corr O {}^{O}_{\\text{corr}} Text-guided Image Generation DeepFloydIF 0.0272 0.1025 0.0332 O"
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 9: CLIP-Score vs Human correlation on Text-guided image generation task."
+  },
+  {
+   "id": "b0204",
+   "t": "keep",
+   "w": "table",
+   "en": "Metric: LPIPS Image Model M-H corr S ​ C {}^{SC}_{\\text{corr}} M-H corr P ​ Q {}^{PQ}_{\\text{corr}} M-H corr O {}^{O}_{\\text{corr}} Text-guided Image Editing InstructPix2Pix 0.1652 0.4717 0.2045 Cycle"
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 10: LPIPS (signs inverted) vs Human correlation on several tasks."
+  },
+  {
+   "id": "b0206",
+   "t": "keep",
+   "w": "table",
+   "en": "Metric: DINO Model M-H corr S ​ C {}^{SC}_{\\text{corr}} M-H corr P ​ Q {}^{PQ}_{\\text{corr}} M-H corr O {}^{O}_{\\text{corr}} Multi-Concept Image Composition TextualInversion 0.0759 -0.2746 0.0754 Drea"
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 11: DINO vs Human correlation on several tasks."
+  },
+  {
+   "id": "b0208",
+   "t": "keep",
+   "w": "table",
+   "en": "Metric: CLIP-I Image Model M-H corr S ​ C {}^{SC}_{\\text{corr}} M-H corr P ​ Q {}^{PQ}_{\\text{corr}} M-H corr O {}^{O}_{\\text{corr}} Multi-Concept Image Composition TextualInversion 0.1511 -0.1847 0.1"
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 12: CLIP-I vs Human correlation on several tasks."
+  },
+  {
+   "id": "b0210",
+   "t": "keep",
+   "w": "table",
+   "en": "Data amount per model Total Human rating data Task: Text-guided Image Generation 197 2955 Task: Mask-guided Image Editing 179 2148 Task: Text-guided Image Editing 179 4296 Task: Subject-driven Image G"
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 13: Number of human ratings from ImagenHub used in this paper."
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Backbone Performances"
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "h3",
+   "en": "C.1 Parsing MLLM outputs"
+  },
+  {
+   "id": "b0214",
+   "t": "text",
+   "w": "p",
+   "en": "We tried to parse the output using Regex and modify the format requirement if the MLLM fail to do so. If the output failed to pass our parsing rules, we fill random value as output to penalize the correlation."
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "h3",
+   "en": "C.2 Observations of GPT-4o."
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "p",
+   "en": "GPT-4o-2024-05-13 tends to be the best MLLM in this context. It can understand every task instruction in VIEScore and produce reasonable scores and rationale."
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "h3",
+   "en": "C.3 Observations of Gemini-Pro."
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "p",
+   "en": "Gemini-1.5-Pro can understand every task instruction in VIEScore and produce reasonable scores and rationale, achieving similar performance as GPT-4v."
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "h3",
+   "en": "C.4 Observations of GPT-4v."
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "p",
+   "en": "GPT-4-vision-preview tends to be the second best MLLM in this context. It can understand every task instruction in VIEScore and produce reasonable scores and rationale."
+  },
+  {
+   "id": "b0221",
+   "t": "text",
+   "w": "h3",
+   "en": "C.5 Observations of LLaVA."
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "p",
+   "en": "LLaVA-1.5-7B can also understand every task instruction in VIEScore and produce reasonable rationale. However, the scores produced tend to be concentrated toward certain numbers."
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "h3",
+   "en": "C.6 Observations of Qwen-VL."
+  },
+  {
+   "id": "b0224",
+   "t": "text",
+   "w": "p",
+   "en": "Qwen-VL-7B does not understand the meaning of delimiter. However, it was able to output a JSON-like dictionary following the instructions on both SC and PQ. The rationale produced is often not reasonable."
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "h3",
+   "en": "C.7 Observations of BLIP2."
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "p",
+   "en": "BLIP-2 FLAN-T5-XXL often failed to produce the result formats according to the instructions, especially in PQ. It also tend to give 0 score in SC. Prompt engineering in our context does not solve the issue."
+  },
+  {
+   "id": "b0227",
+   "t": "text",
+   "w": "h3",
+   "en": "C.8 Observations of InstructBLIP."
+  },
+  {
+   "id": "b0228",
+   "t": "text",
+   "w": "p",
+   "en": "InstructBLIP-T5-XL shares same observation as BLIP-2 FLAN-T5-XXL."
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "h3",
+   "en": "C.9 Observations of Fuyu."
+  },
+  {
+   "id": "b0230",
+   "t": "text",
+   "w": "p",
+   "en": "Fuyu-8B always output 0 and failed to follow in our instruction."
+  },
+  {
+   "id": "b0231",
+   "t": "text",
+   "w": "h3",
+   "en": "C.10 Observations of CogVLM."
+  },
+  {
+   "id": "b0232",
+   "t": "text",
+   "w": "p",
+   "en": "CogVLM tends to output numbers fall off the range [0, 10] and often failed to follow the required format. Prompt engineering in our context does not solve the issue."
+  },
+  {
+   "id": "b0233",
+   "t": "text",
+   "w": "h3",
+   "en": "C.11 Observations of OpenFlamingo."
+  },
+  {
+   "id": "b0234",
+   "t": "text",
+   "w": "p",
+   "en": "OpenFlamingo simply printing blank as the output in our context."
+  }
+ ]
+}

@@ -1,0 +1,1894 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Position: A Roadmap to Pluralistic Alignment"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "With increased power and prevalence of AI systems, it is ever more critical that AI systems are designed to serve all , i.e., people with diverse values and perspectives. However, aligning models to s"
+  },
+  {
+   "id": "b0003",
+   "t": "text",
+   "w": "h6",
+   "en": "Keywords:"
+  },
+  {
+   "id": "b0004",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Three kinds of pluralism in models."
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "AI alignment aims to ensure that a system works with human intentions and values (Leike et al., 2018; Ji et al., 2024; Gabriel, 2020). However, even within a single task or prompt, individual people vary widely in their goals, intentions, and values. As a broader set of people use and rely upon AI systems, we need systems that can understand and cater to a broader set of needs. In other words, we need systems that are pluralistic, or capable of representing a diverse set of human values and perspectives. While many in the community have argued for this (Bai et al., 2022b; Gordon et al., 2022; Sorensen et al., 2023), at least two important questions remain: How, concretely, can a system be pluralistic? and How might benchmarks be designed to measure pluralism?"
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "In this piece, we advocate for explicit pluralistic considerations in aligning AI systems (§2). In particular, we use large language models (LLMs) as a testbed for alignment (Askell et al., 2021), though we believe the concepts can generalize to other AI systems (§6.3). Because pluralism may look different in different contexts, we formalize three distinct ways of operationalizing pluralism for AI systems/models: 1) providing comprehensive, high-coverage responses (Overton pluralism, §3.1), 2) an ability to be faithfully steered to represent particular attributes (steerable pluralism, §3.2), and 3) distributional representation of a population (distributional pluralism, §3.3). Each form of pluralism has cases where they may be desirable to maximize. We also define three types of pluralistic benchmarks: multi-objective benchmarks (§4.1), benchmarks of models’ steerability across objectives (trade-off steerable benchmarks, §4.2), and benchmarks that explicitly model individuals (jury-pluralistic benchmarks, §4.3). We also outline the situations for which each would be useful."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "We then discuss the relationship between current alignment approaches and pluralism (§5) and provide initial findings that current alignment techniques reduce distributional pluralism. We advocate and lay out a plan for future work toward pluralistic evaluations and alignment."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Arguments for Pluralism in AI Systems"
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we argue for the importance of pluralism in aligning AI models."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "Customization necessitates pluralism. Any guardrails placed on AI systems will require customization, within the bounds of those guardrails, to serve diverse use cases and values (Chen et al., 2023; Jang et al., 2023). Pluralism can illuminate the set of values or attributes that users may customize to, and provide an understanding of how well a system can be steered (§3.2, 4.2)."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "Pluralistic systems have technical benefits. Implicit to current preference-based methods like reinforcement learning with human feedback (RLHF) is the assumption that models should fit to the “average” human preference. However, this treats human variation as noise instead of signal (Aroyo et al., 2023; Siththaranjan et al., 2023) – pluralism, however, recognizes this as signal. Modeling pluralism also may increase interpretability by enabling a clearer relationship between decisions and their source (§3.2, 4.2)."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "Pluralistic evaluations enable generalist systems. Recently, AI/NLP has trended away from specialist systems and towards generalist systems (foundation models) for use in a diverse set of tasks by a diverse set of users. Yet, current alignment optimizes these generalist systems for a single objective – averaged human preferences. To understand the strengths and weaknesses of these systems, we must measure how they perform across a variety of objectives (§4.1) (Ethayarajh & Jurafsky, 2022) and users (§3.2, 3.3, 4.3)."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "Pluralism as a value itself. Many modern societies view accepting competing values and perspectives as a core value in and of itself. Theorists have extolled the benefits of political pluralism (de Tocqueville, 1835; Berlin, 1969; Rawls, 1996), moral and value pluralism (Nagel, 1979; Kekes, 1993; Raz, 1999), and pluralist theories of truth (Wright, 1992; Sher, 1998). While this piece primarily focuses on surfacing differing ideas, perspectives, and values (§3, 4), our scaffolding for technical measurements and implementations of value can also apply to other notions of pluralism. This stands in contrast to current alignment procedures such as RLHF which have been characterized as implementing “preference-based utilitarianism.” (Tasioulas, 2022)."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "AI systems should reflect human diversity. We contend that AI systems should reflect and support the diversity amongst humans and their values, as it is both a feature and a desired quality of human societies (§3.3, 4.3). Exposure to diverse ideas (§3.1) also improves deliberation (Bowman et al., 2022; Landemore & Page, 2015). Furthermore, algorithmic monocultures lead to increased unfairness when applied by many decision makers (Bommasani et al., 2021)."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Pluralism for AI Models/Systems"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we formalize three definitions for how a single model or system can be pluralistic. Specifically, we outline Overton pluralism, wherein a model outputs the whole spectrum of reasonable responses; Steerable pluralism, wherein a model is faithfully steered to reflect certain properties or perspectives; and Distributional pluralism, wherein a model’s distribution over answers matches that of a given target population (see Figure 1). For each, we will also discuss relevant applications and potential evaluations, along with limitations and recommendations for future research."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "Throughout, we will consider a model or system ⟦SLOT_0⟧, a query ⟦SLOT_1⟧, and a response ⟦SLOT_2⟧. While we specifically focus on natural language queries and responses with ⟦SLOT_3⟧ being an LLM, our definitions can nevertheless generalize to other inputs, outputs, and models as well."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Overton Pluralistic Models"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "Given an input, there are often many potential types (or modes) of answers a model can produce. For example, if a user poses a query to an LLM for which there is no single established correct answer, the LLM may answer with any one of several reasonable answers."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Definitions Given a query ⟦SLOT_4⟧, consider possible answers ⟦SLOT_5⟧."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "h6",
+   "en": "(1) Correct Answer in ⟦SLOT_6⟧:"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "An answer which can be conclusively verified or with which the overwhelming majority of people across various backgrounds would agree."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "h6",
+   "en": "(2) Reasonable Answer in ⟦SLOT_7⟧:"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "An answer for which there is suggestive, but inconclusive, evidence, or one with which significant swaths of the population would agree. Additional top-down restrictions (e.g., safety) may apply."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "h6",
+   "en": "(3) Overton window:"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "The set of all reasonable answers: ⟦SLOT_8⟧.11 1 Our terminology generalizes the concept of an “Overton window” as used in political science: “the spectrum of ideas on public policy and social issues considered acceptable or viable by the general public at a given time.” (OED, 2023)"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "h6",
+   "en": "(4) A response set ⟦SLOT_9⟧ to a query ⟦SLOT_10⟧ is Overton-pluralistic:"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_11⟧ contains all potentially reasonable answers in the Overton window. This is in contrast to picking just one answer in the Overton window, or presenting an unreasonable answer which would lie outside the Overton window. A single response may be Overton-pluralistic if it synthesizes the whole response set ⟦SLOT_12⟧."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "h6",
+   "en": "(5) Model ⟦SLOT_13⟧ is Overton-pluralistic:"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_14⟧ gives Overton-pluralistic responses to queries, that is for a given input ⟦SLOT_15⟧, the output of ⟦SLOT_16⟧."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "Motivation In many situations, there are many reasonable answers to a question (Min et al., 2020; Scherrer et al., 2023). Rather than outputting a single reasonable answer, which may be selected idiosyncratically or in a biased fashion, Overton-pluralistic models output all reasonable answers."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "Potential Implementation We outline two ways to operationalize Overton pluralism. In order to determine an Overton window for a set of queries ⟦SLOT_17⟧, one could survey a population for responses to a question and identify clusters (e.g., using semantic similarity) of candidate reasonable answers. Then, one could narrow down the window to reasonable answers ⟦SLOT_18⟧ with additional polling for reasonableness, defining a minimum threshold of support, or some other top-down way of filtering out unreasonable responses. One could define a way to extract the set of “answers\" ⟦SLOT_19⟧ from a model response and compare it to the window. Alternatively, one could enumerate a list of unreasonable answers ⟦SLOT_20⟧ and detect which reasonable or unreasonable answers the response entails with an entailment model (Shajalal et al., 2023; Liu et al., 2022). With both methods, metrics like precision/recall/accuracy can be calculated."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Applications Many relevant domains fall under advice-giving. Current LLMs often give advice confidently but inconsistently or in an opinionated manner, affecting users’ downstream judgments (Krügel et al., 2023; Jakesch et al., 2023). Overton-pluralism requires consideration of multiple heterogeneous judgements, encouraging deliberation over spontaneous judgement (Kant, 1788; Rawls, 1971). It could also aid in scalable oversight (Bowman et al., 2022) to help users annotate model outputs, in the single ground truth case (Michael et al., 2023) or when we want a diversity of views. Further examples include settings where we want to encourage multiple approaches, such as mathematical proof writing."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "Limitations Defining and operationalizing the Overton window may present a challenge. If a reasonable answer is determined by a set of expert annotators, it may be difficult to scale. If the Overton window is not properly defined, models may contribute to bothsidesism / false balance (Imundo & Rapp, 2021; Boykoff & Boykoff, 2004). One remedy may be to present the support or certainty for each reasonable answer in addition to its content, although current LLMs struggle with this (Zhou et al., 2024). Also, while pluralism may never be completely neutral, it can be considered a fairer response to queries (Haraway, 1988). Finally, this framework requires long-form responses with multiple answers; other concepts of pluralism may be required for distributions over short answers (see §3.3)."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "Alignment Procedures and Recommendations While RLHF may implicitly steer models to Overton pluralism to the extent that users prefer it, further study into this is needed. Alternatively, one approach to explicitly encourage Overton pluralism is taking multiple samples from a model (Long, 2023; Jung et al., 2022), potentially prompting for diverse outputs (Hayati et al., 2023), to simulate an Overton window. Alternatively, one could manually create the batch of reasonable responses. A model can be trained to output a synthesis of the entire batch. Datasets which identify human values (Hendrycks et al., 2020; Sorensen et al., 2023) can be used to evaluate Overton-pluralism. We recommend further study into models’ current degree of Overton-pluralism and how it can be amplified for relevant applications."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Steerable Pluralistic Models"
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "A pluralistic model might instead faithfully steer (or align) its responses to a given attribute or perspective, such as a value, framework, or population."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "Definitions With this in mind, let us consider:"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "h6",
+   "en": "(6) Steering attributes ⟦SLOT_21⟧:"
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "Attributes/properties/perspecti-ves which we wish a model to faithfully reflect. Examples include groups of people from a shared culture, philosophical/political schools of thought, or particular values. To reflect multiple attributes simultaneously, the elements of ⟦SLOT_22⟧ could be construed as sets of attributes."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "h6",
+   "en": "(7) Response ⟦SLOT_23⟧ faithfully reflects attribute ⟦SLOT_24⟧:"
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "The response ⟦SLOT_25⟧ to the query ⟦SLOT_26⟧ is consistent with, or follows from, attribute ⟦SLOT_27⟧."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "h6",
+   "en": "(8) Model ⟦SLOT_28⟧ is steerably-pluralistic with respect to attributes ⟦SLOT_29⟧:"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "Given an input ⟦SLOT_30⟧ and an attribute ⟦SLOT_31⟧, the model ⟦SLOT_32⟧ conditioned on ⟦SLOT_33⟧ produces a response ⟦SLOT_34⟧ which faithfully reflects ⟦SLOT_35⟧."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "Motivation In many instances, we want models to respond to queries in a consistent and specifiable manner. Models which have been so heavily “aligned” towards a specific attribute such that they cannot be steered to other attributes fail to be useful (or usable) to populations who may not share that value or attribute. We see evidence of this in the “Silicon Valley” and “WEIRD” (Henrich et al., 2010) bias of many LLMs, which often skew male, White, American, liberal, and wealthy in perspective (Santurkar et al., 2023; Hartmann et al., 2023; Perez et al., 2022; Santy et al., 2023)."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "Potential Implementation Given queries ⟦SLOT_36⟧ and attributes ⟦SLOT_37⟧, one needs a way to condition the model on attributes at inference. To measure whether a response reflects ⟦SLOT_38⟧, one could either use direct human annotations or reward models that are tuned specifically to the attributes, such as a value-specific reward (Sorensen et al., 2023). These attribute-specific faithfulness scores would be the degree to which a model is steerably pluralistic."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "Different attributes may require different metrics for faithfulness, depending on the kind of attribute and level of ambiguity. For example, for a particular difficult moral quandary, there may be no ambiguity given a particular ethical framework (e.g., only one “correct\" or faithful answer). However, if you condition instead on a population, there may still be disagreement or ambiguity - other approaches like an Overton window may apply here."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "Several previous works have measured forms of steerable pluralism, particularly with respect to moral, political, and cultural perspectives (Argyle et al., 2023; Jiang et al., 2022; Simmons, 2023; Ramezani & Xu, 2023; Santy et al., 2023). However, previous work suggests that conditional pluralism is far from solved (Santurkar et al., 2023)."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "Applications An important application of steerable-pluralism is customization. Users often want to personalize models towards characteristic properties and perspectives (Chen et al., 2023), in tasks such as writing assistance (Li et al., 2023a) and ideation (Girotra et al., 2023; Ma et al., 2023). Steering towards therapeutic values can help in the mental health domain (Song et al., 2024; Sharma et al., 2023a). Steering models to represent multiple different perspectives can be valuable in creative production (Shanahan & Clarke, 2023), psychological inquiry (Shanahan et al., 2023), simulating social systems (Park et al., 2022), and deliberative discourse (Danry et al., 2023; Landemore & Page, 2015; Page, 2019; Page, 2008)."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "Moreover, steerably pluralistic models may have useful representations in a variety of settings, such as hate speech detection (Feng et al., 2023) and negative thought reframing (Sharma et al., 2023b; Sharma et al., 2023c). In general, this may allow varying “cognitive architectures” for more structured and generally intelligent systems (Sumers et al., 2023)."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "Limitations Steerable pluralism requires deciding which attributes are acceptable to steer the model. We may want to disallow some attributes (e.g., hate speech). The challenges here are similar to those in determining which answers are “reasonable” in Overton-pluralism, such as subjectivity or arbitrariness in the selection of steerable attributes. Moreover, if attributes are defined too broadly, there is a risk of stereotyping or “flattening” the nuances of the complex perspectives and people that attributes are intended to represent (Durmus et al., 2023). In some cases, an intersectional evaluation (Crenshaw, 1989), in which attributes are not considered independently but in conjunction with each other, may be necessary."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "Alignment Procedures and Recommendations There are a variety of ways to induce particular values at inference time. These include conditioning on certain groups (Argyle et al., 2023; Hwang et al., 2023) and studying which conditions (responses, demographics, etc.) yield the best agreement. Li et al. (2023b); Kim & Lee (2023) learn user embeddings which they use to induce certain values from LLMs. Zhao et al. (2023) add a module to base LLMs which aims to predict group responses in a few-shot manner. Fleisig et al. (2023) predict annotator ratings for specific groups. Sharma et al. (2023c); Sharma et al. (2023d) rewrite responses for specific audiences."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "We believe that steerability research will become increasingly important as users desire more customizability. While there may be certain behaviors to which a model should not be aligned, we advocate for systems that can be aligned to many attributes within an acceptable range."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Distributionally Pluralistic Models"
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "Another way to operationalize pluralism is in the distribution over answers compared to a given population."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "Definitions In this framework, we consider:"
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "h6",
+   "en": "(9) A population or group of people ⟦SLOT_39⟧:"
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "A set of people which we want the model to represent."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "h6",
+   "en": "(10) Model ⟦SLOT_40⟧ is distributionally-pluralistic with respect to a reference population ⟦SLOT_41⟧:"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "For a given prompt ⟦SLOT_42⟧, ⟦SLOT_43⟧ is as likely to provide response ⟦SLOT_44⟧ as the reference population ⟦SLOT_45⟧. In other words, ⟦SLOT_46⟧ is well-calibrated w.r.t. the distribution over answers from ⟦SLOT_47⟧."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "Motivation and Applications Distributional pluralism in an LLM is crucial for any application where ⟦SLOT_48⟧ is used to simulate, interface with, or otherwise model the views of a population, e.g., simulating populations via agent-based modeling (Törnberg et al., 2023; Park et al., 2022; Park et al., 2023), piloting subject/user responses to surveys (Argyle et al., 2023; Aher et al., 2023), survey design (Ziems et al., 2023), or studying the internet as a cultural artifact (Buttrick, 2024)."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "Potential Implementation Let ⟦SLOT_49⟧ be a set of queries to which ⟦SLOT_50⟧ gives a distribution ⟦SLOT_51⟧. For example, a census survey or public opinion poll. ⟦SLOT_52⟧’s estimate, ⟦SLOT_53⟧, can be compared to the population distribution using any distributional divergence metrics, such as Jensen-Shannon divergence, KL-divergence, or Wasserstein distance (Santurkar et al., 2023; Durmus et al., 2023), or hard measures like accuracy or tetrachoric correlation (Argyle et al., 2023)."
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "Limitations One potential limitation of distributional pluralism is its proportional nature. This means that more frequent opinions will be output by a model with higher frequency, even if this response is harmful - although might be mitigated by defining a window of reasonableness as in Overton pluralism. Another limitation is the need for a predetermined target distribution–a population. In creation of a general LLM, like ChatGPT, who is the target distribution? Furthermore, for many open-ended queries, it is not clear whether there is any response frequency data."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "Alignment procedures While, to our knowledge, there are no alignment procedures to explicitly increase distributional calibration, there are a couple promising directions. One is to simply (pre)train a model on more data from the target population. As the cross entropy objective encourages a model to learn the distributions of speech of a training population, simply providing more data from that population ought to lead to better representation. Another promising direction is to train on the data from a population (e.g., survey data) that one could use to evaluate distributional pluralism, although it is unclear how well this will generalize to novel questions/domains. Further research is needed here."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "Recommendations Oftentimes when researchers measure to which group of people a model best aligns, they compare average responses. In contrast, we advocate for comparing distributions because it leads to clearer results: groups of people have distributions over answers, and probabilistic models do as well. We advocate for more distributionally pluralistic evaluations with respect to clearly specified groups of people to better characterize current models. Nonetheless, the stochasticity in distributional pluralism is not desirable in all cases–for example, when the behavior of a model needs to be tightly controlled."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Pluralism for Benchmarks"
+  },
+  {
+   "id": "b0069",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Three kinds of pluralistic benchmarks."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "While the last section defined how a model can be pluralistic, here we explore how a benchmark can be pluralistic. Most current benchmarks are monistic (focused on a single objective). Pluralistic benchmarks have more than one objective to maximize. Importantly, each is measured separately."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Multi-Objective Benchmarks"
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "Definitions Define:"
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "h6",
+   "en": "(11) Objectives to maximize ⟦SLOT_54⟧:"
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "p",
+   "en": "A set of multiple objectives to evaluate a model ⟦SLOT_55⟧, each of which which we desire to maximize. Each ⟦SLOT_56⟧ maps from a model ⟦SLOT_57⟧ to a scalar in ⟦SLOT_58⟧."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h6",
+   "en": "(12) Model ⟦SLOT_59⟧ is a Pareto improvement to model ⟦SLOT_60⟧.:"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_61⟧. In other words, ⟦SLOT_62⟧ is at least as good as ⟦SLOT_63⟧ for all objectives and strictly better for some objective ⟦SLOT_64⟧."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "h6",
+   "en": "(13) Function ⟦SLOT_65⟧ is a commensurating function over objectives ⟦SLOT_66⟧:"
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_67⟧ is a function which combines multiple objectives into a single scalar meta-objective of the form ⟦SLOT_68⟧."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "h6",
+   "en": "(14) Benchmark ⟦SLOT_69⟧ is a multi-objective benchmark over ⟦SLOT_70⟧:"
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_71⟧ reports the entire spectrum of model performances on all objectives and can be flexibly adapted to multiple commensurating functions. The “top\" of the leaderboard is the set of solutions (models) for which there is no Pareto improvement."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "In practice, the set of solutions for which there is no Pareto improvement can be quite large. Therefore, it may be convenient to define a commensurating function ⟦SLOT_72⟧ to determine a ranking for a given use case. The important part of a Pareto benchmark is that if objectives are combined, it is done explicitly, reporting all objectives for all solutions. This makes it possible to propose alternative explicit trade-offs."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "Motivation and Applications Implicit trade-offs are everywhere. For example, there is a fundamental tension between helpfulness and harmlessness for LLMs (Askell et al., 2021; Bai et al., 2022a). However, these two attributes often get clumped together and are implicitly traded-off through data mixtures or vague human preferences. Through explicit multi-objective benchmarks, we can better understand how they trade-off and make informed decisions when selecting a model for a given application or domain (Liang et al., 2023; Srivastava et al., 2023; Hendrycks et al., 2023)."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "p",
+   "en": "Potential Implementation There are many ways to operationalize these objectives, such as evaluation on test sets, outputs of a reward model, preference/ELO scores, model properties and more. Other objectives might include adherence to individual rules such as “Do not offer financial advice\" (Glaese et al., 2022) or principles (Bai et al., 2022b)."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "p",
+   "en": "Limitations If the set of metrics is very large, it may be costly to compare models across a large number of dimensions. The choice of which objectives and the granularity of benchmarks to include will influence the strength of the evaluation. Choosing the correct number and level of abstraction of the objectives can be a difficult design decision."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "Alignment Procedures and Recommendations Most alignment techniques optimize a single objective instead of a group of objectives, requiring a commensurating function. To avoid this, we can look to techniques from multi-objective RL (Hayes et al., 2022; Yang et al., 2019; Tozer et al., 2017). While several multi-objective benchmarks exist (Liang et al., 2023; Srivastava et al., 2023; Pan et al., 2023) and it is common practice to evaluate LLMs on a range of evaluations, we encourage the continued use, research, and development of these benchmarks. Single-value benchmarks can often lead to “reward-hacking” and exploiting spurious features, such as annotators’ preference for more verbose responses (Wang et al., 2023a). Multiple objectives allow for a more diverse set of model strengths (Ethayarajh & Jurafsky, 2020) and mitigate over-optimization."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Trade-Off Steerable Benchmarks"
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "In the multi-objective benchmark section, we assumed that the model was static, occupying a single point in the objective space. However, it is useful to consider a benchmark which encourages models to be steerable to trade off objectives in different ways at inference time."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "Many of the takeaways from the previous section apply here, so we will focus our discussion on what is unique about trade-off steerable benchmarks."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "Definitions Building on the definitions from Section 4.1,"
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "h6",
+   "en": "(15) Steering commensurating (or trade-off) functions ⟦SLOT_73⟧:"
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "A set of commensurating functions to steer a model towards."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "h6",
+   "en": "(16) Model ⟦SLOT_74⟧ is steerable to functions ⟦SLOT_75⟧:"
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "For ⟦SLOT_76⟧, the model steered to ⟦SLOT_77⟧ (denoted ⟦SLOT_78⟧) maximizes ⟦SLOT_79⟧: ⟦SLOT_80⟧"
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "h6",
+   "en": "(17) Benchmark ⟦SLOT_81⟧ is a trade-off steerable benchmark with respect to ⟦SLOT_82⟧:"
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_83⟧ attempts to measure 1) a model’s ability to maximize objectives ⟦SLOT_84⟧ and 2) a model’s steerability to various commensurating functions ⟦SLOT_85⟧."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "Motivation and Applications A trade-off steerable benchmark measures whether a single model can represent solutions across a spectrum of objectives, allowing for tuning to trade-off functions of choice at deployment time. Any application where customization is desirable could benefit from this kind of benchmark."
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "Potential Implementation Many commensurating functions are possible, including linear combinations (e.g., ⟦SLOT_86⟧) and selecting a single objective."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "p",
+   "en": "Given ⟦SLOT_87⟧, one implementation of a trade-off steerable benchmark could be a reward which tries to maximize the steerability and overall objective values, as follows:"
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "table",
+   "en": "∑ f ∈ ℱ f ⁡ ( ℳ f ) \\sum_{f\\in\\mathcal{F}}f(\\mathcal{M}_{f})"
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "p",
+   "en": "Maximizing requires the model to increase the overall value of each ⟦SLOT_88⟧ and also match the aligned model to the corresponding objective function. Related concepts include the hypervolume indicator (Guerreiro et al., 2020) and expected utility metric (Zintgraf et al., 2015)."
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "p",
+   "en": "Limitations This framework assumes a set of commensurating functions. However, many philosophers who subscribe to value pluralism believe that values are incommensurable and cannot be traded off (Hsieh & Andersson, 2021). Trade-off sterable benchmarks (and most of machine learning) are incompatible with that view. It is also important for generalization that the kind of commensurating functions desired for use at test time are present in the benchmark."
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "p",
+   "en": "Alignment Procedures and Recommendations Some promising procedures to steer models include controllable decoding (Liu et al., 2024; Qin et al., 2022; Lu et al., 2020), prefix tokens/custom instructions (Chen et al., 2021; Lu et al., 2022), and model soups (Wortsman et al., 2022; Jang et al., 2023; Ramé et al., 2023). To our knowledge, however, there are no standard LLM trade-off steerable benchmarks. We advocate for increased development of such benchmarks to spur more development in steerable AI systems."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Jury-Pluralistic Benchmarks"
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "p",
+   "en": "While multi-objective benchmarks deal with an arbitrary objective type, it is also useful to talk about the specific case when there is a population of annotators (or jury) to which we wish to align. Here, we formalize a type of benchmark which separately and explicitly models a jury (Gordon et al., 2022) to maximize an overall welfare function."
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "p",
+   "en": "Definitions We define:"
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "h6",
+   "en": "(18) Jury/Population/Annotators ⟦SLOT_89⟧:"
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "p",
+   "en": "Some population which we wish to represent in our evaluation. Each annotator/person/jury member ⟦SLOT_90⟧ maps from an query and response to a scalar reward or utility ⟦SLOT_91⟧."
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "h6",
+   "en": "(19) Function ⟦SLOT_92⟧ is a welfare function over jury ⟦SLOT_93⟧:"
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_94⟧ is a function which combines the jury’s utilities into a single scalar welfare objective of the form ⟦SLOT_95⟧."
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "h6",
+   "en": "(20) Benchmark ⟦SLOT_96⟧ is jury-pluralistic:"
+  },
+  {
+   "id": "b0112",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_97⟧ explicitly measures each juror ⟦SLOT_98⟧ to maximize a welfare function ⟦SLOT_99⟧."
+  },
+  {
+   "id": "b0113",
+   "t": "text",
+   "w": "p",
+   "en": "Motivation and Applications Jury-pluralistic benchmarks can serve as a concrete approach for democratic AI alignment (Koster et al., 2022; Ovadya, 2023; Mishra, 2023). They allow us to explicitly reason over which users or groups models are being aligned to, and potentially obtain fairer outcomes as people are included and social welfare functions are selected. Consensus-seeking applications benefit from this approach. For instance, Deepmind trained an LLM to find consensus statements that users preferred to any individual human-written statement (Bakker et al., 2022) and Twitter’s Community Notes has moderated misinformation by leveraging consensus between users who often disagree (Wojcik et al., 2022). These approaches help to integrate a diverse set of user preferences, which have been found to vary globally in perceptions such as safety judgments (Aroyo et al., 2023)."
+  },
+  {
+   "id": "b0114",
+   "t": "text",
+   "w": "p",
+   "en": "Potential Implementation One could construct a representative jury (e.g., of a particular country, population, or expertise) using established social science methods (Flanigan et al., 2021; Arnesen & Peters, 2018). One could also construct a jury designed to amplify specific perspectives. For instance, in online communities, under-represented users sometimes face extra harassment (Pew Research Center, 2021). To combat this, community-specific moderation algorithms could be aligned to a jury featuring their voices. Once a jury is selected, jury member functions ⟦SLOT_100⟧ can be approximated in several ways. For example, a separate preference/reward model could be trained for each jury member (Gordon et al., 2022), or they could be estimated using entailment from some user-written statement (Bakker et al., 2022). These computational jury functions may be necessary for alignment, but evaluation would ideally be validated by human annotators."
+  },
+  {
+   "id": "b0115",
+   "t": "text",
+   "w": "p",
+   "en": "Different welfare function choices can lead to explicit tradeoffs between the juror utilities as well. For example, using a class of social welfare functions (Moulin, 2004; Bakker et al., 2022)–"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "table",
+   "en": "w α ​ ( j 1 , … , j n ) = { ( 1 n ​ ∑ i = 1 n j i 1 − α ) 1 1 − α if ​ α ≥ 0 , α ≠ 1 OPEN ∏ i = 1 n j i ) n if ​ α = 1 w_{\\alpha}(j_{1},\\ldots,j_{n})=\\begin{cases}\\left(\\frac{1}{n}\\sum_{i=1}^{n}j_{i}^"
+  },
+  {
+   "id": "b0117",
+   "t": "text",
+   "w": "p",
+   "en": "–one can sweep the parameter ⟦SLOT_101⟧ to change the inequality aversion from a fully Utilitarian objective (⟦SLOT_102⟧) to a max-min/Rawlsian objective (⟦SLOT_103⟧) (Bakker et al., 2022). Alternatively, one could modify the utility functions as follows ⟦SLOT_104⟧ to reduce the objective to a MAX-SAT problem. Equilibria and minimax solutions (Harsanyi et al., 1988) are also possible, e.g. (Swamy et al., 2024)."
+  },
+  {
+   "id": "b0118",
+   "t": "text",
+   "w": "p",
+   "en": "Limitations The main limitation to this approach is that precisely estimating the individual juror’s functions may require a large amount of data, although this could be mitigated by grouping by salient characteristics (e.g., nationality (Aroyo et al., 2023)) or using sample efficient methods (Liu et al., 2023). Depending on the choice of welfare function, other limitations may apply: e.g., majoritarian welfare functions could be susceptible to tyranny of the majority and Utilitarian welfare functions to fanatical influence (MacAskill, 2016). This approach also assumes commensurability. Reported values also might not be comparable on the same scale (Ethayarajh & Jurafsky, 2022)."
+  },
+  {
+   "id": "b0119",
+   "t": "text",
+   "w": "p",
+   "en": "Alignment Procedures and Recommendations Once we have our jury ⟦SLOT_105⟧ and a welfare function ⟦SLOT_106⟧ defined, the problem reduces to one of reward maximization, and we can leverage established alignment techniques. The main novelty of the framework is in the reward modeling through a jury. We therefore recommend further research into the questions of 1) who to represent on a jury, 2) how to estimate juror functions, and 3) establishing jury-pluralistic benchmarks to spur further innovation."
+  },
+  {
+   "id": "b0120",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Current Alignment Approaches and Pluralism"
+  },
+  {
+   "id": "b0121",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1 Current Alignment Approaches"
+  },
+  {
+   "id": "b0122",
+   "t": "text",
+   "w": "p",
+   "en": "AI alignment aims to guide a LLM in the direction of human intentions and values, such as safety and accuracy (Leike et al., 2018; Ji et al., 2024). In supervised fine-tuning, models are trained to improve instruction following (Touvron et al., 2023; Brown et al., 2020; Achiam et al., 2023) or express certain values (Solaiman & Dennison, 2021). RLHF uses a reward model trained on human ratings of model-generated data to steer a model to maximize human preferences (Ouyang et al., 2022; Anthropic, 2023). Controllable decoding steers an LLM’s output towards an objective at inference (Liu et al., 2024; Liu et al., 2021; Qin et al., 2022), but often fall short of learning-based methods on alignment benchmarks and have not been explored with pluralism. The degree of pluralism of models resulting from these approaches depends on many factors, including: the representativeness of the people building the models, from designers to annotators (Cotra, 2021; Perez et al., 2022; Bobu et al., 2023; Peng et al., 2023); the richness of a dataset/LM/reward model (Casper et al., 2023); and other factors. Mishra (2023) argues that monistic approaches to RLHF cannot meet certain democratic properties and Siththaranjan et al. (2023) find that RLHF underweights outliers."
+  },
+  {
+   "id": "b0123",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2 Current Approaches and Pluralism"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Class LLaMA LLaMA2 (7B) LLaMA2 (13B) Gemma (7B) GPT-3 Dataset Pre Alpaca Tulu Pre Post Pre Post Pre Post Pre Post GlobalQA (Japan) 0.40 0.45 0.54 0.47 0.57 0.40 0.55 0.33 0.51 0.42 0.43 GlobalQA"
+  },
+  {
+   "id": "b0125",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Jensen-Shannon distance (similarity) between human and model distributions on GlobalQA (target human distributions of Japan, US, and Germany) and MPI. Note that we compare two “post\" RLHF models for LLaMA (Alpaca and Tulu). Smaller (more similar) values are in bold."
+  },
+  {
+   "id": "b0126",
+   "t": "text",
+   "w": "p",
+   "en": "Hypothesis: Current LLM alignment techniques can reduce distributional pluralism w.r.t. the population of internet users."
+  },
+  {
+   "id": "b0127",
+   "t": "text",
+   "w": "p",
+   "en": "Theoretical aspect: The language modeling cross entropy objective may help models learn distributional pluralism. If query ⟦SLOT_107⟧ with response ⟦SLOT_108⟧ appears many times in the training data written by a random internet users, cross entropy encourages the model to output ⟦SLOT_109⟧ in proportion to the population (Ji et al., 2021) 22 2 This may be complicated by factors such as overfitting (with ⟦SLOT_110⟧ epoch) or textual features which hint at the response; however, within tolerance, we believe this to be a descriptive analogy.. Moreover, we postulate that current alignment techniques can reduce distributional pluralism, as the alignment procedure does not have this property."
+  },
+  {
+   "id": "b0128",
+   "t": "text",
+   "w": "p",
+   "en": "Empirical aspect: We rely on three empirical findings that provide an initial indication of support for our hypothesis. Firstly, in work by Santurkar et al. (2023), questions from Pew Research’s American Trends Panels survey data (OpinionQA) were utilized to compare the distribution of LLM responses to those of US citizens. Two different model classes (Jurassic/GPT-3) with both pre- and post-aligned models were compared. The results revealed that post-aligned models exhibited less similarity to human populations compared to pre-aligned models. Expanding beyond the U.S., Durmus et al. (2023) introduced GlobalOpinionQA, an aggregation of multinational World Values similar to OpinionQA. Although their focus was solely on post-aligned models, they observed that these models tended to concentrate the probability mass on a few answer choices, in contrast to the dispersed answers seen in their human distributions."
+  },
+  {
+   "id": "b0129",
+   "t": "text",
+   "w": "p",
+   "en": "In an effort to expand on these works, we further tested33 3 Code can be found at: https://github.com/jfisher52/AI_Pluralistic_Alignment a suite of vanilla pretrained LLMs in comparison to their corresponding “aligned\" counterparts (RLHFed, finetuned LLMs) from three model classes, LLaMA(2), Gemma, and GPT-3. These evaluations were conducted on two distinct multiple-choice datasets: GlobalOpinionQA, as utilized in the study by Durmus et al. (2023), and the Machine Personality Inventory (MPI), comprising 120 questions designed to assess human personality traits (Jiang et al., 2023). 44 4 An analysis’s strength of distributional pluralism w.r.t. a population depends on the degree of representativeness of the sample. We refer interested readers to the original dataset documentation. Our target distributions were Japan and the US citizens for GlobalOpinionQA 55 5 We included the U.S. due to LLMs being largely trained on English from the U.S. and selected Japan as a nation with a somewhat distinct culture (JS-distance of .26). The choice of two nations was made due to incomplete overlap between country pairs. and a global population for the MPI. We calculate Jensen-Shannon distance between the human the model distributions, averaged over 5 prompts."
+  },
+  {
+   "id": "b0130",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Table 1, almost all pre-aligned models have lower Jensen-Shannon distance to the target human distribution than the post-aligned models for both datasets.66 6 The only exception is for GPT-3 on MPI. However, OpenAI now only provides ”davinci-02” and ”gpt-3.5-turbo” as opposed to the original ”davinci” and ”*-instruct” series models, so it is difficult to confirm if ”davinci-002” is indeed the base model or what procedure was done to ”gpt-3.5-turbo”. Thus, we encourage interpretion of the GPT-3 results with caution. Additionally, we also observed a post-alignment reduction in entropy, as reported in previous work (Santurkar et al., 2023; Durmus et al., 2023). More details can be found in App. A and B."
+  },
+  {
+   "id": "b0131",
+   "t": "text",
+   "w": "p",
+   "en": "These studies reveal a consistent pattern of reduced distributional variance following alignment across various domains. Therefore, when the target distribution is diverse, such as internet users, current alignment techniques may potentially limit distributional pluralism. However, a more comprehensive investigation of this hypothesis requires large-scale experimentation across a broader range of domains, along with further exploration into the role of entropy."
+  },
+  {
+   "id": "b0132",
+   "t": "text",
+   "w": "p",
+   "en": "Current alignment techniques and other forms of pluralism. Overton pluralism may emerge to the degree that users prefer it, but people’s preference bias for assertiveness (Hosking et al., 2023; Zhou et al., 2024) may work against this, causing models to express support inconsistently (Krügel et al., 2023). LLMs may have a degree of steerable pluralism via prompting, but this needs to be further evaluated. Alignment techniques for all kinds of pluralistic benchmarks warrant further investigation."
+  },
+  {
+   "id": "b0133",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Discussion"
+  },
+  {
+   "id": "b0134",
+   "t": "text",
+   "w": "h3",
+   "en": "6.1 Limitations"
+  },
+  {
+   "id": "b0135",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we 1) argue that current approaches are unclear regarding to whom/what is being aligned and 2) formalize and discuss a set of frameworks to operationalize how to better align models to a set of values, characteristics, or perspectives. However, the goal of this work is not to delineate exactly to whom or what to align, but rather to argue for clearer, more pluralistic approaches in alignment."
+  },
+  {
+   "id": "b0136",
+   "t": "text",
+   "w": "p",
+   "en": "Nevertheless, several of our definitions are hard to operationalize (e.g., how to describe the Overton window, select a population for alignment, etc.). We acknowledge this and believe that this is a necessary difficulty in order to be precise in measuring pluralism. We attempted to make our definitions a useful abstraction: “as simple as possible, but not simpler\" (Ratcliffe, 2016). Further abstracting away these details would remove the required nuance of the evaluations. Any design decisions, along with their limitations and assumptions, must be carefully justified. Although some alignment techniques may require automatic methods (e.g., jury functions), we advocate for human-centered evaluations whenever possible."
+  },
+  {
+   "id": "b0137",
+   "t": "text",
+   "w": "p",
+   "en": "We recognize that not all of our definitions of pluralism are necessarily desirable in all cases. For example, distributional pluralism may be helpful in using LLMs to study culture (Buttrick, 2024) or creative domains (Shanahan & Clarke, 2023), but may not be desirable in controlled environments such as customer support. Additionally, it may not be possible for a single model to satisfy all conditions: e.g., Overton pluralism may be at odds with distributional pluralism. Rather, our definitions are useful abstractions to understand how models and benchmarks can be pluralistic, and each applies in a different domain."
+  },
+  {
+   "id": "b0138",
+   "t": "text",
+   "w": "h3",
+   "en": "6.2 Relation to Prior Work"
+  },
+  {
+   "id": "b0139",
+   "t": "text",
+   "w": "p",
+   "en": "There has been a growing sense in the community of the importance of measuring which values and to whom we are trying to align LLMs (Kasirzadeh & Gabriel, 2022; Wang et al., 2023b). While some previous work has shed valuable light on these questions (Santurkar et al., 2023), our work goes further in 1) unifying disparate approaches under concrete definitions of pluralism (e.g., distributional), 2) proposing previously unexplored (to our knowledge) kinds of pluralism (e.g., Overton), and 3) arguing that, in many cases, it may actually be desirable to increase certain measures of pluralism as opposed to merely using them as probes, in contrast to other work (Santurkar et al., 2023; Durmus et al., 2023; Feng et al., 2023)."
+  },
+  {
+   "id": "b0140",
+   "t": "text",
+   "w": "h3",
+   "en": "6.3 Pluralism in Broader AI Systems"
+  },
+  {
+   "id": "b0141",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we focused largely on LLMs. However, we believe that our definitions generalize broadly to other AI systems. In general, the query/response framework may be applied to any set of inputs/outputs, whether actions, images, audio, or any other modality. For example, it may be desirable for agents to be steerably pluralistic to be able to customize to users needs. Distributional pluralism may be useful in modeling potential actions that agents may take, such as drivers on a road. There may be less of a need for pluralism in areas where there is a single correct objective to optimize - e.g., efficiency of a system, performance in a 2-player game. However, there is a broad set of subjective tasks where pluralism is a valuable consideration."
+  },
+  {
+   "id": "b0142",
+   "t": "text",
+   "w": "h2",
+   "en": "7 Conclusion"
+  },
+  {
+   "id": "b0143",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we have argued for increased and more precisely-directed attention on pluralism and the alignment of AI systems. We also formalized three definitions of pluralistic models and three forms of pluralistic benchmarks. We argue that while current alignment techniques have made remarkable progress, new methodologies for measuring and aligning are needed."
+  },
+  {
+   "id": "b0144",
+   "t": "text",
+   "w": "p",
+   "en": "While we thread specific recommendations for each kind of pluralism throughout the work, we sketch some broad recommendations here: 1) more research into finegrained pluralistic evaluations to better characterize current models; 2) continued normative discussions about to what we want to align and desirable customization bounds; 3) additional alignment techniques to create more pluralistic models."
+  },
+  {
+   "id": "b0145",
+   "t": "text",
+   "w": "h2",
+   "en": "Impact Statement"
+  },
+  {
+   "id": "b0146",
+   "t": "text",
+   "w": "p",
+   "en": "We hope that this work leads to positive impact in encouraging work in AI systems that work better with a diverse set of people. Throughout the work, we have discussed potential limitations and risks for each proposed definition. Additionally, this work, along with any other work in machine learning, has potential for dual use: aligning to attributes which may cause harm, etc. However, as our work is more theoretical, we believe that the positive impact to discussions around pluralism in alignment outweigh any marginal potential for dual use, which we believe to be minimal."
+  },
+  {
+   "id": "b0147",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgments"
+  },
+  {
+   "id": "b0148",
+   "t": "text",
+   "w": "p",
+   "en": "The authors thank Ben Newman, Joongwon Kim, Victoria Ebert, Zaid Harchaoui, and Iason Gabriel for helpful feedback. This research was supported in part by DARPA under the ITM program (FA8650-23-C-7316), the Office of Naval Research (N00014-24-1-2207), the Institute for Humane Studies (IHS018186), and the Allen Institute for AI."
+  },
+  {
+   "id": "b0149",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OED (2023) Oxford English Dictionary, s.v. “Overton window (n.)”, July 2023. URL https://doi.org/10.1093/OED/1985277434 ."
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Achiam et al. (2023) Achiam, O. J., Adler, S., Agarwal, S., Ahmad, L., Akkaya, I., Aleman, F. L., Almeida, D., Altenschmidt, J., Altman, S., Anadkat, S., Avila, R., Babuschkin, I., Balaji, S., Balcom,"
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Aher et al. (2023) Aher, G. V., Arriaga, R. I., and Kalai, A. T. Using large language models to simulate multiple humans and replicate human subject studies. In International Conference on Machine Lea"
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Anthropic (2023) Anthropic. Introducing claude, 2023. URL https://www.anthropic.com/index/introducing-claude ."
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Argyle et al. (2023) Argyle, L., Busby, E., Fulda, N., Gubler, J., Rytting, C., and Wingate, D. Out of one, many: Using language models to simulate human samples. Political Analysis , 31:1–15, 02 2023"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Arnesen & Peters (2018) Arnesen, S. and Peters, Y. The legitimacy of representation: How descriptive, formal, and responsiveness representation affect the acceptability of political decisions. Compara"
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Aroyo et al. (2023) Aroyo, L., Taylor, A. S., Diaz, M., Homan, C. M., Parrish, A., Serapio-Garcia, G., Prabhakaran, V., and Wang, D. Dices dataset: Diversity in conversational ai evaluation for safety"
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Askell et al. (2021) Askell, A., Bai, Y., Chen, A., Drain, D., Ganguli, D., Henighan, T., Jones, A., Joseph, N., Mann, B., DasSarma, N., Elhage, N., Hatfield-Dodds, Z., Hernandez, D., Kernion, J., Ndo"
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al. (2022a) Bai, Y., Jones, A., Ndousse, K., Askell, A., Chen, A., DasSarma, N., Drain, D., Fort, S., Ganguli, D., Henighan, T., Joseph, N., Kadavath, S., Kernion, J., Conerly, T., El-Showk, S."
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al. (2022b) Bai, Y., Kadavath, S., Kundu, S., Askell, A., Kernion, J., Jones, A., Chen, A., Goldie, A., Mirhoseini, A., McKinnon, C., Chen, C., Olsson, C., Olah, C., Hernandez, D., Drain, D., G"
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bakker et al. (2022) Bakker, M. A., Chadwick, M. J., Sheahan, H. R., Tessler, M. H., Campbell-Gillingham, L., Balaguer, J., McAleese, N., Glaese, A., Aslanides, J., Botvinick, M. M., and Summerfield, "
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Berlin (1969) Berlin, I. Two concepts of liberty. In Four Essays on Liberty , pp. 118–172. Oxford University Press, Oxford, 1969."
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bobu et al. (2023) Bobu, A., Peng, A., Agrawal, P., Shah, J., and Dragan, A. D. Aligning robot and human representations. arXiv preprint arXiv:2302.01928 , 2023."
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bommasani et al. (2021) Bommasani, R., Hudson, D. A., Adeli, E., Altman, R., Arora, S., von Arx, S., Bernstein, M. S., Bohg, J., Bosselut, A., Brunskill, E., Brynjolfsson, E., Buch, S., Card, D., Cast"
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bowman et al. (2022) Bowman, S. R., Hyun, J., Perez, E., Chen, E., Pettit, C., Heiner, S., Lukošiūtė, K., Askell, A., Jones, A., Chen, A., Goldie, A., Mirhoseini, A., McKinnon, C., Olah, C., Amodei, D"
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Boykoff & Boykoff (2004) Boykoff, M. T. and Boykoff, J. M. Balance as bias: global warming and the us prestige press. Global Environmental Change , 14(2):125–136, 2004. ISSN 0959-3780. doi: https://do"
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Brown et al. (2020) Brown, T. B., Mann, B., Ryder, N., Subbiah, M., Kaplan, J., Dhariwal, P., Neelakantan, A., Shyam, P., Sastry, G., Askell, A., Agarwal, S., Herbert-Voss, A., Krueger, G., Henighan, "
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Buttrick (2024) Buttrick, N. Studying large language models as compression algorithms for human culture. Trends in Cognitive Sciences , S1364-6613(24):00001–9, 2024. doi: 10.1016/j.tics.2024.01.001 . "
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Casper et al. (2023) Casper, S., Davies, X., Shi, C., Gilbert, T. K., Scheurer, J., Rando, J., Freedman, R., Korbak, T., Lindner, D., Freire, P., Wang, T., Marks, S., Ségerie, C.-R., Carroll, M., Peng"
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2023) Chen, J., Liu, Z., Huang, X., Wu, C., Liu, Q., Jiang, G., Pu, Y., Lei, Y., Chen, X., Wang, X., Lian, D., and Chen, E. When large language models meet personalization: Perspectives o"
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2021) Chen, L., Lu, K., Rajeswaran, A., Lee, K., Grover, A., Laskin, M., Abbeel, P., Srinivas, A., and Mordatch, I. Decision transformer: Reinforcement learning via sequence modeling, 202"
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cotra (2021) Cotra, A. Why ai alignment could be hard with modern deep learning. https://www.cold-takes.com/why-ai-alignment-could-be-hard-with-modern-deep-learning/ , 2021."
+  },
+  {
+   "id": "b0172",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Crenshaw (1989) Crenshaw, K. Demarginalizing the intersection of race and sex: A black feminist critique of antidiscrimination doctrine, feminist theory and antiracist politics. The University of Chic"
+  },
+  {
+   "id": "b0173",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Danry et al. (2023) Danry, V., Pataranutaporn, P., Mao, Y., and Maes, P. Don’t just tell me, ask me: Ai systems that intelligently frame explanations as questions improve human logical discernment acc"
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "de Tocqueville (1835) de Tocqueville, A. Democracy in America . 1835."
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Durmus et al. (2023) Durmus, E., Nyugen, K., Liao, T. I., Schiefer, N., Askell, A., Bakhtin, A., Chen, C., Hatfield-Dodds, Z., Hernandez, D., Joseph, N., Lovitt, L., McCandlish, S., Sikder, O., Tamkin"
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ethayarajh & Jurafsky (2020) Ethayarajh, K. and Jurafsky, D. Utility is in the eye of the user: A critique of nlp leaderboard design. In Conference on Empirical Methods in Natural Language Processing "
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ethayarajh & Jurafsky (2022) Ethayarajh, K. and Jurafsky, D. The authenticity gap in human evaluation. In Goldberg, Y., Kozareva, Z., and Zhang, Y. (eds.), Proceedings of the 2022 Conference on Empiri"
+  },
+  {
+   "id": "b0178",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Feng et al. (2023) Feng, S., Park, C. Y., Liu, Y., and Tsvetkov, Y. From pretraining data to language models to downstream tasks: Tracking the trails of political biases leading to unfair nlp models, "
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Flanigan et al. (2021) Flanigan, B., Gölz, P., Gupta, A., Hennig, B., and Procaccia, A. D. Fair algorithms for selecting citizens’assemblies. Nature , 596(7873):548–552, 2021. doi: 10.1038/s41586-021-"
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fleisig et al. (2023) Fleisig, E., Abebe, R., and Klein, D. When the Majority is Wrong: Modeling Annotator Disagreement for Subjective Tasks, November 2023. URL http://arxiv.org/abs/2305.06626 . arXiv"
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gabriel (2020) Gabriel, I. Artificial intelligence, values, and alignment. Minds and Machines , 30(3):411–437, 2020. doi: 10.1007/s11023-020-09539-2 . URL https://doi.org/10.1007/s11023-020-09539-2 ."
+  },
+  {
+   "id": "b0182",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Girotra et al. (2023) Girotra, K., Meincke, L., Terwiesch, C., and Ulrich, K. T. Ideas are dimes a dozen: Large language models for idea generation in innovation. https://ssrn.com/abstract=4526071 , J"
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Glaese et al. (2022) Glaese, A., McAleese, N., Trębacz, M., Aslanides, J., Firoiu, V., Ewalds, T., Rauh, M., Weidinger, L., Chadwick, M., Thacker, P., Campbell-Gillingham, L., Uesato, J., Huang, P.-S."
+  },
+  {
+   "id": "b0184",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gordon et al. (2022) Gordon, M. L., Lam, M. S., Park, J. S., Patel, K., Hancock, J., Hashimoto, T., and Bernstein, M. S. Jury learning: Integrating dissenting voices into machine learning models. In C"
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Guerreiro et al. (2020) Guerreiro, A. P., Fonseca, C. M., and Paquete, L. The hypervolume indicator. ACM Computing Surveys (CSUR) , 54:1–42, 2020. URL https://api.semanticscholar.org/CorpusID:21847018"
+  },
+  {
+   "id": "b0186",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Haraway (1988) Haraway, D. Situated knowledges: The science question in feminism and the privilege of partial perspective. Feminist Studies , 14(3):575–599, 1988. ISSN 00463663. URL http://www.jstor.o"
+  },
+  {
+   "id": "b0187",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Harsanyi et al. (1988) Harsanyi, J. C., Selten, R., et al. A general theory of equilibrium selection in games. MIT Press Books , 1, 1988."
+  },
+  {
+   "id": "b0188",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hartmann et al. (2023) Hartmann, J., Schwenzow, J., and Witte, M. The political ideology of conversational ai: Converging evidence on chatgpt’s pro-environmental, left-libertarian orientation, 2023."
+  },
+  {
+   "id": "b0189",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hayati et al. (2023) Hayati, S. A., Lee, M., Rajagopal, D., and Kang, D. How far can we extract diverse perspectives from large language models? criteria-based diversity prompting! ArXiv , abs/2311.09"
+  },
+  {
+   "id": "b0190",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hayes et al. (2022) Hayes, C. F., Rădulescu, R., Bargiacchi, E., Källström, J., Macfarlane, M., Reymond, M., Verstraeten, T., Zintgraf, L. M., Dazeley, R., Heintz, F., Howley, E., Irissappane, A. A., "
+  },
+  {
+   "id": "b0191",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hendrycks et al. (2020) Hendrycks, D., Burns, C., Basart, S., Critch, A., Li, J., Song, D., and Steinhardt, J. Aligning ai with shared human values. arXiv preprint arXiv:2008.02275 , 2020."
+  },
+  {
+   "id": "b0192",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hendrycks et al. (2023) Hendrycks, D., Burns, C., Basart, S., Critch, A., Li, J., Song, D., and Steinhardt, J. Aligning ai with shared human values, 2023."
+  },
+  {
+   "id": "b0193",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Henrich et al. (2010) Henrich, J., Heine, S. J., and Norenzayan, A. The weirdest people in the world? Behavioral and Brain Sciences , 33(2-3):61–83, 2010. URL http://www2.psych.ubc.ca/~henrich/audiofi"
+  },
+  {
+   "id": "b0194",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hosking et al. (2023) Hosking, T., Blunsom, P., and Bartolo, M. Human feedback is not gold standard. ArXiv , abs/2309.16349, 2023. URL https://api.semanticscholar.org/CorpusID:263134280 ."
+  },
+  {
+   "id": "b0195",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hsieh & Andersson (2021) Hsieh, N.-h. and Andersson, H. Incommensurable Values. In Zalta, E. N. (ed.), The Stanford Encyclopedia of Philosophy . Metaphysics Research Lab, Stanford University, Fall 202"
+  },
+  {
+   "id": "b0196",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hwang et al. (2023) Hwang, E., Majumder, B. P., and Tandon, N. Aligning Language Models to User Opinions. 2023. doi: 10.48550/ARXIV.2305.14929 . URL https://arxiv.org/abs/2305.14929 . Publisher: arXiv"
+  },
+  {
+   "id": "b0197",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Imundo & Rapp (2021) Imundo, M. and Rapp, D. When fairness is flawed: Effects of false balance reporting and weight-of-evidence statements on beliefs and perceptions of climate change. Journal of Appl"
+  },
+  {
+   "id": "b0198",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jakesch et al. (2023) Jakesch, M., Bhat, A., Buschek, D., Zalmanson, L., and Naaman, M. Co-writing with opinionated language models affects users’ views. In Proceedings of the 2023 CHI Conference on H"
+  },
+  {
+   "id": "b0199",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jang et al. (2023) Jang, J., Kim, S., Lin, B. Y., Wang, Y., Hessel, J., Zettlemoyer, L., Hajishirzi, H., Choi, Y., and Ammanabrolu, P. Personalized soups: Personalized large language model alignment v"
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ji et al. (2024) Ji, J., Qiu, T., Chen, B., Zhang, B., Lou, H., Wang, K., Duan, Y., He, Z., Zhou, J., Zhang, Z., Zeng, F., Ng, K. Y., Dai, J., Pan, X., O’Gara, A., Lei, Y., Xu, H., Tse, B., Fu, J., Mc"
+  },
+  {
+   "id": "b0201",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ji et al. (2021) Ji, Z., Li, J. D., and Telgarsky, M. Early-stopped neural networks are consistent, 2021."
+  },
+  {
+   "id": "b0202",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jiang et al. (2023) Jiang, G., Xu, M., Zhu, S.-C., Han, W., Zhang, C., and Zhu, Y. Evaluating and inducing personality in pre-trained language models, 2023. URL https://api.semanticscholar.org/CorpusI"
+  },
+  {
+   "id": "b0203",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jiang et al. (2022) Jiang, H., Beeferman, D., Roy, B., and Roy, D. Communitylm: Probing partisan worldviews from language models, 2022."
+  },
+  {
+   "id": "b0204",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jung et al. (2022) Jung, J., Qin, L., Welleck, S., Brahman, F., Bhagavatula, C., Bras, R. L., and Choi, Y. Maieutic prompting: Logically consistent reasoning with recursive explanations, 2022."
+  },
+  {
+   "id": "b0205",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kant (1788) Kant, I. Kant: Critique of Practical Reason . Cambridge Texts in the History of Philosophy. Cambridge University Press, 2 edition, 1788. doi: 10.1017/CBO9781316136478 ."
+  },
+  {
+   "id": "b0206",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kasirzadeh & Gabriel (2022) Kasirzadeh, A. and Gabriel, I. In conversation with artificial intelligence: aligning language models with human values, 2022."
+  },
+  {
+   "id": "b0207",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kekes (1993) Kekes, J. The Morality of Pluralism . Princeton University Press, Princeton, 1993."
+  },
+  {
+   "id": "b0208",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kim & Lee (2023) Kim, J. and Lee, B. Ai-augmented surveys: Leveraging large language models for opinion prediction in nationally representative surveys. arXiv preprint arXiv:2305.09620 , 2023."
+  },
+  {
+   "id": "b0209",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kirk et al. (2024) Kirk, R., Mediratta, I., Nalmpantis, C., Luketina, J., Hambro, E., Grefenstette, E., and Raileanu, R. Understanding the effects of rlhf on llm generalisation and diversity, 2024."
+  },
+  {
+   "id": "b0210",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Koster et al. (2022) Koster, R., Balaguer, J., Tacchetti, A., Weinstein, A., Zhu, T., Hauser, O., Williams, D., Campbell-Gillingham, L., Thacker, P., Botvinick, M., and Summerfield, C. Human-centred m"
+  },
+  {
+   "id": "b0211",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Krügel et al. (2023) Krügel, S., Ostermaier, A., and Uhl, M. Chatgpt’s inconsistent moral advice influences users’judgment. Scientific Reports , 13(1):4569, Apr 2023. ISSN 2045-2322. doi: 10.1038/s415"
+  },
+  {
+   "id": "b0212",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Landemore & Page (2015) Landemore, H. and Page, S. E. Deliberation and disagreement: Problem solving, prediction, and positive dissensus. Politics, philosophy & economics , 14(3):229–254, 2015."
+  },
+  {
+   "id": "b0213",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Leike et al. (2018) Leike, J., Krueger, D., Everitt, T., Martic, M., Maini, V., and Legg, S. Scalable agent alignment via reward modeling: a research direction, 2018."
+  },
+  {
+   "id": "b0214",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023a) Li, C., Zhang, M., Mei, Q., Wang, Y., Hombaiah, S. A., Liang, Y., and Bendersky, M. Teach llms to personalize – an approach inspired by writing education, 2023a."
+  },
+  {
+   "id": "b0215",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023b) Li, J., Mehrabi, N., Peris, C., Goyal, P., Chang, K.-W., Galstyan, A., Zemel, R., and Gupta, R. On the steerability of large language models toward data-driven personas. 2023b. doi: "
+  },
+  {
+   "id": "b0216",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liang et al. (2023) Liang, P., Bommasani, R., Lee, T., Tsipras, D., Soylu, D., Yasunaga, M., Zhang, Y., Narayanan, D., Wu, Y., Kumar, A., Newman, B., Yuan, B., Yan, B., Zhang, C., Cosgrove, C., Mannin"
+  },
+  {
+   "id": "b0217",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2021) Liu, A., Sap, M., Lu, X., Swayamdipta, S., Bhagavatula, C., Smith, N. A., and Choi, Y. Dexperts: Decoding-time controlled text generation with experts and anti-experts. In Annual Mee"
+  },
+  {
+   "id": "b0218",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2022) Liu, A., Swayamdipta, S., Smith, N. A., and Choi, Y. Wanli: Worker and ai collaboration for natural language inference dataset creation, 2022."
+  },
+  {
+   "id": "b0219",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2024) Liu, A., Han, X., Wang, Y., Tsvetkov, Y., Choi, Y., and Smith, N. A. Tuning language models by proxy, 2024."
+  },
+  {
+   "id": "b0220",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023) Liu, N. F., Kumar, A., Liang, P., and Jia, R. Are sample-efficient nlp models more robust?, 2023."
+  },
+  {
+   "id": "b0221",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Long (2023) Long, J. Large language model guided tree-of-thought. arXiv preprint arXiv:2305.08291 , 2023."
+  },
+  {
+   "id": "b0222",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lu et al. (2020) Lu, X., West, P., Zellers, R., Bras, R. L., Bhagavatula, C., and Choi, Y. Neurologic decoding: (un)supervised neural text generation with predicate logic constraints. ArXiv , abs/2010"
+  },
+  {
+   "id": "b0223",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lu et al. (2022) Lu, X., Welleck, S., Hessel, J., Jiang, L., Qin, L., West, P., Ammanabrolu, P., and Choi, Y. Quark: Controllable text generation with reinforced unlearning, 2022."
+  },
+  {
+   "id": "b0224",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ma et al. (2023) Ma, X., Mishra, S., Liu, A., Su, S., Chen, J., Kulkarni, C., Cheng, H.-T., Le, Q., and Chi, E. Beyond chatbots: Explorellm for structured thoughts and personalized model responses, 20"
+  },
+  {
+   "id": "b0225",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "MacAskill (2016) MacAskill, W. Normative Uncertainty as a Voting Problem. Mind , 125(500):967–1004, October 2016. ISSN 0026-4423. doi: 10.1093/mind/fzv169 . URL https://doi.org/10.1093/mind/fzv169 ."
+  },
+  {
+   "id": "b0226",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Michael et al. (2023) Michael, J., Mahdi, S., Rein, D., Petty, J., Dirani, J., Padmakumar, V., and Bowman, S. R. Debate helps supervise unreliable experts. arXiv preprint arXiv:2311.08702 , 2023."
+  },
+  {
+   "id": "b0227",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Min et al. (2020) Min, S., Michael, J., Hajishirzi, H., and Zettlemoyer, L. AmbigQA: Answering ambiguous open-domain questions. In Webber, B., Cohn, T., He, Y., and Liu, Y. (eds.), Proceedings of the "
+  },
+  {
+   "id": "b0228",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mishra (2023) Mishra, A. Ai alignment and social choice: Fundamental limitations and policy implications, 2023."
+  },
+  {
+   "id": "b0229",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Moulin (2004) Moulin, H. Fair Division and Collective Welfare . MIT Press, 2004."
+  },
+  {
+   "id": "b0230",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Nagel (1979) Nagel, T. The fragmentation of value. In Mortal Questions . Cambridge University Press, Cambridge, 1979."
+  },
+  {
+   "id": "b0231",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2023a) OpenAI. Openai davinci-002 model. https://www.openai.com , 2023a. Accessed on Date 06/2023."
+  },
+  {
+   "id": "b0232",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2023b) OpenAI. Openai gpt3.5-turbo. https://www.openai.com , 2023b. Accessed on Date 06/2023."
+  },
+  {
+   "id": "b0233",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ouyang et al. (2022) Ouyang, L., Wu, J., Jiang, X., Almeida, D., Wainwright, C. L., Mishkin, P., Zhang, C., Agarwal, S., Slama, K., Ray, A., Schulman, J., Hilton, J., Kelton, F., Miller, L., Simens, M"
+  },
+  {
+   "id": "b0234",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ovadya (2023) Ovadya, A. Reimagining democracy for ai. Journal of Democracy , 34(4):162–170, Oct 2023."
+  },
+  {
+   "id": "b0235",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Page (2008) Page, S. The difference: How the power of diversity creates better groups, firms, schools, and societies-new edition . Princeton University Press, 2008."
+  },
+  {
+   "id": "b0236",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Page (2019) Page, S. E. The diversity bonus: How great teams pay off in the knowledge economy . Princeton University Press, 2019."
+  },
+  {
+   "id": "b0237",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Pan et al. (2023) Pan, A., Chan, J. S., Zou, A., Li, N., Basart, S., Woodside, T., Ng, J., Zhang, H., Emmons, S., and Hendrycks, D. Do the rewards justify the means? measuring trade-offs between rewar"
+  },
+  {
+   "id": "b0238",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Park et al. (2022) Park, J. S., Popowski, L., Cai, C. J., Morris, M. R., Liang, P., and Bernstein, M. S. Social simulacra: Creating populated prototypes for social computing systems, 2022."
+  },
+  {
+   "id": "b0239",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Park et al. (2023) Park, J. S., O’Brien, J., Cai, C. J., Morris, M. R., Liang, P., and Bernstein, M. S. Generative agents: Interactive simulacra of human behavior. In Proceedings of the 36th Annual AC"
+  },
+  {
+   "id": "b0240",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Peng et al. (2023) Peng, A., Netanyahu, A., Ho, M. K., Shu, T., Bobu, A., Shah, J., and Agrawal, P. Diagnosis, feedback, adaptation: A human-in-the-loop framework for test-time policy adaptation. In P"
+  },
+  {
+   "id": "b0241",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Perez et al. (2022) Perez, E., Ringer, S., Lukošiūtė, K., Nguyen, K., Chen, E., Heiner, S., Pettit, C., Olsson, C., Kundu, S., Kadavath, S., et al. Discovering language model behaviors with model-writ"
+  },
+  {
+   "id": "b0242",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Pew Research Center (2021) Pew Research Center. The state of online harassment. Technical report, Washington, D.C., January 2021. URL https://www.pewresearch.org/internet/2021/01/13/the-state-of-onlin"
+  },
+  {
+   "id": "b0243",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qin et al. (2022) Qin, L., Welleck, S., Khashabi, D., and Choi, Y. Cold decoding: Energy-based constrained text generation with langevin dynamics. ArXiv , abs/2202.11705, 2022. URL https://api.semanti"
+  },
+  {
+   "id": "b0244",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ramezani & Xu (2023) Ramezani, A. and Xu, Y. Knowledge of cultural moral norms in large language models, 2023."
+  },
+  {
+   "id": "b0245",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ramé et al. (2023) Ramé, A., Couairon, G., Shukor, M., Dancette, C., Gaya, J.-B., Soulier, L., and Cord, M. Rewarded soups: towards pareto-optimal alignment by interpolating weights fine-tuned on dive"
+  },
+  {
+   "id": "b0246",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ratcliffe (2016) Ratcliffe, S. Albert einstein, 2016. URL https://www.oxfordreference.com/view/10.1093/acref/9780191826719.001.0001/q-oro-ed4-00003988 ."
+  },
+  {
+   "id": "b0247",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Rawls (1971) Rawls, J. A Theory of Justice: Original Edition . Harvard University Press, 1971. ISBN 9780674880108. URL http://www.jstor.org/stable/j.ctvjf9z6v ."
+  },
+  {
+   "id": "b0248",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Rawls (1996) Rawls, J. Political Liberalism . Columbia University Press, New York, 1996."
+  },
+  {
+   "id": "b0249",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Raz (1999) Raz, J. Engaging Reason: On the Theory of Value and Action . Oxford University Press, Oxford, 1999."
+  },
+  {
+   "id": "b0250",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Santurkar et al. (2023) Santurkar, S., Durmus, E., Ladhak, F., Lee, C., Liang, P., and Hashimoto, T. Whose opinions do language models reflect?, 2023."
+  },
+  {
+   "id": "b0251",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Santy et al. (2023) Santy, S., Liang, J. T., Bras, R. L., Reinecke, K., and Sap, M. Nlpositionality: Characterizing design biases of datasets and models, 2023."
+  },
+  {
+   "id": "b0252",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Scherrer et al. (2023) Scherrer, N., Shi, C., Feder, A., and Blei, D. M. Evaluating the moral beliefs encoded in llms, 2023."
+  },
+  {
+   "id": "b0253",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Shajalal et al. (2023) Shajalal, M., Atabuzzaman, M., Baby, M. B., Karim, M. R., and Boden, A. Textual Entailment Recognition with Semantic Features from Empirical Text Representation , pp. 183–195. S"
+  },
+  {
+   "id": "b0254",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Shanahan & Clarke (2023) Shanahan, M. and Clarke, C. Evaluating large language model creativity from a literary perspective, 2023."
+  },
+  {
+   "id": "b0255",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Shanahan et al. (2023) Shanahan, M., McDonell, K., and Reynolds, L. Role-play with large language models, 2023."
+  },
+  {
+   "id": "b0256",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sharma et al. (2023a) Sharma, A., Lin, I. W., Miner, A. S., Atkins, D. C., and Althoff, T. Human–ai collaboration enables more empathic conversations in text-based peer-to-peer mental health support. "
+  },
+  {
+   "id": "b0257",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sharma et al. (2023b) Sharma, A., Rushton, K., Lin, I., Wadden, D., Lucas, K., Miner, A., Nguyen, T., and Althoff, T. Cognitive reframing of negative thoughts through human-language model interaction."
+  },
+  {
+   "id": "b0258",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sharma et al. (2023c) Sharma, A., Rushton, K., Lin, I. W., Nguyen, T., and Althoff, T. Facilitating self-guided mental health interventions through human-language model interaction: A case study of co"
+  },
+  {
+   "id": "b0259",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sharma et al. (2023d) Sharma, A., Rushton, K., Lin, I. W., Wadden, D., Lucas, K. G., Miner, A. S., Nguyen, T., and Althoff, T. Cognitive reframing of negative thoughts through human-language model int"
+  },
+  {
+   "id": "b0260",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sher (1998) Sher, G. On the possibility of a substantive theory of truth. Synthese , 117:133–172, 1998."
+  },
+  {
+   "id": "b0261",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Simmons (2023) Simmons, G. Moral mimicry: Large language models produce moral rationalizations tailored to political identity. In Padmakumar, V., Vallejo, G., and Fu, Y. (eds.), Proceedings of the 61s"
+  },
+  {
+   "id": "b0262",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Siththaranjan et al. (2023) Siththaranjan, A., Laidlaw, C., and Hadfield-Menell, D. Distributional preference learning: Understanding and accounting for hidden context in rlhf, 2023."
+  },
+  {
+   "id": "b0263",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Solaiman & Dennison (2021) Solaiman, I. and Dennison, C. Process for adapting language models to society (palms) with values-targeted datasets, 2021."
+  },
+  {
+   "id": "b0264",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Song et al. (2024) Song, I., Pendse, S. R., Kumar, N., and Choudhury, M. D. The typing cure: Experiences with large language model chatbots for mental health support, 2024."
+  },
+  {
+   "id": "b0265",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sorensen et al. (2023) Sorensen, T., Jiang, L., Hwang, J., Levine, S., Pyatkin, V., West, P., Dziri, N., Lu, X., Rao, K., Bhagavatula, C., Sap, M., Tasioulas, J., and Choi, Y. Value kaleidoscope: Enga"
+  },
+  {
+   "id": "b0266",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Srivastava et al. (2023) Srivastava, A., Rastogi, A., Rao, A., Shoeb, A. A. M., Abid, A., Fisch, A., Brown, A. R., Santoro, A., Gupta, A., Garriga-Alonso, A., Kluska, A., Lewkowycz, A., Agarwal, A., P"
+  },
+  {
+   "id": "b0267",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sumers et al. (2023) Sumers, T. R., Yao, S., Narasimhan, K., and Griffiths, T. L. Cognitive architectures for language agents, 2023."
+  },
+  {
+   "id": "b0268",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Swamy et al. (2024) Swamy, G., Dann, C., Kidambi, R., Wu, Z. S., and Agarwal, A. A minimaximalist approach to reinforcement learning from human feedback, 2024."
+  },
+  {
+   "id": "b0269",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Taori et al. (2023) Taori, R., Gulrajani, I., Zhang, T., Dubois, Y., Li, X., Guestrin, C., Liang, P., and Hashimoto, T. B. Stanford alpaca: An instruction-following llama model. https://github.com/tat"
+  },
+  {
+   "id": "b0270",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tasioulas (2022) Tasioulas, J. Artificial Intelligence, Humanistic Ethics. Daedalus , 151(2):232–243, 05 2022. ISSN 0011-5266. doi: 10.1162/daed_a_01912 . URL https://doi.org/10.1162/daed_a_01912 ."
+  },
+  {
+   "id": "b0271",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Team et al. (2024) Team, G., Mesnard, T., Hardin, C., Dadashi, R., Bhupatiraju, S., Pathak, S., Sifre, L., Rivière, M., Kale, M. S., Love, J., Tafti, P., Hussenot, L., Chowdhery, A., Roberts, A., Baru"
+  },
+  {
+   "id": "b0272",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Törnberg et al. (2023) Törnberg, P., Valeeva, D., Uitermark, J., and Bail, C. Simulating social media using large language models to evaluate alternative news feed algorithms. arXiv preprint arXiv:231"
+  },
+  {
+   "id": "b0273",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Touvron et al. (2023) Touvron, H., Martin, L., Stone, K., Albert, P., Almahairi, A., Babaei, Y., Bashlykov, N., Batra, S., Bhargava, P., Bhosale, S., Bikel, D., Blecher, L., Ferrer, C. C., Chen, M., C"
+  },
+  {
+   "id": "b0274",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tozer et al. (2017) Tozer, B., Mazzuchi, T., and Sarkani, S. Many-objective stochastic path finding using reinforcement learning. Expert Systems with Applications , 72:371–382, 2017. ISSN 0957-4174. d"
+  },
+  {
+   "id": "b0275",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2023a) Wang, Y., Ivison, H., Dasigi, P., Hessel, J., Khot, T., Chandu, K. R., Wadden, D., MacMillan, K., Smith, N. A., Beltagy, I., and Hajishirzi, H. How far can camels go? exploring the"
+  },
+  {
+   "id": "b0276",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2023b) Wang, Y., Zhong, W., Li, L., Mi, F., Zeng, X., Huang, W., Shang, L., Jiang, X., and Liu, Q. Aligning large language models with human: A survey, 2023b."
+  },
+  {
+   "id": "b0277",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wojcik et al. (2022) Wojcik, S., Hilgard, S., Judd, N., Mocanu, D., Ragain, S., Hunzaker, M. B. F., Coleman, K., and Baxter, J. Birdwatch: Crowd wisdom and bridging algorithms can inform understanding"
+  },
+  {
+   "id": "b0278",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wortsman et al. (2022) Wortsman, M., Ilharco, G., Gadre, S. Y., Roelofs, R., Gontijo-Lopes, R., Morcos, A. S., Namkoong, H., Farhadi, A., Carmon, Y., Kornblith, S., and Schmidt, L. Model soups: averag"
+  },
+  {
+   "id": "b0279",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wright (1992) Wright, C. Truth and Objectivity . Harvard University Press, Cambridge, MA, 1992."
+  },
+  {
+   "id": "b0280",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2019) Yang, R., Sun, X., and Narasimhan, K. A generalized algorithm for multi-objective reinforcement learning and policy adaptation, 2019."
+  },
+  {
+   "id": "b0281",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhao et al. (2023) Zhao, S., Dang, J., and Grover, A. Group Preference Optimization: Few-Shot Alignment of Large Language Models. 2023. doi: 10.48550/ARXIV.2310.11523 . URL https://arxiv.org/abs/2310."
+  },
+  {
+   "id": "b0282",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhou et al. (2024) Zhou, K., Hwang, J. D., Ren, X., and Sap, M. Relying on the unreliable: The impact of language models’ reluctance to express uncertainty, 2024."
+  },
+  {
+   "id": "b0283",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ziems et al. (2023) Ziems, C., Held, W., Shaikh, O., Chen, J., Zhang, Z., and Yang, D. Can large language models transform computational social science? arXiv preprint arXiv:2305.03514 , 2023."
+  },
+  {
+   "id": "b0284",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zintgraf et al. (2015) Zintgraf, L. M., Kanters, T. V., Roijers, D. M., Oliehoek, F. A., and Beau, P. Quality assessment of morl algorithms: A utility-based approach. 2015. URL https://api.semanticsch"
+  },
+  {
+   "id": "b0285",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Experimentation Details"
+  },
+  {
+   "id": "b0286",
+   "t": "text",
+   "w": "p",
+   "en": "In section 5.2 we explore Claim 1 using experimentation. This section outlines the details of these experiments."
+  },
+  {
+   "id": "b0287",
+   "t": "text",
+   "w": "h4",
+   "en": "Dataset"
+  },
+  {
+   "id": "b0288",
+   "t": "text",
+   "w": "p",
+   "en": "We use two diverse multiple choices datasets, the GlobalOpinionQA (GlobalQA) dataset which is an aggregation of cross-national surveys designed to capture opinions on global issues (Durmus et al., 2023) and the Machine Personality Inventory (MPI) which is a collection of 120 questions designed to evaluate human personality traits (Jiang et al., 2023). GlobalQA human responses were collected using strict protocols which required that each country to have a nationally representative sample of at least ⟦SLOT_111⟧ people (⟦SLOT_112⟧ years of age). For our experimentation, we only used questions which had responses from both the United States and Japan (⟦SLOT_113⟧ questions total). The MPI consisted of a collection of ⟦SLOT_114⟧ responses from ⟦SLOT_115⟧ countries. Examples of these two datasets can be found in Table 2."
+  },
+  {
+   "id": "b0289",
+   "t": "keep",
+   "w": "table",
+   "en": "Dataset Question Answer Choices GlobalQA Do you personally believe that getting a divorce is morally acceptable, morally unacceptable, or is it not a moral issue? [’Morally acceptable’,’Morally unacce"
+  },
+  {
+   "id": "b0290",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Example of GlobalQA and MIP dataset."
+  },
+  {
+   "id": "b0291",
+   "t": "text",
+   "w": "h4",
+   "en": "Models"
+  },
+  {
+   "id": "b0292",
+   "t": "text",
+   "w": "p",
+   "en": "We used three different model classes: LLaMA, LLaMA2, and GPT-3. For each model class, we used a pre and post aligned model. We refer to Table 3 for the exact models used and the type of alignment."
+  },
+  {
+   "id": "b0293",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Class Model Name Type Alignment LLaMA LLaMA ( Touvron et al., 2023 ) Pre N/A LLaMA Alpaca ( Taori et al., 2023 ) Post Instruction FT LLaMA Tulu ( Wang et al., 2023a ) Post Instruction FT LLaMA2 "
+  },
+  {
+   "id": "b0294",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: A list of models used in experimentation. We list the overall model class, the exact name of the mode, whether it is pre- or post-alignment, and if it is post-aligned we indicate the type of alignment used (fine-tuning (FT), reinforcement learning with human feedback (RLHF), or unknown"
+  },
+  {
+   "id": "b0295",
+   "t": "text",
+   "w": "h4",
+   "en": "Model Distribution"
+  },
+  {
+   "id": "b0296",
+   "t": "text",
+   "w": "p",
+   "en": "To create the ‘‘model distribution\", we extracted the probability of next token response (logit) for each answer choice selection. Since we were using pre-aligned models, we utilized the technique of in-context learning to steer the model to output the letter of the multiple choice answer it wanted to select as the first, next token. In order to remove any bias these in-context examples might implicitly have, we prompted the model with the same prompt a total of 5 times, each time randomly selecting the ‘‘correct\" answer shown in the in-context examples. We then averaged the probabilities over these five distributions. The in-context examples are given below77 7 The answer choice was randomized for each sample:"
+  },
+  {
+   "id": "b0297",
+   "t": "text",
+   "w": "p",
+   "en": "GlobalQA Prefix How much, if at all, do you think people should vote? A. Every election B. Some elections C. No elections Answer Choice:A. Please tell use whether you are satisfied or dissatisfied with your current class? A. Very satisfied B. Somewhat Satisfied C. Somewhat dissatisfied D. Very dissatisfied Answer Choice:A. How often, if ever, do you clean your house? A. Often B. Sometimes C. Rarely D. Never E. Refused Answer Choice:C."
+  },
+  {
+   "id": "b0298",
+   "t": "text",
+   "w": "p",
+   "en": "MPI Prefix Given a statement of you: Ask for help from a friend Please choose from the following options to identify how accurately this statement describes you. A. Very Accurate B. Moderately Accurate C.Neither Accurate Nor Inaccurate D.Moderately Inaccurate E.Very Inaccurate Answer Choice:B. Given a statement of you: Celebrate accomplishments of family members Please choose from the following options to identify how accurately this statement describes you. A. Very Accurate B. Moderately Accurate C.Neither Accurate Nor Inaccurate D.Moderately Inaccurate E.Very Inaccurate Answer Choice:A. Given a statement of you: Wonder about the stars and space Please choose from the following options to identify how accurately this statement describes you. A. Very Accurate B. Moderately Accurate C.Neither Accurate Nor Inaccurate D.Moderately Inaccurate E.Very Inaccurate Answer Choice:E."
+  },
+  {
+   "id": "b0299",
+   "t": "text",
+   "w": "h4",
+   "en": "Evaluation Metrics"
+  },
+  {
+   "id": "b0300",
+   "t": "text",
+   "w": "p",
+   "en": "We compare the model distribution to the target human population using the Jensen-Shannon distance (lower values indicate more similar distributions) over each question and then average the values. We also calculate the entropy of each distribution as well."
+  },
+  {
+   "id": "b0301",
+   "t": "text",
+   "w": "h3",
+   "en": "A.1 Further Analysis"
+  },
+  {
+   "id": "b0302",
+   "t": "text",
+   "w": "p",
+   "en": "To test the extent to which our claim holds, we test a suite of vanilla pretrained LLMs compared to a set of “aligned\" (RLHFed, finetuned) on two diverse multiple choices datasets, the GlobalOpinionQA (GlobalQA) dataset which is an aggregation of cross-national surveys designed to capture opinions on global issues (Durmus et al., 2023) and the Machine Personality Inventory (MPI) which is a collection of 120 questions designed to evaluate human personality traits (Jiang et al., 2023). Both datasets area accompanied by large and nationally representative 88 8 GlobalQA results were collected using strict protocols which required each country to have a nationally representative sample of at least ⟦SLOT_116⟧ people (⟦SLOT_117⟧ years of age). MPI consisted of a collection of ⟦SLOT_118⟧ responses from ⟦SLOT_119⟧ countries. human responses. For the GlobalQA dataset, we included questions which had responses from citizens of the United States and Japan (⟦SLOT_120⟧) as our target population. To create each model’s distribution, we extracted the probability of next token response (logit) for each answer choice selection and averaged these results over ⟦SLOT_121⟧ prompts of the model. We then compared the model distribution to the target human population using the Jensen-Shannon distance (lower values indicate more similar distributions)."
+  },
+  {
+   "id": "b0303",
+   "t": "text",
+   "w": "p",
+   "en": "Both datasets area accompanied by large and nationally representative 99 9 GlobalQA results were collected using strict protocols which required each country to have a nationally representative sample of at least ⟦SLOT_122⟧ people (⟦SLOT_123⟧ years of age). MPI consisted of a collection of ⟦SLOT_124⟧ responses from ⟦SLOT_125⟧ countries. human responses. For the GlobalQA dataset, we included questions which had responses from citizens of the United States and Japan (⟦SLOT_126⟧) as our target population. To create each model’s distribution, we extracted the probability of next token response (logit) for each answer choice selection and averaged these results over ⟦SLOT_127⟧ prompts of the model. We then compared the model distribution to the target human population using the Jensen-Shannon distance (lower values indicate more similar distributions). More details of the experimentation can be found in Appendix A."
+  },
+  {
+   "id": "b0304",
+   "t": "text",
+   "w": "p",
+   "en": "As you can see in our results in Table 1, almost all pre-aligned models are more similar to the target human distribution than the post-aligned models for both datasets. This is even more pronounced in models with more training data and higher context length with the gap between pre- and post-models more than doubling when comparing LLaMA and LLaMA2. This is even more pronounced in models with more training data and higher context length with the gap between pre- and post-models more than doubling when comparing LLaMA and LLaMA2. We also note that the size of the model does not have a large impact on the results, as seen in comparing LLaMA2 7b vs. 13b. From qualitative analysis we did see the pre-aligned models had more variance in their distributional spread than post-aligned models and this was confirmed by looking at the average entropy of each distribution. On average, the pre-aligned model has ⟦SLOT_128⟧ more entropy compared to the post-aligned models."
+  },
+  {
+   "id": "b0305",
+   "t": "text",
+   "w": "p",
+   "en": "As additional support for this hypothesis, (Santurkar et al., 2023; Durmus et al., 2023) both find that “aligned\" models have much lower entropy in their response distribution compared to any reference population (even compared to subgroups, like Democrats). Prior work also finds that RLHFed models “tend to be less well-calibrated than pre-trained models.\" (Durmus et al., 2023) and have reduced textual diversity (Kirk et al., 2024)."
+  },
+  {
+   "id": "b0306",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Additional Experimentation"
+  },
+  {
+   "id": "b0307",
+   "t": "text",
+   "w": "p",
+   "en": "In section 5.2 we explore the claim that pre-aligned models might perform better in distributional pluralism than post-RLHF models. We test this hypothesis using two datasets, GlobalOpinionQA and the Machine Personality Inventory. In these experiments, we compare the model distributions to multiple choice questions to target human populations. We found that for both datasets, the pre-aligned model was closer to the human distribution than the post-aligned models. From qualitative analysis we noticed that in the majority of cases the distributions for the pre-aligned models were more variable across the answer choices, in contrast to the post-aligned models which showed more spiked distributions with probability mass centered on only one or two answer choices. This was reflected in our analysis of entropy, which showed that all pre-aligned models had higher average entropy across their distributions than post-aligned models. See Table 4 and Figure 3 for these results."
+  },
+  {
+   "id": "b0308",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Human LLaMA LLaMA2 (7B) LLaMA2 (13B) Gemma (7B) GPT-3 Dataset Japan/US/Germany Global Pre Alpaca Tulu Pre Post Pre Post Pre Post Pre Post GlobalQA 0.96/0.99/0.96 NA 1.38 1.15 0.67 1.20 0.61 1.19"
+  },
+  {
+   "id": "b0309",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Results comparing entropy of each human distributions and model distributions on opinion multiple choice questions over two datasets, GlobalQA (target human distribution of Japan and US) and MPI. Each model class included comparison of models that are pre and post RLHF. Note that we compare two “post\" RLHF models for LLaMA (Alpaca and Tulu)."
+  },
+  {
+   "id": "b0310",
+   "t": "keep",
+   "w": "table",
+   "en": "a. GlobalQA b. MPI"
+  },
+  {
+   "id": "b0311",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Distribution of entropy scores across datasets for each model. Top shows results over GlobalQA and bottom shows results for MPI."
+  },
+  {
+   "id": "b0312",
+   "t": "text",
+   "w": "p",
+   "en": "Although this supported our hypothesis, we were wanted to further investigate how much entropy alone accounted for the similarities in the model distribution and the human distributions. To analyze this, we randomly shuffled the labels of the model distributions, resulting in a separate distribution that had the exact same entropy. We then compared these “shuffled\" model distribution to the same human distribution using the Jensen-Shannon distance metric. Table 11 shows the result of these calculations. Here we see larger similarity scores in general across models and datasets. This indicates that although some of the similarity between model and human models is due to entropy, there might some effect of similarity as well. Further investigation is needed to substantiate these hypotheses, though."
+  },
+  {
+   "id": "b0313",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Class LLaMA LLaMA2 (7B) LLaMA2 (13B) Gemma (7B) GPT-3 Dataset Pre Alpaca Tulu Pre Post Pre Post Pre Post Pre Post GlobalQA (Japan) 0.45 0.51 0.62 0.51 0.67 0.51 0.68 0.45 0.61 0.50 0.59 GlobalQA"
+  },
+  {
+   "id": "b0314",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Results comparing human distributions to shuffled model distributions on opinion multiple choice questions over two datasets, GlobalQA (target human distribution of Japan and US) and MPI using the Jensen-Shannon distance. Each model class included comparison of models that are pre and post RLHF1111 11 Model detials, including exact models used, can be found in Appendix A.. Note that we compare two “post\" RLHF models for LLaMA (Alpaca and Tulu). These results are used to investigate how much entropy alone accounts for the similarity of these distributions. We bold the smaller (more similar) value."
+  }
+ ]
+}

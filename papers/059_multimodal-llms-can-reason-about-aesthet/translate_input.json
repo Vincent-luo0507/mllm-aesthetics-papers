@@ -1,0 +1,1612 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Multimodal LLMs Can Reason about Aesthetics in Zero-Shot DOI: XXXXXXX.XXXXXXX Conference: Arxiv; 2025; NY ISBN: 978-1-4503-XXXX-X/2018/06 CCS: Applied computing Fine arts CCS: Computing methodologies "
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract."
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "The rapid progress of generative art has democratized the creation of visually pleasing imagery. However, achieving genuine artistic impact – the kind that resonates with viewers on a deeper, more mea"
+  },
+  {
+   "id": "b0003",
+   "t": "text",
+   "w": "h6",
+   "en": "Keywords:"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "h2",
+   "en": "1. Introduction"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Human aesthetic perception is a multifaceted decision-making process that extends beyond mere visual appeal. It encompasses factors including, but not limited to, originality, cultural background, emotional resonance, and visual narrative, all of which contribute to the unique aesthetic value of artworks (Gombrich and Gombrich 1995; Kant 2024; Hume 1757; Joshi et al. 2011). The importance of understanding this complex process is widely acknowledged by art practitioners and scholars, as it not only deepens our theoretical understanding of beauty but also informs and inspires art creation (Gombrich and Gombrich 1995; Sibley 2017). In the era of rapidly advancing generative arts, an algorithmic understanding of aesthetics is also crucial to producing truly unique and impactful artistic representations (Samo and Highhouse 2023; Bo et al. 2018; Guo et al. 2025b; Chamberlain et al. 2018)."
+  },
+  {
+   "id": "b0006",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1. Existing models assess aesthetics as a black-box, which is oversimplified and can misinterpret the aesthetic value. The complex, multifaceted human aesthetic judging process must be captured for human-aligned aesthetic evaluation. Credit: Girl with a Mandolin (1910), by Pablo Picasso"
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "Despite its complexity and importance, a majority of existing computational approaches have oversimplified the concept of aesthetics. They predominantly employ end-to-end learning to obtain black-box models that predict a score. Specifically, systems like traditional Image Quality Assessment (IQA) (Zhu et al. 2024; Wang et al. 2023), AI-Generated IQA (AGIQA) (Yang et al. 2024), and more recent human preference models (e.g., PickScore (Kirstain et al. 2023), VisionPrefer (Wu et al. 2024)) follow this limited paradigm—regressing human preference based on visual feature maps, without engaging with the complex cognitive processes underlying aesthetic judgment. While these scoring models may be effective in assessing image quality in certain cases, they provide no insights and interpretation for their prediction. More importantly, the measurement of quality or visual appeal is a fundamentally superficial understanding (i.e., a kistch) of aesthetics (Sibley 2017; Kant 2024; Schelling et al. 2008; Gombrich and Gombrich 1995; Hume 1757; Isik and Vessel 2021), and this limited view can lead to misalignment with human aesthetic perception in practice (So 2023; Ioannou and Maddock 2024; Barnet 2015; Chen et al. 2024; Ortlieb and Carbon 2019; Samo and Highhouse 2023; Black et al. 2023). For instance, impactful paintings that are not immediately visually pleasing but involve more in-depth artistic expression may be mis-classified by these models. Therefore, modeling and mimicking the multifaceted cognitive process in human aesthetic judgment is essential to build a truly human-aligned aesthetic evaluator, as illustrated in Fig. 1."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "In seeking to capture the ineffable nature of human aesthetic perception, we draw broad inspiration from art and philosophy. In particular, the practice of “formal analysis” (Barnet 2015; Kim et al. 2022; Van Leeuwen and Jewitt 2000) in art criticism offers valuable insights to formulate our goal. It is a structured approach where critics methodically describe their observations in terms of visual elements, critically interpret compositional choices, and connect these observations to broader aesthetic principles for objective aesthetic judgment. This analysis does not merely catalog visual features; it actively weaves perception, emotion, cultural context, and artistic knowledge into a coherent evaluative narrative. This multifaceted narrative connects observation and interpretation, mapping the cognitive activity of our art experience into words, a holistic capability that bears a striking resemblance to the inference-time reasoning paradigm of recent multimodal large language models (MLLMs) (OpenAI 2023; Team et al. 2023; Anthropic [n. d.]; Wei et al. 2022). This parallel presents an opportunity to address the long-standing challenge of modeling human aesthetic judgment, inspiring our central research question:"
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "blockquote",
+   "en": "Can reasoning facilitate MLLMs perform human-aligned aesthetic judgments in zero-shot?"
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "Answering this question requires understanding both human aesthetic judgment and how reasoning can be effectively performed in MLLMs. For the human aspect, this paper proposes a rank-based human aesthetic perception model, designed to suppress inter-person subjectivity through philosophy-inspired principles (Tatarkiewicz 1963; Kant 2024; Tatarkiewicz 2012). Human expert judgment is collected on a newly proposed dataset, FineArtBench, with large-scale and semantically labeled styles to facilitate statistically unbiased correlation studies. We leverage chain-of-thought (CoT) prompting to enable the reasoning of MLLMs. The reasoning traces are tracked to facilitate judgment and perform quantitative correlation analysis with human decisions."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "By experimenting with different prompting techniques across MLLMs, we identify a key challenge in applying them for artistic evaluation: hallucination. Specifically, we observe a high tendency for MLLMs to reason subjectively with unsubstantiated artistic interpretations. Our analysis further underscores that the bottleneck lies in the reasoning process itself, rather than in the base model. We argue that evidence-based and objective reasoning is essential to suppress these hallucinations. With these valuable insights, we demonstrate that a simple baseline, ArtCoT, can produce exceptionally in-depth and multifaceted aesthetic reasoning. Judgments conditioned with such objective and critical reasoning demonstrate a substantial improvement in correlation with human decision. It also significantly outperforms existing IQA and preference models. Overall, our findings not only envision future directions for aesthetic reasoning but also have direct applications in human-computer interaction (HCI) and generative art, such as AI art tutors (Ghose 2017; Xu 2024) and reinforcement learning from AI feedback (RLAIF)-enhanced art generation (Black et al. 2023; Clark et al. 2023; Guo et al. 2025b; Wu et al. 2024)."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "We summarize our contributions as follows:"
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "li",
+   "en": "(1) We introduce the task of aesthetic reasoning."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "li",
+   "en": "(2) We propose a philosophy-inspired principled approach for objectively modeling human aesthetic judgment."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "li",
+   "en": "(3) We introduce FineArtBench, the first large-scale semantically annotated dataset for broad tasks related to art."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "li",
+   "en": "(4) Our analysis provides valuable insights into the hallucination bottleneck of MLLMs in aesthetic reasoning."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "li",
+   "en": "(5) Our baseline ArtCoT points out a promising way for human-aligned aesthetic reasoning in zero-shot."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "h2",
+   "en": "2. Related Works"
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1. Generative Art, Fine Art and Aesthetics"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "Generative art is nothing special but a new medium for artistic expression. Neural style transfer (NST) (Deng et al. 2022; Huang and Belongie 2017; Gatys et al. 2016; An et al. 2021; Jiang and Chen 2024) and image generation methods (Elgammal et al. 2017; Rombach et al. 2022) are two central techniques in this field. Initially, research focused primarily on fidelity challenges, and the goal was to distill the distribution of real artworks, utilizing feature-level metrics such as Gram Loss (Gatys et al. 2016) and FID (Heusel et al. 2017; Wright and Ommer 2022) to quantify the alignment between generated and real artworks. More recently, the focus has shifted towards the affective challenge (Samo and Highhouse 2023; Li et al. 2024; Wu et al. 2024; Hullman et al. 2023): ensuring that the generated results are not only accurate but also visually pleasing. Preference models, such as PickScore (Kirstain et al. 2023) and HPS (Wu et al. 2023), are employed to address this aspect. With the rapid scaling of generative models, the acquisition of artistic images has become democratized. This progression allows us to pursue the ultimate challenge of art: striving for artistically meaningful and impactful artworks rather than mere visual appeal. This tri-stage progression was articulated at least 300 years ago by philosophers such as Hegel (Hegel and Hegel 1998). It is contextualized by the transition in art history from technical execution to artistic expression (Gombrich and Gombrich 1995). Just as aesthetics played a central role in that transition, an algorithmic understanding of aesthetics is key to advancing generative art. In this paper, we present a comprehensive study to this critical issue."
+  },
+  {
+   "id": "b0022",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2. Overview of our correlation evaluation pipeline. First, (a) we sample content and style from FineArtBench, and construct 2AFC comparison sets by sampling from all possible candidate (artwork) comparisons. (b) Human judgment data is collected and filtered with two heuristic indicators, which are finally aggregated as global rankings. (c) We leverage different reasoning methods to derive the judgment from MLLMs. Finally, we calculate the correlation of rankings from MLLMs and humans as indicators of aesthetic alignment."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2. Computational Evaluation of Artworks"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "Early aesthetic evaluation algorithms were primarily rule-based, assessing the visual quality of paintings or photos using different principles (Bo et al. 2018; Gips and Stiny 1975). While simple and interpretable, these principles lack the generality to explain all cases. With the development of deep learning, data-driven methods (Schuhmann et al. 2022; Hentschel et al. 2022) have emerged, attempting to directly learn aesthetic evaluators from image collections labeled with human preferences. In parallel to these explorations, a highly related line of works is the development of quantitative metrics for NST. ArtFID (Wright and Ommer 2022) and Art Score (Chen et al. 2024) are two notable examples of this trend. Despite their different focus, they share the same underlying design philosophy: measuring the distance between input and human-preferred images within the vision feature space. This black-box inference, however, oversimplifies the complex aesthetic judgment process and is often misaligned with human perception (So 2023; Ioannou and Maddock 2024; Barnet 2015; Black et al. 2023). Recent methods (Zhang et al. 2023a; Huang et al. 2024a; Ke et al. 2023) attempt to incorporate MLLMs for more interpretable aesthetic perception. Nevertheless, most of these approaches require costly instruction-tuning and still focus on characterizing the visual appeal. This paper demonstrates that reasoning can make general-purpose MLLMs human-aligned aesthetic reasoners in zero-shot."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h3",
+   "en": "2.3. CoT Reasoning and Hallucinations"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "CoT prompting (Wei et al. 2022; Kojima et al. 2022; Hao et al. 2024) is a simple yet powerful technique for both LLMs and MLLMs. It functions by enabling the model to “think aloud,” generating a trace of its reasoning process before arriving at a final answer. CoT has proven effective for a variety of tasks that benefit from enhanced logical reasoning (Mitra et al. 2024; Sprague et al. 2024). Despite this progress, CoT is also susceptible to hallucinations, where the generated reasoning trace can be misleading (Lindsey et al. 2025; Huang et al. 2025). This paper investigates the application of CoT to aesthetics evaluation, a domain that extends beyond strict logical reasoning. Our analysis reveals an inherent and special hallucination issue when CoT is applied to this task, and the proposed method overcomes challenge."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "h2",
+   "en": "3. Methodology"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1. Problem Definition"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "Motivation. Despite the subjective nature of aesthetic taste, philosophers (Hume 1757; Tatarkiewicz 2012; Kant 2024; Tatarkiewicz 1963; Sircello 1968) and psychologists (Lindell and Mueller 2011; Palmer et al. 2013) generally acknowledge a degree of consensus regarding aesthetic judgments exists across cultures and historical periods, suggesting the possibility of objective comparative evaluation. This consensus, however, is not absolute. Comparing vastly different artworks, such as “Mona Lisa” and “Guernica” highlights the challenge of objective judgment without resorting to personal preference due to divergent content and style. In contrast, a controlled scenario, such as an art lesson where students draw porcelain vases using the cross-hatching technique, offers a more robust basis for objective aesthetics comparison. This approach aligns with established practices in art criticism and art education (Groenendijk et al. 2020; Andrade et al. 2014). With these observations, we explore aesthetic judgment within comparable contextual and stylistic frameworks for objective comparison."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "Objective. From a computational perspective, we aim to derive a statistically robust global ranking of a set of artists (or art generators) or artworks (or generated art) from human feedback. Formally, let ⟦SLOT_0⟧, ⟦SLOT_1⟧, and ⟦SLOT_2⟧ denote the sets of all content, styles, and artists, respectively (within the studied scope). Each combination ⟦SLOT_3⟧ constitutes a task presented to the artists. The resulting artworks from artists ⟦SLOT_4⟧, denoted as ⟦SLOT_5⟧, form the set of candidates for this task: ⟦SLOT_6⟧. We model human aesthetic judgment as a partial ordering on the set ⟦SLOT_7⟧:"
+  },
+  {
+   "id": "b0032",
+   "t": "keep",
+   "w": "table",
+   "en": "(1) y π ⁡ ( 1 ) ≻ y π ⁡ ( 2 ) ≻ ⋯ ≻ y π ⁡ ( k ) , \\displaystyle y_{\\pi(1)}\\succ y_{\\pi(2)}\\succ\\cdots\\succ y_{\\pi(k)},"
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_8⟧ maps the candidate index to its global rank, and ⟦SLOT_9⟧ means ⟦SLOT_10⟧ is judged to be superior than ⟦SLOT_11⟧. We measure the alignment as the correlation between the ranks constructed from human experts and the MLLM(s), and we are interested in studying the effectiveness and potential challenges of reasoning in enhancing this alignment."
+  },
+  {
+   "id": "b0034",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3. The FineArtBench dataset. Left: The label distribution and semantic attributes for both content and style. Right: examples of two content (top) and two style (bottom)."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2. Modeling Human Aesthetic Perception"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "Judgment Collection. Directly deriving the partial ordering as in Eq. 1 requires an exhaustive comparison, which can be cognitively demanding and impair human decision-making. Inspired by findings in psychometrics and HCI (Sullivan and Artino Jr 2013; So 2023), we instead employ a two-alternative forced choice (2AFC) task for more efficient decision collection. Specifically, we present users with the task specification ⟦SLOT_12⟧, along with two candidate artworks ⟦SLOT_13⟧. Users are required to judge the relatively superior artwork without the option to indicate a tie or skip the comparison. We model the (judged) aesthetic superiority relationship probabilistically:"
+  },
+  {
+   "id": "b0038",
+   "t": "keep",
+   "w": "table",
+   "en": "(2) P ⁡ ( y i ≻ y j | c , s ) = Q i Q i + Q j , P(y_{i}\\succ y_{j}|c,s)=\\frac{Q_{i}}{Q_{i}+Q_{j}},"
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_14⟧ represents the latent competence of ⟦SLOT_15⟧, conditioned on the task of ⟦SLOT_16⟧."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "Sampling Strategies for 2AFC. Given the combinatorial complexity of ⟦SLOT_17⟧ (⟦SLOT_18⟧ in our case), exhaustive pairwise comparisons is infeasible. Therefore, we generate 2AFC comparisons by sampling, which reduce to a classical tournament scheduling problem. For a specific candidate set ⟦SLOT_19⟧, all possible comparisons can be modeled as complete graph ⟦SLOT_20⟧, where the node ⟦SLOT_21⟧ is the set of candidate results and ⟦SLOT_22⟧ stand for pair-wise comparison. We consider two strategies for sampling ⟦SLOT_23⟧, corresponding to two real-world scenarios:"
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "li",
+   "en": "(1) Global sampling: Uniformly sample arbitrary number of edges without replacement. This approach is suitable for covering a wider range of content and style to facilitate the ranking of artists."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "li",
+   "en": "(2) Per-task sampling: Sample edges ⟦SLOT_24⟧ such that the sub-graph is connective with maximum node degree uniformness, meaning that each candidates shall be compared with for similar times. This is suitable for determining the ranks within specific task."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "We design a novel greedy algorithm (described in Appendix. A.2) to efficiently achieve the requirements of per-task sampling."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "Dealing with Subjectivity in Human judgment. Due to the inherent subjectivity of aesthetic perception, human judgment can vary even within the constrained scenario. This variation can arise from inherent annotation noise and is particularly prevalent when the artists perform equally good or bad. While addressing these challenging edge cases could be valuable, in this paper, given that this is an initial exploration of aesthetic reasoning, we focus on modeling the universality of aesthetics (Kant 2024; Tatarkiewicz 1963; Sircello 1968) with suppressed inter-personal subjectivity. This allows us to create an unbiased testbed for evaluation. To this end, we employ the following two heuristics to mitigate subjectivity during annotation collection:"
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "li",
+   "en": "(1) 2AFC disagreement: We exclude the 2AFC questions where judgments tie (⟦SLOT_25⟧)."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "li",
+   "en": "(2) Non-transitive relationship: To deal with non-transitive judgment, such as ⟦SLOT_26⟧, we apply a feedback arc set (FAS) algorithm (Younger 1963) to detect feedback arcs ⟦SLOT_27⟧ and drop the whole task when ⟦SLOT_28⟧."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "Global Rank Derivation. We utilize Bradley-Terry (BT) model (Bradley and Terry 1952) and Elo (Elo and Sloan 1978) algorithm. In the BT model, ⟦SLOT_29⟧, where the latent parameter ⟦SLOT_30⟧ is optimized with maximum likelihood estimation (MLE). The Elo algorithm utilize ⟦SLOT_31⟧, where ⟦SLOT_32⟧ is the rating of candidate-i that is updated on-line. The rank within a task is the sorted by the competence ⟦SLOT_33⟧ of each candidate result, and we leverage the averaged competence among all tasks as the competence of an artist."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1. Quantitative comparison of aesthetic judgment correlation. This table presents the statistical correlation (spearman’s ⟦SLOT_34⟧) and significance (⟦SLOT_35⟧ value, ⟦SLOT_36⟧) between rankings generated by different aesthetic evaluators and expert judgments. Both conventional models and MLLMs with different reasoning methods are compared. Performance improvement and decline is calculated as normalized changes relative to the base prompt method for each of the corresponding MLLM. MLLMs reasoned with ArtCoT consistently demonstrates strong alignment with human judgment."
+  },
+  {
+   "id": "b0049",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Reasoning Per-Artist Alignment Per-Task Alignment Elo Bradley-Terry Elo Bradley-Terry ρ \\rho ↑ \\uparrow p p -value ↓ \\downarrow ρ \\rho ↑ \\uparrow p p -value ↓ \\downarrow ρ \\rho ↑ \\uparrow p p -v"
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3. Zero-shot Aesthetics Reasoning via CoT"
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "Recent inference-time scaling paradigms, in particular the CoT prompting (Wei et al. 2022; Kojima et al. 2022) demonstrate impressive zero-shot task-solving capability. However, CoT is more widely studied for commonsense and logical reasoning. Applying CoT reasoning to the task of aesthetic-level art evaluation, which is not a direct logical task, presents significant challenges and may lead to diminished alignment with the human judgment (Sprague et al. 2024; Liu et al. 2024), as will be detailed in the Sec. 5.1. Specifically, a key issue is hallucination, where judgments are made prematurely, relying on subjective and superficial justifications. In other words, during aesthetics reasoning, MLLMs inherently exhibit a tendency to “feel” rather than to “reason”, and this hallucinated feeling often severely degrades the MLLM’s aesthetic judgment."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "Motivated by the formal analysis in art criticism (Barnet 2015; Kim et al. 2022; Van Leeuwen and Jewitt 2000), our key insight is to explicitly ground the MLLMs’ decision-making with evidence and domain knowledge in art. Based on this principle, we propose a simple yet effective baseline, ArtCoT, which frames aesthetic perception as an evidence-based reasoning task."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "ArtCoT features a two-hop reasoning process. In the initial stage, the MLLM acts as a CS Analyzer, providing a detailed and concrete description of the input task ⟦SLOT_37⟧, as well as the paired 2AFC images ⟦SLOT_38⟧. In the second phase, acting as an Art Critic, the MLLM is prompted to critically evaluate its previous observation and critically argue about the aesthetic quality. This analysis is linked to domain knowledge in art, encompassing a multifaced discussion that is not limited to stylistic features of ⟦SLOT_39⟧, aesthetic principles, technical execution of the two candidates, and potential emotional impact. These two stages link observation, knowledge, and artistic value, mirroring the essence of formal analysis. Effectively, it establishes a rubric (Groenendijk et al. 2020; Andrade et al. 2014), translating the subjective perception of beauty into more well-defined sub-tasks that can be objectively reasoned with logical reasoning (Christensen and Ball 2016; Coleman 1966; Li et al. 2023)."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "During this structured CoT reasoning process, MLLMs perform a multi-faceted and in-depth aesthetic evaluation that mimics the deliberation of an art critic. (Note that our goal is to capture such reasoning trace, not simply the 2AFC result.) This reasoning trace can benefit a wide range of downstream applications. In this paper, we aim to assess the correlation with human judgment during 2AFC. Therefore, we further employ a summarizer that takes the reasoning trace as input and outputs a binary answer indicating the winner. The overall workflow is visualized in Fig. 2."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "h3",
+   "en": "3.4. FineArtBench"
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "The collection of content and style (i.e., ⟦SLOT_40⟧) is most widely studied in NST literature (Jiang and Chen 2024; Huang et al. 2024b; Deng et al. 2022). However, these papers mainly rely on ad-hoc sampling from datasets such as MS-COCO (Lin et al. 2014) and WikiART (Wikiart [n. d.]). The limitation of this approach is at least in two folds: (1) limited in size and diversity, which cannot cover the wide range of art styles in real-world scenarios. (2) Limited semantic annotation, as most of the existing datasets do not provide semantic-level labeling of style and content, which impedes a fine-grained understanding of the methods’ strengths and weaknesses."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "To circumvent these challenges, we propose FineArtBench, a dataset for generative art with unprecedented scale, diversity and quality. First, FineArtBench contains 1,000, and 1,000 densely annotated content and styles, respectively. The data is harvested from diverse sources (Kirillov et al. 2023; Lin et al. 2014; Wikiart [n. d.]; Wang et al. 2022), and further diversified using MLLMs, enabling comprehensive comparison for downstream tasks related to art. Moreover, we provide both content and style in two modalities (text and image), further expanding its versatility. Second, we perform a semi-automated annotation process (detailed in Appendix. A.3) where both content and style are annotated from diverse perspectives, such as scene in content (e.g., nature, portrait) and abstractness of style (e.g., figurative, abstract). These annotations enable a semantic-level understanding for downstream tasks. A comparison of FineArtBench with existing datasets is presented in Tab. 2, and an overview is given in Fig. 3."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2. Comparison of representative stylization benchmark datasets. The proposed FineArtBench offers significantly more content and style instance, with fine-grained multimodal annotations."
+  },
+  {
+   "id": "b0059",
+   "t": "keep",
+   "w": "table",
+   "en": "Dataset/Protocol # Content # Style Multimodal Semantic Labeling StyleID ( Chung et al. 2024 ) 20 40 ✗ ✗ LAION-Aesthetics ( Schuhmann et al. 2022 ) - ∼ \\sim 50 ✗ ✗ ArtBench ( Liao et al. 2022 ) - 10 ✗ "
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "h2",
+   "en": "4. Experiments"
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1. Experiment Setup"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "Stylization models. Considering the size of ⟦SLOT_41⟧, it is infeasible to hire real human artists for scalable dataset collection: a single painting requires days of expertise. On the other hand, existing publicly-available artworks have limited style that only covers a small subset of ⟦SLOT_42⟧. Even if we collect some paired paintings, the MLLMs are prone to memorization than reasoning. To this end, we primarily rely on neural style transfer (NST) models as our “artists.” We evaluated total of 10 NST models, all executed with the default configurations suggested by respective authors. The methods include AdaIN (Huang and Belongie 2017), ArtFlow (An et al. 2021), ControlNet (Zhang et al. 2023b), DDIM (Song et al. 2020), DiffArtist (Jiang and Chen 2024), DiffStyler (Huang et al. 2024b), InstantStyle (Wang et al. 2024), Instruct-pix2pix (Brooks et al. 2023), StyleID (Chung et al. 2024), and Sty-Tr2 (Deng et al. 2022). These stylization models encompass a wide range of architectures and exhibit varying degrees of artistic stylization capability. This diversity provides a robust testbed for evaluating the performance of MLLMs in art evaluation."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "Alignment Metrics. Following (Jiang and Chen 2024; Chen et al. 2024; Zhang et al. 2023a), we use the spearman’s correlation coefficient (Spearman 1987) to quantify the alignment between judgment from experts and MLLMs. A spearman’s ⟦SLOT_43⟧ closer to 1 indicates a stronger positive linear correlation of ranking, which suggests better alignment. To ensure robustness, we calculate averaged ⟦SLOT_44⟧ from five random and independent splits for the global (per-artist) sampling scheme, while for per-task sampling, we correlate each independent task. Considering the size of independent test and typical ⟦SLOT_45⟧ values, we combine ⟦SLOT_46⟧ using Pearson’s and Fisher’s method for per-artist and per-task scenario, respectively, as suggested by (Heard and Rubin-Delanchy 2018). A lower ⟦SLOT_47⟧ value means stronger statistical significance."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "Compared Methods As the first exploration on MLLMs for aesthetic reasoning, finding direct comparisons can be challenging. Therefore we broadly compare three groups of methods. (a), IQA methods: including CLIP-IQA (Wang et al. 2023) and Compare2Score (Zhu et al. 2024); (b) Text-image alignment and preference scores: CLIP Score (Radford et al. 2021), Aesthetic Predictor (Schuhmann et al. 2022), PickScore (Kirstain et al. 2023) and HPSv2 (Wu et al. 2023). Despite ArtScore (Chen et al. 2024) share the most similar objective with this paper, we exclude it due to the unavailability of code at the time this paper was written. We consider (3) Zero-shot MLLMs, where we use three mainstream MLLMs as base model, including GPT-4o (OpenAI 2023), Gemini 1.5 (Team et al. 2023), and Claude 3.5 (Anthropic [n. d.]). We apply different MLLM reasoning methods, including base (directly output the winner), zero-shot CoT and the proposed ArtCoT. We also consider recent reasoning MLLMs, including Claude-3.7-sonnet-reasoning and Gemini-2.0-flash-thinking. The experiment of all MLLMs are repeated thrice with default hyper-parameters to ensure robustness."
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2. Human Judgment Collection"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "We recruit 18 human experts with general knowledge of fine art for annotation. We collected a total of 80,000 initial judgments. For per-task sampling, we sample ⟦SLOT_48⟧ for each task. We prune uncertain human feedback with ⟦SLOT_49⟧, and remove non-transitive task with ⟦SLOT_50⟧. As a result, 20.1% of the feedback is filtered out due to pairwise divergence, while the remaining 15.3% are removed due to a high non-transitivity. To quantify the inter-annotation agreement, we use McFadden’s ⟦SLOT_51⟧ (McFadden 1972) to assess the transitivity of global ranking constructed from BT and Elo, reported in Tab. 3. A ⟦SLOT_52⟧ is generally considered as a good fit, which implies the judgment are statistically consistent."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3. Inter-Annotator Agreement. Higher goodness-of-fit ⟦SLOT_53⟧ indicate more concordant global ranking."
+  },
+  {
+   "id": "b0068",
+   "t": "keep",
+   "w": "table",
+   "en": "Raw + prune uncertain + drop non-transitive R 2 ↑ R^{2}\\uparrow 0.17 0.26 0.31"
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3. Main Result: Human Alignment"
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "We compare the correlation and statistical significance of different MLLMs and prompts using two sampling strategies. The results in Tab. 1 demonstrate a substantial advantage of aesthetic reasoning for enhancing MLLMs’ ability to judge aesthetics, achieving average improvements of 44%, 30% in the per-artist and per-task setup, respectively. When compared with other specialized IQA or preference models, MLLMs prompted with ArtCoT demonstrate state-of-the-art alignment even without any targeted optimization. By contrast, we observe that zero-shot CoT adversely affects alignment, decreasing it by 16% and 18% on average. Overall, these results prove that (1) reasoning can indeed make MLLMs human-aligned aesthetic evaluators, and (2) conditioned on proper elicitation of their reasoning capability."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "h2",
+   "en": "5. Analysis and Discussion"
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4. Response subjectivity and hallucination from different prompting methods. We report the average length of thinking trace (in words), two subjectivity metrics, and human-annotated hallucination score (normalized) from four perspectives. Reasoning traces generated with ArtCoT contain less subjectivity and hallucination. (*): Trace from Claude-3.7-sonnet-thinking."
+  },
+  {
+   "id": "b0073",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Avg. length Response Subjectivity Hallucination (Factuality) Hallucination (Extrinsic) TextBlob ↓ \\downarrow Word frequency ( % \\% ) ↓ \\downarrow Visual ↓ \\downarrow Textual ↓ \\downarrow Opinio"
+  },
+  {
+   "id": "b0074",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4. A minimal example of the hallucination issue. In particular, the frequent use of opinionated and artistic interpretation words degrades MLLM’s aesthetic judgment."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1. Zero-shot CoT Reinforces Hallucination"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "During aesthetic reasoning of artworks, MLLMs exhibit a bias towards subjective \"feeling\" rather than objective \"reasoning.\" This tendency can significantly degrade an MLLM’s aesthetic judgment, leading to the counter-intuitive result where zero-shot CoT negatively impacts alignment with human perception. Our findings suggest that this issue stems from hallucination, particularly concerning the use of subjective language during the reasoning process."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "Specifically, in the zero-shot CoT setting, we observe that MLLMs tend to arrive at rapid conclusions, employing subjective and less concrete language to justify their judgments. This hallucination is distinctive and can be broadly categorized into two types. The first is the use of opinionated and subjective words. For instance, opinion verbs (e.g., “feels”, “senses”) and hedge words (e.g., “appears”, “seemingly”) are frequently employed. These terms often indicate a lack of in-depth consideration, weak logical connection to the given task and are less supportive for aesthetic judgment (Sircello 1968). Furthermore, the MLLMs may generate ostensible “artistic interpretations” that are superficial and not substantiated with facts or explanations. These hallucinations are consistently observed across different MLLMs when prompted with zero-shot CoT, which is broadly in line with recent findings (Liu et al. 2024; Huang et al. 2025). Illustrative conversation examples are provided in Appendix B. Our analysis in the subsequent section further corroborates this observation."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2. Evidence-based Reasoning Suppress Subjectivity and Hallucination"
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "p",
+   "en": "Compared with the base prompting and zero-shot CoT, the thinking traces produced by ArtCoT are more concise, objective, and closely aligned with the input, as exemplified in Fig. 4. To quantify this improvement, we analyze the thinking traces in detail. Specifically, we first (1) measure the subjectivity of responses by calculating the frequency of subjective verbs in the lemmatized responses of MLLMs. We also follow established practices in natural language processing (NLP) by performing lexicon-based subjectivity analysis using the TextBlob package, which provides a score in the range of 0 to 1 (with a higher score indicating greater subjectivity)."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "Moreover, (2) during human annotation, we present the misaligned 2AFC questions to users for fine-grained hallucination labeling. Similarly, we categorize hallucinations into two types: (a) Factual Errors, which include incorrect image recognition (visual) and inaccurate style explanations (textual) — often referred to as intrinsic hallucinations, as they can be directly deduced from the input; and (b) Extrinsic Hallucinations, comprising opinionated responses and artistic interpretations. Users are tasked with reading the MLLM’s thinking trace and rating the severity of hallucinations on a scale of [0,1,2] for each of the four factors. We summarize the results for both experiments in Tab. 4."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "The experiment results offer insights into the hallucination challenge faced by MLLMs. Firstly, human evaluation reveals that all models exhibit relatively less severe hallucinations in terms of visual and textual aspects. This suggests that factual inaccuracies are not the primary source of hallucinations in this context. Instead, the prevalent use of subjective language, characterized by opinionated expressions and unsubstantiated artistic interpretations, significantly impedes the ability of MLLMs to align their aesthetic judgments with those of humans. Moreover, the elevated response subjectivity observed in zero-shot CoT, as evidenced by the remarkably consistent TextBlob scores (⟦SLOT_54⟧) and the frequency of subjective words, provides further support for this assertion."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "In other words, this experiment reinforces our finding that the bottleneck for MLLMs in art evaluation does not reside in their recognition capabilities—as all models demonstrate a relatively clear comprehension of the input. Rather, the challenge lies in effectively eliciting their reasoning capability by mitigating the hallucinations stemming from subjective expressions. We have also shown that this challenge is surmountable, as an evidence-based and reflective reasoning approach like ArtCoT enables a substantial suppression of subjectivity and hallucination, bringing a significant improvement in human alignment."
+  },
+  {
+   "id": "b0084",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5. Fine-grained comparison of different MLLM prompting scheme. We show the spearman’s ⟦SLOT_55⟧ for per-instance alignment, grouped by representative attribute in FineArtBench. ArtCoT elicits aesthetic reasoning in all scenarios, especially for tasks with a specific style instruction."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "h3",
+   "en": "5.3. Multifaceted Aesthetic Reasoning is Versatile"
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "The semantic label in FineArtBench enables finegrained understanding of MLLM’s performance. For instance, in Fig. 5 , we visualize the alignment performance on different content image complexity and style prompt categories."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "The proposed ArtCoT outperforms both base and zero-shot CoT prompting in all examined sub-classes, demonstrating its versatility. The most notable improvements are observed in tasks that with concrete style instructions. For example, we notice a significant improvement of “long prompt” and prompts specifying particular “art movement”. We posit that longer prompts and mentioning of art movement set a more concrete objective for both the art creation evaluation (Bai et al. 2024). Compared with obscure instructions, this specificity facilitates the MLLM to more objectively perform the two-hop reasoning, resulting in reduced hallucination and improved human alignment (Huang et al. 2025; Wei et al. 2022; Guo et al. 2025a; Bai et al. 2024)."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "h3",
+   "en": "5.4. Ablations."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "Components of ArtCoT. We ablate the key components of ArtCoT, specifically the CS analyzer and the art critic, and report the results in Tab. 5. The complete ArtCoT prompt achieves the highest aesthetic alignment. Particularly, removing the art critic phase induces the most significant decline, underscoring its critical role. This provides further evidence that reasoning is the key bottleneck."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "p",
+   "en": "Input to MLLM. We ablate input modalities and image resolutions, with results reported in Tab. 6. The full resolution achieves the best result. This is because the details in artworks, such as strokes, are important factors of aesthetics. For input modalities, providing style information is important in per-artist alignment, while including the reference image affects per-instance alignment the most. For either setting, providing all input modalities achieves the best alignment, meaning that task-constrained 2AFC aids objective aesthetic reasoning and judgment to be human-aligned."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5. Ablation on component of ArtCoT. We ablate the content/style analyzer and the art critic. The full two-hop aesthetics reasoning facilitates human-aligned judgment."
+  },
+  {
+   "id": "b0093",
+   "t": "keep",
+   "w": "table",
+   "en": "CS-analyzer Art Critic Per-artist ρ \\rho ↑ \\uparrow Per-task ρ \\rho ↑ \\uparrow ✗ ✓ 0.630 0.532 ✓ ✗ 0.531 0.366 ✓ ✓ 0.739 0.607"
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6. Ablation on image resolution and source information. We report the correlation ⟦SLOT_56⟧ (averaged from BT and Elo) of different input setups: content image, style prompt, and image sub-sampling factor."
+  },
+  {
+   "id": "b0095",
+   "t": "keep",
+   "w": "table",
+   "en": "Content Style Resolution Per-artist ρ \\rho ↑ \\uparrow Per-task ρ \\rho ↑ \\uparrow ✓ ✓ 1/2 0.630 -42% 0.432 -44% ✓ ✓ 1/4 0.502 -91% 0.285 -82% ✗ ✗ full 0.476 -100% 0.416 -49% ✗ ✓ full 0.678 -23% 0.465 -"
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "h3",
+   "en": "5.5. Boarder Impact"
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "We have demonstrated that evidence-based reasoning makes MLLMs human-aligned art evaluators. A lot of applications can benefit from this exploration, both in terms of RLAIF and HCI. Fig. 6 provides an illustration of how generative art may benefit from the reward signals with aesthetic reasoners to improve the generation, utilizing a pipeline akin to (Guo et al. 2025b). A similar pipeline may also be employed for human-centered and interactive art education."
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6. A minimal illustration of ArtCoT-enhanced art generation."
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "h3",
+   "en": "5.6. Limitations and Future Works"
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "p",
+   "en": "Aesthetics, as a subject studied for centuries, possesses complexities that cannot be fully addressed in a single paper. Numerous avenues for improvement exist, with the most significant challenge being the computational modeling of inter-person subjectivity. One possible technical direction involves conditioning Eq. 2 with the audience identity to enable personalized aesthetic models. A deeper understanding of the human part provides valuable insights, such as the philosophical theories and discussion on aesthetic judgment (Kant 2024; Sircello 1968; Hullman et al. 2023)."
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "h2",
+   "en": "6. Conclusion"
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "p",
+   "en": "The concept of aesthetics has been largely simplified in existing algorithms. Without explicitly modeling the cognitive process underlying human aesthetic judgment, computational models can never truly align how humans perceive beauty and produce artistically impactful artworks. This paper pioneers this exploration by capturing such aesthetic reasoning process with MLLMs. Our experiments reveal a key bottleneck in applying MLLMs for aesthetic reasoning: the proper elicitation of reasoning capability during inference rather than relying solely on the base model. In-depth analysis further highlights the hallucination issues stemming from subjective opinions and unsubstantiated interpretations, leading to misaligned judgments. We further identify a promising solution through an evidence-based and objective reasoning process. These valuable findings can inspire future AI models to align with human aesthetic perception."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "(1)"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "An et al . (2021) Jie An, Siyu Huang, Yibing Song, Dejing Dou, Wei Liu, and Jiebo Luo. 2021. Artflow: Unbiased image style transfer via reversible neural flows. In Proceedings of the IEEE/CVF Conferen"
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Andrade et al . (2014) Heidi Andrade, Joanna Hefferen, and Maria Palma. 2014. Formative assessment in the visual arts. Art Education 67, 1 (2014), 34–40."
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Anthropic ([n. d.]) Anthropic. [n. d.]. Meet Claude. https://www.anthropic.com/claude ."
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al . (2024) Zechen Bai, Pichao Wang, Tianjun Xiao, Tong He, Zongbo Han, Zheng Zhang, and Mike Zheng Shou. 2024. Hallucination of multimodal large language models: A survey. arXiv preprint arXiv"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Barnet (2015) Sylvan Barnet. 2015. A short guide to writing about art . Pearson Upper Saddle River, NJ."
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Black et al . (2023) Kevin Black, Michael Janner, Yilun Du, Ilya Kostrikov, and Sergey Levine. 2023. Training diffusion models with reinforcement learning. arXiv preprint arXiv:2305.13301 (2023)."
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bo et al . (2018) Yihang Bo, Jinhui Yu, and Kang Zhang. 2018. Computational aesthetics and applications. Visual computing for industry, biomedicine, and art 1 (2018), 1–19."
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bradley and Terry (1952) Ralph Allan Bradley and Milton E Terry. 1952. Rank analysis of incomplete block designs: I. The method of paired comparisons. Biometrika 39, 3/4 (1952), 324–345."
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Brooks et al . (2023) Tim Brooks, Aleksander Holynski, and Alexei A Efros. 2023. Instructpix2pix: Learning to follow image editing instructions. In Proceedings of the IEEE/CVF Conference on Computer V"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chamberlain et al . (2018) Rebecca Chamberlain, Caitlin Mullin, Bram Scheerlinck, and Johan Wagemans. 2018. Putting the art in artificial: Aesthetic responses to computer-generated art. Psychology of "
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al . (2024) Junyu Chen, Jie An, Hanjia Lyu, Christopher Kanan, and Jiebo Luo. 2024. Learning to Evaluate the Artness of AI-generated Images. IEEE Transactions on Multimedia (2024)."
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Christensen and Ball (2016) Bo T Christensen and Linden J Ball. 2016. Dimensions of creative evaluation: Distinct design and reasoning strategies for aesthetic, functional and originality judgments. D"
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chung et al . (2024) Jiwoo Chung, Sangeek Hyun, and Jae-Pil Heo. 2024. Style injection in diffusion: A training-free approach for adapting large-scale diffusion models for style transfer. In Proceedin"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Clark et al . (2023) Kevin Clark, Paul Vicol, Kevin Swersky, and David J Fleet. 2023. Directly fine-tuning diffusion models on differentiable rewards. arXiv preprint arXiv:2309.17400 (2023)."
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Coleman (1966) Francis J Coleman. 1966. A phenomenology of aesthetic reasoning. The Journal of Aesthetics and Art Criticism 25, 2 (1966), 197–203."
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Deng et al . (2022) Yingying Deng, Fan Tang, Weiming Dong, Chongyang Ma, Xingjia Pan, Lei Wang, and Changsheng Xu. 2022. Stytr2: Image style transfer with transformers. In Proceedings of the IEEE/CVF "
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Elgammal et al . (2017) Ahmed Elgammal, Bingchen Liu, Mohamed Elhoseiny, and Marian Mazzone. 2017. Can: Creative adversarial networks, generating\" art\" by learning about styles and deviating from styl"
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Elo and Sloan (1978) Arpad E Elo and Sam Sloan. 1978. The rating of chessplayers: Past and present. (No Title) (1978)."
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gao et al . (2024) Junyao Gao, Yanchen Liu, Yanan Sun, Yinhao Tang, Yanhong Zeng, Kai Chen, and Cairong Zhao. 2024. Styleshot: A snapshot on any style. arXiv preprint arXiv:2407.01414 (2024)."
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gatys et al . (2016) Leon A Gatys, Alexander S Ecker, and Matthias Bethge. 2016. Image style transfer using convolutional neural networks. In Proceedings of the IEEE conference on computer vision and "
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ghose (2017) Tia Ghose. 2017. This AI Helps You Paint Like Van Gogh. https://www.livescience.com/60536-ai-helps-you-paint-like-van-gogh.html . Live Science (sep 2017). Accessed: 2025-04-09."
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gips and Stiny (1975) James Gips and George Stiny. 1975. An investigation of algorithmic aesthetics. Leonardo 8, 3 (1975), 213–220."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gombrich and Gombrich (1995) Ernst Hans Gombrich and EH Gombrich. 1995. The story of art . Vol. 12. Phaidon London."
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Groenendijk et al . (2020) Talita Groenendijk, Andrea Kárpáti, and Folkert Haanstra. 2020. Self-Assessment in art education through a visual rubric. International Journal of Art & Design Education 39,"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Guo et al . (2025a) Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin Xu, Qihao Zhu, Shirong Ma, Peiyi Wang, Xiao Bi, et al . 2025a. Deepseek-r1: Incentivizing reasoning capabilit"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Guo et al . (2025b) Ziyu Guo, Renrui Zhang, Chengzhuo Tong, Zhizheng Zhao, Peng Gao, Hongsheng Li, and Pheng-Ann Heng. 2025b. Can We Generate Images with CoT? Let’s Verify and Reinforce Image Generati"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hao et al . (2024) Shibo Hao, Sainbayar Sukhbaatar, DiJia Su, Xian Li, Zhiting Hu, Jason Weston, and Yuandong Tian. 2024. Training large language models to reason in a continuous latent space. arXiv p"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Heard and Rubin-Delanchy (2018) Nicholas A Heard and Patrick Rubin-Delanchy. 2018. Choosing between methods of combining-values. Biometrika 105, 1 (2018), 239–246."
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hegel and Hegel (1998) Georg Wilhelm Friedrich Hegel and GWF Hegel. 1998. Aesthetics: Lectures on fine art . Vol. 1. Oxford University Press."
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hentschel et al . (2022) Simon Hentschel, Konstantin Kobs, and Andreas Hotho. 2022. CLIP knows image aesthetics. Frontiers in Artificial Intelligence 5 (2022), 976235."
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Heusel et al . (2017) Martin Heusel, Hubert Ramsauer, Thomas Unterthiner, Bernhard Nessler, and Sepp Hochreiter. 2017. Gans trained by a two time-scale update rule converge to a local nash equilibrium"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al . (2025) Lei Huang, Weijiang Yu, Weitao Ma, Weihong Zhong, Zhangyin Feng, Haotian Wang, Qianglong Chen, Weihua Peng, Xiaocheng Feng, Bing Qin, et al . 2025. A survey on hallucination in la"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al . (2024b) Nisha Huang, Yuxin Zhang, Fan Tang, Chongyang Ma, Haibin Huang, Weiming Dong, and Changsheng Xu. 2024b. Diffstyler: Controllable dual diffusion for text-driven image stylization."
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang and Belongie (2017) Xun Huang and Serge Belongie. 2017. Arbitrary style transfer in real-time with adaptive instance normalization. In Proceedings of the IEEE international conference on compute"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al . (2024a) Yipo Huang, Xiangfei Sheng, Zhichao Yang, Quan Yuan, Zhichao Duan, Pengfei Chen, Leida Li, Weisi Lin, and Guangming Shi. 2024a. Aesexpert: Towards multi-modality foundation model"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hullman et al . (2023) Jessica Hullman, Ari Holtzman, and Andrew Gelman. 2023. Artificial intelligence and aesthetic judgment. arXiv preprint arXiv:2309.12338 (2023)."
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hume (1757) David Hume. 1757. Of the Standard of Taste. Essays, Moral, Political, and Literary (1757). https://oll.libertyfund.org/titles/hume-essays-moral-political-literary-lf-ed"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ioannou and Maddock (2024) Eleftherios Ioannou and Steve Maddock. 2024. Evaluation in Neural Style Transfer: A Review. In Computer Graphics Forum . Wiley Online Library, e15165."
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Isik and Vessel (2021) Ayse Ilkay Isik and Edward A Vessel. 2021. From visual perception to aesthetic appeal: Brain responses to aesthetically appealing natural landscape movies. Frontiers in Human Ne"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jiang and Chen (2024) Ruixiang Jiang and Changwen Chen. 2024. Artist: Aesthetically Controllable Text-Driven Stylization without Training. arXiv preprint arXiv:2407.15842 (2024)."
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Joshi et al . (2011) Dhiraj Joshi, Ritendra Datta, Elena Fedorovskaya, Quang-Tuan Luong, James Z Wang, Jia Li, and Jiebo Luo. 2011. Aesthetics and emotions in images. IEEE Signal Processing Magazine 2"
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kant (2024) Immanuel Kant. 2024. Critique of judgment . Vol. 10. Minerva Heritage Press."
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ke et al . (2023) Junjie Ke, Keren Ye, Jiahui Yu, Yonghui Wu, Peyman Milanfar, and Feng Yang. 2023. Vila: Learning image aesthetics from user comments with vision-language pretraining. In Proceedings "
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kim et al . (2022) Diana Kim, Ahmed Elgammal, and Marian Mazzone. 2022. Formal analysis of art: Proxy learning of visual concepts from style through language models. arXiv preprint arXiv:2201.01819 (2"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kirillov et al . (2023) Alexander Kirillov, Eric Mintun, Nikhila Ravi, Hanzi Mao, Chloe Rolland, Laura Gustafson, Tete Xiao, Spencer Whitehead, Alexander C Berg, Wan-Yen Lo, et al . 2023. Segment anyt"
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kirstain et al . (2023) Yuval Kirstain, Adam Polyak, Uriel Singer, Shahbuland Matiana, Joe Penna, and Omer Levy. 2023. Pick-a-pic: An open dataset of user preferences for text-to-image generation. Adv"
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kojima et al . (2022) Takeshi Kojima, Shixiang Shane Gu, Machel Reid, Yutaka Matsuo, and Yusuke Iwasawa. 2022. Large language models are zero-shot reasoners. Advances in neural information processing "
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al . (2024) Daiqing Li, Aleks Kamko, Ehsan Akhgari, Ali Sabet, Linmiao Xu, and Suhail Doshi. 2024. Playground v2. 5: Three insights towards enhancing aesthetic quality in text-to-image generatio"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al . (2023) Leida Li, Yipo Huang, Jinjian Wu, Yuzhe Yang, Yaqian Li, Yandong Guo, and Guangming Shi. 2023. Theme-aware visual attribute reasoning for image aesthetics assessment. IEEE Transactio"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liao et al . (2022) Peiyuan Liao, Xiuyu Li, Xihui Liu, and Kurt Keutzer. 2022. The artbench dataset: Benchmarking generative models with artworks. arXiv preprint arXiv:2206.11404 (2022)."
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lin et al . (2014) Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr Dollár, and C Lawrence Zitnick. 2014. Microsoft coco: Common objects in context. In Compu"
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lindell and Mueller (2011) Annukka K Lindell and Julia Mueller. 2011. Can science account for taste? Psychological insights into art appreciation. Journal of Cognitive Psychology 23, 4 (2011), 453–475"
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lindsey et al . (2025) Jack Lindsey, Wes Gurnee, Emmanuel Ameisen, Brian Chen, Adam Pearce, Nicholas L. Turner, Craig Citro, David Abrahams, Shan Carter, Basil Hosmer, Jonathan Marcus, Michael Sklar, "
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al . (2024) Ryan Liu, Jiayi Geng, Addison J Wu, Ilia Sucholutsky, Tania Lombrozo, and Thomas L Griffiths. 2024. Mind your step (by step): Chain-of-thought can reduce performance on tasks where "
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "McFadden (1972) Daniel McFadden. 1972. Conditional logit analysis of qualitative choice behavior. Frontiers in Econometrics (1972)."
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mitra et al . (2024) Chancharik Mitra, Brandon Huang, Trevor Darrell, and Roei Herzig. 2024. Compositional chain-of-thought prompting for large multimodal models. In Proceedings of the IEEE/CVF Confer"
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2023) R OpenAI. 2023. Gpt-4 technical report. arxiv 2303.08774. View in Article 2, 5 (2023)."
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ortlieb and Carbon (2019) Stefan A Ortlieb and Claus-Christian Carbon. 2019. A functional model of kitsch and art: linking aesthetic appreciation to the dynamics of social motivation. Frontiers in psy"
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Palmer et al . (2013) Stephen E Palmer, Karen B Schloss, and Jonathan Sammartino. 2013. Visual aesthetics and human preference. Annual review of psychology 64, 1 (2013), 77–107."
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Radford et al . (2021) Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al . 2021. Learning transf"
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Rombach et al . (2022) Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn Ommer. 2022. High-resolution image synthesis with latent diffusion models. In Proceedings of the IEEE/"
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Samo and Highhouse (2023) Andrew Samo and Scott Highhouse. 2023. Artificial intelligence and art: Identifying the aesthetic judgment factors that distinguish human-and machine-generated artwork. Psych"
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Schelling et al . (2008) Friedrich Wilhelm Joseph Schelling, Douglas W Stott, and David Simpson. 2008. The philosophy of art . University of Minnesota Press."
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Schuhmann et al . (2022) Christoph Schuhmann, Romain Beaumont, Richard Vencu, Cade Gordon, Ross Wightman, Mehdi Cherti, Theo Coombes, Aarush Katta, Clayton Mullis, Mitchell Wortsman, et al . 2022. Lai"
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sibley (2017) Frank Sibley. 2017. Aesthetic concepts. In Aesthetics . Routledge, 501–505."
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sircello (1968) Guy Sircello. 1968. Subjectivity and Justification in Aesthetic Judgments. The Journal of Aesthetics and Art Criticism 27, 1 (1968), 3–12."
+  },
+  {
+   "id": "b0172",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "So (2023) Chaehan So. 2023. Measuring aesthetic preferences of neural style transfer: More precision with the two-alternative-forced-choice task. International Journal of Human–Computer Interaction 39"
+  },
+  {
+   "id": "b0173",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Song et al . (2020) Jiaming Song, Chenlin Meng, and Stefano Ermon. 2020. Denoising diffusion implicit models. arXiv preprint arXiv:2010.02502 (2020)."
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Spearman (1987) Charles Spearman. 1987. The proof and measurement of association between two things. The American journal of psychology 100, 3/4 (1987), 441–471."
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sprague et al . (2024) Zayne Sprague, Fangcong Yin, Juan Diego Rodriguez, Dongwei Jiang, Manya Wadhwa, Prasann Singhal, Xinyu Zhao, Xi Ye, Kyle Mahowald, and Greg Durrett. 2024. To cot or not to cot? "
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sullivan and Artino Jr (2013) Gail M Sullivan and Anthony R Artino Jr. 2013. Analyzing and interpreting data from Likert-type scales. Journal of graduate medical education 5, 4 (2013), 541–542."
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tatarkiewicz (1963) Wladyslaw Tatarkiewicz. 1963. Objectivity and Subjectivity in the History of Aesthetics. Philosophy and phenomenological research 24, 2 (1963), 157–173."
+  },
+  {
+   "id": "b0178",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tatarkiewicz (2012) Władysław Tatarkiewicz. 2012. A history of six ideas: An essay in aesthetics . Vol. 5. Springer Science & Business Media."
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Team et al . (2023) Gemini Team, Rohan Anil, Sebastian Borgeaud, Jean-Baptiste Alayrac, Jiahui Yu, Radu Soricut, Johan Schalkwyk, Andrew M Dai, Anja Hauth, Katie Millican, et al . 2023. Gemini: a fami"
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Van Leeuwen and Jewitt (2000) Theo Van Leeuwen and Carey Jewitt. 2000. The handbook of visual analysis . Sage."
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al . (2024) Haofan Wang, Matteo Spinelli, Qixun Wang, Xu Bai, Zekui Qin, and Anthony Chen. 2024. Instantstyle: Free lunch towards style-preserving in text-to-image generation. arXiv preprint a"
+  },
+  {
+   "id": "b0182",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al . (2023) Jianyi Wang, Kelvin CK Chan, and Chen Change Loy. 2023. Exploring clip for assessing the look and feel of images. In Proceedings of the AAAI conference on artificial intelligence ,"
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al . (2022) Zijie J Wang, Evan Montoya, David Munechika, Haoyang Yang, Benjamin Hoover, and Duen Horng Chau. 2022. Diffusiondb: A large-scale prompt gallery dataset for text-to-image generativ"
+  },
+  {
+   "id": "b0184",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wei et al . (2022) Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Fei Xia, Ed Chi, Quoc V Le, Denny Zhou, et al . 2022. Chain-of-thought prompting elicits reasoning in large language models. "
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wikiart ([n. d.]) volunteer team Wikiart. [n. d.]. WikiArt dataset. https://www.wikiart.org ."
+  },
+  {
+   "id": "b0186",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wright and Ommer (2022) Matthias Wright and Björn Ommer. 2022. Artfid: Quantitative evaluation of neural style transfer. In DAGM German Conference on Pattern Recognition . Springer, 560–576."
+  },
+  {
+   "id": "b0187",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al . (2024) Xun Wu, Shaohan Huang, Guolong Wang, Jing Xiong, and Furu Wei. 2024. Multimodal large language models make text-to-image generative models align better. Advances in Neural Informatio"
+  },
+  {
+   "id": "b0188",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al . (2023) Xiaoshi Wu, Keqiang Sun, Feng Zhu, Rui Zhao, and Hongsheng Li. 2023. Human preference score: Better aligning text-to-image models with human preference. In Proceedings of the IEEE/CV"
+  },
+  {
+   "id": "b0189",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xu (2024) Jianing Xu. 2024. Exploration of the Applications of Image-based AIGC in Art Education. Advances in Social Development and Education Research 1, 3 (2024), 60–65."
+  },
+  {
+   "id": "b0190",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al . (2024) Junfeng Yang, Jing Fu, Wei Zhang, Wenzhi Cao, Limei Liu, and Han Peng. 2024. Moe-agiqa: Mixture-of-experts boosted visual perception-driven and semantic-aware quality assessment fo"
+  },
+  {
+   "id": "b0191",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Younger (1963) D Younger. 1963. Minimum feedback arc sets for a directed graph. IEEE Transactions on Circuit Theory 10, 2 (1963), 238–245."
+  },
+  {
+   "id": "b0192",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al . (2023b) Lvmin Zhang, Anyi Rao, and Maneesh Agrawala. 2023b. Adding conditional control to text-to-image diffusion models. In Proceedings of the IEEE/CVF International Conference on Compu"
+  },
+  {
+   "id": "b0193",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al . (2023a) Xinlu Zhang, Yujie Lu, Weizhi Wang, An Yan, Jun Yan, Lianke Qin, Heng Wang, Xifeng Yan, William Yang Wang, and Linda Ruth Petzold. 2023a. Gpt-4v (ision) as a generalist evaluator"
+  },
+  {
+   "id": "b0194",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al . (2024) Hanwei Zhu, Haoning Wu, Yixuan Li, Zicheng Zhang, Baoliang Chen, Lingyu Zhu, Yuming Fang, Guangtao Zhai, Weisi Lin, and Shiqi Wang. 2024. Adaptive image quality assessment via teach"
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Additional Experiment Details"
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "h3",
+   "en": "A.1. Human Aesthetic Judgment Collection"
+  },
+  {
+   "id": "b0197",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0198",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7. UI for 2AFC annotation. We present user with the source image (top), 2AFC (middle) and style prompt (bottom). The user is required to choose the preferred one by clicking on the “left\" or “right\" button."
+  },
+  {
+   "id": "b0199",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0200",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8. UI for hallucination annotation. Users are presented with the original 2AFC task and the response of MLLM, when the answer are not aligned. User shall drag discrete-valued slider to determine the hallucination strength from four perspectives."
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "p",
+   "en": "User Interface For the main judgment collection in Sec.3.2, we develop a web-based application to collect responses from human-expert annotators. We present users with the 2AFC question and reference content and style. The content is presented as a reference image, while we present the style as a prompt. The name of the stylization model is tracked but not visible to the user during annotation. The screenshot of the user interface (UI) can be found in Fig. 7."
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "p",
+   "en": "For the hallucination labeling, we also designed a UI, visualized in Fig. 8. We record the user’s response during the 2AFC annotation and present them with the misaligned comparisons. The user shall read the MLLM’s response (the prompting method and the model name is not visible) and determine the hallucination issue from the four aspects. The image on left will be enlarged on mouse hover."
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "p",
+   "en": "The annotation tools will be open-sourced to benefit future research."
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "p",
+   "en": "Preference Collection The participants (n=18, 7 female, 11 male) all have at least a tertiary education background. All participants have basic knowledge about Western and oriental art history, 14 participants have at least basic experience in painting, while 7 participants have experience in generative art, either as creative media or research. All participants are at least 18 and consent to the potential naked human body present in the dataset. Participants are allowed to search when they encounter unfamiliar art styles. The average time spent (measured as the time the author stays on the annotation page) per 2AFC annotation comparison is 13.3 sec, and the hallucination annotation is 63.5 sec. The physical setup is visualized in Fig. 9"
+  },
+  {
+   "id": "b0205",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9. A illustrative diagram for the physical setup of human data collection."
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "h3",
+   "en": "A.2. Sampling algorithm"
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "p",
+   "en": "We formally describe the proposed degree-uniform sub-graph sampling algorithm in Algorithm below."
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Algorithm 1 Sample a Connected Subgraph with Uniform Degree Distribution"
+  },
+  {
+   "id": "b0210",
+   "t": "text",
+   "w": "p",
+   "en": "Input:"
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "p",
+   "en": "⟦SLOT_57⟧ ;"
+  },
+  {
+   "id": "b0212",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0213",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0214",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0215",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0216",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0217",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0218",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0219",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0220",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0221",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0222",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0223",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0224",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0225",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0226",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0227",
+   "t": "keep",
+   "w": "table",
+   "en": "B ​ e ​ s ​ t ​ E ​ d ​ g ​ e ​ s ← { e ∈ E ∖ E ′ | min ⁡ max ⁡ { d ⁡ ( u ) + 1 , d ⁡ ( v ) + 1 } } BestEdges\\leftarrow\\left\\{e\\in E\\setminus E^{\\prime}\\ \\bigg|\\ \\min\\max\\{d(u)+1,d(v)+1\\}\\right\\}"
+  },
+  {
+   "id": "b0228",
+   "t": "keep",
+   "w": "table",
+   "en": "B e s t E d g e s ← { e ∈ B e s t E d g e s | min ∑ { d ( u ) + 1 , d ( v ) + 1 } } BestEdges\\leftarrow\\left\\{e\\in BestEdges\\ \\bigg|\\ \\min\\sum\\{d(u)+1,d(v)+1\\}\\right\\}"
+  },
+  {
+   "id": "b0229",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0230",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0231",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0232",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0233",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0234",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0235",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0236",
+   "t": "text",
+   "w": "h3",
+   "en": "A.3. Detail on FineArtBench"
+  },
+  {
+   "id": "b0237",
+   "t": "text",
+   "w": "p",
+   "en": "We construct FineArtBench by harvesting from existing open-source datasets with the help of MLLMs."
+  },
+  {
+   "id": "b0238",
+   "t": "text",
+   "w": "p",
+   "en": "For the Content category, 50% of the content images are generated using the Ideogram-v1 text-to-image (T2I) diffusion model with diverse prompts produced by GPT-4. The remaining 50% are randomly sampled from the SA-1B (Kirillov et al. 2023) and MS-COCO (Lin et al. 2014) datasets, with captions generated by Gemini-v1.5 pro (Team et al. 2023). Images from SA-1B are downsampled by a factor of two, while those from MS-COCO retain their original resolution. Overall, all images have an average height and width of 895.7 and 811.9 pixels, respectively. The 5th percentiles for height and width are 480 and 427 pixels, respectively, and the 95th percentiles for both dimensions are 1248 pixels."
+  },
+  {
+   "id": "b0239",
+   "t": "text",
+   "w": "p",
+   "en": "To synthesize fine-grained attribute annotations for the content images and their associated prompts, we first employ Gemini v1.5-pro to automate the annotation process based on a predefined attribute set. The Style subset of FineArtBench is derived from WikiArt (Wikiart [n. d.]) and DiffusionDB (Wang et al. 2022). The process involves two main steps:"
+  },
+  {
+   "id": "b0240",
+   "t": "text",
+   "w": "li",
+   "en": "(1) WikiArt Processing: We extract keywords from WikiArt, focusing on specifications such as art movement, artist, and genre. These base keywords are then expanded and combined using GPT-4 (OpenAI 2023) to create a diverse set of style descriptors."
+  },
+  {
+   "id": "b0241",
+   "t": "text",
+   "w": "li",
+   "en": "(2) DiffusionDB Processing: Given the high noise level in DiffusionDB annotations, we utilize an MLLM to preprocess the text prompts within the dataset. Specifically, we extract the style descriptions from each prompt and merge those with similar style specifications. Subsequently, we subsample from these processed style prompts to ensure quality and diversity."
+  },
+  {
+   "id": "b0242",
+   "t": "text",
+   "w": "p",
+   "en": "For both the WikiArt and DiffusionDB prompts, style reference images are generated using StableDiffusion-v2 (Rombach et al. 2022), with all images standardized to a resolution of 512⟦SLOT_58⟧512 pixels. Similar to content annotations, we employ MLLMs to annotate the attributes of style prompts."
+  },
+  {
+   "id": "b0243",
+   "t": "text",
+   "w": "p",
+   "en": "All annotations are manually validated by at least two human annotators to ensure quality. The actual number of sampled content and style images is summarized in Table 7. We will open-source FineArtBench to facilitate reproducibility and support future research endeavors."
+  },
+  {
+   "id": "b0244",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7. Content and Style Sources FineArtBench is built from diverse sources to eliminate bias."
+  },
+  {
+   "id": "b0245",
+   "t": "keep",
+   "w": "table",
+   "en": "Content Style Source Generated MS-COCO SA-1B WikiArt DiffusionDB Number 500 250 250 764 236"
+  },
+  {
+   "id": "b0246",
+   "t": "text",
+   "w": "h3",
+   "en": "A.4. Prompt Design"
+  },
+  {
+   "id": "b0247",
+   "t": "text",
+   "w": "p",
+   "en": "We summarize the full prompt of base prompt, zero-shot CoT prompting and the proposed ArtCoT prompt in Tab. 8. We did not attempt to optimize the prompt design of ArtCoT as it just act as a strong baseline method to identify the key issue and inspire future works."
+  },
+  {
+   "id": "b0248",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8. Template for different prompting methods. [STYLE] stands for placeholder for the style prompt, and [IMAGE] stands for placeholder for image tokens."
+  },
+  {
+   "id": "b0249",
+   "t": "keep",
+   "w": "table",
+   "en": "Base Prompt Zero-Shot CoT ArtCoT CS Analyzer Art Critic Summarizer ‘[IMAGE]‘ You are an expert in fine art. A source image (top) and two different stylized images (bottom) in the style of ‘[STYLE]‘ ar"
+  },
+  {
+   "id": "b0250",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Example conversations"
+  },
+  {
+   "id": "b0251",
+   "t": "text",
+   "w": "p",
+   "en": "We present several quantitative comparisons of MLLM’s response generated using different prompt in the following pages. We highlight the subjective words and unsubstantiated interpretation of zero-shot CoT. Compared with zero-shot CoT, the responses from ArtCoT is much more detailed and contain less hallucination."
+  },
+  {
+   "id": "b0252",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0253",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0254",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0255",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0256",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0257",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0258",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0259",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0260",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0261",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0262",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Samples of FineArtBench"
+  },
+  {
+   "id": "b0263",
+   "t": "text",
+   "w": "p",
+   "en": "Examples of content image and style prompt is in Fig. 10, Tab. 9, respectively"
+  },
+  {
+   "id": "b0264",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0265",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 10. Random sample of content images from FineArtBench"
+  },
+  {
+   "id": "b0266",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 9. Examples of style prompt"
+  },
+  {
+   "id": "b0267",
+   "t": "keep",
+   "w": "table",
+   "en": "Randomly Sampled Style Prompts Bauhaus geometric abstraction with primary colors and clean lines The Blue Boy by Thomas Gainsborough Alphonse Mucha, Vincent van Gogh, Egon Schiele-inspired artwork wit"
+  }
+ ]
+}

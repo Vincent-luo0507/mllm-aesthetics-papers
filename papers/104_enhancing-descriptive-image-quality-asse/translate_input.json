@@ -1,0 +1,1996 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Enhancing Descriptive Image Quality Assessment with A Large-scale Multi-modal Dataset"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "With the rapid advancement of Vision Language Models (VLMs), VLM-based Image Quality Assessment (IQA) seeks to describe image quality linguistically to align with human expression and capture the mult"
+  },
+  {
+   "id": "b0003",
+   "t": "text",
+   "w": "h2",
+   "en": "I Introduction"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "p",
+   "en": "Image Quality Assessment (IQA) aims to measure and compare the quality of images, expecting to align with human perception. With the emergence of Vision Language Models (VLMs) [1, 2, 3], VLM-based IQA begins to attract more research interest [4, 5, 6, 7, 8]. These methods leverage VLMs to describe image quality using language, recognizing that language better mirrors human expression, and captures the multifaceted nature of IQA tasks [8]. However, existing VLM-based IQA methods still fall short especially in aspects of functionality and performance."
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "Functionality. There are various application scenarios of IQA, but existing VLM-based IQA models only support a few of them. For example, one scenario involves assessing a single image downloaded from the web, while another requires comparing multiple images handled by different algorithms. Also, image restoration needs to assess an image against a reference, while image generation requests non-reference assessments. Therefore, a superior IQA model should be multi-functional to cater to such diverse scenarios. However, existing methods limit to a specific subset of these tasks, such as single-image assessment [5], multi-image comparison [6], or full-reference setting [8], etc. Hence, the limitations in functionality hinder the wide applications of prior methods."
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "Performance. Many IQA methods perform well on some specific datasets but may generalize poorly to other images with different contents or distortions. For instance, Co-Instruct [6] performs well on TID2013 dataset [9] (85.0%), but drops significantly to 50.7% when testing on BAPPS dataset [10]. A more comprehensive comparison on our newly created benchmark is given in Fig. 1, where it shows that previous works [5, 6] under-perform even within their defined tasks and settings. One potential cause for this is the limited scope of their training datasets. For example, the added distortion category in Q-Instruct [5] is limited; Co-Instruct [6] directly utilizes GPT-4V [2], which is not accurate in IQA tasks, to generate data; and the dataset scale in DepictQA [8] remains small. Besides, these methods are constrained in their usage by resizing images to a fixed resolution [5, 6], while the image resolution is critical for quality. Therefore, the dataset’s coverage, quality, and scale together with the training techniques limit the performance of previous methods."
+  },
+  {
+   "id": "b0007",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 1: Performance comparison. Our model surpasses previous works including Q-Instruct [5], Co-Instruct [6], and the proprietary GPT-4V [2] across a broad range of tasks in both full-reference and non-reference settings. Traditional score-based IQA methods like LPIPS [10] and MUSIQ [11] have no language abilities, and thus can only be used in instant rating task. Q-Instruct is only tested on single-image input tasks."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "To address these challenges, we propose a multi-functional IQA model to handle various image quality assessment tasks. We categorize these tasks into two types, as shown in Fig. 2. (a) Single-image assessment aims to evaluate the quality of a single image by identifying distortions (e.g., “blur” in Fig. 2a top). It can also analyze the distortions’ impacts on contents (e.g., blur “affecting the definition of mountains and trees” in Fig. 2a bottom). (b) Paired-image comparison focuses on comparing the quality of two distorted images based on the clarity, colorfulness, and sharpness of presented contents. For example, in Fig. 2b, despite reduced contrast, “Image A maintains more scene integrity”, as “Image B’s serious noise level is more detrimental”. We omit multi-image comparison since it is an easy extension of a pairwise one [12]. Each type includes basic brief sub-tasks for fundamental assessments and detailed sub-tasks to enhance reasoning abilities. Moreover, the model supports both full-reference and non-reference settings, making it adaptable to diverse scenarios."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "Under the multi-functional task paradigm, we construct a new large-scale dataset, DQ-495K, for comprehensive and accurate training and evaluation. First, for diverse distortion, we design and implement 35 types of distortions, each with 5 levels. Second, to enhance the label quality, we inform GPT-4V of the low-level ground truths (e.g., distortions) to leverage its strong high-level perception and language abilities, while avoiding its sub-optimal IQA capabilities. Third, to increase the dataset scale, we scale up the data amount to 495K under the brief-detail combined framework [8]. Also, our dataset is suitable for both full-reference and non-reference settings."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "With the above collected DQ-495K dataset, we then train an enhanced Depicted image Quality Assessment VLM model (DepictQA-Wild). During training, the original image resolution is retained, leading to a better quality perception regarding resolution. Furthermore, we estimate the confidence of responses from key tokens, providing vital auxiliary information, especially for filtering low-quality responses."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "The performance of DepictQA-Wild is evaluated in Fig. 1 and Sec. V. In brief tasks, our model surpasses general VLMs, IQA-specific VLMs, and score-based IQA methods by a large margin. For example, we achieve 95.9% in non-reference comparison on TID2013 dataset, remarkably surpassing Co-Instruct (85.0%) and GPT-4V (88.1%). In detailed tasks, our model also excels, e.g., recording 74.9% in non-reference comparison reasoning, compared to 48.1% for Co-Instruct and 60.3% for GPT-4V. At last, experiments on real-world applications including assessing web-downloaded images and comparing model-restored images further demonstrate our superiority. We hope that our multi-functional model could serve as a stepping stone towards a unified VLM-based IQA model. Although not yet fully realized, our method showcases the potential of VLM-based IQA models."
+  },
+  {
+   "id": "b0013",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 2: Illustration of our task paradigm and qualitative results. Our DepictQA-Wild focuses on two main tasks including single-image assessment and paired-image comparison in both full-reference and non-reference settings. Each task contains a brief sub-task focusing on the fundamental IQA ability, and a detailed sub-task fostering the reasoning capacities. More qualitative results are provided in Fig. S5 and S7 of Supp. Mat."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "h2",
+   "en": "II Related Works"
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "Score-based IQA methods. Traditional IQA methods rely on scores to assess image quality and can be divided into full-reference and non-reference methods. (a) Full-reference methods compute a similarity score between a distorted image and a high-quality reference. Early works rely on human-designed metrics such as image information [13], structural similarity [14], phase congruency with gradient magnitude [15], etc. The rapid advancement of deep learning has also inspired learning-based IQA methods that measure image quality through data-driven training. Pioneered by PieAPP [16] and LPIPS [10], data-driven approaches [17, 18, 19, 20, 21, 22, 23] have spurred innovations in IQA, exhibiting high consistency with human judgments. (b) Non-reference methods directly regress a quality score without a reference image. Initially, human-designed natural image statistics are adopted [24, 25, 26, 27, 28, 29, 30]. Subsequently, deep-learning-based methods [31, 32, 33, 34, 35, 36, 37] replace hand-crafted statistics by learning quality priors from extensive data. Recent works focus on enhancing performance by introducing multi-scale features [11], CLIP pre-training [38], multi-dimension attention [39], continual learning [40], multitask learning [41], and so on. However, as discussed in [8], score-based IQA methods limit themselves in complex analyses and multi-aspect weighing of IQA, since the information provided by a single score is far from sufficient."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "Vision Language Models (VLMs) incorporate visual modality into Large Language Models (LLMs) [42, 43, 44], aiming to leverage their emergent ability to achieve general visual ability. These VLMs [45, 46, 1, 2, 47, 48, 49, 50, 51, 52] have demonstrated a general visual ability and can tackle a variety of multi-modality tasks, including image captioning [53, 54, 55], visual question answering [56, 57, 58], document understanding [59, 60, 61], etc. Although proficient in these high-level visual perception tasks, we demonstrate in Sec. V that general-purpose VLMs still struggle with IQA tasks."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "VLM-based IQA methods aim to achieve better alignment with human perception leveraging the power of VLMs [7]. Q-Bench [4] establishes a comprehensive benchmark for evaluating general-purpose VLMs in low-level perception tasks. [62] evaluates various VLMs on the widely-adopted two-alternative forced choice (2AFC) task. Q-Instruct [5] enhances the low-level perception ability of VLMs by introducing a large-scale dataset. Q-Align [63] and DeQA-Score [64] employ discrete text-defined levels for more accurate quality score regression. Co-Instruct [6] concentrates on the quality comparison among multiple images. DepictQA [8] performs quality description, quality comparison, and comparison reasoning in the full-reference setting. Recently, inspired by the success of DeepSeek-R1 [65], Q-Insight [66] first introduces reasoning-induced quality regression by employing the GRPO reinforcement learning method [67] for IQA. Building upon this idea, VisualQuality-R1 [68] further improves IQA performance by incorporating pairwise ranking relationships into the reinforcement learning objective. Moreover, Q-Ponder [69] proposes a unified two-stage training framework, consisting of a cold-start pretraining phase followed by reinforcement learning-based fine-tuning. Nonetheless, as highlighted in Sec. I, most of these methods focus on specific aspects of IQA tasks, diverging from the original intents of VLMs’ universality and practical usage requirements."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "Explainable AI for computer vision. Our descriptive IQA model could be seen as an explainable IQA approach, as it provides a human-understandable reasoning process. Recent studies in computer vision have increasingly emphasized explainability to enhance transparency and trust in deep models [70, 71, 72, 73, 74]. Several efforts have also been made to design explainable IQA models [75, 76, 77]. However, most existing explainable IQA methods primarily rely on visualization-based interpretability (i.e., saliency or attribution maps) to highlight influential regions, which can qualitatively indicate what the model attends to but fails to fully capture the underlying reasoning or perceptual logic behind the score assignment. Recently, TIFA [78] leveraged language-based question answering to evaluate text-to-image results, demonstrating that linguistic explanations can serve as an intuitive bridge between human judgment and model understanding. Inspired by this, we take a further step to construct a descriptive IQA model that provides natural-language rationales to describe perceptual factors influencing the assessment."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "h2",
+   "en": "III Task Paradigm and Dataset Construction"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h3",
+   "en": "III-A Task Paradigm"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "As highlighted in the introduction, there are various application scenarios for IQA models. First, the evaluation objective can be either single-image assessment or paired-image comparison. The former is useful to rate a web-downloaded image, while the latter suits comparing images processed by two different algorithms. Second, the reference setting may be full-reference or non-reference. For example, image restoration requires assessments based on references, while image generation needs non-reference evaluations. Third, the response could be either brief or detailed. Brief responses suit well-targeted tasks (e.g., comparison without reasons), while detailed responses enhance interpretability and human interaction. To cater to such diverse scenarios, a practical IQA method should be multi-functional. Therefore, we aim to establish such a multi-functional task paradigm for VLM-based IQA research. As shown in Fig. 2, we focus on two tasks, each containing both brief and detailed sub-tasks, and supporting both full-reference and non-reference settings."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "li",
+   "en": "• Task1: single-image assessment. (a) Brief sub-task: distortion identification. Given a distorted image, the model should identify the most obvious distortions. (b) Detailed sub-task: assessment reasoning. In addition to identifying distortions, the model should also describe how these distortions affect the perception of image contents and the overall image quality."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "li",
+   "en": "• Task2: paired-image comparison. (a) Brief sub-task: instant rating. Given two distorted images, the model should find the image with better quality. (b) Detailed sub-task: comparison reasoning. Building upon the comparison results, the model should first compare the content loss caused by distortions in the two images, then weigh different aspects to draw inferences, and finally justify its comparison results. Note that we omit the multi-image (⟦SLOT_0⟧2) comparison since it can be achieved easily as the extension of paired case [12]."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "Compared with previous works, our design unifies various tasks, response types, and reference settings into a multi-functional paradigm. In contrast, Q-Instruct [5] focuses on non-reference single-image assessment, Co-Instruct [6] targets comparison among multiple images in the non-reference setting, and DepictQA [8] primarily addresses the full-reference setting. Although one can achieve unified IQA by combining these task-specific IQA models, it is impractical due to the significant increase in network parameters, considering that current VLMs are already quite large."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h3",
+   "en": "III-B Distortion Library"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE I: Overview of our distortion library with 12 super-categories and 35 sub-categories in total."
+  },
+  {
+   "id": "b0028",
+   "t": "keep",
+   "w": "table",
+   "en": "Super-category Blur Noise Compression Brighten Darken Contrast Strengthen Contrast Weaken Saturate Strengthen Saturate Weaken Over-sharpen Pixelate Quantize # Sub-category 6 6 2 4 4 2 2 2 2 1 1 3"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "Existing IQA datasets (e.g., BAPPS [10], PieAPP [16]) usually introduce distortions (e.g., noise, blur) into high-quality reference images to create distorted images for evaluation. However, these datasets do not publicly release the distortion information of each image, and their distortions only cover limited scenes. Therefore, we aim to develop a comprehensive large-scale distortion library."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "Distortion generation. Our distortion system comprises 12 super-categories in total, with each super-category consisting of multiple sub-categories. For instance, the “blur” category encompasses “Gaussian blur”, “motion blur”, “lens blur”, etc. In total, there are 35 sub-categories. For each sub-category, there are 5 severity levels: “slight”, “moderate”, “obvious”, “serious”, and “catastrophic”. A summary is illustrated in Tab. I. Considering the need to assess high-quality images as well, we retain the original image without any distortions in 5% proportion. See details in Supp. Mat."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "Multi-distortion setups. In practical usage, multiple distortions may occur simultaneously on the same image. While a simple way to simulate them is to add multiple distortions recursively, real-world scenarios are more complex. First, one distortion may weaken another, such as “brighten” weakens “darken”, “blur” weakens “over-sharpen”. Second, certain distortions exhibit similar visual results, such as “pixelate” looks similar to “blur”, making it challenging to identify both if they are applied simultaneously. We also observe that humans can identify at most two distortions when three or more are applied, as illustrated in Fig. S2 of Supp. Mat. Hence, we limit the distortion number to two and manually review all possible combinations to exclude contradictory or similar combinations. See details of multi-distortion setting in Tab. S1 and Sec. -A of Supp. Mat."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "h3",
+   "en": "III-C Dataset Construction"
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "High-quality and large-scale datasets are crucial for training VLMs. Following [1, 49], training VLMs requires {images, question, response} triplets, where “images” are the ones to be evaluated, “question” describes the task, and “response” is the ground truth answer. In this section, we detail the construction of our dataset from the selection of images and the collection of questions and responses."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "Image collection. Typical IQA datasets involve two types of images: high-quality reference images and distorted images to be evaluated. Generating distorted images is easy given our comprehensive distortion library introduced in Sec. III-B. Existing studies often collect a large number of distorted images from a small number of references [12, 9]. However, the semantic richness of images is also crucial for VLM training. Therefore, we primarily source reference images from the KADIS-700K dataset [79], which offers 140K pristine reference images from diverse natural and daily scenes. We also leverage other IQA datasets for their convenience to generate responses (details are below)."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Question collection. Humans often express similar questions using different sentences, necessitating model robustness to various questions. For each task, we initially prompt GPT-4 [43] to generate 50 candidate questions. Then, we manually eliminate ambiguous and repetitive ones and correct inaccurate ones, creating a set of 20 questions. We randomly sample these questions during training and testing to form the data pair."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "Response collection. We employ two response types as shown in Fig. 3. The first comprises brief templated responses that are easy to produce, where we emphasize the quantity to bring robust fundamental skills. The second consists of detailed responses, where we emphasize the quality to enhance the advanced reasoning abilities. Existing methods to collect detailed responses mainly rely on human annotation [5, 8] and GPT-4V generation [6]. However, human annotation can be biased and vary in quality when annotators are untrained or tired [8]. Also, GPT-4V is not fully reliable since its IQA performance is still unsatisfactory as evidenced in Sec. V."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "We rethink the key aspects of our desired responses and GPT-4V’s corresponding abilities, introducing GT-informed generation by prompting the Ground Truth (GT) details to enhance GPT-4V’s generation. Specifically, a high-quality detailed response should contain image contents, key distortions, the impacts of distortions on contents, and conclusions. While GPT-4V excels at identifying contents and analyzing impacts, it struggles with distortion identification and quality comparison, as shown in Sec. V. To compensate for that, we directly provide it with explicit GT information. The response generation for each task is detailed subsequently."
+  },
+  {
+   "id": "b0038",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 3: Construction of DQ-495K dataset. For distortion identification, templated responses are generated using distortion information. In instant rating, we sample images from existing datasets and compare the Mean Opinion Score (MOS) to determine the better image for templated response creation. For assessment reasoning and comparison reasoning tasks, we provide GPT-4V with evaluated images and Ground Truth (GT) details (i.e., distortion information, comparison results from an assistant model) to facilitate detailed and accurate response generation, called GT-informed generation. This additional information is critical as GPT-4V cannot produce it accurately."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "Task1-brief: distortion identification. As shown in Fig. 3a, we first establish a response pool containing 20 templates with unspecified distortions. Next, we add distortions into the reference to create its distorted counterpart and populate a sampled template with the specific distortions as the response. For streamlined evaluation, we sample half of the questions and append the short answer prompt: “Answer the question using a single word or phrase.” Correspondingly, the response will be a single phrase, like “noise”, specifying the distortions."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "Task1-detail: assessment reasoning. Given the reference image, we initially introduce distortions to corrupt the reference. Then, GPT-4V is input with both two images and the distortion information, and requested to assess the quality of the distorted image, as illustrated in Fig. 3b. We instruct GPT-4V to respond from three dimensions: contents, distortions along with their impacts on contents, and overall quality. Prior works [5, 6] mainly focus on low-level properties, while we consider how these distortions influence the display of high-level contents."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "Task2-brief: instant rating. We begin by sampling a reference image and its two distorted versions from existing IQA datasets, and then compare the Mean Opinion Score (MOS) to determine the better one, as shown in Fig. 3c. Similar to distortion identification, we assemble a response pool of 20 templates to convert the comparison results into textual responses, and append the short answer prompt for the convenience of evaluation. We select three IQA datasets for training, including BAPPS [10], KADID-10K [80], and PIPAL [12], to cover a diverse range of reference images."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "Task2-detail: comparison reasoning. As depicted in Fig. 3d, given a high-quality image, we randomly apply distortions to produce two distorted images. We first train an assistant model using the large-scale instant rating data to predict the comparison results. Note that GPT-4V does not perform well on the quality comparison task, as shown in our experiments in Sec. V-B and Tab. IX, and thus we train our own comparison model. Then, similar to assessment reasoning, we inform GPT-4V of the three images, distortion information, and comparison results to generate detailed responses."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "Setup of non-reference setting. Our dataset accommodates both full-reference and non-reference settings. However, even for humans, identifying subtle distortions (e.g., minor brightness adjustments) without a reference is challenging. Thus, in the non-reference setting, we selectively remove samples with “slight” severity on some specific distortions, including “brighten”, “darken”, “contrast weaken”, “contrast strengthen”, “saturate weaken”, “saturate strengthen”, “quantize”, and “over-sharpen”."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE II: Statistics of our DQ-495K dataset."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "(a) Number of samples. All tasks except instant rating are displayed in the single-distortion / multi-distortion format. Task1-brief Task1-detail Task2-brief Task2-detail Distortion Identification Assessment Reasoning Instant Rating Comparison Reasoning Train 112,000 / 112,000 19,829 / 7,981 215,676 19,809 / 7,958 Test 28,000 / 28,000 200 / 100 41,120 200 / 100"
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "(b) Response length reported as word count / string length. Distortion Identification Assessment Reasoning Instant Rating Comparison Reasoning Single-dist. 10.36 / 69.81 64.37 / 430.23 9.30 / 52.02 93.20 / 604.97 Multi-dist. 12.84 / 88.67 87.31 / 588.44 114.04 / 740.68"
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "h3",
+   "en": "III-D Dataset Analysis"
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "Dataset statistics are given in Tab. IIa. Our training set contains 439,676 brief samples and 55,577 detailed samples. For instant rating, the training set includes BAPPS, KADID, and PIPAL, while the validation set consists of BAPPS, KADID, PIPAL, TID2013 [9], LIVE-MD [81], and MDID2013 [82]. To ensure there is no intersection between training and validation sets for those overlapped datasets, the original splits are kept. For detailed tasks, all samples in the validation set have been carefully checked by humans."
+  },
+  {
+   "id": "b0050",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 4: Statistics of all images in our dataset about (a) semantic features, (b) brightness, (c) contrast, (d) colorfulness, (e) edge density, and (f) texture variance."
+  },
+  {
+   "id": "b0052",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 5: Word length distribution of detailed responses."
+  },
+  {
+   "id": "b0054",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 6: Wordcloud map of all detail responses."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "Image analysis. We analyze six statistical features to examine the image distributions. First, we use CLIP [83] ViT to extract semantic features and apply K-Means clustering with ⟦SLOT_1⟧. As shown in Fig. 4a, the samples are relatively balanced across clusters. Second, the brightness (Fig. 4b) and contrast (Fig. 4c) approximately follow Gaussian distributions, consistent with natural image statistics [84]. Third, as in Fig. 4de, colorfulness and edge density exhibit right-skewed heavy-tailed distributions, which are characteristics of natural scenes [85, 86]. Finally, texture variance (Fig. 4f) follows a highly right-skewed ⟦SLOT_2⟧ distribution, aligning with prior findings [87]. These results confirm that our dataset maintains natural image statistics in semantic and low-level dimensions."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "Text analysis. First, we examine the response length statistics of our DQ-495K dataset in Tab. IIb, including both word count and character length. For the instant rating task, single- and multi-distortion cases are not distinguished. We further present the word-length distribution of detailed reasoning responses in Fig. 6. The results show a near-Gaussian distribution centered around approximately 90 words, indicating that most responses are concise yet sufficiently descriptive. Second, Fig. 6 illustrates the word cloud of our DQ-495K dataset. We manually remove “Image A” and “Image B”, as they are constant proper nouns across all texts. The most frequent terms (e.g., “overly high”, “color quantization”, “high contrast”, “high saturation”, and “detail”) are closely related to low-level image attributes and visual quality."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "h2",
+   "en": "IV Model Design"
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "Model Architecture. DepictQA-Wild primarily adopts the architecture from LLaVA-1.6 [88] and mPLUG-Owl2 [3], structured as follows. Specifically, the input images and the question texts are first tokenized, then fused, finally processed by the Large Language Model (LLM) for response generation. (1) Tokenizing input images and question texts. We use a frozen CLIP pre-trained ViT-L/14 [83] as the image encoder to convert the input images into visual tokens. The question texts are tokenized into textual tokens using the SentencePiece tokenizer [89]. To bridge the different embedding spaces of visual and textual tokens, we implement a trainable image abstractor, which is a four-layer transformer network, to map visual tokens into the textual space following [3]. The abstractor can also significantly reduce the number of vision tokens, relieving the computing pressure. (2) Token fusion. We integrate the visual tokens into pre-defined positions within the textual tokens as token fusion. (3) Response generation using LLM. The fused tokens are fed into LLM to generate the final response. Here we mainly conduct experiments with Vicuna-v1.5-7B. Despite their capabilities, pre-trained LLMs typically do not perform well on IQA tasks without adjustments. Therefore, we employ LoRA [90], a fine-tuning technique that efficiently modifies a small subset of parameters within the LLM. Specifically, we apply LoRA to adjust the projection layers in all self-attention modules, following [90, 49]. This approach allows for targeted refinement of the model’s performance on IQA tasks without the need for extensive retraining. Our experiments in Tab. XIII also show that model architecture has little influence on model performance."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "Retaining resolution in training. Although previous VLM-based IQA models typically resize all input images to a fixed resolution [5, 6], we find this might hurt their performance, as resolution variation may affect visual quality. Instead, we retain the original image resolution during training. Specifically, we interpolate (in bicubic mode) the position embedding in CLIP [83] to accommodate varying image resolutions. Ablation studies detailed in Sec. V-D demonstrate our model’s capability to assess quality variations attributable to resolution, even without explicitly training on such tasks."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "p",
+   "en": "Confidence estimation. In many applications, it is important to know a confidence score that indicates when the model is uncertain of its response. Here we use the confidence scores of some key tokens as the confidence of the entire answer. Intuitively, the key tokens are distortion names in distortion identification, and are either “Image A” or “Image B” in instant rating. For detailed reasoning tasks, which feature diverse and non-structured responses, we utilize semantic change testing [91] to identify the top 20 tokens with the highest importance scores as key tokens. In semantic change testing, we employ all-MiniLM-L6-v2 [92] as the similarity model, due to its high processing speed (14K sentences per second). The predicted likelihood of key tokens is averaged as the confidence score. Results in Fig. 9 verify that confidence and model performance are highly correlated."
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "Model setup. Since the CLIP pre-trained ViT-L/14 [83] encodes each ⟦SLOT_3⟧ patch to a visual token, the resolution of the input image should be integer multiples of 14. Therefore, we first pad the size of input images to integer multiples of 14 with zero-padding. We encode the image patches into visual tokens using the CLIP pre-trained ViT-L/14 [83], with each token having a channel of 1024. The vision abstractor can reduce the number of vision tokens to 64 and map the vision tokens to the hidden dimension of the LLM, which is 4096. Without the vision abstractor, the maximum resolution is limited to 672, constrained by computation resources (RTX A6000 GPUs). However, with the vision abstractor, we can process images with much larger resolutions (up to ⟦SLOT_4⟧). In our experiments, the maximum image resolution is ⟦SLOT_5⟧, thus the resolutions of all images are retained. The vision abstractor consists of four transformer layers with 64 learnable query embeddings. In LoRA of LLM, the parameters of rank and scale factor are both set as 16. The projection weights in each attention layer are fine-tuned using LoRA technique."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "Training and inference setup. DepictQA-Wild is trained for 1 epoch with batch size 64. Adam optimizer with ⟦SLOT_6⟧, weight decay 0.001, and learning rate 0.0002 is used for training. During inference, the temperature is set to 0, since lots of predicted information (e.g., distortion, comparison result) need to be certain."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "h2",
+   "en": "V Experiments"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "h3",
+   "en": "V-A Metrics and Baselines"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "Accuracy, SRCC, and PLCC. The accuracy metric is utilized for distortion identification and instant rating tasks. VLMs usually produce diverse textual outputs, and we transform them into brief results for accuracy calculation. Specifically, we prompt our model with “Answer the question using a single word or phrase” to encourage direct output of brief responses. For baseline models, we include all potential answers in the prompt and instruct the model to identify the most accurate one. We emphasize that our key motivation is to generate descriptive language rather than quality scores. However, our approach can produce quality scores using pair-wise comparison if required. The quality scores are assessed using Spearman Rank Correlation Coefficient (SRCC) and Pearson Linear Correlation Coefficient (PLCC)."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "GPT-4 score, BLEU, and ROUGE-L. We employ the GPT-4 score to evaluate assessment reasoning and comparison reasoning tasks, following [1]. Specifically, we provide GPT-4 with both the model-generated response and the corresponding ground truth response. GPT-4 assesses the helpfulness, relevance, accuracy, and level of detail in the model-generated response relative to the ground truth, assigning an overall score on a scale of 0 to 10, where a higher score indicates better quality. This average score is subsequently normalized to a scale of 0 to 100%, reported as the GPT-4 score metric. We further evaluate the reasoning tasks with classical metrics including BLEU and ROUGE-L score following [93, 94]."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "Baselines. We categorize our baseline methods into general-purpose VLMs and IQA-specific VLMs. For general VLMs, we include mPLUG-Owl2 [3], LLaVA-1.6 [88], LLaVA-OneVision-1.5 [95], InternVL2.5 [96], Qwen2.5-VL [97], and the proprietary GPT-4V [2]. We use 7B/8B version for open-source VLMs for fair comparison. IQA-specific VLMs are represented by Q-Instruct [5], Co-Instruct [6], CLIP-like LIQE [41], and reasoning-based IQA model Q-Insight [66]. Note that Q-Instruct only supports single-image inputs, thus we only test it on non-reference single-image assessment tasks. Additionally, we compare traditional score-based IQA methods including full-reference ones (PSNR, SSIM [14], LPIPS [10], DISTS [19]) and non-reference ones (NIQE [26], ClipIQA [38], MUSIQ [11], MANIQA [39]) in instant rating task and score regression experiments."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "h3",
+   "en": "V-B Results on Benchmarks"
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE III: Distortion identification results under both single-distortion and multi-distortion cases. The accuracy metric is reported in the full-reference / non-reference settings. The best results are highlighted in bold. Our DepictQA-Wild greatly outperforms all baselines and maintains its high accuracy in out-of-distribution (OOD) setting."
+  },
+  {
+   "id": "b0071",
+   "t": "keep",
+   "w": "table",
+   "en": "General VLM IQA-specific VLM mPLUG-Owl2 LLaVA-1.6 LLaVA-OV-1.5 InternVL2.5 Qwen2.5-VL GPT-4V Q-Instruct Co-Instruct LIQE Q-Insight Ours Ours-OOD Single-dist. 10.1 / 11.6 14.0 / 15.3 23.9 / 30.4 18.7 /"
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE IV: Instant rating results on multiple benchmarks in the full-reference / non-reference setting with the accuracy metric. The best results are shown in bold. Q-Instruct is tested by inputting single images to calculate quality scores, and then compare the scores to rate. DepictQA-Wild surpasses all baselines by a large margin."
+  },
+  {
+   "id": "b0073",
+   "t": "keep",
+   "w": "table",
+   "en": "Methods BAPPS test {}^{\\texttt{test}} KADID test {}^{\\texttt{test}} PIPAL test {}^{\\texttt{test}} TID2013 LIVE-MD MDID2013 Mean Full-reference Score-based IQA PSNR 68.9 / 78.7 / 80.9 / 85.0 / 89.7 / 7"
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "Quantitative results of distortion identification are shown in Sec. V-B. First, for open-source general VLMs and Co-Instruct, the performance in the non-reference setting is generally better than in the full-reference setting. This is counterintuitive, as humans typically find full-reference comparison easier. The reason is that current VLMs are primarily trained without reference, thus it is hard to use the reference image. Second, for open-source general VLMs, the performance in the multi-distortion case is higher than in the single-distortion case. In fact, for multi-distortion samples like “blur, darken”, when the model predicts only one distortion “blur”, it still achieves 0.5 accuracy. Therefore, for multi-distortion cases, achieving very high accuracy (⟦SLOT_7⟧90%) is difficult, whereas obtaining moderate accuracy (⟦SLOT_8⟧40%) is comparatively easier than in single-distortion cases. Third, the proprietary GPT-4V outperforms other general-purpose VLMs and exceeds specialized IQA VLMs like Q-Instruct and Co-Instruct, achieving similar results with reasoning-based IQA model Q-Insight. Fourth, DepictQA-Wild stably surpasses all baseline methods, demonstrating our model’s efficacy. Finally, we evaluate our model in an out-of-distribution (OOD) setting, i.e., for a particular category of distortion (e.g., noise), we use some sub-categories (e.g., Gaussian noise) during training, and other sub-categories (e.g., impulse noise) for evaluation. Results in the last column of Sec. V-B show that our method maintains high accuracy even under such an OOD setting."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "p",
+   "en": "Quantitative results of instant rating are demonstrated in Sec. V-B. First, in the full-reference context, traditional score-based methods, even the simplest PSNR, outperform all general VLMs including GPT-4V and prior IQA-specific VLMs, indicating the inadequacy of existing VLMs in full-reference IQA tasks. Second, conversely, in the non-reference scenario, GPT-4V and Co-Instruct excel beyond most score-based approaches, except MUSIQ. Third, for some general VLMs (i.e., InternVL2.5 and Qwen2.5-VL) and IQA-specific VLM Co-Instruct, the performance in the non-reference setting consistently surpasses that in the full-reference setting, as these models struggle to effectively utilize reference images even with explicit prompts. This further demonstrates the necessity of unifying full-reference and non-reference settings. Fourth, the reasoning-based Q-Insight model performs much better in some cases (e.g., non-reference KADID and TID2013) than in others (e.g., LIVE-MD and MDID2013), indicating its instability across datasets. Finally, DepictQA-Wild demonstrates superior performance across both settings by a large margin, showcasing its substantial advantage."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "p",
+   "en": "Quantitative results of assessment reasoning and comparison reasoning are shown in Tab. V and Tab. VI. First, the performance of the VLM-specific models significantly declines on tasks outside their defined scopes. For instance, Co-Instruct’s performance is unsatisfactory on full-reference tasks. Second, GPT-4V shows robust reasoning abilities, stably outperforming prior IQA-specific VLMs. Third, DepictQA-Wild surpasses GPT-4V, especially in the non-reference setting, affirming its superior reasoning abilities. Finally, DepictQA-Wild achieves relatively good GPT-4 score and ROUGE-L, indicative of the overall semantic accuracy, but a low BLEU score (yet remains much higher than GPT-4V), which reflects word-level consistency. This suggests that while our predicted answers do not precisely duplicate the ground truths word-for-word, they preserve similar meanings with diverse expressions."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE V: Assessment reasoning and comparison reasoning results with GPT-4 score metric in the full-reference / non-reference setting. The best results are marked in bold."
+  },
+  {
+   "id": "b0078",
+   "t": "keep",
+   "w": "table",
+   "en": "Methods Assessment Reasoning Comparison Reasoning Single-dist. Multi-dist. Single-dist. Multi-dist. GPT-4V 67.8 / 59.2 71.0 / 62.3 66.2 / 60.3 67.2 / 60.1 Q-Instruct - / 45.7 - / 45.8 - - Co-Instruct "
+  },
+  {
+   "id": "b0079",
+   "t": "keep",
+   "w": "table",
+   "en": "Methods Assessment Reasoning Comparison Reasoning Single-distortion Multi-distortion Single-distortion Multi-distortion BLEU ROUGE-L BLEU ROUGE-L BLEU ROUGE-L BLEU ROUGE-L GPT-4V 0.020/0.010 0.248/0.2"
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE VI: Assessment reasoning and comparison reasoning results with classical metrics (BLEU and ROUGE-L) in the full-reference / non-reference setting. The best results are bold."
+  },
+  {
+   "id": "b0081",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 7: User study results."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "Qualitative results of our model on the four tasks in the non-reference setting are depicted in Fig. 2. More qualitative results are provided in Figs. S4, S5, S6, S7 and S8 of Supp. Mat."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "h3",
+   "en": "V-C Quality score regression"
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "p",
+   "en": "Our key focus in this work is to generate descriptive language rather than quality scores. We focus more on linguistic descriptions because language is an effective interaction tool in an LLM-based intelligent agent. With the rapid development of LLMs and multi-modal techniques, in an LLM-based intelligent agent, language could be a useful tool for interacting and communicating across quality-related tasks such as image assessment, refinement, editing, and recommendation. Still, if it is required, our approach can produce quality scores."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "Quality score regression. The score regression results are evaluated on the PIPAL, KADID, TID2013, and CSIQ datasets. These datasets include high-quality reference images and their distorted versions under various distortions. We calculate the win rate of an image against others to determine its quality score. Specifically, for an image A, we randomly sample comparison candidates, such as B, C, D, etc., which share the same content as A but have different distortions. Image A is then compared pairwise with each of its comparison candidates (B, C, D, etc.). Finally, the win rate of Image A against all its compared candidates is calculated as its quality score. The comparison numbers per image for PIPAL, KADID, TID2013, and CSIQ datasets are 58, 62, 60, and 15, respectively. We show that the comparison number per image could be reduced significantly without large performance degradation in Tab. S3 of Supp. Mat. The results of quality score regression are given in Tab. VII and Tab. VII, proving that our method can generate accurate quality scores."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE VII: Results of quality score regression with SRCC / PLCC metrics. The best results are emphasized in bold."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "(a) Full-reference setting. Methods PIPAL⟦SLOT_9⟧ KADID⟦SLOT_10⟧ TID2013 CSIQ SSIM 0.624 / 0.680 0.750 / 0.751 0.746 / 0.802 0.861 / 0.857 FSIM 0.673 / 0.746 0.855 / 0.857 0.841 / 0.875 0.937 / 0.937 LPIPS 0.639 / 0.718 0.799 / 0.803 0.798 / 0.851 0.905 / 0.926 DepictQA-Wild 0.743 / 0.780 0.938 / 0.943 0.852 / 0.886 0.934 / 0.949"
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "(b) Non-reference setting. Methods PIPAL⟦SLOT_11⟧ KADID⟦SLOT_12⟧ TID2013 CSIQ NIQE 0.300 / 0.367 0.430 / 0.499 0.315 / 0.413 0.660 / 0.747 CLIPIQA 0.448 / 0.491 0.644 / 0.653 0.616 / 0.690 0.761 / 0.798 MUSIQ 0.539 / 0.570 0.650 / 0.668 0.578 / 0.693 0.755 / 0.811 MANIQA 0.558 / 0.602 0.482 / 0.527 0.472 / 0.603 0.701 / 0.714 DepictQA-Wild 0.742 / 0.778 0.937 / 0.941 0.847 / 0.866 0.912 / 0.938"
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "Assessing in-the-wild images with different contents. Existing real-world IQA datasets like KonIQ [98] and SPAQ [99] contain real distorted images with various contents. To regress quality scores from such a dataset, our model needs to compare images with different contents though it is trained only to compare images with similar contents, as shown in Task 2 of Fig. 2. The results in Tab. VIII show that even with a task gap between training and test, our original DepictQA-Wild still achieves comparable results with previous score-based IQA methods in score regression. Furthermore, we formulate real-world IQA datasets into instant rating tasks to re-train our DepictQA-Wild, i.e., trained on KonIQ then evaluated on SPAQ, and vice versa. Our re-trained DepictQA-Wild outperforms all baselines trained on the same dataset. These results indicate that our method is capable of assessing in-the-wild images with different contents."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE VIII: Results of quality score calculation on SPAQ and KonIQ datasets with SRCC / PLCC metrics. The best results are bold. DepictQA-Wild needs to compare images with different contents to obtain the quality score, since all images in the two datasets contain different contents. The original DepictQA-Wild is only trained to compare images with similar contents, which brings a task gap. When trained on the same dataset as baselines, DepictQA-Wild surpasses the baseline methods."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "(a) Results on SPAQ dataset. Methods NIQE CLIPIQA MUSIQ MANIQA Ours Ours Train Set - - KonIQ KonIQ KonIQ Original SRCC 0.664 0.700 0.856 0.755 0.859 0.835 PLCC 0.679 0.722 0.859 0.765 0.861 0.841"
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "(b) Results on KonIQ dataset. Methods NIQE CLIPIQA DBCNN MUSIQ Ours Ours Train Set - - SPAQ SPAQ SPAQ Original SRCC 0.530 0.685 0.731 0.753 0.787 0.717 PLCC 0.533 0.717 0.758 0.680 0.807 0.729"
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE IX: Our assistant model surpasses GPT-4V in instant rating task. The metric is accuracy in the full-reference / non-reference setting. The best results are highlighted in bold."
+  },
+  {
+   "id": "b0095",
+   "t": "keep",
+   "w": "table",
+   "en": "TID2013 LIVE-MD MDID2013 GPT-4V 84.4 / 88.1 79.6 / 72.7 70.6 / 67.6 Our Assistant Model 94.9 / 94.6 93.1 / 92.8 90.1 / 89.8"
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 8: One example of model-restored image by SwinIR [100]."
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE X: Relationships between the comparison reasoning and instant rating tasks. The best results are bold. Overall, the two tasks are beneficial to each other."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "p",
+   "en": "(a) Results on the instant rating task. BAPPStest KADIDtest PIPALtest TID2013 LIVE-MD MDID2013 Only Rating 81.6 / 81.6 92.4 / 92.3 89.1 / 89.0 94.2 / 94.1 92.9 / 92.7 92.1 / 91.7 Co-training 84.7 / 82.4 93.6 / 93.1 90.5 / 90.0 96.9 / 96.4 92.1 / 91.8 90.0 / 89.6"
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "p",
+   "en": "(b) Results on the comparison reasoning task. Single-distortion Multi-distortion GPT-4 Score BLEU ROUGE-L GPT-4 Score BLEU ROUGE-L Only Reasoning 74.3 / 69.6 0.203 / 0.202 0.465 / 0.453 70.6 / 69.1 0.165 / 0.165 0.414 / 0.407 Co-training 75.1 / 74.9 0.207 / 0.207 0.466 / 0.463 71.7 / 68.7 0.176 / 0.172 0.420 / 0.413"
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "p",
+   "en": "Results on Q-Bench. Q-Bench [4] is a VLM benchmark for low-level perception, but it mainly contains multiple-choice questions, whereas our model targets descriptive assessments, making direct evaluation mismatched. To test whether our data still helps on Q-Bench, we co-train with the multiple-choice dataset Q-Instruct [5] in Tab. XI. Co-training on Q-Instruct and our dataset consistently outperforms training on Q-Instruct alone, especially in distortion-related questions, demonstrating the benefit of our dataset even under a format shift. We borrow LLaVA results trained on Q-Instruct from [5] for reference."
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE XI: Results on Q-Bench [4]. The best results are highlighted in bold."
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "table",
+   "en": "Q-Bench Yes-or-No What How Distortion Other LLaVA (Q-Instruct trained) 66.4 58.2 50.5 49.4 65.7 Ours (Q-Instruct trained) 70.5 49.6 51.7 55.4 56.7 Ours (Q-Instruct + Our data trained) 74.0 62.8 54.0 6"
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "h3",
+   "en": "V-D Ablation Studies"
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "p",
+   "en": "Relationships between the comparison reasoning and instant rating tasks are studied in Tab. X. First, comparison reasoning task improves the performance on four instant rating datasets, but decreases the results on two datasets. Overall, comparison reasoning task helps the instant rating. Second, instant rating task stably improves the performance on comparison reasoning task."
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 9: Our estimated confidence scores are high correlated to the model performance on (a) distortion identification and (b) (c) instant rating tasks on different benchmarks in both full-reference and non-reference settings."
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "p",
+   "en": "Confidence. We examine the correlation between the performance and estimated confidence in Fig. 9. For distortion identification and instant rating tasks, across both full-reference and non-reference settings, our model demonstrates improved performance as the confidence interval increases. This validates the effectiveness of our confidence estimation."
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "p",
+   "en": "Assistant model. To construct comparison reasoning responses, we train an assistant model to predict comparison results (see Fig. 3). These results serve as pseudo labels, which are subsequently provided to GPT-4V to generate responses. We compare the assistant model to GPT-4V on three out-of-distribution IQA datasets. The results in Tab. IX affirm the superiority of the assistant model."
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "p",
+   "en": "Retaining resolution. In Tab. XII, we study the effects of retaining resolution. Specially, we randomly sample 1,000 high-quality images whose aspect ratios are greater than ⟦SLOT_13⟧. These images are either resized by swapping their height and width (denoted as H⟦SLOT_14⟧W), or bi-linearly down-sampled by a scale factor of 0.5, 0.75, 0.8, 0.85, 0.9, or 0.95. DepictQA-Wild is requested to conduct the instant rating task, i.e., compare the original and resized images to determine the superior one. The alternative method of retaining resolution is to resize both original image and resized image to a larger resolution, which can maintain the quality difference. In contrast, resizing both images to smaller resolution results in two nearly same images. The results are presented in Tab. XII. First, retaining resolution is crucial for identifying images with better aspect ratio or higher resolution. Second, with down-sampling becomes severer (i.e., aspect ratio is from 0.95 to 0.5), the accuracy is improved since the quality drop is more significant. Third, for severe down-sampling (e.g., aspect ratio is 0.5) where the quality degradation is quite obviously, retaining resolution or just resizing both images to a larger size both perform well ( ⟦SLOT_15⟧ 99.0% ). Finally, however, for relatively slight down-sampling (e.g., aspect ratio is from 0.75 to 0.95), the performance of retaining resolution is stably superior than resizing."
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE XII: Retaining resolution during both training and inference is important to identify images with better aspect ratio or higher resolution."
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "table",
+   "en": "Retain Resolution? H ↔ \\leftrightarrow W 0.5 × 0.5\\times 0.75 × 0.75\\times 0.8 × 0.8\\times 0.85 × 0.85\\times 0.9 × 0.9\\times 0.95 × 0.95\\times Training Inference ✗ ✗ 73.0 99.0 93.5 91.7 83.8 77.2 71.2"
+  },
+  {
+   "id": "b0113",
+   "t": "text",
+   "w": "p",
+   "en": "Ablation study on module choice. Under the same VLM architecture framework and the same training loss, we compare two vision-text connectors (i.e., vision abstractor v.s. projector) and three LLMs on distortion identification and instant rating tasks. The default vision-text connector and LLM in this ablation study are vision projector and Vicuna-v1.5-7B. The results in Tab. XIII show that simply replacing vision-text connectors or LLMs has relatively little influence on performance. Considering that vision abstractor can greatly reduce the computational burden than projector, we select abstractor by default. For example, for a ⟦SLOT_16⟧ image, projector generates 1024 tokens, while abstractor only outputs 64 tokens. Note that the computation amount is proportional to the square of the number of tokens."
+  },
+  {
+   "id": "b0114",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE XIII: Simply replacing modules (i.e., vision-text connectors and LLMs) has relatively little influence on performance."
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "table",
+   "en": "Types Architectures Distortion Identification Instant Rating Single-dist. ID Multi-dist. ID BAPPS test {}^{\\texttt{test}} KADID test {}^{\\texttt{test}} PIPAL test {}^{\\texttt{test}} TID2013 LIVE-MD MD"
+  },
+  {
+   "id": "b0116",
+   "t": "text",
+   "w": "p",
+   "en": "Ablation on comparison order. We evaluate the impact of comparison order using the fine-grained dataset of [101], following its protocol to report consistency / accuracy / correlation. Here, consistency measures prediction stability when the two input images are swapped. As shown in Tab. XIV, our model attains >90% consistency under order reversal, and achieves substantially higher comparison accuracy and score correlation than Q-Instruct and GPT-4V. The Q-Instruct and GPT-4V results are quoted from [101]. These findings indicate that our model is robust to input-order variations. In addition, we provide the average confidence of our model in Tab. XV. The results show that the confidence of consistent predictions is substantially higher than that of inconsistent ones, highlighting the model’s ability for self-evaluation."
+  },
+  {
+   "id": "b0117",
+   "t": "text",
+   "w": "p",
+   "en": "Failure cases. We further examine typical failure cases for a general VLM (i.e., Qwen2.5-VL-7B) and our DepictQA-Wild. Both models sometimes confuse visually similar distortions. In the first row of Fig. 10, they misclassify “compression” (blocky artifacts), “pixelation” (aliasing-induced jaggedness), and “blur” (low-frequency smoothing). In the second row, they confuse “insufficient brightness”, “insufficient saturation”, and “insufficient contrast”, which also produce similar global appearance changes. These results suggest that the fine-grained discrimination ability of current models remains limited."
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0119",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 10: Failure cases where the model confuses some similar distortions, leading to misclassification."
+  },
+  {
+   "id": "b0120",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE XIV: Ablation results of comparison order on fine-grained dataset released in [101]. We follow [101] to report the consistency (%) / accuracy (%) / correlation as metrics. The best results are highlighted in bold."
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "table",
+   "en": "Q-Instruct [ 66 ] GPT-4V [ 2 ] DepictQA-Wild CSIQ (Levels) 11.5 / 8.1 / 0.557 41.9 / 40.2 / 0.906 95.5 / 92.5 / 0.958 CSIQ (Types) 11.7 / 6.9 / 0.416 32.5 / 24.4 / 0.482 90.5 / 69.0 / 0.857 SPAQ (Scor"
+  },
+  {
+   "id": "b0122",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE XV: Confidence estimation of consistent and inconsistent comparison results on fine-grained dataset in [101]."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "table",
+   "en": "Confidence statistics Consistency Inconsistency CSIQ (Levels) 0.933 ± \\pm 0.120 0.629 ± \\pm 0.083 CSIQ (Types) 0.860 ± \\pm 0.141 0.611 ± \\pm 0.098 SPAQ (Scores) 0.900 ± \\pm 0.125 0.649 ± \\pm 0.110"
+  },
+  {
+   "id": "b0124",
+   "t": "text",
+   "w": "h3",
+   "en": "V-E Real-world Applications"
+  },
+  {
+   "id": "b0125",
+   "t": "text",
+   "w": "p",
+   "en": "Assessing web-downloaded images. A practical usage of an IQA model involves assessing the quality of real images. We collect a total of 50 real-world images from the web, featuring diverse contents including animals, plants, faces, buildings, and landscapes. Qualitative results in Fig. 11 and Fig. S8 (in Supp. Mat.) indicate that our method can assess real images with detailed descriptions. More importantly, DepictQA-Wild can describe how the distortions affect the contents. For example, in Fig. 11d, our model first accurately identifies the “severe quantization”, then describes that the quantization “causes banding in the sky and water”, and finally concludes that the quality “is considerably degraded”. We also conduct a user study with 20 participants involved. Participants are instructed to choose the assessment result that is of the highest quality among the test methods. The results are shown in Fig. 7, revealing that our approach stably outperforms baseline methods in aligning human perception."
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0127",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 11: Qualitative results on assessing web-downloaded images. More results in Fig. S8 of Supp. Mat."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0129",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. 12: Qualitative results of detailed comparison reasoning on model-processed images."
+  },
+  {
+   "id": "b0130",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE XVI: Results on model-processed images. The best results are bold. GPT-4V exhibits variability in ranking, so its results are reported as mean ⟦SLOT_17⟧ standard deviation."
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "table",
+   "en": "NIQE ClipIQA MUSIQ ManIQA GPT-4V Ours Rank ↓ \\downarrow 2.20 1.40 1.60 1.80 1.34 ± \\pm 0.27 1.20 Accuracy ↑ \\uparrow 45.5 72.7 77.3 66.4 74.5 82.7"
+  },
+  {
+   "id": "b0132",
+   "t": "text",
+   "w": "p",
+   "en": "Comparison on model-processed images. To develop image restoration models, one often needs to compare the restoration quality of different models. We consider five common image restoration tasks: super-resolution, denoising, JPEG compression artifact removal, motion deblurring, and defocus deblurring. For each task, we collect three to four cutting-edged models in recent years (listed in Tab. XVII), apply them to a correspondingly degraded image, and then manually rank the resultant model-processed images. To find the image considered best by VLMs, we linearly scan the candidates and compare them in pairs. As VLMs’ results are not deterministic and may be sensitive to the presentation order of images, we repeat the linear scan 10 times and randomly shuffle the scan order each time. The average rank of the found best restoration and the accuracy of the paired comparison are reported in Tab. XVI. First, DepictQA-Wild achieves an average rank of 1.20 (1 is the best), outperforming both GPT-4V and score-based methods. Second, though the temperature is set to 0, GPT-4V shows variability with a large standard deviation. Third, model-restored images are generally out-of-distribution for our model, while DepictQA-Wild exhibits excellent generalization ability on these images. For example, the image in Fig. 8 is restored from a noisy image. There is still remnant noise, which is somewhat strange. For such an OOD image, our DepictQA-Wild correctly recognizes it to be inferior, but MANIQA, MUSIQ, and NIQE consider it as the best of the four candidates. Finally, we provide two qualitative results of detailed comparison reasoning on model-processed images in Fig. 12. One compares SwinIR and FBCNN in the JPEG compression artifact removal task, and the other compares MPRNet and MAXIM in the deblur task. Our model can generate a reasonable explanation for the comparison results."
+  },
+  {
+   "id": "b0133",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE XVII: Image restoration models used in real-world experiments of comparing model-processed images , including SwinIR [100], HAT [102], X-Restormer [103], MPRNet [104], Restormer [105], FBCNN [106], MAXIM [107], MPRNet [104], DRBNet [108], and IFAN [109]. For FBCNN, “⟦SLOT_18⟧=90” means training on the quality factor 90, and “blind” means blind to the quality factor."
+  },
+  {
+   "id": "b0134",
+   "t": "text",
+   "w": "p",
+   "en": "[t] Image restoration task Image restoration models Super-resolution SwinIR, HAT, X-Restormer Denoising SwinIR, MPRNet, Restormer, X-Restormer JPEG artifact removal SwinIR, FBCNN (⟦SLOT_19⟧=90), FBCNN (blind) Motion deblurring MAXIM, MPRNet, Restormer Defocus deblurring DRBNet, IFAN, Restormer"
+  },
+  {
+   "id": "b0135",
+   "t": "text",
+   "w": "h3",
+   "en": "V-F Complexity and Efficiency"
+  },
+  {
+   "id": "b0136",
+   "t": "text",
+   "w": "p",
+   "en": "Training cost. The total parameters are 7.11B, including 6.76B for LLM, 0.30B for vision encoder, and 54M for vision abstractor. The trainable parameters are 70M (54M for vision abstractor and 16M for LoRA), constituting only 0.98% of the total parameters. The model is trained on 8 GPUs (RTX A6000). The training is completed in around 22 hours."
+  },
+  {
+   "id": "b0137",
+   "t": "text",
+   "w": "p",
+   "en": "Inference cost. The inference latency depends on the response length and it is tested on a single RTX A6000 GPU. For brief tasks task with the short answer prompt (about 2.92 words), the inference time stands at approximately 2.23s / batch=32, transformed to 0.07s / sample. For the assessment reasoning task (75.84 words on average), the inference time is 22.97s / batch=32 (i.e., 0.72s per response). Despite adopting VLMs, our DepictQA-Wild remains deployable on a single consumer GPU (e.g., RTX3090)."
+  },
+  {
+   "id": "b0138",
+   "t": "text",
+   "w": "h2",
+   "en": "VI Conclusions and Limitations"
+  },
+  {
+   "id": "b0139",
+   "t": "text",
+   "w": "p",
+   "en": "We introduce DepictQA-Wild, a VLM-based IQA model, empowered by a new multi-functional task paradigm, dataset enrichment, and training technique, surpassing baseline methods in both benchmarks and two real-world applications, showing the potential of descriptive quality assessment."
+  },
+  {
+   "id": "b0140",
+   "t": "text",
+   "w": "p",
+   "en": "Limitations. First, the fine-grained abilities requiring more high-level perception skills are still unsatisfactory. For example, in Fig. 11c, though identifying noise and pixelation successfully, our model fails to point out that they are respectively located in the left and right parts. One solution is to take the segmentation model to add various distortions to different regions. Second, for the convenience of evaluating, analyzing, and improving the model, we mainly focus on standardized answers. To achieve more flexible responses, LLM rewriting and human annotation can be used to increase linguistic diversity during dataset construction. Third, whether our assessment can be used as feedback to improve the quality of generation or restoration models is still under-explored."
+  },
+  {
+   "id": "b0141",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] H. Liu, C. Li, Q. Wu, and Y. J. Lee (2023) Visual instruction tuning . In Proceedings of the Annual Conference on Neural Information Processing Systems , Vol. 36 , pp. 34892–34916 . Cited by: §I ,"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] OpenAI (2023) GPT-4V(ision) system card . External Links: Link Cited by: Fig. 1 , Fig. 1 , §I , §I , §II , §V-A , TABLE XIV ."
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] Q. Ye, H. Xu, J. Ye, M. Yan, A. Hu, H. Liu, Q. Qian, J. Zhang, and F. Huang (2024) mPLUG-Owl2: revolutionizing multi-modal large language model with modality collaboration . In Proceedings of the "
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] H. Wu, Z. Zhang, E. Zhang, C. Chen, L. Liao, A. Wang, C. Li, W. Sun, Q. Yan, G. Zhai, et al. (2024) Q-Bench: a benchmark for general-purpose foundation models on low-level vision . In Proceedings "
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] H. Wu, Z. Zhang, E. Zhang, C. Chen, L. Liao, A. Wang, K. Xu, C. Li, J. Hou, G. Zhai, et al. (2024) Q-Instruct: improving low-level visual abilities for multi-modality foundation models . In Procee"
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] H. Wu, H. Zhu, Z. Zhang, E. Zhang, C. Chen, L. Liao, C. Li, A. Wang, W. Sun, Q. Yan, et al. (2024) Towards open-ended visual quality comparison . In Proceedings of the European Conference on Compu"
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] T. Wu, K. Ma, J. Liang, Y. Yang, and L. Zhang (2024) A comprehensive study of multimodal large language models for image quality assessment . In Proceedings of the European Conference on Computer "
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] Z. You, Z. Li, J. Gu, Z. Yin, T. Xue, and C. Dong (2024) Depicting beyond scores: advancing image quality assessment through multi-modal language models . In Proceedings of the European Conference"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] N. Ponomarenko, L. Jin, O. Ieremeiev, V. Lukin, K. Egiazarian, J. Astola, B. Vozel, K. Chehdi, M. Carli, F. Battisti, et al. (2015) Image database TID2013: peculiarities, results and perspectives "
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] R. Zhang, P. Isola, A. A. Efros, E. Shechtman, and O. Wang (2018) The unreasonable effectiveness of deep features as a perceptual metric . In Proceedings of the IEEE/CVF Conference on Computer Vi"
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] J. Ke, Q. Wang, Y. Wang, P. Milanfar, and F. Yang (2021) MUSIQ: multi-scale image quality transformer . In Proceedings of the IEEE/CVF International Conference on Computer Vision , pp. 5148–5157 "
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] G. Jinjin, C. Haoming, C. Haoyu, Y. Xiaoxing, J. S. Ren, and D. Chao (2020) PIPAL: a large-scale image quality assessment dataset for perceptual image restoration . In Proceedings of the European"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] H. R. Sheikh and A. C. Bovik (2006) Image information and visual quality . IEEE Transactions on Image Processing 15 ( 2 ), pp. 430–444 . Cited by: §II ."
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] Z. Wang, A. C. Bovik, H. R. Sheikh, and E. P. Simoncelli (2004) Image quality assessment: from error visibility to structural similarity . IEEE Transactions on Image Processing 13 ( 4 ), pp. 600–"
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] L. Zhang, L. Zhang, X. Mou, and D. Zhang (2011) FSIM: a feature similarity index for image quality assessment . IEEE Transactions on Image Processing 20 ( 8 ), pp. 2378–2386 . Cited by: §II ."
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] E. Prashnani, H. Cai, Y. Mostofi, and P. Sen (2018) PieAPP: perceptual image-error assessment through pairwise preference . In Proceedings of the IEEE Conference on Computer Vision and Pattern Re"
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] S. Bosse, D. Maniry, K. Müller, T. Wiegand, and W. Samek (2017) Deep neural networks for no-reference and full-reference image quality assessment . IEEE Transactions on Image Processing 27 ( 1 ),"
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] Y. Cao, Z. Wan, D. Ren, Z. Yan, and W. Zuo (2022) Incorporating semi-supervised and positive-unlabeled learning for boosting full reference image quality assessment . In Proceedings of the IEEE/C"
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] K. Ding, K. Ma, S. Wang, and E. P. Simoncelli (2020) Image quality assessment: unifying structure and texture similarity . IEEE Transactions on Pattern Analysis and Machine Intelligence 44 ( 5 ),"
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] K. Ding, Y. Liu, X. Zou, S. Wang, and K. Ma (2021) Locally adaptive structure and texture similarity for image quality assessment . In Proceedings of the ACM International Conference on Multimedi"
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] A. Ghildyal and F. Liu (2022) Shift-tolerant perceptual similarity metric . In Proceedings of the European Conference on Computer Vision , pp. 91–107 . Cited by: §II ."
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] G. Yin, W. Wang, Z. Yuan, C. Han, W. Ji, S. Sun, and C. Wang (2022) Content-variant reference image quality assessment via knowledge distillation . In Proceedings of the AAAI Conference on Artifi"
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] W. Zhou and Z. Wang (2022) Quality assessment of image super-resolution: balancing deterministic and statistical fidelity . In Proceedings of the ACM International Conference on Multimedia , pp. "
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] C. Ma, C. Yang, X. Yang, and M. Yang (2017) Learning a no-reference quality metric for single-image super-resolution . Computer Vision and Image Understanding 158 , pp. 1–16 . Cited by: §II ."
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] A. Mittal, A. K. Moorthy, and A. C. Bovik (2012) No-reference image quality assessment in the spatial domain . IEEE Transactions on Image Processing 21 ( 12 ), pp. 4695–4708 . Cited by: §II ."
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] A. Mittal, R. Soundararajan, and A. C. Bovik (2012) Making a “completely blind” image quality analyzer . IEEE Signal Processing Letters 20 ( 3 ), pp. 209–212 . Cited by: §II , §V-A ."
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] A. K. Moorthy and A. C. Bovik (2010) A two-step framework for constructing blind image quality indices . IEEE Signal Processing Letters 17 ( 5 ), pp. 513–516 . Cited by: §II ."
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] A. K. Moorthy and A. C. Bovik (2011) Blind image quality assessment: from natural scene statistics to perceptual quality . IEEE Transactions on Image Processing 20 ( 12 ), pp. 3350–3364 . Cited b"
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] M. A. Saad, A. C. Bovik, and C. Charrier (2012) Blind image quality assessment: a natural scene statistics approach in the dct domain . IEEE Transactions on Image Processing 21 ( 8 ), pp. 3339–33"
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] H. Tang, N. Joshi, and A. Kapoor (2011) Learning a blind measure of perceptual image quality . In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pp. 305–312 ."
+  },
+  {
+   "id": "b0172",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] L. Kang, P. Ye, Y. Li, and D. Doermann (2014) Convolutional neural networks for no-reference image quality assessment . In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Re"
+  },
+  {
+   "id": "b0173",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] X. Liu, J. Van De Weijer, and A. D. Bagdanov (2017) RankIQA: learning from rankings for no-reference image quality assessment . In Proceedings of the IEEE/CVF International Conference on Computer"
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] D. Pan, P. Shi, M. Hou, Z. Ying, S. Fu, and Y. Zhang (2018) Blind predicting similar quality map for image quality assessment . In Proceedings of the IEEE/CVF Conference on Computer Vision and Pa"
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] S. Su, Q. Yan, Y. Zhu, C. Zhang, X. Ge, J. Sun, and Y. Zhang (2020) Blindly assess image quality in the wild guided by a self-adaptive hyper network . In Proceedings of the IEEE/CVF Conference on"
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] S. Sun, T. Yu, J. Xu, W. Zhou, and Z. Chen (2022) GraphIQA: learning distortion graph representations for blind image quality assessment . IEEE Transactions on Multimedia 25 , pp. 2912–2925 . Cit"
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] H. Zheng, H. Yang, J. Fu, Z. Zha, and J. Luo (2021) Learning conditional knowledge distillation for degraded-reference image quality assessment . In Proceedings of the IEEE/CVF International Conf"
+  },
+  {
+   "id": "b0178",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] H. Zhu, L. Li, J. Wu, W. Dong, and G. Shi (2020) MetaIQA: deep meta-learning for no-reference image quality assessment . In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern R"
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] J. Wang, K. C. Chan, and C. C. Loy (2023) Exploring CLIP for assessing the look and feel of images . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 37 , pp. 2555–2563 . C"
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] S. Yang, T. Wu, S. Shi, S. Lao, Y. Gong, M. Cao, J. Wang, and Y. Yang (2022) MANIQA: multi-dimension attention network for no-reference image quality assessment . In Proceedings of the IEEE/CVF C"
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] W. Zhang, D. Li, C. Ma, G. Zhai, X. Yang, and K. Ma (2022) Continual learning for blind image quality assessment . IEEE Transactions on Pattern Analysis and Machine Intelligence 45 ( 3 ), pp. 286"
+  },
+  {
+   "id": "b0182",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] W. Zhang, G. Zhai, Y. Wei, X. Yang, and K. Ma (2023) Blind image quality assessment via vision-language correspondence: a multitask learning perspective . In Proceedings of the IEEE/CVF Conferenc"
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[42] W. Chiang, Z. Li, Z. Lin, Y. Sheng, Z. Wu, H. Zhang, L. Zheng, S. Zhuang, Y. Zhuang, J. E. Gonzalez, et al. (2023) Vicuna: an open-source chatbot impressing GPT-4 with 90%* ChatGPT quality . Exte"
+  },
+  {
+   "id": "b0184",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[43] OpenAI (2023) GPT-4 technical report . arXiv preprint arXiv:2303.08774 . Cited by: §II , §III-C ."
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[44] H. Touvron, T. Lavril, G. Izacard, X. Martinet, M. Lachaux, T. Lacroix, B. Rozière, N. Goyal, E. Hambro, F. Azhar, et al. (2023) LLaMA: open and efficient foundation language models . arXiv prepr"
+  },
+  {
+   "id": "b0186",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[45] J. Alayrac, J. Donahue, P. Luc, A. Miech, I. Barr, Y. Hasson, K. Lenc, A. Mensch, K. Millican, M. Reynolds, et al. (2022) Flamingo: a visual language model for few-shot learning . Proceedings of "
+  },
+  {
+   "id": "b0187",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[46] W. Dai, J. Li, D. Li, A. Tiong, J. Zhao, W. Wang, B. Li, P. N. Fung, and S. Hoi (2023) InstructBLIP: towards general-purpose vision-language models with instruction tuning . Proceedings of the An"
+  },
+  {
+   "id": "b0188",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[47] H. Wei, L. Kong, J. Chen, L. Zhao, Z. Ge, J. Yang, J. Sun, C. Han, and X. Zhang (2024) Vary: scaling up the vision vocabulary for large vision-language model . In Proceedings of the European Conf"
+  },
+  {
+   "id": "b0189",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[48] Q. Ye, H. Xu, G. Xu, J. Ye, M. Yan, Y. Zhou, J. Wang, A. Hu, P. Shi, Y. Shi, et al. (2023) mPLUG-Owl: modularization empowers large language models with multimodality . arXiv preprint arXiv:2304."
+  },
+  {
+   "id": "b0190",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[49] Z. Yin, J. Wang, J. Cao, Z. Shi, D. Liu, M. Li, X. Huang, Z. Wang, L. Sheng, L. Bai, et al. (2023) LAMM: language-assisted multi-modal instruction-tuning dataset, framework, and benchmark . In Pr"
+  },
+  {
+   "id": "b0191",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[50] P. Zhang, X. Dong, B. Wang, Y. Cao, C. Xu, L. Ouyang, Z. Zhao, S. Ding, S. Zhang, H. Duan, W. Zhang, H. Yan, X. Zhang, W. Li, J. Li, K. Chen, C. He, X. Zhang, Y. Qiao, D. Lin, and J. Wang (2023) "
+  },
+  {
+   "id": "b0192",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[51] R. Zhang, J. Han, C. Liu, A. Zhou, P. Lu, Y. Qiao, H. Li, and P. Gao (2024) LLaMA-Adapter: efficient fine-tuning of large language models with zero-initialized attention . In Proceedings of the I"
+  },
+  {
+   "id": "b0193",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[52] D. Zhu, J. Chen, X. Shen, X. Li, and M. Elhoseiny (2024) MiniGPT-4: enhancing vision-language understanding with advanced large language models . In Proceedings of the International Conference on"
+  },
+  {
+   "id": "b0194",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[53] H. Agrawal, K. Desai, Y. Wang, X. Chen, R. Jain, M. Johnson, D. Batra, D. Parikh, S. Lee, and P. Anderson (2019) Nocaps: novel object captioning at scale . In Proceedings of the IEEE/CVF Internat"
+  },
+  {
+   "id": "b0195",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[54] X. Chen, H. Fang, T. Lin, R. Vedantam, S. Gupta, P. Dollár, and C. L. Zitnick (2015) Microsoft COCO captions: data collection and evaluation server . arXiv preprint arXiv:1504.00325 . Cited by: §"
+  },
+  {
+   "id": "b0196",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[55] P. Young, A. Lai, M. Hodosh, and J. Hockenmaier (2014) From image descriptions to visual denotations: new similarity metrics for semantic inference over event descriptions . Transactions of the A"
+  },
+  {
+   "id": "b0197",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[56] Y. Goyal, T. Khot, D. Summers-Stay, D. Batra, and D. Parikh (2017) Making the V in VQA matter: elevating the role of image understanding in visual question answering . In Proceedings of the IEEE/"
+  },
+  {
+   "id": "b0198",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[57] Y. Liu, H. Duan, Y. Zhang, B. Li, S. Zhang, W. Zhao, Y. Yuan, J. Wang, C. He, Z. Liu, et al. (2024) MMBench: is your multi-modal model an all-around player? . In Proceedings of the European Confe"
+  },
+  {
+   "id": "b0199",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[58] P. Lu, S. Mishra, T. Xia, L. Qiu, K. Chang, S. Zhu, O. Tafjord, P. Clark, and A. Kalyan (2022) Learn to explain: multimodal reasoning via thought chains for science question answering . Proceedin"
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[59] A. Masry, X. L. Do, J. Q. Tan, S. Joty, and E. Hoque (2022) ChartQA: a benchmark for question answering about charts with visual and logical reasoning . In Findings of the Association for Computa"
+  },
+  {
+   "id": "b0201",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[60] M. Mathew, D. Karatzas, and C. Jawahar (2021) DocVQA: a dataset for vqa on document images . In Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision , pp. 2200–2209 . "
+  },
+  {
+   "id": "b0202",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[61] A. Singh, V. Natarajan, M. Shah, Y. Jiang, X. Chen, D. Batra, D. Parikh, and M. Rohrbach (2019) Towards VQA models that can read . In Proceedings of the IEEE/CVF Conference on Computer Vision and"
+  },
+  {
+   "id": "b0203",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[62] H. Zhu, X. Sui, B. Chen, X. Liu, P. Chen, Y. Fang, and S. Wang (2024) 2AFC prompting of large multimodal models for image quality assessment . IEEE Transactions on Circuits and Systems for Video "
+  },
+  {
+   "id": "b0204",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[63] H. Wu, Z. Zhang, W. Zhang, C. Chen, L. Liao, C. Li, Y. Gao, A. Wang, E. Zhang, W. Sun, et al. (2024) Q-Align: teaching LMMs for visual scoring via discrete text-defined levels . In Proceedings of"
+  },
+  {
+   "id": "b0205",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[64] Z. You, X. Cai, J. Gu, T. Xue, and C. Dong (2025) Teaching large language models to regress accurate image quality scores using score distribution . In Proceedings of the IEEE/CVF Conference on C"
+  },
+  {
+   "id": "b0206",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[65] D. Guo, D. Yang, H. Zhang, J. Song, P. Wang, Q. Zhu, R. Xu, R. Zhang, S. Ma, X. Bi, et al. (2025) DeepSeek-R1: incentivizes reasoning in LLMs through reinforcement learning . Nature 645 ( 8081 ),"
+  },
+  {
+   "id": "b0207",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[66] W. Li, X. Zhang, S. Zhao, Y. Zhang, J. Li, L. Zhang, and J. Zhang (2025) Q-Insight: understanding image quality via visual reinforcement learning . In Proceedings of the Annual Conference on Neur"
+  },
+  {
+   "id": "b0208",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[67] Z. Shao, P. Wang, Q. Zhu, R. Xu, J. Song, X. Bi, H. Zhang, M. Zhang, Y. Li, Y. Wu, et al. (2024) DeepSeekMath: pushing the limits of mathematical reasoning in open language models . arXiv preprin"
+  },
+  {
+   "id": "b0209",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[68] T. Wu, J. Zou, J. Liang, L. Zhang, and K. Ma (2025) VisualQuality-R1: reasoning-induced image quality assessment via reinforcement learning to rank . In Proceedings of the Annual Conference on Ne"
+  },
+  {
+   "id": "b0210",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[69] Z. Cai, J. Zhang, X. Yuan, P. Jiang, W. Chen, B. Tang, L. Yao, Q. Wang, J. Chen, and B. Li (2025) Q-Ponder: a unified training pipeline for reasoning-based visual quality assessment . arXiv prepr"
+  },
+  {
+   "id": "b0211",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[70] A. B. Arrieta, N. Díaz-Rodríguez, J. Del Ser, A. Bennetot, S. Tabik, A. Barbado, S. García, S. Gil-López, D. Molina, R. Benjamins, et al. (2020) Explainable artificial intelligence (XAI): concept"
+  },
+  {
+   "id": "b0212",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[71] H. Chefer, S. Gur, and L. Wolf (2021) Transformer interpretability beyond attention visualization . In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pp. 782–"
+  },
+  {
+   "id": "b0213",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[72] Y. Hao, L. Dong, F. Wei, and K. Xu (2021) Self-attention attribution: interpreting information interactions inside transformer . In Proceedings of the AAAI Conference on Artificial Intelligence ,"
+  },
+  {
+   "id": "b0214",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[73] R. Fu, Q. Hu, X. Dong, Y. Guo, Y. Gao, and B. Li (2020) Axiom-based Grad-CAM: towards accurate visualization and explanation of CNNs . arXiv preprint arXiv:2008.02312 . Cited by: §II ."
+  },
+  {
+   "id": "b0215",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[74] P. Schramowski, W. Stammer, S. Teso, A. Brugger, F. Herbert, X. Shao, H. Luigs, A. Mahlein, and K. Kersting (2020) Making deep neural networks right for the right scientific reasons by interactin"
+  },
+  {
+   "id": "b0216",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[75] Y. Shen, B. Sheng, R. Fang, H. Li, L. Dai, S. Stolte, J. Qin, W. Jia, and D. Shen (2020) Domain-invariant interpretable fundus image quality assessment . Medical Image Analysis 61 , pp. 101654 . "
+  },
+  {
+   "id": "b0217",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[76] B. Jo, D. Cho, I. K. Park, and S. Hong (2023) IFQA: interpretable face quality assessment . In Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision , pp. 3444–3453 . C"
+  },
+  {
+   "id": "b0218",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[77] P. Costa, A. Campilho, B. Hooi, A. Smailagic, K. Kitani, S. Liu, C. Faloutsos, and A. Galdran (2017) EyeQual: accurate, explainable, retinal image quality assessment . In IEEE International Confe"
+  },
+  {
+   "id": "b0219",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[78] Y. Hu, B. Liu, J. Kasai, Y. Wang, M. Ostendorf, R. Krishna, and N. A. Smith (2023) TIFA: accurate and interpretable text-to-image faithfulness evaluation with question answering . In Proceedings "
+  },
+  {
+   "id": "b0220",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[79] H. Lin, V. Hosu, and D. Saupe (2020) DeepFL-IQA: weak supervision for deep iqa feature learning . arXiv preprint arXiv:2001.08113 . Cited by: §III-C ."
+  },
+  {
+   "id": "b0221",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[80] H. Lin, V. Hosu, and D. Saupe (2019) KADID-10k: a large-scale artificially distorted iqa database . In Proceedings of the International Conference on Quality of Multimedia Experience (QoMEX) , pp"
+  },
+  {
+   "id": "b0222",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[81] D. Jayaraman, A. Mittal, A. K. Moorthy, and A. C. Bovik (2012) Objective quality assessment of multiply distorted images . In Proceedings of the Asilomar Conference on Signals, Systems and Comput"
+  },
+  {
+   "id": "b0223",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[82] W. Sun, F. Zhou, and Q. Liao (2017) MDID: a multiply distorted image database for image quality assessment . Pattern Recognition 61 , pp. 153–168 . Cited by: §III-D ."
+  },
+  {
+   "id": "b0224",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[83] A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark, et al. (2021) Learning transferable visual models from natural language supervision ."
+  },
+  {
+   "id": "b0225",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[84] R. A. Frazor and W. S. Geisler (2006) Local luminance and contrast in natural images . Vision Research 46 ( 10 ), pp. 1585–1598 . Cited by: §III-D ."
+  },
+  {
+   "id": "b0226",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[85] D. Hasler and S. E. Suesstrunk (2003) Measuring colorfulness in natural images . In Human Vision and Electronic Imaging VIII , Vol. 5007 , pp. 87–95 . Cited by: §III-D ."
+  },
+  {
+   "id": "b0227",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[86] P. J. Bex, S. G. Solomon, and S. C. Dakin (2009) Contrast sensitivity in natural scenes depends on edge as well as spatial frequency structure . Journal of Vision 9 ( 10 ), pp. 1–19 . Cited by: §"
+  },
+  {
+   "id": "b0228",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[87] A. Hyvärinen, J. Hurri, and P. O. Hoyer (2009) Natural image statistics: a probabilistic approach to early computational vision. . Vol. 39 , Springer Science & Business Media . Cited by: §III-D ."
+  },
+  {
+   "id": "b0229",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[88] H. Liu, C. Li, Y. Li, B. Li, Y. Zhang, S. Shen, and Y. J. Lee (2024) LLaVA-NeXT: improved reasoning, ocr, and world knowledge . External Links: Link Cited by: §IV , §V-A ."
+  },
+  {
+   "id": "b0230",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[89] T. Kudo and J. Richardson (2018) SentencePiece: a simple and language independent subword tokenizer and detokenizer for neural text processing . In Proceedings of the Conference on Empirical Meth"
+  },
+  {
+   "id": "b0231",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[90] E. J. Hu, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, W. Chen, et al. (2022) LoRA: Low-Rank adaptation of large language models . In Proceedings of the International Conference on Learning "
+  },
+  {
+   "id": "b0232",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[91] J. Duan, H. Cheng, S. Wang, A. Zavalny, C. Wang, R. Xu, B. Kailkhura, and K. Xu (2024) Shifting attention to relevance: towards the predictive uncertainty quantification of free-form large langua"
+  },
+  {
+   "id": "b0233",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[92] N. Reimers and I. Gurevych (2019) Sentence-BERT: sentence embeddings using siamese bert-networks . In Proceedings of the Conference on Empirical Methods in Natural Language Processing and the Int"
+  },
+  {
+   "id": "b0234",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[93] A. See, P. J. Liu, and C. D. Manning (2017) Get to the point: summarization with pointer-generator networks . In Proceedings of the Annual Meeting of the Association for Computational Linguistics"
+  },
+  {
+   "id": "b0235",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[94] A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin (2017) Attention is all you need . Proceedings of the Annual Conference on Neural Information "
+  },
+  {
+   "id": "b0236",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[95] X. An, Y. Xie, K. Yang, W. Zhang, X. Zhao, Z. Cheng, Y. Wang, S. Xu, C. Chen, C. Wu, et al. (2025) LLaVA-OneVision-1.5: fully open framework for democratized multimodal training . arXiv preprint "
+  },
+  {
+   "id": "b0237",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[96] Z. Chen, W. Wang, Y. Cao, Y. Liu, Z. Gao, E. Cui, J. Zhu, S. Ye, H. Tian, Z. Liu, et al. (2024) Expanding performance boundaries of open-source multimodal models with model, data, and test-time s"
+  },
+  {
+   "id": "b0238",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[97] S. Bai, K. Chen, X. Liu, J. Wang, W. Ge, S. Song, K. Dang, P. Wang, S. Wang, J. Tang, et al. (2025) Qwen2.5-VL technical report . arXiv preprint arXiv:2502.13923 . Cited by: §V-A ."
+  },
+  {
+   "id": "b0239",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[98] V. Hosu, H. Lin, T. Sziranyi, and D. Saupe (2020) KonIQ-10k: an ecologically valid database for deep learning of blind image quality assessment . IEEE Transactions on Image Processing 29 , pp. 40"
+  },
+  {
+   "id": "b0240",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[99] Y. Fang, H. Zhu, Y. Zeng, K. Ma, and Z. Wang (2020) Perceptual quality assessment of smartphone photography . In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition "
+  },
+  {
+   "id": "b0241",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[100] J. Liang, J. Cao, G. Sun, K. Zhang, L. Van Gool, and R. Timofte (2021) SwinIR: image restoration using swin transformer . In Proceedings of the IEEE/CVF International Conference on Computer Visi"
+  },
+  {
+   "id": "b0242",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[101] H. Zhu, X. Sui, B. Chen, X. Liu, P. Chen, Y. Fang, and S. Wang (2024) 2AFC prompting of large multimodal models for image quality assessment . IEEE Transactions on Circuits and Systems for Video"
+  },
+  {
+   "id": "b0243",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[102] X. Chen, X. Wang, J. Zhou, Y. Qiao, and C. Dong (2023) Activating more pixels in image super-resolution transformer . In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Rec"
+  },
+  {
+   "id": "b0244",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[103] X. Chen, Z. Li, Y. Pu, Y. Liu, J. Zhou, Y. Qiao, and C. Dong (2024) A comparative study of image restoration networks for general backbone network design . In Proceedings of the European Confere"
+  },
+  {
+   "id": "b0245",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[104] S. W. Zamir, A. Arora, S. Khan, M. Hayat, F. S. Khan, M. Yang, and L. Shao (2021) Multi-stage progressive image restoration . In Proceedings of the IEEE/CVF Conference on Computer Vision and Pat"
+  },
+  {
+   "id": "b0246",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[105] S. W. Zamir, A. Arora, S. Khan, M. Hayat, F. S. Khan, and M. Yang (2022) Restormer: efficient transformer for high-resolution image restoration . In Proceedings of the IEEE/CVF Conference on Com"
+  },
+  {
+   "id": "b0247",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[106] J. Jiang, K. Zhang, and R. Timofte (2021) Towards flexible blind jpeg artifacts removal . In Proceedings of the IEEE/CVF International Conference on Computer Vision , pp. 4997–5006 . Cited by: T"
+  },
+  {
+   "id": "b0248",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[107] Z. Tu, H. Talebi, H. Zhang, F. Yang, P. Milanfar, A. Bovik, and Y. Li (2022) MAXIM: multi-axis mlp for image processing . In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern"
+  },
+  {
+   "id": "b0249",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[108] L. Ruan, B. Chen, J. Li, and M. Lam (2022) Learning to deblur using light field generated and real defocus images . In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recog"
+  },
+  {
+   "id": "b0250",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[109] J. Lee, H. Son, J. Rim, S. Cho, and S. Lee (2021) Iterative filter adaptive network for single image defocus deblurring . In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern"
+  },
+  {
+   "id": "b0251",
+   "t": "keep",
+   "w": "table",
+   "en": "Zhiyuan You is a Ph.D. candidate from Multimedia Laboratory at The Chinese University of Hong Kong, under the supervision of Prof. Chao Dong and Prof. Tianfan Xue. He obtained both his Bachelor’s and "
+  },
+  {
+   "id": "b0252",
+   "t": "keep",
+   "w": "table",
+   "en": "Jinjin Gu received his Ph.D. degree from the School of Electrical and Computer Engineering at the University of Sydney in 2024, under the supervision of Prof. Wanli Ouyang and Prof. Luping Zhou. Prior"
+  },
+  {
+   "id": "b0253",
+   "t": "keep",
+   "w": "table",
+   "en": "Xin Cai received the B.S. degree in computer science from University of Chinese Academy of Sciences (UCAS) in 2020 and the M.S. degree from the Institute of Computing Technology(ICT), Chinese Academy "
+  },
+  {
+   "id": "b0254",
+   "t": "keep",
+   "w": "table",
+   "en": "Zheyuan Li is currently a Ph.D. Student at University of Macau. He has also worked as a research intern since 2021 in Shenzhen Institutes of Advanced Technology, Chinese Academy of Sciences. He receiv"
+  },
+  {
+   "id": "b0255",
+   "t": "keep",
+   "w": "table",
+   "en": "Kaiwen Zhu is currently a Ph.D. student in Shanghai Jiao Tong University supervised by Prof. Chao Dong. He obtained his B.Eng. degree from Shanghai Jiao Tong University in 2024. He has been working as"
+  },
+  {
+   "id": "b0256",
+   "t": "keep",
+   "w": "table",
+   "en": "Chao Dong is a professor at Shenzhen Institutes of Advanced Technology, Chinese Academy of Science (SIAT), and Shanghai Artificial Intelligence Laboratory. In 2014, he first introduced deep learning m"
+  },
+  {
+   "id": "b0257",
+   "t": "keep",
+   "w": "table",
+   "en": "Tianfan Xue is a Vice-Chancellor Assistant Professor at the Multimedia Lab in the Department of Information Engineering at the Chinese University of Hong Kong (CUHK). Prior to this, he worked in the C"
+  },
+  {
+   "id": "b0258",
+   "t": "text",
+   "w": "h3",
+   "en": "-A Dataset Details"
+  },
+  {
+   "id": "b0259",
+   "t": "text",
+   "w": "h4",
+   "en": "-A1 Details of Distortion Library"
+  },
+  {
+   "id": "b0260",
+   "t": "text",
+   "w": "p",
+   "en": "As stated in Sec. III-B, to facilitate the dataset construction, we design and implement a comprehensive distortion library. Our distortion system contains 12 distortion super-categories in total, with each category consisting of multiple sub-categories. For instance, the “blur” category encompasses “Gaussian blur”, “motion blur”, “lens blur”, etc. In total, there are 35 sub-categories. For each sub-category, there are 5 severity levels: “slight”, “moderate”, “obvious”, “serious”, and “catastrophic”. In this section, we elaborate on our distortion implementations, including the principles, formulas, and severity setup. We also provide one example for each implementation in Fig. S3, with the reference image in Fig. S1."
+  },
+  {
+   "id": "b0261",
+   "t": "text",
+   "w": "p",
+   "en": "Blur."
+  },
+  {
+   "id": "b0262",
+   "t": "text",
+   "w": "li",
+   "en": "• Gaussian blur. The distorted image is generated by convolving the reference image with a Gaussian blur kernel. We set the kernel size ⟦SLOT_20⟧ to be a function of the standard deviation ⟦SLOT_21⟧ of the blur kernel: ⟦SLOT_22⟧."
+  },
+  {
+   "id": "b0263",
+   "t": "text",
+   "w": "li",
+   "en": "• Motion blur. Linear motion blur is applied to the reference image using the linear filter, where ⟦SLOT_23⟧."
+  },
+  {
+   "id": "b0264",
+   "t": "text",
+   "w": "li",
+   "en": "• Glass blur. Filter the image using a Gaussian filter, then randomly jitter each pixel in the image by ⟦SLOT_24⟧ pixels, and repeat this process ⟦SLOT_25⟧ iterations. ⟦SLOT_26⟧."
+  },
+  {
+   "id": "b0265",
+   "t": "text",
+   "w": "li",
+   "en": "• Lens blur. This distortion uses the circular average filter, where ⟦SLOT_27⟧."
+  },
+  {
+   "id": "b0266",
+   "t": "text",
+   "w": "li",
+   "en": "• Zoom blur. The image is gradually zoomed in and overlaid to calculate the average."
+  },
+  {
+   "id": "b0267",
+   "t": "text",
+   "w": "li",
+   "en": "• Jitter blur. Each pixel is randomly displaced by a shift of ⟦SLOT_28⟧ pixels both in ⟦SLOT_29⟧ and ⟦SLOT_30⟧ dimensions, with a total of 5 displacements, where ⟦SLOT_31⟧."
+  },
+  {
+   "id": "b0268",
+   "t": "text",
+   "w": "p",
+   "en": "Noise."
+  },
+  {
+   "id": "b0269",
+   "t": "text",
+   "w": "li",
+   "en": "• Gaussian noise in RGB space. Additive Gaussian noise is applied to each of the RGB channels of an image, where ⟦SLOT_32⟧."
+  },
+  {
+   "id": "b0270",
+   "t": "text",
+   "w": "li",
+   "en": "• Gaussian noise in YCrCb space. Similar to the Gaussian noise in RGB space, this distortion is implemented in YCbCr space, where the value of ⟦SLOT_33⟧ can be (0.05, 1, 1), (0.06, 1.45, 1.45), (0.07, 1.9, 1.9), (0.08, 2.35, 2.35), or (0.09, 2.8, 2.8)."
+  },
+  {
+   "id": "b0271",
+   "t": "text",
+   "w": "li",
+   "en": "• Speckle noise. Speckle Noise is also known as Multiplicative Gaussian noise, where ⟦SLOT_34⟧."
+  },
+  {
+   "id": "b0272",
+   "t": "text",
+   "w": "li",
+   "en": "• Spatially correlated noise. The reference image is first corrupted by an additive Gaussian noise, which results in each pixel being corrupted by an independent and identically distributed noise pattern. The resultant image is then filtered with an average filter of kernel size 3 × 3, correlating the intensity of each pixel with those of the neighboring pixels. More specifically, the distorted image is given by: ⟦SLOT_35⟧ where ⟦SLOT_36⟧ is the distorted image, ⟦SLOT_37⟧ is the reference image, ⟦SLOT_38⟧ is the set of neighboring pixels, and ⟦SLOT_39⟧."
+  },
+  {
+   "id": "b0273",
+   "t": "text",
+   "w": "li",
+   "en": "• Poisson noise. This distortion generates Poisson noise based on the image pixel values, where ⟦SLOT_40⟧."
+  },
+  {
+   "id": "b0274",
+   "t": "text",
+   "w": "li",
+   "en": "• Impulse noise. Impulse noise is also known as salt and pepper noise. The density of the noise: ⟦SLOT_41⟧."
+  },
+  {
+   "id": "b0275",
+   "t": "text",
+   "w": "p",
+   "en": "Compression."
+  },
+  {
+   "id": "b0276",
+   "t": "text",
+   "w": "li",
+   "en": "• JPEG. The distorted image is a JPEG-compressed version of the reference image, where the parameter in Pillow, quality ⟦SLOT_42⟧."
+  },
+  {
+   "id": "b0277",
+   "t": "text",
+   "w": "li",
+   "en": "• JPEG 2000. This distortion is an advanced compression widely used, where the Pillow’s parameter quality ⟦SLOT_43⟧."
+  },
+  {
+   "id": "b0278",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0279",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. S1: Reference image for distorted images in Fig. S3."
+  },
+  {
+   "id": "b0280",
+   "t": "text",
+   "w": "p",
+   "en": "Brightness."
+  },
+  {
+   "id": "b0281",
+   "t": "text",
+   "w": "li",
+   "en": "• Brightness shift in HSV space. The RGB image is mapped to HSV, and then we enhance and reduce the brightness by V channel, where ⟦SLOT_44⟧ for Brightening and ⟦SLOT_45⟧ for darkening."
+  },
+  {
+   "id": "b0282",
+   "t": "text",
+   "w": "li",
+   "en": "• Brightness shift in RGB space. We enhance and reduce the brightness in all channels, where ⟦SLOT_46⟧ for Brightening and ⟦SLOT_47⟧ for darkening."
+  },
+  {
+   "id": "b0283",
+   "t": "text",
+   "w": "li",
+   "en": "• Gamma brightness tuning in HSV space. The RGB image is mapped to HSV space and then we enhanced and reduce the brightness by V channel with a gamma function, where ⟦SLOT_48⟧ for brightening and ⟦SLOT_49⟧ for darkening."
+  },
+  {
+   "id": "b0284",
+   "t": "text",
+   "w": "p",
+   "en": "Contrast."
+  },
+  {
+   "id": "b0285",
+   "t": "text",
+   "w": "li",
+   "en": "• Contrast tuning by scaling. Given an input image ⟦SLOT_50⟧, there is a corresponding ⟦SLOT_51⟧, which is a gray image in which each element is the mean of ⟦SLOT_52⟧. The distorted image ⟦SLOT_53⟧ is generated as following: ⟦SLOT_54⟧, where ⟦SLOT_55⟧ for strengthening and ⟦SLOT_56⟧ for weakening."
+  },
+  {
+   "id": "b0286",
+   "t": "text",
+   "w": "li",
+   "en": "• Contrast tuning by stretching. Contrast changing is performed as follows: ⟦SLOT_57⟧, where ⟦SLOT_58⟧ is the distorted image, ⟦SLOT_59⟧ is the reference image, and ⟦SLOT_60⟧ is the mean intensity for channel ⟦SLOT_61⟧. ⟦SLOT_62⟧ for weakening, and ⟦SLOT_63⟧ for strengthening."
+  },
+  {
+   "id": "b0287",
+   "t": "text",
+   "w": "p",
+   "en": "Saturate."
+  },
+  {
+   "id": "b0288",
+   "t": "text",
+   "w": "li",
+   "en": "• Saturate tuning in HSV space. The reference image is firstly mapped into HSV space and then the S channel is scaled, where the scale factor ⟦SLOT_64⟧ for weakening and ⟦SLOT_65⟧ for enhancement."
+  },
+  {
+   "id": "b0289",
+   "t": "text",
+   "w": "li",
+   "en": "• Saturate tuning in YCbCr space. The reference image ⟦SLOT_66⟧ is firstly mapped into YCbCr space and then the distorted image ⟦SLOT_67⟧ is generated like the following formulation: ⟦SLOT_68⟧ (S1) ⟦SLOT_69⟧ (S2) where ⟦SLOT_70⟧ donates the scale factor for weakening and ⟦SLOT_71⟧ for strengthening."
+  },
+  {
+   "id": "b0290",
+   "t": "text",
+   "w": "p",
+   "en": "Over-sharpen. The reference image ⟦SLOT_72⟧ is firstly processed by a Gaussian blur kernel to generated a blurred image ⟦SLOT_73⟧. Then the original image is over-sharpened with ⟦SLOT_74⟧, where ⟦SLOT_75⟧."
+  },
+  {
+   "id": "b0291",
+   "t": "text",
+   "w": "p",
+   "en": "Pixelate. The reference image is firstly down-sampled in BOX mode, then up-sampled to the original resolution in NEAREST mode, where the down-sampling factor ⟦SLOT_76⟧."
+  },
+  {
+   "id": "b0292",
+   "t": "text",
+   "w": "p",
+   "en": "Quantize."
+  },
+  {
+   "id": "b0293",
+   "t": "text",
+   "w": "li",
+   "en": "• Color quantization using histogram equalization. The color elements are divided into an equal histogram for quantization, where the number of classes ⟦SLOT_77⟧."
+  },
+  {
+   "id": "b0294",
+   "t": "text",
+   "w": "li",
+   "en": "• Color quantization using histogram median. This distortion is implemented by the function PIL.Image.Quantize.MEDIANCUT, where the number of classes ⟦SLOT_78⟧."
+  },
+  {
+   "id": "b0295",
+   "t": "text",
+   "w": "li",
+   "en": "• Color quantization using OTSU method, which is implemented by existing function skimage.filters.threshold_multiotsu to generate thresholds. The number of classes ⟦SLOT_79⟧."
+  },
+  {
+   "id": "b0296",
+   "t": "text",
+   "w": "p",
+   "en": "Multi-distortion setups. As discussed in Sec. III-B, multiple distortions may occur simultaneously on the same image in practical usage. First, we observe that humans can identify at most two distortions when three or more are applied, as in Fig. S2, thus we limit the number of applied distortions to two. Second, some distortions could weaken each other’s presentation (e.g., “brighten” weakens “darken”, “blur” weakens “over-sharpen”). Also, certain distortions show similar visual effects (e.g., “pixelate” looks similar to “blur”), making it hard to identify both if applied simultaneously. Hence, to exclude contradictory or similar distortion combinations, we manually review all possible combinations. All feasible distortion combinations are provided in Tab. S1."
+  },
+  {
+   "id": "b0297",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE S1: Multi-distortion setting where we show all feasible distortion combinations."
+  },
+  {
+   "id": "b0298",
+   "t": "keep",
+   "w": "table",
+   "en": "First Distortion All Possible Second Distortions Blur Brighten, Compression, Contrast Strengthen, Contrast Weaken, Darken, Noise, Quantize, Saturate Strengthen, Saturate Weaken Brighten Blur, Compress"
+  },
+  {
+   "id": "b0299",
+   "t": "text",
+   "w": "p",
+   "en": "Out-of-distribution setups. In Sec. V-B, we evaluate our model in an out-of-distribution (OOD) setting. Specifically, for a particular category of distortion (e.g., noise), we use some sub-categories (e.g., Poisson noise) during training, and different sub-categories (e.g., impulse noise) for evaluation. Here we provide a detailed split of training distortions and evaluation distortions in Tab. S2."
+  },
+  {
+   "id": "b0300",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE S2: Setting of out-of-distribution (OOD) distortion identification."
+  },
+  {
+   "id": "b0301",
+   "t": "keep",
+   "w": "table",
+   "en": "Category Training distortions Validation distortions Blur Motion blur, Glass blur, Lens blur, Zoom blur Gaussian blur, Jitter blur Noise Gaussian noise in YCrCb space, Speckle noise, Spatial correlate"
+  },
+  {
+   "id": "b0302",
+   "t": "text",
+   "w": "h4",
+   "en": "-A2 Details of Template pool"
+  },
+  {
+   "id": "b0303",
+   "t": "text",
+   "w": "p",
+   "en": "As stated in Sec. III-C, for brief tasks, the questions and answers are templated and sampled from a pool. The questions of detailed tasks are also sampled from a pool. The question pools and answer pools (if possible) of distortion identification, instant rating, assessment reasoning, and comparison reasoning tasks are given in Tab. S5, Tab. S7, Tab. S5, and Tab. S7, respectively."
+  },
+  {
+   "id": "b0304",
+   "t": "text",
+   "w": "h3",
+   "en": "-B More Ablation Studies"
+  },
+  {
+   "id": "b0305",
+   "t": "text",
+   "w": "p",
+   "en": "Influence of comparison numbers. We calculate the win rate of one image over other compared images as the quality score. Here the compared images are selected by round robin for a small number, and random sampling for a large number. For the SPAQ dataset, the number of possible compared images is quite large, thus we adopt the random sampling strategy. The influence of comparison numbers is investigated in Tab. S3. It is shown that the comparison number could be reduced significantly without large performance degradation. In the most extreme cases (i.e., the comparison number is 1 or 2), we use the estimated confidence as weights to calculate the win rate as quality score. Otherwise, the values of the win rate are too discrete (i.e., the values of the win rate can only be 0 or 1 when the comparison number is 1). The results of our DepictQA-Wild are still reasonable in such extreme cases. Considering that the random sampling may bring large randomness or variance, we average the results with 5 random runs for small comparison numbers (i.e., ⟦SLOT_80⟧ 10). Although the comparison number is small and the sampling process is random, our method is still very stable with relatively small standard deviations in Tab. S3."
+  },
+  {
+   "id": "b0306",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE S3: Influence of comparison numbers per image on SPAQ dataset with SRCC and PLCC metrics. “(KONIQ)” means the model is trained on KONIQ dataset, which is also an in-the-wild IQA dataset. For small comparison numbers (⟦SLOT_81⟧ 10), we average the results with 5 random runs."
+  },
+  {
+   "id": "b0307",
+   "t": "keep",
+   "w": "table",
+   "en": "Comparison Numbers 100 50 25 10 5 2 1 DepictQA-Wild (Original) SRCC 0.835 0.832 0.826 0.806 0.731 ± \\pm 0.006 0.647 ± \\pm 0.009 0.577 ± \\pm 0.015 PLCC 0.841 0.837 0.832 0.810 0.735 ± \\pm 0.006 0.639 ±"
+  },
+  {
+   "id": "b0308",
+   "t": "text",
+   "w": "h3",
+   "en": "-C More Qualitative Results"
+  },
+  {
+   "id": "b0309",
+   "t": "text",
+   "w": "p",
+   "en": "More qualitative results of assessment reasoning, comparison reasoning, and assessment on web-downloaded images are presented in Fig. S4, Fig. S5, Fig. S6, Fig. S7, and Fig. S8, respectively. Our DepictQA-Wild could accurately identify distortions, analyze their impacts on the display of image contents, then weigh the advantages and disadvantages of different aspects, and finally draw a final conclusion."
+  },
+  {
+   "id": "b0310",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0311",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. S2: Humans usually identify at most two distortions (blue) when three (purple) are applied."
+  },
+  {
+   "id": "b0312",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE S4: Question pool and answer pool of distortion identification task."
+  },
+  {
+   "id": "b0313",
+   "t": "keep",
+   "w": "table",
+   "en": "# Question / Answer 1 Q: What are the primary degradation(s) observed in the evaluated image? A: The primary degradation(s) in the evaluated image is/are {}. 2 Q: What distortion(s) are most apparent "
+  },
+  {
+   "id": "b0314",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE S5: Question pool of assessment reasoning task."
+  },
+  {
+   "id": "b0315",
+   "t": "keep",
+   "w": "table",
+   "en": "# Question 1 Could you assess the overall quality of the image and elaborate on your evaluation? 2 How would you rate the image’s quality, and what factors contribute to your assessment? 3 Can you pro"
+  },
+  {
+   "id": "b0316",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE S6: Question pool and answer pool of instant rating task."
+  },
+  {
+   "id": "b0317",
+   "t": "keep",
+   "w": "table",
+   "en": "# Question / Answer 1 Q: Which image do you believe has better overall quality: Image A or Image B? A: I believe Image {} has better overall quality. 2 Q: Determine which image exhibits higher quality"
+  },
+  {
+   "id": "b0318",
+   "t": "text",
+   "w": "figcaption",
+   "en": "TABLE S7: Question pool of comparison reasoning task."
+  },
+  {
+   "id": "b0319",
+   "t": "keep",
+   "w": "table",
+   "en": "# Question 1 Compare the overall quality of Image A with Image B and provide a comprehensive explanation. 2 Which image has better visual quality, Image A or Image B? Can you explain the comparison re"
+  },
+  {
+   "id": "b0320",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0321",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. S3: Distortion examples of our distortion design. We showcase one example for each distortion implementation. The reference image is depicted in Fig. S1."
+  },
+  {
+   "id": "b0322",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0323",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. S4: Qualitative results on assessment reasoning task in the full-reference setting. The two images from top to down are the reference image and evaluated image, respectively."
+  },
+  {
+   "id": "b0324",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0325",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. S5: Qualitative results on assessment reasoning task in the non-reference setting."
+  },
+  {
+   "id": "b0326",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0327",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. S6: Qualitative results on comparison reasoning task in the full-reference setting. The three images from left to right are the reference image, Image A, and Image B, respectively."
+  },
+  {
+   "id": "b0328",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0329",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. S7: Qualitative results on comparison reasoning task in the non-reference setting. The two images from top to down are Image A and Image B, respectively."
+  },
+  {
+   "id": "b0330",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0331",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Fig. S8: Qualitative results on assessing web-downloaded images."
+  }
+ ]
+}

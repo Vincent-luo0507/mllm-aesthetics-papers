@@ -1,0 +1,3184 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Visual Aesthetic Benchmark: Can Frontier Models Judge Beauty?"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Multimodal large language models (MLLMs) are now routinely deployed for visual understanding, generation, and curation. A substantial fraction of these applications require an explicit aesthetic judgm"
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Code BakeLab/Visual-Aesthetic-Benchmark Dataset BakeLab/Visual-Aesthetic-Benchmark Website vab.bakelab.ai"
+  },
+  {
+   "id": "b0004",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Overview of the VAB benchmark. VAB spans three visual domains — fine art, photography, and illustration — covering 24 topics across 400 evaluation tasks and 1,195 images. Each task presents a set of candidate images sharing a common subject."
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "Multimodal large language models (MLLMs) have become critical to a widening range of visual tasks such as image generation and curation (Liu et al., 2023, Team et al., 2023, Wang et al., 2024). Many of these applications require aesthetic judgment, asking models to compare visual works and identify differences in execution quality across composition, color harmony, technical execution, and cultural convention. This makes aesthetic judgment a demanding test of higher-order multimodal reasoning that is often omitted by existing visual benchmarks (Yu et al., 2023, Yue et al., 2024)."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "Existing image-aesthetics datasets and methods typically reduce aesthetic judgment to a mapping from an image to a scalar score (Murray et al., 2012, Kong et al., 2016, He et al., 2022, Lee and Kim, 2019, Hosu et al., 2019, Yi et al., 2023, He et al., 2023), an approach that we argue is poorly suited to the underlying decision being studied. Preference order is inferred from independent scores rather than measured through direct comparison; crowd-averaged labels mix expertise, taste, and annotation noise, so the aesthetic signal is difficult to isolate; and because images in such datasets often depict different subjects, a model can shortcut its way to high accuracy by exploiting content preferences instead of discriminating execution quality."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "We first ask whether scoring faithfully captures comparative preference . Eight expert annotators evaluate the same images under both independent absolute scoring and direct comparative ranking, and the two protocols disagree. Comparative ranking yields 42 percentage points higher inter-annotator agreement on best-image selection than score-derived rankings (Talebi and Milanfar, 2018, Ma et al., 2017, Wu et al., 2023, Zhou et al., 2024a). The two protocols therefore elicit different preference signals from the same annotators, and direct comparison captures the underlying judgment more faithfully than the pointwise scoring used in most existing pipelines."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "Building on this finding, we introduce the Visual Aesthetic Benchmark (VAB), which formulates aesthetic judgment as a comparative selection problem over candidate sets with matched subject matter. VAB contains 400 tasks and 1,195 images across fine art, photography, and illustration, covering 24 topics (Figure 1). Each task presents two to six images sharing a common subject, and the model selects the best image and, under the stricter setting, also the worst image. Three design choices distinguish VAB from prior aesthetic benchmarks. Matched subject matter within each task isolates differences in execution from differences in content; each ground-truth label is the consensus of 10 independent expert judges, filtered through a dual-threshold criterion to remove ambiguous cases; and every task is evaluated under three independent random permutations of the candidate order. We report ap@1, the average accuracy across the three evaluations, and pass^3, which credits a task only when the model is correct in all three."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "We benchmark 20 frontier MLLMs and six dedicated visual-quality reward models on VAB. The strongest system, Claude Sonnet 4.6, reaches 26.5% on TB-1 pass^3, 42.4 points below the human baseline of 68.9%. Models are also highly sensitive to candidate order, retaining only 34–65% of their ap@1 accuracy when required to be correct across all three permutations, and they degrade much faster than humans as the candidate set grows: a ⟦SLOT_0⟧ drop from two-image to four-or-more-image tasks, against only ⟦SLOT_1⟧ for human experts. The contributions of this paper are as follows."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "li",
+   "en": "• A controlled human study with eight expert annotators establishes that direct comparative ranking is substantially more reliable than independent scoring for subjective aesthetic annotation, and motivates the design of the benchmark."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "li",
+   "en": "• VAB is, to our knowledge, the first set-based, expert-grounded, multi-domain aesthetic benchmark with permutation-robust evaluation, covering 400 tasks and 1,195 images across fine art, photography, and illustration."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "li",
+   "en": "• A systematic evaluation of 20 frontier MLLMs and six dedicated reward models exposes a persistent 42.4-point gap to human experts on TB-1 pass^3 together with severe positional instability across permutations of the candidate order."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "li",
+   "en": "• Fine-tuning on 2,000 expert examples brings a 35B-parameter model close to a 397B-parameter open-weight model, indicating that expert comparative judgments transfer effectively through lightweight adaptation."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Human Annotation Study: Ranking vs. Scoring"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "Existing aesthetic benchmarks rely on Scoring to collect ground truth labels (Murray et al., 2012, Kong et al., 2016, He et al., 2022, Cao et al., 2025). We conduct a controlled human study to explore the following research question regarding the annotation process:"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "Which protocol yields a more scientifically sound signal for data annotation?"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "li",
+   "en": "• Scoring: expert annotates each image independently on an absolute aesthetic scale."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "li",
+   "en": "• Ranking: expert compares images and annotates their relative order."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h5",
+   "en": "Setup and Metrics."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Eight expert annotators evaluate the same images under two protocols: (1) scoring assigns each image an independent score ⟦SLOT_2⟧; (2) ranking orders images directly within groups of size ⟦SLOT_3⟧. We construct 119 homogeneous-content tasks, in which all candidates share the same underlying content, and 107 heterogeneous-content tasks formed by regrouping images across source groups while preserving topic consistency. We compare the two protocols along three dimensions:"
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "li",
+   "en": "• Fidelity (Kendall’s ⟦SLOT_4⟧ (Kendall, 1938)): we compute ⟦SLOT_5⟧, where ⟦SLOT_6⟧ and ⟦SLOT_7⟧ are the numbers of concordant and discordant pairs between an annotator’s score-derived ranking ⟦SLOT_8⟧ and the same annotator’s direct comparison. A low ⟦SLOT_9⟧ means the two protocols elicit different preference orderings from the same person. We additionally report the top-1 self-consistency (SC) rate: the fraction of annotator–task pairs for which ⟦SLOT_10⟧ and the direct comparison select the same top image."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "li",
+   "en": "• Reproducibility (⟦SLOT_11⟧): ⟦SLOT_12⟧ is the proportion of tasks where a single image receives ⟦SLOT_13⟧ of 8 best-image votes; ⟦SLOT_14⟧ and ⟦SLOT_15⟧ are defined analogously. Higher accuracy means the protocol produces ground truth labels that different experts can independently reproduce."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "li",
+   "en": "• Distinguishability (top-1 entropy (Shannon, 1948)): we measure ⟦SLOT_16⟧, where ⟦SLOT_17⟧ is the fraction of annotators selecting image ⟦SLOT_18⟧ as best. Lower entropy means annotators concentrate on a single top choice rather than spreading votes."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "Full protocol details, notations, formal definitions, and statistical tests are in Appendix F."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "h5",
+   "en": "Scoring does not faithfully preserve preference order."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "Table 1 shows that score-derived rankings often diverge from the direct comparisons given by the same annotator. The mean Kendall’s ⟦SLOT_19⟧ is 0.188 for homogeneous-content and 0.351 for heterogeneous-content tasks; the top-1 self-consistency rates are 45.5% and 52.0%, respectively. In other words, nearly half of the numeric score annotations fail to recover the order that the same annotator expresses under direct comparison."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: We report within-annotator agreement between expert’s score-derived rankings ⟦SLOT_20⟧ and direct comparison from 8 annotators, measured by Kendall’s ⟦SLOT_21⟧ (⟦SLOT_22⟧) and top-1 self-consistency rate (SC rate, ⟦SLOT_23⟧), defined as the fraction of annotator–task pairs where the score-derived top-1 matches the direct comparison top-1. The results show that nearly 50% of the numeric score annotations do not reliably preserve the order that the annotator would express in direct comparison."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a) Results on homogeneous-content tasks."
+  },
+  {
+   "id": "b0031",
+   "t": "keep",
+   "w": "table",
+   "en": "n n N N tasks Mean τ \\tau Std. τ \\tau SC rate 2 28 0.098 0.511 54.9% 3 38 0.274 0.328 49.7% 4 35 0.126 0.243 34.3% 5 18 0.267 0.243 43.6% All 119 0.188 0.354 45.5%"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(b) Results on heterogeneous-content tasks."
+  },
+  {
+   "id": "b0033",
+   "t": "keep",
+   "w": "table",
+   "en": "n n N N tasks Mean τ \\tau Std. τ \\tau SC rate 2 19 0.342 0.427 67.1% 3 37 0.286 0.300 48.0% 4 34 0.441 0.172 51.1% 5 17 0.324 0.256 45.6% All 107 0.351 0.291 52.0%"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "h5",
+   "en": "Ranking yields more reproducible labels."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Table 2 shows that ranking yields substantially higher inter-annotator agreement on best and worst labels. On homogeneous-content tasks, ranking improves ⟦SLOT_24⟧ by 42.0 points, ⟦SLOT_25⟧ by 37.0 points, and ⟦SLOT_26⟧ by 51.3 points (all ⟦SLOT_27⟧, McNemar test (McNemar, 1947)); the same pattern holds for heterogeneous-content tasks. Independent experts can therefore reproduce best/worst labels far more reliably under ranking than under scoring."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: We report inter-annotator consistency on best and worst decisions for 8 annotators, where a majority requires agreement from at least 5 of 8. Each row shows task-level accuracy ⟦SLOT_28⟧ (⟦SLOT_29⟧), improvement ⟦SLOT_30⟧, and the exact two-sided McNemar ⟦SLOT_31⟧-value (⟦SLOT_32⟧) (McNemar, 1947, Fagerland et al., 2013). The Significance level is marked as ⟦SLOT_33⟧. Results show that ranking is more likely to yield annotation labels that independent experts can reproduce."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "Homogeneous-content (⟦SLOT_34⟧) Heterogeneous-content (⟦SLOT_35⟧) Metric Scoring Ranking ⟦SLOT_36⟧ ⟦SLOT_37⟧ Scoring Ranking ⟦SLOT_38⟧ ⟦SLOT_39⟧ ⟦SLOT_40⟧ 52.9% 95.0% ⟦SLOT_41⟧42.0% ⟦SLOT_42⟧0.001∗∗ 65.4% 94.4% ⟦SLOT_43⟧29.0% ⟦SLOT_44⟧0.001∗∗ ⟦SLOT_45⟧ 55.5% 92.4% ⟦SLOT_46⟧37.0% ⟦SLOT_47⟧0.001∗∗ 69.2% 93.5% ⟦SLOT_48⟧24.3% ⟦SLOT_49⟧0.001∗∗ ⟦SLOT_50⟧ 39.5% 90.8% ⟦SLOT_51⟧51.3% ⟦SLOT_52⟧0.001∗∗ 49.5% 90.7% ⟦SLOT_53⟧41.1% ⟦SLOT_54⟧0.001∗∗"
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "h5",
+   "en": "Ranking makes the top choice stand out more clearly."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "Table 3 measures how concentrated their top-choice preference is within each task. It shows that ranking produces lower entropy over top-1 selections (Shannon, 1948) (0.729 vs. 1.213) and a much higher rate of unanimous choices (10.1% vs. 0.8%; Wilcoxon ⟦SLOT_55⟧ (Wilcoxon, 1945)). More generally, ranking concentrates votes on a single preferred image rather than spreading them across several plausible winners."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: We report top-choice concentration in the homogeneous-content setting (119 tasks, 8 annotators), measured by entropy ⟦SLOT_56⟧ (Shannon, 1948) and the rate of unanimous tasks (⟦SLOT_57⟧). The 95% confidence intervals use a normal approximation for mean ⟦SLOT_58⟧ and a Wilson interval (Wilson, 1927) for the unanimous-task rate. A Wilcoxon signed-rank test (Wilcoxon, 1945) yields that the difference is statistically significant (⟦SLOT_59⟧)."
+  },
+  {
+   "id": "b0041",
+   "t": "keep",
+   "w": "table",
+   "en": "Metric Scoring Ranking Mean H H ( ↓ \\downarrow ) [95% CI] 1.213 ​ [ 1.137 , 1.289 ] 1.213\\ [1.137,\\ 1.289] 0.729 ​ [ 0.665 , 0.793 ] 0.729\\ [0.665,\\ 0.793] Unanimous rate ( ↑ \\uparrow ) 0.8 % ​ [ 0.1 "
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "h5",
+   "en": "Interpretation."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "Our findings align with conclusions from two complementary disciplines. Aesthetically, modern aesthetics favors a relational view of beauty (Goldman, 1995, Levinson, 2005): people judge preference more reliably when alternatives are juxtaposed than when items are assessed in isolation. Cognitively, comparative judgment is a more primitive operation than absolute evaluation (Thurstone, 1927). Absolute scoring requires maintaining an internal reference scale and converting qualitative impressions into numbers, imposing heavier cognitive load and greater instability (Stewart et al., 2005, Parducci, 1965)."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "We therefore adopt ranking as the annotation protocol for VAB. Extended discussion is provided in Appendix F.2."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "h2",
+   "en": "3 The VAB Benchmark"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "Building on the findings of Section 2, we construct the Visual Aesthetic Benchmark (VAB) to test whether frontier multimodal models can make expert-aligned aesthetic judgments under a ranking-based protocol. In contrast with prior evaluations that aggregate scalar ratings from crowd annotators (Murray et al., 2012, Kong et al., 2016, He et al., 2022), VAB casts aesthetic evaluation as comparative selection over candidate sets with matched subject matter: each task asks the model to identify the best image and, in the stricter setting, also the worst. The remainder of this section describes the task layout, the data construction pipeline, and the ground-truth formation procedure."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Overview"
+  },
+  {
+   "id": "b0048",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Detailed distribution of VAB."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "Task formulation. Each benchmark task presents a candidate set of images with matched subject matter, so performance depends on differences in execution rather than differences in depicted content. VAB contains 400 released tasks and 1,195 images across fine art, photography, and illustration, covering 24 topics with candidate set sizes from 2 to 6 images. We consider two settings: in Top-1, the model selects the best image in the set; in TB-1, it identifies both the best and the worst image. Figure 1 provides a visual overview, Figure 2 summarizes the released domain and topic distribution, and Appendix B.1 reports detailed benchmark statistics."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluation protocol. Labels are derived from direct comparative judgments by independent experts rather than post hoc aggregation of absolute scores. Each task is evaluated three times, each under an independent random permutation of the candidate order. We report ap@1, the average accuracy across the three evaluations, and pass^3, which counts a task as correct only if the model is correct in all three. Representative topic-level examples are collected in Appendix I."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Data Construction"
+  },
+  {
+   "id": "b0053",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Overview of the VAB data construction pipeline. Images are organized into candidate sets with matched subject matter and varying aesthetic execution, then passed through expert review and consensus filtering before entering the benchmark."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "Because VAB is annotated through direct ranking over candidate sets, data construction is organized around matched image groups rather than standalone images: in every domain, the members of a set share subject matter but vary in execution quality. Figure 3 summarizes the pipeline; Appendix B.2 reports the full raw-pool statistics, and Appendix B.3 contains the domain-level construction details."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "p",
+   "en": "Fine Art. We commissioned 426 painting sets comprising 1,142 images. Each set is built from constrained artist prompts that preserve subject matter while allowing variation in composition, value structure, color handling, and finish. All works were commissioned specifically for VAB."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "Photography. We constructed 670 photography sets comprising 1,809 images. Each set originates from a single source photograph, many provided directly by professional photographers, and is expanded through two pipelines: an expert-edit pipeline based on professional retouching tools, which can produce either original/improved pairs or larger multi-expert sets, and a scalable agent-edit pipeline that generates improved and degraded variants. The agent-edit prompt sequence and runtime pipeline are recorded in Appendix H.1."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "Illustration. We constructed 271 illustration sets comprising 908 images. These sets are formed either by prompt-based generation with text-to-image models or by rendering CC0 3D assets under controlled viewpoint and presentation changes, producing multiple images with matched subject matter but varying execution. Prompt templates are in Appendix H.2."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "All collected sets are deduplicated and reviewed for semantic consistency before annotation."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Expert Annotation and Ground Truth"
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "p",
+   "en": "Following Section 2, VAB uses ranking-based expert consensus for ground truth."
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "Review setup. Creation and evaluation are strictly separated. In the raw pre-filter pool, each collected candidate set is reviewed by 10 independent expert judges drawn from a pool of more than 100 evaluators, yielding over 13,000 assessments and more than 300 hours of review. Judges remain blind to artist identity throughout annotation. Rubrics and interface examples are in Appendix C. Additional topic-level examples are in Appendix I."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "Annotation protocol. Each task presents ⟦SLOT_60⟧ candidate images side by side. Judges first assess each image against the domain-specific rubric and then make a comparative selection over the full set. For ⟦SLOT_61⟧, a judge selects the best image. For ⟦SLOT_62⟧, a judge selects both the best and the worst image, with distinct choices required. Every task receives exactly 10 judgments. A representative annotation example is shown in Figure 4."
+  },
+  {
+   "id": "b0064",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Example of a single VAB annotation task, illustrating the candidate set presented to expert judges and the resulting consensus decision. The consensus threshold is determined through statistical confidence; see Appendix D for details."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "Consensus filter. A task is retained only if expert votes are sufficiently concentrated. For ⟦SLOT_63⟧, the best-image votes must meet the threshold; for ⟦SLOT_64⟧, the best-image and worst-image votes must both meet it, so satisfying only one is insufficient. The thresholds are chosen by statistical confidence under a uniform-random null, and the exact derivation and threshold table are provided in Appendix D."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Experiments"
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 Setup"
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluation scope. We evaluate 20 MLLMs and six reward models on VAB. Unless otherwise noted, each model is evaluated under its default inference configuration."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "We compare all systems against two baselines. The Human Expert baseline is obtained from a fresh round of annotation in which 10 expert judges evaluate each released task under the benchmark interface, and we report their average accuracy against the released labels. The Random Guess baseline is computed analytically for each task size ⟦SLOT_65⟧."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "h5",
+   "en": "MLLMs."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "Our MLLM evaluation covers 20 closed-source and open-weight models spanning the Claude family (Anthropic, 2026a, Anthropic, 2025a, Anthropic, 2026b, Anthropic, 2025b, Anthropic, 2026c), the Gemini family (Google DeepMind, 2025a, Google DeepMind, 2025c, Google DeepMind, 2026), GPT and o-series models (OpenAI, 2025a, OpenAI, 2025e, OpenAI, 2025c, OpenAI, 2025b, OpenAI, 2025d, OpenAI, 2025f), and additional systems from Doubao, Grok, GLM, Kimi, and Qwen (ByteDance Seed, 2026, xAI, 2025, Z.ai, 2025, Team et al., 2026, Bai et al., 2023, Qwen Team, 2026). For each task, the model selects either the best image (Top-1) or both the best and worst images (TB-1). We evaluate each task three times under independent random permutations of candidate order and report ap@1 and pass^3 as defined in Section 3. Prompts are provided in Appendix H.3."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "h5",
+   "en": "Reward Models."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "We additionally evaluate six reward models: ArtiMuse (Cao et al., 2025), PEAS-aes and PEAS-ava (Yun and Choo, 2024), Q-Align (Wu et al., 2023), Q-Instruct (Wu et al., 2024), and RealQA-ava (Li et al., 2025). Unlike MLLMs, these models assign scalar scores to images independently rather than selecting directly from a set. We therefore follow each model’s official scoring interface, score each image three times, average the scores, and then rank images within each task. The main text reports Top-1 and TB-1; model-specific scoring interfaces and full result tables, including Bot-1 and topic-level breakdowns, are deferred to Appendix H.4, Appendix E.2, and Appendix E.4."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 Results"
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 4 and 5 summarize the main results; Appendices E.1–E.4 provide the full tables, topic-level breakdowns, and auxiliary metrics."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "h4",
+   "en": "4.2.1 Results for Multimodal Large Language Models"
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Main VAB results for 20 frontier MLLMs. We report Top-1 and TB-1 accuracy under both ap@1 and pass^3 (%). Best result in each column is shown in bold."
+  },
+  {
+   "id": "b0079",
+   "t": "keep",
+   "w": "table",
+   "en": "Overall Fine Art Illustration Photography Top-1 TB-1 Top-1 TB-1 Top-1 TB-1 Top-1 TB-1 Model ap@1 p^3 ap@1 p^3 ap@1 p^3 ap@1 p^3 ap@1 p^3 ap@1 p^3 ap@1 p^3 ap@1 p^3 Random Guess 37.2 6.6 27.5 5.3 41.0 "
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "p",
+   "en": "Gap to experts. Current frontier models remain far below expert performance. On the strictest metric, TB-1 pass^3, Claude Sonnet 4.6 attains 26.5%, against 68.9% for human experts; even under the more lenient TB-1 ap@1, the strongest model, Doubao Seed 2.0 Pro, reaches 42.8%, still 26.1 points short of the expert baseline."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "Progress across families. Improvements are uneven across model families. Claude Sonnet 4.6 nearly doubles its predecessor on TB-1 pass^3 (14.5% ⟦SLOT_66⟧ 26.5%), whereas the GPT-5 series regresses from 21.8% (GPT-5) to 20.0% (GPT-5.1) and 15.5% (GPT-5.2). A clear closed/open gap persists under the stricter metric: the strongest open-weight system, Qwen3.5-397B-A17B, reaches 17.2% on TB-1 pass^3, compared with 26.5% for Claude Sonnet 4.6."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "Domain difficulty and stability. Accuracy varies strongly across domains and across repeated evaluations. Illustration is the most difficult domain, where Claude Sonnet 4.6 attains only 19.0% on TB-1 pass^3, while photography is comparatively more tractable, with o4-mini reaching 30.2%. The large ap@1-to-pass^3 gap—for example, GLM-4.6V drops from 34.1% to 11.5% on TB-1—indicates that sensitivity to candidate order and response instability remain major failure modes."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "h4",
+   "en": "4.2.2 Results for Reward Models"
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Main reward-model results on VAB. We report overall and domain-level Top-1 and TB-1 accuracy (%). Best non-baseline result in each column is shown in bold."
+  },
+  {
+   "id": "b0085",
+   "t": "keep",
+   "w": "table",
+   "en": "Overall Fine Art Illustration Photography Model Top-1 TB-1 Top-1 TB-1 Top-1 TB-1 Top-1 TB-1 Random Guess 37.2 27.5 41.0 36.0 31.5 19.2 36.8 23.7 Human Expert 77.7 68.9 80.4 74.7 70.3 54.4 79.9 72.4 Ar"
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "Overall performance. Reward models also remain well below human experts, although some are competitive with MLLMs on Top-1. Q-Align is the strongest overall, reaching 52.2% on Top-1 and 38.2% on TB-1, against 77.7% and 68.9% for the human baseline."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "Domain trends and asymmetric failure modes. Domain trends broadly mirror the MLLM results. Appendix E.2 additionally reveals an asymmetry between best and worst predictions: Q-Instruct reaches 51.5% on overall Bot-1 and 77.0% on photography Bot-1, despite considerably weaker Top-1 scores of 38.5% overall and 43.9% in photography. This pattern suggests that detecting aesthetic failure is in some cases easier than identifying the strongest image in a set."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "Comparison with MLLMs. The best reward-model Top-1 result , 52.2%, is numerically close to the best MLLM Top-1 ap@1 result , 55.4%, but the comparison is not strictly like-for-like: MLLMs make a single comparative decision over a candidate set, whereas reward models score images independently and are then ranked within the set."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Ablations and Additional Analysis"
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "Temperature ablation. For models with an exposed temperature parameter, greedy decoding improves Top-1 pass^3 by 1.1 points on average and TB-1 pass^3 by 2.3 points. Decoding stochasticity therefore contributes noise, but it does not explain the main performance gap; full model-by-model results are reported in Appendix E.5."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "p",
+   "en": "Candidate set size. Performance degrades sharply as the candidate set grows. Under TB-1 pass^3, the best model falls from 47.3% on two-image tasks to 6.7% on four-image tasks, while human experts decline from 87.1% to 43.6%. Larger candidate sets therefore amplify both comparative difficulty and instability; the full breakdown is reported in Appendix E.6."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Fine-Tuning on Expert Aesthetic Judgments"
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "h5",
+   "en": "Training Setup."
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "We fine-tune Qwen3.5-35B-A3B using Low-Rank Adaptation (LoRA) (Hu et al., 2022) with rank 64 and ⟦SLOT_67⟧, freezing the vision tower while updating the multimodal projector. Supervision comes from 2,000 additional expert-annotated examples collected with the same annotation pipeline described in Section 3.3; these examples are fully disjoint from the benchmark evaluation set. We train for three epochs with a learning rate of ⟦SLOT_68⟧ and cosine scheduling. Additional hyperparameters and full fine-tuning results are provided in Appendix G. The fine-tuned model is denoted as Kallisti-35B-A3B."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Fine-tuning results on VAB. We compare open-weight baselines with Kallisti-35B-A3B, which is obtained by LoRA fine-tuning on 2,000 expert-annotated training examples. All models are evaluated under their default inference configuration. Best result in each column is shown in bold."
+  },
+  {
+   "id": "b0096",
+   "t": "keep",
+   "w": "table",
+   "en": "Top-1 TB-1 Model ap@1 p^3 ap@1 p^3 Open-Weight Models GLM-4.6V 43.0 17.5 34.1 11.5 Kimi-K2.5 49.4 26.8 36.8 15.0 Qwen3-VL-235B-A22B 44.9 20.5 35.2 14.0 Qwen3.5-397B-A17B 50.1 29.8 38.9 17.2 Ours Qwen3"
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "h5",
+   "en": "Improvement over the base model."
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "Table 6 compares Kallisti-35B-A3B against its base model and a set of open-weight baselines. Fine-tuning yields consistent gains across all four reported metrics: Top-1 pass^3 improves from 25.5% to 29.5%, TB-1 pass^3 from 15.8% to 17.5%, Top-1 ap@1 from 47.5% to 51.3%, and TB-1 ap@1 from 36.5% to 38.8%. The topic-level breakdown is reported in Appendix G.2."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "h5",
+   "en": "Scaling implication."
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "p",
+   "en": "Kallisti-35B-A3B approaches the substantially larger Qwen3.5-397B-A17B on Top-1 pass^3, 29.5% versus 29.8%, and lies within roughly one point on the other metrics. This is preliminary evidence that the comparative supervision in VAB carries enough aesthetic signal to compensate for an order-of-magnitude reduction in parameter count under lightweight adaptation."
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Conclusion"
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "p",
+   "en": "We introduced VAB, a benchmark that recasts aesthetic evaluation as comparative selection over candidate sets with matched subject matter, with labels grounded in expert ranking rather than scalar scoring. VAB contains 400 tasks and 1,195 images spanning fine art, photography, and illustration. A controlled human study motivates the protocol: direct ranking yields 42 percentage points higher inter-annotator agreement than score-derived rankings. Across 20 frontier MLLMs and six reward models, the strongest system reaches 26.5% on TB-1 pass^3 against 68.9% for human experts, and accuracy drops sharply as the candidate set grows; models also exhibit pronounced positional instability across permutations of the candidate order. Fine-tuning a 35B-parameter model on 2,000 expert examples brings its accuracy close to that of a 397B-parameter open-weight model, suggesting that expert comparative supervision transfers efficiently with lightweight adaptation. We see several directions for future work: broadening domain and annotator diversity beyond the present three domains, improving robustness to candidate-order permutations, and scaling expert comparative supervision to larger training corpora. By making expert aesthetic judgment a measurable, comparative target, VAB establishes the foundation on which expert-aligned multimodal aesthetic judgment can now be systematically pursued."
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "h2",
+   "en": "Ethics Statement"
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "p",
+   "en": "This study involved human participants providing aesthetic judgments through an online evaluation platform. The University of Washington Human Subjects Division (HSD) reviewed the protocol and determined that the research qualifies as exempt human subjects research (Category 2 and 3; minimal-risk behavioral research) under U.S. federal regulations. Participation was voluntary and participants could stop at any time. No sensitive personal information was collected. Only aggregated benchmark results are publicly released, and no identifiable participant data are included in any publications or datasets. The exempt determination letter is on file with the authors."
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "p",
+   "en": "All fine art works were created as commissioned works for VAB, with participating artists informed of and consenting to the use of their work for research. Professional photographers whose images served as source material for the photography pipeline contributed their work under appropriate licensing terms. Agent-edited variants derived from these source photographs were produced within the scope of those agreements. Illustration sets generated through text-to-image models used structured prompts without reproducing copyrighted material, and 3D-rendered sets were constructed exclusively from CC0-licensed assets. We are committed to crediting and fairly compensating all human creators whose work contributed to this benchmark."
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Adobe (2026a) Adobe Adobe Lightroom . Note: Adobe Website External Links: Link Cited by: §B.3 ."
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Adobe (2026b) Adobe Adobe Photoshop . Note: Adobe Website External Links: Link Cited by: §B.3 ."
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Alayrac et al. (2022) J. Alayrac, J. Donahue, P. Luc, A. Miech, I. Barr, Y. Hasson, K. Lenc, A. Mensch, K. Millican, M. Reynolds, et al. Flamingo: a visual language model for few-shot learning . Advan"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Anthropic (2025a) Anthropic Introducing Claude Opus 4.5 . Note: Anthropic News External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Anthropic (2025b) Anthropic Introducing Claude Sonnet 4.5 . Note: Anthropic News External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Anthropic (2026a) Anthropic Introducing Claude Haiku 4.5 . Note: Anthropic News External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Anthropic (2026b) Anthropic Introducing Claude Opus 4.6 . Note: Anthropic News External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Anthropic (2026c) Anthropic Introducing Claude Sonnet 4.6 . Note: Anthropic News External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al. (2023) J. Bai, S. Bai, Y. Chu, Z. Cui, K. Dang, X. Deng, Y. Fan, W. Ge, Y. Han, F. Huang, et al. Qwen technical report . arXiv preprint arXiv:2309.16609 . Cited by: §4.1 ."
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bonferroni (1936) C. Bonferroni Teoria statistica delle classi e calcolo delle probabilita . Pubblicazioni del R istituto superiore di scienze economiche e commericiali di firenze 8 , pp. 3–62 . Cited"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "ByteDance Seed (2026) ByteDance Seed SEED2 . Note: ByteDance Seed Website External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cao et al. (2025) S. Cao, N. Ma, J. Li, X. Li, L. Shao, K. Zhu, Y. Zhou, Y. Pu, J. Wu, J. Wang, et al. Artimuse: Fine-grained image aesthetics assessment with joint scoring and expert-level understand"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Creative Commons (2009) Creative Commons CC0 1.0 Universal . Note: Creative Commons Website External Links: Link Cited by: §B.3 ."
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dai et al. (2023) W. Dai, J. Li, D. Li, A. Tiong, J. Zhao, W. Wang, B. Li, P. N. Fung, and S. Hoi Instructblip: Towards general-purpose vision-language models with instruction tuning . Advances in neu"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fagerland et al. (2013) M. W. Fagerland, S. Lydersen, and P. Laake The McNemar test for binary matched-pairs data: mid-p and asymptotic are better than exact conditional . BMC medical research methodo"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Goldman (1995) A. H. Goldman Aesthetic Value . Westview Press . Cited by: §2 ."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Google DeepMind (2025a) Google DeepMind Gemini 3 Flash . Note: Google DeepMind Model Card External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Google DeepMind (2025b) Google DeepMind Gemini 3 Pro Image (Nano Banana Pro) . Note: Google DeepMind Model Card External Links: Link Cited by: §B.3 ."
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Google DeepMind (2025c) Google DeepMind Gemini 3 Pro . Note: Google DeepMind Model Card External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Google DeepMind (2026) Google DeepMind Gemini 3.1 Pro . Note: Google DeepMind Model Card External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "He et al. (2023) S. He, A. Ming, Y. Li, J. Sun, S. Zheng, and H. Ma Thinking image color aesthetics assessment: Models, datasets and benchmarks . In Proceedings of the IEEE/CVF International Conferenc"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "He et al. (2022) S. He, Y. Zhang, R. Xie, D. Jiang, and A. Ming Rethinking Image Aesthetics Assessment: Models, Datasets and Benchmarks. . In IJCAI , Vol. 6 , pp. 22 . Cited by: Appendix A , §1 , §2 ,"
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hosu et al. (2019) V. Hosu, B. Goldlucke, and D. Saupe Effective aesthetics prediction with multi-level spatially pooled features . In proceedings of the IEEE/CVF conference on computer vision and pat"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hu et al. (2022) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, W. Chen, et al. Lora: Low-rank adaptation of large language models. . Iclr 1 ( 2 ), pp. 3 . Cited by: §5 ."
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024a) Y. Huang, X. Sheng, Z. Yang, Q. Yuan, Z. Duan, P. Chen, L. Li, W. Lin, and G. Shi Aesexpert: Towards multi-modality foundation model for image aesthetics perception . In Proceedin"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024b) Y. Huang, Q. Yuan, X. Sheng, Z. Yang, H. Wu, P. Chen, Y. Yang, L. Li, and W. Lin Aesbench: An expert benchmark for multimodal large language models on image aesthetics perception "
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kendall and Smith (1939) M. G. Kendall and B. B. Smith The problem of m rankings . The annals of mathematical statistics 10 ( 3 ), pp. 275–287 . Cited by: §F.7 ."
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kendall (1938) M. G. Kendall A new measure of rank correlation . Biometrika 30 ( 1-2 ), pp. 81–93 . Cited by: §F.1 , 1st item ."
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kong et al. (2016) S. Kong, X. Shen, Z. Lin, R. Mech, and C. Fowlkes Photo aesthetics ranking network with attributes and content adaptation . In European conference on computer vision , pp. 662–679 ."
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lee and Kim (2019) J. Lee and C. Kim Image aesthetic assessment based on pairwise comparison a unified approach to score regression, binary classification, and personalization . In Proceedings of the "
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Levinson (2005) J. Levinson The Oxford handbook of aesthetics . Oxford University Press . Cited by: §2 ."
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023) J. Li, D. Li, S. Savarese, and S. Hoi Blip-2: Bootstrapping language-image pre-training with frozen image encoders and large language models . In International conference on machine l"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2025) M. Li, R. Wang, L. Sun, Y. Bai, and X. Chu Next token is enough: Realistic image quality and aesthetic scoring with multimodal large language model . arXiv preprint arXiv:2503.06141 ."
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023) H. Liu, C. Li, Q. Wu, and Y. J. Lee Visual instruction tuning . Advances in neural information processing systems 36 , pp. 34892–34916 . Cited by: Appendix A , §1 ."
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ma et al. (2017) S. Ma, J. Liu, and C. Wen Chen A-lamp: Adaptive layout-aware multi-patch deep convolutional neural network for photo aesthetic assessment . In Proceedings of the IEEE conference on co"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "McNemar (1947) Q. McNemar Note on the sampling error of the difference between correlated proportions or percentages . Psychometrika 12 ( 2 ), pp. 153–157 . Cited by: §F.6 , §2 , Table 2 , Table 2 ."
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Midjourney (2026) Midjourney Version . Note: Midjourney Documentation External Links: Link Cited by: §B.3 ."
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Murray et al. (2012) N. Murray, L. Marchesotti, and F. Perronnin AVA: A large-scale database for aesthetic visual analysis . In 2012 IEEE conference on computer vision and pattern recognition , pp. 24"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2025a) OpenAI GPT-4.1 . Note: OpenAI API Documentation External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2025b) OpenAI GPT-5.1 Codex . Note: OpenAI API Documentation External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2025c) OpenAI Introducing GPT-5.1 . Note: OpenAI Website External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2025d) OpenAI Introducing GPT-5.2 . Note: OpenAI Website External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2025e) OpenAI Introducing GPT-5 . Note: OpenAI Website External Links: Link Cited by: §B.3 , §4.1 ."
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "OpenAI (2025f) OpenAI o4-mini . Note: OpenAI API Documentation External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Parducci (1965) A. Parducci Category judgment: a range-frequency model. . Psychological review 72 ( 6 ), pp. 407 . Cited by: §2 ."
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "PixelLab (2026) PixelLab PixelLab . Note: PixelLab Website External Links: Link Cited by: §B.3 ."
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qi et al. (2025) D. Qi, H. Zhao, J. Shi, S. Jenni, Y. Fan, F. Dernoncourt, S. Cohen, and S. Li The Photographer’s Eye: Teaching Multimodal Large Language Models to See, and Critique Like Photographers"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qwen Team (2026) Qwen Team Qwen3.5 . Note: Qwen Blog External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Shannon (1948) C. E. Shannon A mathematical theory of communication . The Bell system technical journal 27 ( 3 ), pp. 379–423 . Cited by: §F.1 , 3rd item , §2 , Table 3 , Table 3 ."
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sketchfab (2026) Sketchfab Sketchfab . Note: Sketchfab Website External Links: Link Cited by: §B.3 ."
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Stewart et al. (2005) N. Stewart, G. D. Brown, and N. Chater Absolute identification by relative judgment. . Psychological review 112 ( 4 ), pp. 881 . Cited by: §2 ."
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sun et al. (2024) P. Sun, Y. Jiang, S. Chen, S. Zhang, B. Peng, P. Luo, and Z. Yuan Autoregressive model beats diffusion: Llama for scalable image generation . arXiv preprint arXiv:2406.06525 . Cited "
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Talebi and Milanfar (2018) H. Talebi and P. Milanfar NIMA: Neural image assessment . IEEE transactions on image processing 27 ( 8 ), pp. 3998–4011 . Cited by: Appendix A , §1 ."
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Team et al. (2023) G. Team, R. Anil, S. Borgeaud, J. Alayrac, J. Yu, R. Soricut, J. Schalkwyk, A. M. Dai, A. Hauth, K. Millican, et al. Gemini: a family of highly capable multimodal models . arXiv pre"
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Team et al. (2026) K. Team, T. Bai, Y. Bai, Y. Bao, S. Cai, Y. Cao, Y. Charles, H. Che, C. Chen, G. Chen, et al. Kimi K2. 5: Visual Agentic Intelligence . arXiv preprint arXiv:2602.02276 . Cited by: §"
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Thurstone (1927) L. L. Thurstone A Law of Comparative Judgment . Psychological Review 34 ( 4 ), pp. 273–286 . External Links: Document Cited by: §2 ."
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2024) P. Wang, S. Bai, S. Tan, S. Wang, Z. Fan, J. Bai, K. Chen, X. Liu, J. Wang, W. Ge, et al. Qwen2-vl: Enhancing vision-language model’s perception of the world at any resolution . arX"
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2019) W. Wang, S. Yang, W. Zhang, and J. Zhang Neural aesthetic image reviewer . IET Computer Vision 13 ( 8 ), pp. 749–758 . Cited by: Appendix A ."
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wilcoxon (1945) F. Wilcoxon Individual comparisons by ranking methods . Biometrics bulletin 1 ( 6 ), pp. 80–83 . Cited by: §F.6 , §2 , Table 3 , Table 3 ."
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wilson (1927) E. B. Wilson Probable inference, the law of succession, and statistical inference . Journal of the American Statistical Association 22 ( 158 ), pp. 209–212 . Cited by: Table 3 , Table 3 "
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2024) H. Wu, Z. Zhang, E. Zhang, C. Chen, L. Liao, A. Wang, K. Xu, C. Li, J. Hou, G. Zhai, et al. Q-instruct: Improving low-level visual abilities for multi-modality foundation models . In "
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2023) H. Wu, Z. Zhang, W. Zhang, C. Chen, L. Liao, C. Li, Y. Gao, A. Wang, E. Zhang, W. Sun, et al. Q-align: Teaching lmms for visual scoring via discrete text-defined levels . arXiv prepri"
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "xAI (2025) xAI Grok 4.1 Fast . Note: xAI News External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2022) Y. Yang, L. Xu, L. Li, N. Qie, Y. Li, P. Zhang, and Y. Guo Personalized image aesthetics assessment with rich attributes . In Proceedings of the IEEE/CVF Conference on Computer Visi"
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yi et al. (2023) R. Yi, H. Tian, Z. Gu, Y. Lai, and P. L. Rosin Towards artistic image aesthetics assessment: a large-scale dataset and a new method . In Proceedings of the IEEE/CVF Conference on Comp"
+  },
+  {
+   "id": "b0172",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yu et al. (2023) W. Yu, Z. Yang, L. Li, J. Wang, K. Lin, Z. Liu, X. Wang, and L. Wang Mm-vet: Evaluating large multimodal models for integrated capabilities . arXiv preprint arXiv:2308.02490 . Cited b"
+  },
+  {
+   "id": "b0173",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yue et al. (2024) X. Yue, Y. Ni, K. Zhang, T. Zheng, R. Liu, G. Zhang, S. Stevens, D. Jiang, W. Ren, Y. Sun, et al. Mmmu: A massive multi-discipline multimodal understanding and reasoning benchmark fo"
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yun and Choo (2024) J. Yun and J. Choo Scaling up personalized image aesthetic assessment via task vector customization . In European Conference on Computer Vision , pp. 323–339 . Cited by: §4.1 , Tab"
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Z.ai (2025) Z.ai GLM-4.6V . Note: Z.ai Blog External Links: Link Cited by: §4.1 ."
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhou et al. (2024a) H. Zhou, L. Tang, R. Yang, G. Qin, Y. Zhang, Y. Li, X. Li, R. Hu, and G. Zhai UniQA: Unified vision-language pre-training for image quality and aesthetic assessment . arXiv preprin"
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhou et al. (2024b) Z. Zhou, Q. Wang, B. Lin, Y. Su, R. Chen, X. Tao, A. Zheng, L. Yuan, P. Wan, and D. Zhang Uniaa: A unified multi-modal image aesthetic assessment baseline and benchmark . arXiv pre"
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix"
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Related Work"
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "h5",
+   "en": "Multimodal Large Language Models."
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "p",
+   "en": "Recent MLLMs such as Flamingo, BLIP-2, InstructBLIP, LLaVA, Gemini, and Qwen2-VL have rapidly improved multimodal perception, instruction following, and reasoning (Alayrac et al., 2022, Li et al., 2023, Dai et al., 2023, Liu et al., 2023, Team et al., 2023, Wang et al., 2024). Their capabilities are typically assessed on broad benchmarks such as MM-Vet and MMMU (Yu et al., 2023, Yue et al., 2024), where each example usually admits a single correct answer. Aesthetic judgment is different: it is comparative, convention-sensitive, and not reducible to factual correctness alone. Our focus is therefore whether frontier MLLMs can make stable, expert-aligned selections over candidate sets with matched subject matter rather than pointwise judgments on isolated images."
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "h5",
+   "en": "Image Aesthetics Assessment."
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "p",
+   "en": "Image aesthetics assessment (IAA) has traditionally been posed as single-image score prediction. Canonical datasets such as AVA and AADB provide large-scale photographic images with scalar ratings. Later resources extend this paradigm through comments, theme-aware labels, and personalization, including AVA-Reviews, TAD66K, and PARA (Murray et al., 2012, Kong et al., 2016, Wang et al., 2019, He et al., 2022, Yang et al., 2022). These resources support a broad line of regression and ranking models, including NIMA, A-Lamp, theme-aware predictors, and more recent vision-language scorers such as Q-Align and UniQA (Talebi and Milanfar, 2018, Ma et al., 2017, He et al., 2022, Wu et al., 2023, Zhou et al., 2024a). Still, the dominant setup remains pointwise, mapping from one image to a score, with preference order inferred only indirectly from independent estimates."
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "p",
+   "en": "More recently, MLLM-based efforts have moved toward richer aesthetic reasoning. AesBench evaluates aesthetic perception in frontier MLLMs; AesExpert and UNIAA build instruction-tuned systems for critique and assessment; and ArtiMuse and the photography-focused The Photographer’s Eye move closer to expert-style analysis (Huang et al., 2024b, Huang et al., 2024a, Zhou et al., 2024b, Cao et al., 2025, Qi et al., 2025). Nevertheless, existing resources remain largely single-image, score-centric, or domain-specific. In contrast, VAB is explicitly set-based: each example is a group with matched subject matter, and the task is to identify the strongest and weakest images under controlled content. This formulation targets relative aesthetic discrimination directly, derives labels from expert consensus rather than crowd averages, and spans fine art, photography, and illustration within a unified benchmark."
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Benchmark Details"
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "h3",
+   "en": "B.1 Final Benchmark Statistics"
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "p",
+   "en": "Table 7 reports the final benchmark statistics after expert annotation and consensus filtering."
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Final benchmark statistics for VAB by domain and topic after expert consensus filtering. T/I denotes the number of tasks and images."
+  },
+  {
+   "id": "b0189",
+   "t": "keep",
+   "w": "table",
+   "en": "Fine Art (161/458) Photography (139/389) Illustration (100/348) Topic ​​T / I Topic ​​T / I Topic ​​T / I Landscape Color 56/243 Landscape 45/130 Digital & AI Art 23/84 Portrait Sketch 33/66 Street & "
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "p",
+   "en": "Table 8 shows the candidate set size distribution in the final benchmark by domain, and Table 9 provides the corresponding topic-level breakdown."
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8: Candidate set size distribution in the final benchmark by domain."
+  },
+  {
+   "id": "b0192",
+   "t": "keep",
+   "w": "table",
+   "en": "Domain k = 2 k=2 k = 3 k=3 k = 4 k=4 k = 5 k=5 k = 6 k=6 Fine Art 109 4 13 34 1 Photography 30 107 2 0 0 Illustration 26 0 74 0 0 Total 165 111 89 34 1"
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 9: Topic-level breakdown of the final benchmark after expert consensus filtering."
+  },
+  {
+   "id": "b0194",
+   "t": "keep",
+   "w": "table",
+   "en": "Domain Topic k = 2 k=2 k = 3 k=3 k = 4 k=4 k = 5 k=5 k = 6 k=6 Tasks Avg. k k Fine Art Calligraphy 11 0 0 0 0 11 2.00 Fine Art Chinese Painting 9 0 0 0 0 9 2.00 Fine Art Ink and Wash 4 0 0 0 0 4 2.00 "
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "h3",
+   "en": "B.2 Raw Collection Statistics Before Expert Filtering"
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "p",
+   "en": "Before expert filtering, the collected pool contains 1,367 tasks and 3,859 images. Table 10 summarizes the raw collection by domain, Table 11 reports the corresponding topic-level breakdown, and Table 12 further decomposes the photography subset by collection pipeline."
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 10: Raw collection statistics by domain before expert filtering."
+  },
+  {
+   "id": "b0198",
+   "t": "keep",
+   "w": "table",
+   "en": "Domain Tasks Images Avg. k k Fine Art 426 1,142 2.68 Photography 670 1,809 2.70 Illustration 271 908 3.35 Total 1,367 3,859 2.82"
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 11: Topic-level raw collection statistics before expert filtering."
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "table",
+   "en": "Domain Topic Tasks Images k = 2 k=2 k = 3 k=3 k = 4 k=4 k = 5 k=5 k = 6 k=6 Avg. k k Fine Art Landscape Color 113 502 12 6 20 70 5 4.44 Fine Art Portrait Sketch 93 186 93 0 0 0 0 2.00 Fine Art Still L"
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 12: Raw photography collection statistics by topic and collection pipeline before expert filtering. Agent-Edit and Expert-Edit denote task counts from the automated editing pipeline and the expert retouching pipeline, respectively."
+  },
+  {
+   "id": "b0202",
+   "t": "keep",
+   "w": "table",
+   "en": "Topic Tasks Images k = 2 k=2 k = 3 k=3 k = 4 k=4 Avg. k k Agent-Edit Expert-Edit Landscape 280 761 81 197 2 2.72 188 92 Street and City 165 450 45 120 0 2.73 115 50 Architecture 157 420 51 106 0 2.68 "
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "h3",
+   "en": "B.3 Data Construction Details"
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "h5",
+   "en": "Fine Art."
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "p",
+   "en": "We commissioned 426 painting sets comprising 1,142 images across nine fine-art topics: calligraphy, Chinese painting, ink and wash, landscape color, portrait color, portrait sketch, quick sketch, still-life color, and still-life sketch. For each topic, artists received constrained prompts that fixed the subject and high-level compositional requirements while allowing variation in execution. The resulting sets preserve semantic intent while differing in composition, value structure, color harmony, and paint handling. All works were commissioned specifically for VAB rather than drawn from existing collections, which reduces the risk of contamination from publicly indexed art. Before annotation, we remove near-duplicates and discard sets with semantic mismatches or trivial cues."
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "h5",
+   "en": "Photography."
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "p",
+   "en": "We constructed 670 photography sets comprising 1,809 images across nine topics: architecture, food and product, landscape, macro, night and astrophotography, portrait, sports, street and city, and wildlife. Each set originates from a single source photograph, many provided directly by professional photographers. We transform these source images into controlled comparison sets through two pipelines."
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "p",
+   "en": "In the expert-edit pipeline, photographers and retouchers improve each source image using tools such as Adobe Photoshop and Lightroom (Adobe, 2026b, Adobe, 2026a), applying recomposition, color and tone correction, and content-aware expansion. The original photograph and its improved variant form a pair. For a subset of source images, multiple experts independently edit the same photograph, yielding larger candidate sets with matched subject matter and varying aesthetic quality."
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "In the agent-edit pipeline, each source image is first sent to a critic model, ArtiMuse (Cao et al., 2025), which produces a detailed aesthetic review. The review and the original image are then passed to a general-purpose MLLM, GPT-5 (OpenAI, 2025e), to generate two editing prompts: one for improvement and one for degradation. These prompts, together with the original image, are fed to an image-to-image model, Gemini-3-Pro-Image (Nano Banana Pro) (Google DeepMind, 2025b), to generate an improved and a degraded variant. The original, improved, and degraded images form a three-image candidate set. The exact prompt sequence is recorded in Appendix H.1."
+  },
+  {
+   "id": "b0210",
+   "t": "text",
+   "w": "p",
+   "en": "All photography sets from both pipelines are deduplicated and reviewed for semantic consistency before annotation."
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "h5",
+   "en": "Illustration."
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "p",
+   "en": "We constructed 271 illustration sets comprising 908 images across six topics: anime and manga, comic, concept art, digital and AI art, pixel art, and stylized 3D. The sets are derived from two distinct sources, prompt-based generation and 3D asset rendering."
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "p",
+   "en": "In the generative pipeline, each set originates from a structured prompt that specifies subject identity, scene context, composition, camera viewpoint, lighting, and stylistic attributes. For each set, the prompt is instantiated using a single text-to-image model, such as Midjourney v7 (Midjourney, 2026), Pixellab.ai (Create M-XL) (PixelLab, 2026), or LlamaGen (Sun et al., 2024), to generate candidate images with matched subject matter and varying aesthetic quality. The prompt templates are provided in Appendix H.2."
+  },
+  {
+   "id": "b0214",
+   "t": "text",
+   "w": "p",
+   "en": "In the 3D-rendering pipeline, each set is constructed from CC0-licensed assets sourced from Sketchfab (Creative Commons, 2009, Sketchfab, 2026). For each asset, we render multiple images by varying camera viewpoint while keeping object identity, scene semantics, lighting, and background conditions fixed. The resulting renders form candidate sets with matched subject matter and controlled variation in composition and visual presentation."
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "p",
+   "en": "All illustration sets from both pipelines are deduplicated and reviewed for semantic consistency before annotation."
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Annotation Details"
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "h3",
+   "en": "C.1 Annotation Rubrics"
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "p",
+   "en": "The rubric serves as a structured comparison guide rather than a separate numerical scoring form. Judges assess each image against domain-specific criteria before making their final comparative selection. The rubrics below describe the criteria used for each domain."
+  },
+  {
+   "id": "b0219",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0220",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0221",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "h3",
+   "en": "C.2 Annotation Interface"
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 5 shows an example annotation interface used by expert judges."
+  },
+  {
+   "id": "b0224",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: The annotation interface presents all ⟦SLOT_69⟧ candidate images side by side. Judges first review each image with respect to the rubric criteria, then make a final comparative selection: selecting the best image for ⟦SLOT_70⟧ and selecting both the best and worst images for ⟦SLOT_71⟧."
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D Ground Truth Mathematical Details"
+  },
+  {
+   "id": "b0227",
+   "t": "text",
+   "w": "p",
+   "en": "This appendix provides additional mathematical details for the consensus filter described in Section 3.3."
+  },
+  {
+   "id": "b0228",
+   "t": "text",
+   "w": "h3",
+   "en": "D.1 Selected Thresholds"
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "p",
+   "en": "Table 13 reports the consensus thresholds used in the benchmark together with their corresponding null pass probabilities."
+  },
+  {
+   "id": "b0230",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 13: Consensus thresholds and corresponding null pass probabilities by candidate set size ⟦SLOT_72⟧, with ⟦SLOT_73⟧ judges per task."
+  },
+  {
+   "id": "b0231",
+   "t": "keep",
+   "w": "table",
+   "en": "k k Threshold m m p accept ​ ( k , m ) p_{\\mathrm{accept}}(k,m) 2 8 10.94% 3 7 0.88% 4 6 0.95% 5 6 0.15% 6 6 0.03%"
+  },
+  {
+   "id": "b0232",
+   "t": "text",
+   "w": "h3",
+   "en": "D.2 Derivation of Null Pass Probabilities"
+  },
+  {
+   "id": "b0233",
+   "t": "text",
+   "w": "p",
+   "en": "For ⟦SLOT_74⟧ candidates with ⟦SLOT_75⟧ judges, each judge’s response is modeled as a directed edge ⟦SLOT_76⟧ (selecting image ⟦SLOT_77⟧ as best and image ⟦SLOT_78⟧ as worst, with ⟦SLOT_79⟧) drawn uniformly from ⟦SLOT_80⟧ possibilities. Let ⟦SLOT_81⟧ denote the count of judges choosing the pair ⟦SLOT_82⟧. The probability of any configuration ⟦SLOT_83⟧ under the random null is:"
+  },
+  {
+   "id": "b0234",
+   "t": "keep",
+   "w": "table",
+   "en": "Pr ⁡ ( C ) = n ! ∏ i ≠ j c i ​ j ! ​ ( 1 k ⁡ ( k − 1 ) ) n . \\Pr(C)=\\frac{n!}{\\prod_{i\\neq j}c_{ij}!}\\left(\\frac{1}{k(k-1)}\\right)^{n}."
+  },
+  {
+   "id": "b0235",
+   "t": "text",
+   "w": "p",
+   "en": "The exact by-chance pass probability is computed by summing over all configurations satisfying the consensus threshold:"
+  },
+  {
+   "id": "b0236",
+   "t": "keep",
+   "w": "table",
+   "en": "p accept ( k , m ) = ∑ C : c i ​ i = 0 , ∑ i ≠ j c i ​ j = n n ! ∏ i ≠ j c i ​ j ! ( 1 k ⁡ ( k − 1 ) ) n ( max i B i ≥ m ) ( max j W j ≥ m ) , p_{\\mathrm{accept}}(k,m)=\\sum_{\\begin{subarray}{c}C:\\,c_{"
+  },
+  {
+   "id": "b0237",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_84⟧ (votes for ⟦SLOT_85⟧ as best) and ⟦SLOT_86⟧ (votes for ⟦SLOT_87⟧ as worst). The exact probabilities were computed by exhaustive enumeration over all valid count configurations ⟦SLOT_88⟧ satisfying ⟦SLOT_89⟧ and ⟦SLOT_90⟧, summing the multinomial probability mass over the configurations that satisfy the acceptance condition. For ⟦SLOT_91⟧, this acceptance condition is conjunctive: a task passes only if the best-vote threshold and the worst-vote threshold are both met, so satisfying only one of the two is insufficient."
+  },
+  {
+   "id": "b0238",
+   "t": "text",
+   "w": "h3",
+   "en": "D.3 Monte Carlo Verification"
+  },
+  {
+   "id": "b0239",
+   "t": "text",
+   "w": "p",
+   "en": "We verify the exact probabilities via Monte Carlo simulation with ⟦SLOT_92⟧ samples per ⟦SLOT_93⟧ configuration. Table 14 compares the exact values from Table 13 against Monte Carlo estimates and reports 95% Wald confidence intervals."
+  },
+  {
+   "id": "b0240",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 14: Monte Carlo verification of null pass probabilities (⟦SLOT_94⟧ samples)."
+  },
+  {
+   "id": "b0241",
+   "t": "keep",
+   "w": "table",
+   "en": "k k m m Exact MC Estimate 95% CI 2 8 10.94% 10.9496% [10.9303%, 10.9690%] 3 7 0.88% 0.8818% [0.8760%, 0.8876%] 4 6 0.95% 0.9507% [0.9447%, 0.9567%] 5 6 0.15% 0.1489% [0.1465%, 0.1513%] 6 6 0.03% 0.030"
+  },
+  {
+   "id": "b0242",
+   "t": "text",
+   "w": "h3",
+   "en": "D.4 Special Case for Binary Tasks"
+  },
+  {
+   "id": "b0243",
+   "t": "text",
+   "w": "p",
+   "en": "For binary tasks (⟦SLOT_95⟧), the worst image is implied once the best is selected. The consensus filter reduces to requiring ⟦SLOT_96⟧ where ⟦SLOT_97⟧:"
+  },
+  {
+   "id": "b0244",
+   "t": "keep",
+   "w": "table",
+   "en": "p accept ​ ( 2 , m ) = Pr ⁡ ( B ≥ m ) + Pr ⁡ ( B ≤ n − m ) = 2 ​ ∑ b = m n ( n b ) ​ ( 1 2 ) n . p_{\\mathrm{accept}}(2,m)=\\Pr\\!\\left(B\\geq m\\right)+\\Pr\\!\\left(B\\leq n-m\\right)=2\\sum_{b=m}^{n}\\binom{n}"
+  },
+  {
+   "id": "b0245",
+   "t": "text",
+   "w": "p",
+   "en": "For ⟦SLOT_98⟧ and ⟦SLOT_99⟧, this gives ⟦SLOT_100⟧. We use this lower binary threshold because ⟦SLOT_101⟧ tasks provide only a single comparative decision per annotator; compared with ⟦SLOT_102⟧, demanding the same level of concentration would remove a disproportionate number of otherwise informative binary comparisons."
+  },
+  {
+   "id": "b0246",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix E Detailed Experimental Results"
+  },
+  {
+   "id": "b0247",
+   "t": "text",
+   "w": "p",
+   "en": "This appendix supplements Section 4 with full result tables that are too large for the main text. We retain the same evaluation focus as in the main paper: overall performance relative to expert baselines, cross-domain variation, sensitivity to candidate order, and auxiliary analyses on decoding and task size."
+  },
+  {
+   "id": "b0248",
+   "t": "text",
+   "w": "h3",
+   "en": "E.1 Comprehensive MLLM Results"
+  },
+  {
+   "id": "b0249",
+   "t": "text",
+   "w": "p",
+   "en": "Table 15 reports comprehensive MLLM results, including Bot-1, across overall and domain-level evaluations. These results complement Table 4 in the main text by making the asymmetry between identifying the strongest and weakest images explicit. They also make clear that the gap between ap@1 and pass^3 is pervasive rather than concentrated in a small subset of models, consistent with the interpretation in Section 4.2.1 that many MLLM predictions remain sensitive to candidate order and response instability."
+  },
+  {
+   "id": "b0250",
+   "t": "text",
+   "w": "p",
+   "en": "The full table also makes several model-level patterns easier to inspect. Within the Claude family, Claude Sonnet 4.6 improves substantially over Claude Sonnet 4.5 on the stricter TB-1 pass^3 metric, whereas the GPT-5 series declines monotonically from GPT-5 to GPT-5.2. The same table also makes the closed/open gap clearer under stability-sensitive metrics: Qwen3.5-397B-A17B is much closer to the strongest closed models under ap@1 than under pass^3, suggesting weaker consistency across repeated evaluations. Finally, the domain columns reinforce the main-text headline that illustration is the most difficult domain, photography is generally more tractable, and fine art lies between them."
+  },
+  {
+   "id": "b0251",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 15: Comprehensive VAB results for evaluated MLLMs and reference baselines. We report Top-1, Bot-1, and TB-1 accuracy under both ap@1 and pass^3 (%). Best result in each non-baseline column is shown in bold."
+  },
+  {
+   "id": "b0252",
+   "t": "keep",
+   "w": "table",
+   "en": "Overall Fine Art Illustration Photography Top-1 Bot-1 TB-1 Top-1 Bot-1 TB-1 Top-1 Bot-1 TB-1 Top-1 Bot-1 TB-1 Model ap@1 p^3 ap@1 p^3 ap@1 p^3 ap@1 p^3 ap@1 p^3 ap@1 p^3 ap@1 p^3 ap@1 p^3 ap@1 p^3 ap@"
+  },
+  {
+   "id": "b0253",
+   "t": "text",
+   "w": "h3",
+   "en": "E.2 Comprehensive Reward-Model Results"
+  },
+  {
+   "id": "b0254",
+   "t": "text",
+   "w": "p",
+   "en": "Table 16 reports comprehensive reward-model results, including Bot-1, across overall and domain-level evaluations. In contrast to the condensed main-text presentation in Table 5, this table shows that some reward models are materially stronger at rejecting poor images than at identifying the best one. In particular, the detailed Bot-1 columns make the failure mode discussed in Section 4.2.2 directly visible, especially for Q-Instruct in photography."
+  },
+  {
+   "id": "b0255",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 16: Comprehensive reward-model results on VAB. Each image is scored independently three times and the scores are averaged before within-task ranking. We report Top-1, Bot-1, and TB-1 accuracy across overall and domain-level evaluations (%). Best result in each non-baseline column is shown in bold."
+  },
+  {
+   "id": "b0256",
+   "t": "keep",
+   "w": "table",
+   "en": "Overall Fine Art Illustration Photography Model Top-1 Bot-1 TB-1 Top-1 Bot-1 TB-1 Top-1 Bot-1 TB-1 Top-1 Bot-1 TB-1 Random Guess 37.2 37.2 27.5 41.0 41.0 36.0 31.5 31.5 19.2 36.8 36.8 23.7 Human Exper"
+  },
+  {
+   "id": "b0257",
+   "t": "text",
+   "w": "h3",
+   "en": "E.3 Topic-Level MLLM Results"
+  },
+  {
+   "id": "b0258",
+   "t": "text",
+   "w": "p",
+   "en": "To match the main-text MLLM table, we report topic-level results under all four metrics: Top-1 ap@1, Top-1 pass^3, TB-1 ap@1, and TB-1 pass^3. Together, these tables show that the domain-level trends in Section 4.2.1 are not driven by a single topic or a single evaluation metric. Illustration remains the hardest domain across all four views, while photography is generally more tractable but still highly uneven across topics."
+  },
+  {
+   "id": "b0259",
+   "t": "text",
+   "w": "p",
+   "en": "Several topic effects recur across metrics. In fine art, Chinese painting and portrait-color tasks are often relatively tractable, whereas landscape-color and some sketch-based tasks become much less stable under the stricter criteria. In illustration, the remaining signal is concentrated mostly in anime-and-manga and comic tasks, while concept art, digital-and-AI art, and stylized 3D frequently collapse under pass^3. In photography, macro and sports tasks are often close to saturation for strong models, but night-and-astrophotography, architecture, and some street-and-city tasks remain much less stable, especially when consistency across repeated evaluations is required."
+  },
+  {
+   "id": "b0260",
+   "t": "text",
+   "w": "p",
+   "en": "Top-1 ap@1."
+  },
+  {
+   "id": "b0261",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 17, 18, and 19 report topic-level Top-1 ap@1 results for fine art, illustration, and photography, respectively."
+  },
+  {
+   "id": "b0262",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 17: Topic-level MLLM Top-1 ap@1 results on fine-art tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0263",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Calligraphy Chinese Painting Ink & Wash Landscape Color Portrait Color Portrait Sketch Quick Sketch Still Life Color Still Life Sketch Avg. Random Guess 50.0 50.0 50.0 25.2 50.0 50.0 50.0 47.7 5"
+  },
+  {
+   "id": "b0264",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 18: Topic-level MLLM Top-1 ap@1 results on illustration tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0265",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Anime & Manga Comic Concept Art Digital & AI Art Pixel Art Stylized 3D Avg. Random Guess 50.0 47.5 25.0 29.3 25.0 25.0 31.5 Human Expert 87.7 82.0 66.8 65.2 62.4 71.8 70.3 Closed-Source Models C"
+  },
+  {
+   "id": "b0266",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 19: Topic-level MLLM Top-1 ap@1 results on photography tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0267",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Architecture Food & Product Landscape Macro Night & Astro Portrait Sports Street & City Wildlife Avg. Random Guess 37.0 36.7 35.4 33.3 33.3 41.7 33.3 38.0 39.8 36.8 Human Expert 81.6 78.0 78.9 7"
+  },
+  {
+   "id": "b0268",
+   "t": "text",
+   "w": "p",
+   "en": "Top-1 pass^3."
+  },
+  {
+   "id": "b0269",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 20, 21, and 22 report topic-level Top-1 pass^3 results for fine art, illustration, and photography, respectively."
+  },
+  {
+   "id": "b0270",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 20: Topic-level MLLM Top-1 pass^3 results on fine-art tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0271",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Calligraphy Chinese Painting Ink & Wash Landscape Color Portrait Color Portrait Sketch Quick Sketch Still Life Color Still Life Sketch Avg. Random Guess 12.5 12.5 12.5 2.4 12.5 12.5 12.5 11.6 12"
+  },
+  {
+   "id": "b0272",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 21: Topic-level MLLM Top-1 pass^3 results on illustration tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0273",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Anime & Manga Comic Concept Art Digital & AI Art Pixel Art Stylized 3D Avg. Random Guess 12.5 11.4 1.6 3.5 1.6 1.6 4.4 Human Expert 87.7 82.0 66.8 65.2 62.4 71.8 70.3 Closed-Source Models Claude"
+  },
+  {
+   "id": "b0274",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 22: Topic-level MLLM Top-1 pass^3 results on photography tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0275",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Architecture Food & Product Landscape Macro Night & Astro Portrait Sports Street & City Wildlife Avg. Random Guess 5.6 5.5 4.8 3.7 3.7 8.1 3.7 6.2 7.4 5.6 Human Expert 81.6 78.0 78.9 75.0 80.0 8"
+  },
+  {
+   "id": "b0276",
+   "t": "text",
+   "w": "p",
+   "en": "TB-1 ap@1."
+  },
+  {
+   "id": "b0277",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 23, 24, and 25 report topic-level TB-1 ap@1 results for fine art, illustration, and photography, respectively."
+  },
+  {
+   "id": "b0278",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 23: Topic-level MLLM TB-1 ap@1 results on fine-art tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0279",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Calligraphy Chinese Painting Ink & Wash Landscape Color Portrait Color Portrait Sketch Quick Sketch Still Life Color Still Life Sketch Avg. Random Guess 50.0 50.0 50.0 11.3 50.0 50.0 50.0 46.4 5"
+  },
+  {
+   "id": "b0280",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 24: Topic-level MLLM TB-1 ap@1 results on illustration tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0281",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Anime & Manga Comic Concept Art Digital & AI Art Pixel Art Stylized 3D Avg. Random Guess 50.0 45.8 8.3 15.6 8.3 8.3 19.2 Human Expert 87.7 79.0 42.3 49.1 43.3 49.1 54.4 Closed-Source Models Clau"
+  },
+  {
+   "id": "b0282",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 25: Topic-level MLLM TB-1 ap@1 results on photography tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0283",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Architecture Food & Product Landscape Macro Night & Astro Portrait Sports Street & City Wildlife Avg. Random Guess 24.0 23.3 20.9 16.7 16.7 33.3 16.7 26.1 30.6 23.7 Human Expert 73.8 72.0 71.3 6"
+  },
+  {
+   "id": "b0284",
+   "t": "text",
+   "w": "p",
+   "en": "TB-1 pass^3."
+  },
+  {
+   "id": "b0285",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 26, 27, and 28 report topic-level TB-1 pass^3 results for fine art, illustration, and photography, respectively."
+  },
+  {
+   "id": "b0286",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 26: Topic-level TB-1 pass^3 results on fine-art tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0287",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Calligraphy Chinese Painting Ink & Wash Landscape Color Portrait Color Portrait Sketch Quick Sketch Still Life Color Still Life Sketch Avg. Random Guess 12.5 12.5 12.5 1.4 12.5 12.5 12.5 11.5 12"
+  },
+  {
+   "id": "b0288",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 27: Topic-level TB-1 pass^3 results on illustration tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0289",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Anime & Manga Comic Concept Art Digital & AI Art Pixel Art Stylized 3D Avg. Random Guess 12.5 11.3 0.1 2.2 0.1 0.1 3.3 Human Expert 87.7 79.0 42.3 49.1 43.3 49.1 54.4 Closed-Source Models Claude"
+  },
+  {
+   "id": "b0290",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 28: Topic-level TB-1 pass^3 results on photography tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0291",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Architecture Food & Product Landscape Macro Night & Astro Portrait Sports Street & City Wildlife Avg. Random Guess 3.1 2.9 2.1 0.5 0.5 6.5 0.5 3.9 5.8 3.1 Human Expert 73.8 72.0 71.3 60.0 60.0 8"
+  },
+  {
+   "id": "b0292",
+   "t": "text",
+   "w": "h3",
+   "en": "E.4 Topic-Level Reward-Model Results"
+  },
+  {
+   "id": "b0293",
+   "t": "text",
+   "w": "p",
+   "en": "To match the main-text reward-model table, we report topic-level results for both Top-1 and TB-1. As in the MLLM case, the domain-level averages in the main text mask substantial variation across topics. The topic-level reward-model tables show that relatively stronger domain-level results in photography are driven by a subset of topics, while illustration remains difficult across most topics for all six reward models."
+  },
+  {
+   "id": "b0294",
+   "t": "text",
+   "w": "p",
+   "en": "The topic breakdown also clarifies where reward models do and do not transfer. Fine-art performance is mixed but not uniformly weak, with several models reaching competitive results on Chinese painting and portrait-color tasks. Illustration remains systematically difficult: outside anime-and-manga and, in a few cases, comic, most models stay close to random on concept art, digital-and-AI art, pixel art, and stylized 3D, especially under TB-1. Photography remains the strongest domain, but the gains are concentrated in a subset of topics and do not transfer uniformly to the harder best-and-worst selection setting."
+  },
+  {
+   "id": "b0295",
+   "t": "text",
+   "w": "p",
+   "en": "Top-1."
+  },
+  {
+   "id": "b0296",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 29, 30, and 31 report topic-level Top-1 results for fine art, illustration, and photography, respectively."
+  },
+  {
+   "id": "b0297",
+   "t": "text",
+   "w": "p",
+   "en": "TB-1."
+  },
+  {
+   "id": "b0298",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 32, 33, and 36 report topic-level TB-1 results for fine art, illustration, and photography, respectively."
+  },
+  {
+   "id": "b0299",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 29: Topic-level reward-model Top-1 results on fine-art tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0300",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Calligraphy Chinese Painting Ink & Wash Landscape Color Portrait Color Portrait Sketch Quick Sketch Still Life Color Still Life Sketch Avg. Random Guess 50.0 50.0 50.0 25.2 50.0 50.0 50.0 47.7 5"
+  },
+  {
+   "id": "b0301",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 30: Topic-level reward-model Top-1 results on illustration tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0302",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Anime & Manga Comic Concept Art Digital & AI Art Pixel Art Stylized 3D Avg. Random Guess 50.0 47.5 25.0 29.3 25.0 25.0 31.5 Human Expert 87.7 82.0 66.8 65.2 62.4 71.8 70.3 Reward Models ArtiMuse"
+  },
+  {
+   "id": "b0303",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 31: Topic-level reward-model Top-1 results on photography tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0304",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Architecture Food & Product Landscape Macro Night & Astro Portrait Sports Street & City Wildlife Avg. Random Guess 37.0 36.7 35.4 33.3 33.3 41.7 33.3 38.0 39.8 36.8 Human Expert 81.6 78.0 78.9 7"
+  },
+  {
+   "id": "b0305",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 32: Topic-level reward-model TB-1 results on fine-art tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0306",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Calligraphy Chinese Painting Ink & Wash Landscape Color Portrait Color Portrait Sketch Quick Sketch Still Life Color Still Life Sketch Avg. Random Guess 50.0 50.0 50.0 11.3 50.0 50.0 50.0 46.4 5"
+  },
+  {
+   "id": "b0307",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 33: Topic-level reward-model TB-1 results on illustration tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0308",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Anime & Manga Comic Concept Art Digital & AI Art Pixel Art Stylized 3D Avg. Random Guess 50.0 45.8 8.3 15.6 8.3 8.3 19.2 Human Expert 87.7 79.0 42.3 49.1 43.3 49.1 54.4 Reward Models ArtiMuse 53"
+  },
+  {
+   "id": "b0309",
+   "t": "text",
+   "w": "h3",
+   "en": "E.5 Temperature Ablation"
+  },
+  {
+   "id": "b0310",
+   "t": "text",
+   "w": "p",
+   "en": "Table 34 reports the full model-by-model temperature ablation referenced in Section 4.3. The overall trend is that greedy decoding modestly improves stability, but the effect size varies substantially across models and does not alter the main conclusion that the dominant limitation is comparative judgment rather than decoding noise alone."
+  },
+  {
+   "id": "b0311",
+   "t": "text",
+   "w": "p",
+   "en": "The gains are not uniform. Gemini 3.1 Pro and Claude Sonnet 4.5 benefit the most from greedy decoding, with especially visible improvements on the stricter TB-1 pass^3 metric. A small set of models, including Claude Sonnet 4.6, Doubao Seed 2.0 Pro, GLM-4.6V, and Qwen3.5-397B-A17B, are flat or slightly worse on at least one metric, reinforcing the point that decoding choice matters but does not dominate the benchmark outcome."
+  },
+  {
+   "id": "b0312",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 34: Effect of decoding temperature on MLLM performance. We compare default decoding (⟦SLOT_103⟧) with greedy decoding (⟦SLOT_104⟧); ⟦SLOT_105⟧ denotes the change from ⟦SLOT_106⟧ to ⟦SLOT_107⟧ (%)."
+  },
+  {
+   "id": "b0313",
+   "t": "keep",
+   "w": "table",
+   "en": "Top-1 p^3 TB-1 p^3 Model t = 1 t{=}1 t = 0 t{=}0 Δ \\Delta t = 1 t{=}1 t = 0 t{=}0 Δ \\Delta Closed-Source Models Claude-Haiku-4.5 18.8 21.2 +2.4 12.5 17.2 +4.7 Claude-Sonnet-4.5 24.2 27.3 +3.1 14.5 20."
+  },
+  {
+   "id": "b0314",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 35: TB-1 results by candidate set size ⟦SLOT_108⟧ for the evaluated MLLMs and reference baselines. For each set size, we report pass^3 and ap@1 (%)."
+  },
+  {
+   "id": "b0315",
+   "t": "keep",
+   "w": "table",
+   "en": "k = 2 k=2 k = 3 k=3 k = 4 k=4 k = 5 k=5 k = 6 k=6 Model p^3 ap@1 p^3 ap@1 p^3 ap@1 p^3 ap@1 p^3 ap@1 Random Guess 12.5 50.0 0.5 16.7 0.1 8.3 0.0 5.0 0.0 3.3 Human Expert 87.1 69.3 43.6 45.9 40.0 Claud"
+  },
+  {
+   "id": "b0316",
+   "t": "text",
+   "w": "h3",
+   "en": "E.6 Results by Candidate Set Size"
+  },
+  {
+   "id": "b0317",
+   "t": "text",
+   "w": "p",
+   "en": "Table 35 provides the full breakdown by candidate set size. Consistent with the summary in the main text, performance drops sharply as ⟦SLOT_109⟧ increases, and the decline is especially severe under the stricter TB-1 pass^3 criterion. The table also shows that the gap between models and human experts widens noticeably on larger candidate sets."
+  },
+  {
+   "id": "b0318",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 36: Topic-level reward-model TB-1 results on photography tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0319",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Architecture Food & Product Landscape Macro Night & Astro Portrait Sports Street & City Wildlife Avg. Random Guess 24.0 23.3 20.9 16.7 16.7 33.3 16.7 26.1 30.6 23.7 Human Expert 73.8 72.0 71.3 6"
+  },
+  {
+   "id": "b0320",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix F Human Study Details"
+  },
+  {
+   "id": "b0321",
+   "t": "text",
+   "w": "h3",
+   "en": "F.1 Detailed Setup and Metric Definitions"
+  },
+  {
+   "id": "b0322",
+   "t": "text",
+   "w": "p",
+   "en": "This subsection provides the full metric definitions summarized in Section 2."
+  },
+  {
+   "id": "b0323",
+   "t": "text",
+   "w": "p",
+   "en": "Eight expert annotators evaluate identical images under both protocols. Under scoring, each annotator independently assigns an absolute score ⟦SLOT_110⟧ to each image. Under ranking, annotators provide a complete within-task ordering when presented with groups of size ⟦SLOT_111⟧. We operationalize “more scientifically sound” along three dimensions: fidelity to human comparative preference, reproducibility across annotators, and sharpness of the resulting label signal."
+  },
+  {
+   "id": "b0324",
+   "t": "text",
+   "w": "p",
+   "en": "The study comprises 119 homogeneous-content tasks drawn directly from the curated benchmark, where all candidates share the same underlying content, and 107 heterogeneous-content tasks formed by regrouping 370 images from distinct homogeneous task groups while preserving topic consistency. Each image appears in at most one regrouped task. Examples of both settings are given in Appendix F.3."
+  },
+  {
+   "id": "b0325",
+   "t": "text",
+   "w": "h5",
+   "en": "Fidelity."
+  },
+  {
+   "id": "b0326",
+   "t": "text",
+   "w": "p",
+   "en": "We ask whether the ranking induced by absolute scores matches the direct ranking produced by the same annotator. Let ⟦SLOT_112⟧ and ⟦SLOT_113⟧ denote annotator ⟦SLOT_114⟧’s direct rankings for homogeneous-content and heterogeneous-content tasks, and let ⟦SLOT_115⟧ denote the ranking induced by the absolute scores. We report Kendall’s ⟦SLOT_116⟧ (Kendall, 1938),"
+  },
+  {
+   "id": "b0327",
+   "t": "keep",
+   "w": "table",
+   "en": "τ = C − D ( n 2 ) , \\tau=\\frac{C-D}{\\binom{n}{2}},"
+  },
+  {
+   "id": "b0328",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_117⟧ and ⟦SLOT_118⟧ are the numbers of concordant and discordant pairs. We compute ⟦SLOT_119⟧ for each annotator within each task, average across annotators to obtain a task-level value, and report the mean and standard deviation across tasks. We additionally report a top-1 self-consistency (SC) rate: the fraction of annotator–task pairs for which ⟦SLOT_120⟧ and the direct ranking select the same top image."
+  },
+  {
+   "id": "b0329",
+   "t": "text",
+   "w": "h5",
+   "en": "Reproducibility."
+  },
+  {
+   "id": "b0330",
+   "t": "text",
+   "w": "p",
+   "en": "We define task-level accuracy ⟦SLOT_121⟧ as the fraction of tasks on which at least five of the eight annotators agree on the relevant label, and report ⟦SLOT_122⟧, ⟦SLOT_123⟧, and ⟦SLOT_124⟧ for both protocols."
+  },
+  {
+   "id": "b0331",
+   "t": "text",
+   "w": "h5",
+   "en": "Distinguishability."
+  },
+  {
+   "id": "b0332",
+   "t": "text",
+   "w": "p",
+   "en": "Restricting to the 119 homogeneous-content tasks, where entropy reflects concentration of aesthetic preference rather than content mismatch, we measure the entropy of the eight annotators’ top-1 selections (Shannon, 1948),"
+  },
+  {
+   "id": "b0333",
+   "t": "keep",
+   "w": "table",
+   "en": "H = − ∑ i p i log 2 p i , H=-\\sum_{i}p_{i}\\log_{2}p_{i},"
+  },
+  {
+   "id": "b0334",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_125⟧ is the fraction of annotators selecting image ⟦SLOT_126⟧ as the top image in a task. Because the maximum entropy depends on task size ⟦SLOT_127⟧, we report the unnormalized quantity so that lower values directly indicate stronger concentration of top-choice judgments."
+  },
+  {
+   "id": "b0335",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0336",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0337",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Schematic examples of the two settings used in the human study. Left: a homogeneous-content task, where all candidates come from the same source task and share the same underlying content. Right: a heterogeneous-content task, where candidates are regrouped from different source tasks. In both settings, the scoring protocol rates images independently, whereas the ranking protocol orders the full set jointly."
+  },
+  {
+   "id": "b0338",
+   "t": "text",
+   "w": "h3",
+   "en": "F.2 Extended Interpretation"
+  },
+  {
+   "id": "b0339",
+   "t": "text",
+   "w": "h5",
+   "en": "Philosophical lens."
+  },
+  {
+   "id": "b0340",
+   "t": "text",
+   "w": "p",
+   "en": "Our results echo the long-standing debate between Aesthetic Absolutism, which posits a context-free, intrinsic standard of beauty, and Aesthetic Relativism, which holds that judgments arise from comparison and context. Modern philosophical aesthetics has largely moved toward the relational view: people can reliably tell which image they prefer when alternatives are juxtaposed."
+  },
+  {
+   "id": "b0341",
+   "t": "text",
+   "w": "h5",
+   "en": "Statistical lens."
+  },
+  {
+   "id": "b0342",
+   "t": "text",
+   "w": "p",
+   "en": "Scoring introduces an additional measurement layer. Annotators must first form an internal judgment and then translate it onto a numeric scale, after which pairwise preference is inferred from score differences. This pipeline adds calibration variance, scale-use heterogeneity, and extra measurement noise. Ranking measures the relative decision of interest more directly, which helps explain its higher consistency and sharper signal."
+  },
+  {
+   "id": "b0343",
+   "t": "text",
+   "w": "h5",
+   "en": "Cognitive lens."
+  },
+  {
+   "id": "b0344",
+   "t": "text",
+   "w": "p",
+   "en": "Comparative judgment is a natural human operation. People can often say which of two images feels better before they can specify by how much. Absolute scoring is cognitively heavier because it requires maintaining an internal reference scale, calibrating intervals, and converting a qualitative impression into a number. That added abstraction likely makes scoring less stable than direct comparison."
+  },
+  {
+   "id": "b0345",
+   "t": "text",
+   "w": "h3",
+   "en": "F.3 Task Examples"
+  },
+  {
+   "id": "b0346",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 6 provides schematic examples of the two task settings used in the human study."
+  },
+  {
+   "id": "b0347",
+   "t": "text",
+   "w": "h3",
+   "en": "F.4 Annotation Protocol"
+  },
+  {
+   "id": "b0348",
+   "t": "text",
+   "w": "h5",
+   "en": "Scoring task."
+  },
+  {
+   "id": "b0349",
+   "t": "text",
+   "w": "p",
+   "en": "Under the scoring protocol, each annotator independently assigned an absolute score ⟦SLOT_128⟧ to each of the 400 images in the base image pool. Images were presented individually, without access to the other members of the same task group. The resulting scores were later reused to derive score-derived rankings for both the 119 homogeneous-content tasks and the 107 heterogeneous-content regroupings. Domain-specific single-image scoring rubrics are given below."
+  },
+  {
+   "id": "b0350",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0351",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0352",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0353",
+   "t": "text",
+   "w": "p",
+   "en": "When converting absolute scores into induced rankings, no exact within-task score ties were observed in the collected annotations, so no tie-breaking rule was required."
+  },
+  {
+   "id": "b0354",
+   "t": "text",
+   "w": "h5",
+   "en": "Ranking task."
+  },
+  {
+   "id": "b0355",
+   "t": "text",
+   "w": "p",
+   "en": "Under the ranking protocol, each annotator provided a complete best-to-worst ordering of all ⟦SLOT_129⟧ images presented simultaneously within a group. Annotators were instructed to rank the images by overall aesthetic quality using the following domain-specific comparative rubrics."
+  },
+  {
+   "id": "b0356",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0357",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0358",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0359",
+   "t": "text",
+   "w": "h3",
+   "en": "F.5 Notation"
+  },
+  {
+   "id": "b0360",
+   "t": "keep",
+   "w": "table",
+   "en": "Symbol Meaning A = 8 A=8 number of annotators n n number of images in a task, n ∈ { 2 , 3 , 4 , 5 } n\\in\\{2,3,4,5\\} s i , a s_{i,a} absolute score assigned to image i i by annotator a a , s i , a ∈ [ "
+  },
+  {
+   "id": "b0361",
+   "t": "text",
+   "w": "h5",
+   "en": "Task-level accuracy."
+  },
+  {
+   "id": "b0362",
+   "t": "text",
+   "w": "p",
+   "en": "For the majority-agreement comparison, task-level accuracy is defined as follows:"
+  },
+  {
+   "id": "b0363",
+   "t": "text",
+   "w": "li",
+   "en": "• ⟦SLOT_130⟧: fraction of tasks on which at least five of the eight annotators select the same best label."
+  },
+  {
+   "id": "b0364",
+   "t": "text",
+   "w": "li",
+   "en": "• ⟦SLOT_131⟧: fraction of tasks on which at least five of the eight annotators select the same worst label."
+  },
+  {
+   "id": "b0365",
+   "t": "text",
+   "w": "li",
+   "en": "• ⟦SLOT_132⟧: fraction of tasks on which both majority conditions are satisfied simultaneously."
+  },
+  {
+   "id": "b0366",
+   "t": "text",
+   "w": "h3",
+   "en": "F.6 Statistical Tests"
+  },
+  {
+   "id": "b0367",
+   "t": "text",
+   "w": "p",
+   "en": "We report two-sided paired tests over tasks to assess whether the ranking and scoring protocols differ systematically. Unless otherwise noted, ⟦SLOT_133⟧-values are uncorrected for multiple comparisons."
+  },
+  {
+   "id": "b0368",
+   "t": "text",
+   "w": "h5",
+   "en": "McNemar’s test for majority-agreement comparisons."
+  },
+  {
+   "id": "b0369",
+   "t": "text",
+   "w": "p",
+   "en": "For each task and each metric ⟦SLOT_134⟧, ⟦SLOT_135⟧, and ⟦SLOT_136⟧, we construct paired binary outcomes indicating whether the protocol achieves a five-of-eight majority hit. We then apply an exact two-sided McNemar test (McNemar, 1947, Fagerland et al., 2013) to the discordant pairs."
+  },
+  {
+   "id": "b0370",
+   "t": "text",
+   "w": "li",
+   "en": "• Homogeneous-content (⟦SLOT_137⟧ tasks): ⟦SLOT_138⟧ for ⟦SLOT_139⟧, ⟦SLOT_140⟧ for ⟦SLOT_141⟧, and ⟦SLOT_142⟧ for ⟦SLOT_143⟧."
+  },
+  {
+   "id": "b0371",
+   "t": "text",
+   "w": "li",
+   "en": "• Heterogeneous-content (⟦SLOT_144⟧ tasks): ⟦SLOT_145⟧ for ⟦SLOT_146⟧, ⟦SLOT_147⟧ for ⟦SLOT_148⟧, and ⟦SLOT_149⟧ for ⟦SLOT_150⟧."
+  },
+  {
+   "id": "b0372",
+   "t": "text",
+   "w": "h5",
+   "en": "Wilcoxon signed-rank test for entropy comparison."
+  },
+  {
+   "id": "b0373",
+   "t": "text",
+   "w": "p",
+   "en": "We compare the paired per-task entropies ⟦SLOT_151⟧ and ⟦SLOT_152⟧ over the 119 homogeneous-content tasks using a two-sided Wilcoxon signed-rank test (Wilcoxon, 1945), which yields ⟦SLOT_153⟧."
+  },
+  {
+   "id": "b0374",
+   "t": "text",
+   "w": "h5",
+   "en": "Multiple comparisons."
+  },
+  {
+   "id": "b0375",
+   "t": "text",
+   "w": "p",
+   "en": "After Bonferroni correction (Bonferroni, 1936) over the three metrics in each setting, all six tests remain significant at ⟦SLOT_154⟧."
+  },
+  {
+   "id": "b0376",
+   "t": "text",
+   "w": "h3",
+   "en": "F.7 Task Lists"
+  },
+  {
+   "id": "b0377",
+   "t": "text",
+   "w": "h4",
+   "en": "Homogeneous-Content Tasks (119 Tasks)"
+  },
+  {
+   "id": "b0378",
+   "t": "text",
+   "w": "p",
+   "en": "Each homogeneous-content task groups images that share the same underlying content but differ in aesthetic treatment. The 119 tasks span four topics across three domains."
+  },
+  {
+   "id": "b0379",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 37: Homogeneous-content tasks (119 tasks)."
+  },
+  {
+   "id": "b0380",
+   "t": "keep",
+   "w": "table",
+   "en": "Task ID n n fine-art_landscape-color_61 4 fine-art_landscape-color_64 2 fine-art_landscape-color_65 4 fine-art_landscape-color_66 4 fine-art_landscape-color_68 5 fine-art_landscape-color_69 5 fine-art"
+  },
+  {
+   "id": "b0381",
+   "t": "text",
+   "w": "h4",
+   "en": "Heterogeneous-Content Tasks (107 Tasks)"
+  },
+  {
+   "id": "b0382",
+   "t": "text",
+   "w": "p",
+   "en": "Each heterogeneous-content task is formed by regrouping images drawn from distinct homogeneous-content tasks, typically within the same topic. Of the original 119 regrouped tasks, 12 are excluded because the score-based Kendall’s ⟦SLOT_155⟧ (Kendall and Smith, 1939) is at least 0.825, indicating that the regrouped task already exhibits near-saturated consensus under the scoring protocol. The remaining 107 tasks are retained for analysis. The Source Task IDs column lists the originating homogeneous-content task for each image in the group, in label order A, B, C, …."
+  },
+  {
+   "id": "b0383",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 38: Heterogeneous-content task construction (107 tasks, after saturation filter)."
+  },
+  {
+   "id": "b0384",
+   "t": "keep",
+   "w": "table",
+   "en": "ID n n Source Task IDs 1 3 illustration_pixel-art_19, illustration_pixel-art_23, illustration_pixel-art_17 2 3 photograph_landscape_27, photograph_landscape_2, photograph_landscape_3 3 3 illustration_"
+  },
+  {
+   "id": "b0385",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix G Fine-Tuning Details"
+  },
+  {
+   "id": "b0386",
+   "t": "text",
+   "w": "h3",
+   "en": "G.1 Hyperparameters"
+  },
+  {
+   "id": "b0387",
+   "t": "text",
+   "w": "p",
+   "en": "Table 39 lists the hyperparameters used to fine-tune Kallisti-35B-A3B."
+  },
+  {
+   "id": "b0388",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 39: Hyperparameters used for fine-tuning Kallisti-35B-A3B."
+  },
+  {
+   "id": "b0389",
+   "t": "keep",
+   "w": "table",
+   "en": "Parameter Value Base Model Qwen3.5-35B-A3B Fine-tuning Method LoRA LoRA Rank 64 LoRA Alpha 128 LoRA Target All layers Vision Tower Frozen MLP Projector Trainable Learning Rate 1 × 10 − 4 1\\times 10^{-"
+  },
+  {
+   "id": "b0390",
+   "t": "text",
+   "w": "h3",
+   "en": "G.2 Detailed Results"
+  },
+  {
+   "id": "b0391",
+   "t": "text",
+   "w": "p",
+   "en": "As in the main-text fine-tuning table, we report topic-level detailed results under all four metrics: Top-1 ap@1, Top-1 pass^3, TB-1 ap@1, and TB-1 pass^3. The full breakdown shows that the gains from fine-tuning are uneven across topics: Kallisti-35B-A3B improves most clearly on several fine-art topics, remains competitive with larger open-weight baselines on illustration, and does not uniformly dominate its base model in photography."
+  },
+  {
+   "id": "b0392",
+   "t": "text",
+   "w": "p",
+   "en": "Top-1 ap@1."
+  },
+  {
+   "id": "b0393",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 40, 41, and 42 report topic-level Top-1 ap@1 results for fine art, illustration, and photography, respectively."
+  },
+  {
+   "id": "b0394",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 40: Topic-level fine-tuning Top-1 ap@1 results on fine-art tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0395",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Calligraphy Chinese Painting Ink & Wash Landscape Color Portrait Color Portrait Sketch Quick Sketch Still Life Color Still Life Sketch Avg. Open-Weight Models GLM-4.6V 21.2 63.0 33.3 26.8 66.7 5"
+  },
+  {
+   "id": "b0396",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 41: Topic-level fine-tuning Top-1 ap@1 results on illustration tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0397",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Anime & Manga Comic Concept Art Digital & AI Art Pixel Art Stylized 3D Avg. Open-Weight Models GLM-4.6V 51.3 53.3 31.8 37.7 60.3 27.3 43.3 Kimi-K2.5 71.8 56.7 36.4 36.2 39.7 30.3 43.0 Qwen3-VL-2"
+  },
+  {
+   "id": "b0398",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 42: Topic-level fine-tuning Top-1 ap@1 results on photography tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0399",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Architecture Food & Product Landscape Macro Night & Astro Portrait Sports Street & City Wildlife Avg. Open-Weight Models GLM-4.6V 35.4 53.3 39.3 58.3 16.7 0.0 100.0 48.7 63.0 43.2 Kimi-K2.5 49.0"
+  },
+  {
+   "id": "b0400",
+   "t": "text",
+   "w": "p",
+   "en": "Top-1 pass^3."
+  },
+  {
+   "id": "b0401",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 43, 44, and 45 report topic-level Top-1 pass^3 results for fine art, illustration, and photography, respectively."
+  },
+  {
+   "id": "b0402",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 43: Topic-level fine-tuning Top-1 pass^3 results on fine-art tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0403",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Calligraphy Chinese Painting Ink & Wash Landscape Color Portrait Color Portrait Sketch Quick Sketch Still Life Color Still Life Sketch Avg. Open-Weight Models GLM-4.6V 9.1 55.6 0.0 5.4 50.0 21.2"
+  },
+  {
+   "id": "b0404",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 44: Topic-level fine-tuning Top-1 pass^3 results on illustration tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0405",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Anime & Manga Comic Concept Art Digital & AI Art Pixel Art Stylized 3D Avg. Open-Weight Models GLM-4.6V 23.1 20.0 9.1 17.4 38.1 0.0 19.0 Kimi-K2.5 53.8 30.0 13.6 21.7 9.5 9.1 21.0 Qwen3-VL-235B-"
+  },
+  {
+   "id": "b0406",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 45: Topic-level fine-tuning Top-1 pass^3 results on photography tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0407",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Architecture Food & Product Landscape Macro Night & Astro Portrait Sports Street & City Wildlife Avg. Open-Weight Models GLM-4.6V 6.2 20.0 15.6 50.0 0.0 0.0 100.0 15.4 33.3 15.8 Kimi-K2.5 18.8 6"
+  },
+  {
+   "id": "b0408",
+   "t": "text",
+   "w": "p",
+   "en": "TB-1 ap@1."
+  },
+  {
+   "id": "b0409",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 46, 47, and 48 report topic-level TB-1 ap@1 results for fine art, illustration, and photography, respectively."
+  },
+  {
+   "id": "b0410",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 46: Topic-level fine-tuning TB-1 ap@1 results on fine-art tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0411",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Calligraphy Chinese Painting Ink & Wash Landscape Color Portrait Color Portrait Sketch Quick Sketch Still Life Color Still Life Sketch Avg. Open-Weight Models GLM-4.6V 21.2 63.0 33.3 17.3 66.7 5"
+  },
+  {
+   "id": "b0412",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 47: Topic-level fine-tuning TB-1 ap@1 results on illustration tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0413",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Anime & Manga Comic Concept Art Digital & AI Art Pixel Art Stylized 3D Avg. Open-Weight Models GLM-4.6V 51.3 50.0 13.6 20.3 28.6 15.2 27.0 Kimi-K2.5 71.8 53.3 18.2 20.3 17.5 18.2 29.0 Qwen3-VL-2"
+  },
+  {
+   "id": "b0414",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 48: Topic-level fine-tuning TB-1 ap@1 results on photography tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0415",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Architecture Food & Product Landscape Macro Night & Astro Portrait Sports Street & City Wildlife Avg. Open-Weight Models GLM-4.6V 28.1 40.0 28.1 33.3 33.3 0.0 66.7 39.3 48.1 33.1 Kimi-K2.5 29.2 "
+  },
+  {
+   "id": "b0416",
+   "t": "text",
+   "w": "p",
+   "en": "TB-1 pass^3."
+  },
+  {
+   "id": "b0417",
+   "t": "text",
+   "w": "p",
+   "en": "Tables 49, 50, and 51 report topic-level TB-1 pass^3 results for fine art, illustration, and photography, respectively."
+  },
+  {
+   "id": "b0418",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 49: Topic-level TB-1 pass^3 fine-tuning results on fine-art tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0419",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Calligraphy Chinese Painting Ink & Wash Landscape Color Portrait Color Portrait Sketch Quick Sketch Still Life Color Still Life Sketch Avg. Open-Weight Models GLM-4.6V 9.1 55.6 0.0 7.1 50.0 21.2"
+  },
+  {
+   "id": "b0420",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 50: Topic-level TB-1 pass^3 fine-tuning results on illustration tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0421",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Anime & Manga Comic Concept Art Digital & AI Art Pixel Art Stylized 3D Avg. Open-Weight Models GLM-4.6V 23.1 20.0 4.5 8.7 0.0 0.0 8.0 Kimi-K2.5 53.8 30.0 4.5 8.7 4.8 0.0 14.0 Qwen3-VL-235B-A22B "
+  },
+  {
+   "id": "b0422",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 51: Topic-level TB-1 pass^3 fine-tuning results on photography tasks. The final column reports the corresponding domain-level average (%)."
+  },
+  {
+   "id": "b0423",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Architecture Food & Product Landscape Macro Night & Astro Portrait Sports Street & City Wildlife Avg. Open-Weight Models GLM-4.6V 0.0 20.0 2.2 0.0 0.0 0.0 0.0 10.3 22.2 5.8 Kimi-K2.5 3.1 60.0 6."
+  },
+  {
+   "id": "b0424",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix H Prompt Templates and Scoring Interfaces"
+  },
+  {
+   "id": "b0425",
+   "t": "text",
+   "w": "p",
+   "en": "This appendix records the prompt templates and scoring interfaces used in data construction and evaluation. We group them by usage: prompts for the photography pipeline, prompts for the illustration pipeline, prompts for MLLM evaluation, and scoring interfaces for reward-model evaluation."
+  },
+  {
+   "id": "b0426",
+   "t": "text",
+   "w": "h3",
+   "en": "H.1 Photography Pipeline Prompts"
+  },
+  {
+   "id": "b0427",
+   "t": "text",
+   "w": "p",
+   "en": "This subsection records the prompts used in the photography agent-edit pipeline described in Section 3. The pipeline consists of three stages: aspect-wise critique generation with ArtiMuse, edit planning with GPT through LiteLLM, and image editing with Gemini-3-Pro-Image (Nano Banana Pro). In Step 1, ArtiMuse is queried eight times independently with the same image, once per aesthetic aspect. The resulting responses are then concatenated into a single review string that is passed to the planning stage."
+  },
+  {
+   "id": "b0428",
+   "t": "text",
+   "w": "h4",
+   "en": "H.1.1 Step 1: ArtiMuse Aspect-Wise Critique"
+  },
+  {
+   "id": "b0429",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0430",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0431",
+   "t": "text",
+   "w": "h4",
+   "en": "H.1.2 Step 2: Edit Planning"
+  },
+  {
+   "id": "b0432",
+   "t": "text",
+   "w": "p",
+   "en": "The planning stage is executed with GPT through LiteLLM. Below we reproduce the literal runtime system and user messages. The placeholder {review} denotes the full ArtiMuse output obtained by concatenating the eight aspect-wise responses from Step 1. We retain the original runtime field names, including substyle."
+  },
+  {
+   "id": "b0433",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0434",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0435",
+   "t": "text",
+   "w": "h4",
+   "en": "H.1.3 Step 3: Image Editing"
+  },
+  {
+   "id": "b0436",
+   "t": "text",
+   "w": "p",
+   "en": "The final stage uses Gemini-3-Pro-Image (Nano Banana Pro) to synthesize the edited variants. Round 1 generates the better image from the original image alone. Round 2 generates the worse image from the original image while conditioning on the better image as additional reference context. For Round 2, we report the file-backed with-context template actually used at runtime. This is the operative version loaded by the pipeline and therefore excludes the fallback sentence beginning with “Important: Apply this edit to the ORIGINAL image” that appears only in the default code path."
+  },
+  {
+   "id": "b0437",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0438",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0439",
+   "t": "text",
+   "w": "h3",
+   "en": "H.2 Illustration Pipeline Prompts"
+  },
+  {
+   "id": "b0440",
+   "t": "text",
+   "w": "p",
+   "en": "This subsection records the prompt templates used in the prompt-based illustration generation pipeline. We use one template for digital and AI art, concept art, and pixel art, and a separate storyboard-style template for anime and manga and comic generation. The stylized 3D subset is constructed through asset rendering rather than text-to-image prompting."
+  },
+  {
+   "id": "b0441",
+   "t": "text",
+   "w": "h4",
+   "en": "H.2.1 Digital and AI Art / Concept Art / Pixel Art Generation"
+  },
+  {
+   "id": "b0442",
+   "t": "text",
+   "w": "p",
+   "en": "For digital and AI art, concept art, and pixel art generation, we use a structured template to control semantic content while allowing variation in visual execution. Each prompt is composed in a fixed order: subject or character, motion or action, environment or background, lighting condition, atmosphere or mood, camera or composition, and art style."
+  },
+  {
+   "id": "b0443",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0444",
+   "t": "text",
+   "w": "h4",
+   "en": "H.2.2 Manga / Comic Storyboard Generation"
+  },
+  {
+   "id": "b0445",
+   "t": "text",
+   "w": "p",
+   "en": "For anime and manga and comic generation, we adopt a storyboard-style template with stronger structural constraints. Each prompt describes a short multi-panel narrative with consistent characters and environment, while each panel specifies shot type, character action, key props, and scene details."
+  },
+  {
+   "id": "b0446",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0447",
+   "t": "text",
+   "w": "h3",
+   "en": "H.3 MLLM Evaluation Prompts"
+  },
+  {
+   "id": "b0448",
+   "t": "text",
+   "w": "p",
+   "en": "This subsection reports the generic prompts used to evaluate MLLMs on VAB. Depending on the task setting, the model is asked to identify the best image, the worst image, or both the best and the worst images in a candidate set."
+  },
+  {
+   "id": "b0449",
+   "t": "text",
+   "w": "h4",
+   "en": "H.3.1 Best-Image Selection Prompt"
+  },
+  {
+   "id": "b0450",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0451",
+   "t": "text",
+   "w": "h4",
+   "en": "H.3.2 Worst-Image Selection Prompt"
+  },
+  {
+   "id": "b0452",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0453",
+   "t": "text",
+   "w": "h4",
+   "en": "H.3.3 Joint Best-and-Worst Selection Prompt"
+  },
+  {
+   "id": "b0454",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0455",
+   "t": "text",
+   "w": "h3",
+   "en": "H.4 Reward-Model Scoring Interfaces"
+  },
+  {
+   "id": "b0456",
+   "t": "text",
+   "w": "p",
+   "en": "This subsection records the model-specific scoring interfaces used to evaluate reward models on VAB. Unlike MLLMs, reward models do not share a single comparative prompt. Instead, each model scores images independently following its released evaluation method, and we convert the resulting per-image scores into within-task rankings. Across all reward models, each image is scored num_trials times, the scores are averaged, and the averaged scores are used to determine the predicted best and worst images. We use the following terminology: explicit prompt denotes prompt text exposed at the call site, implicit prompt denotes prompt text embedded inside the model library, and no prompt denotes a pure vision scorer with no language instruction."
+  },
+  {
+   "id": "b0457",
+   "t": "text",
+   "w": "h4",
+   "en": "H.4.1 ArtiMuse"
+  },
+  {
+   "id": "b0458",
+   "t": "text",
+   "w": "p",
+   "en": "ArtiMuse uses an implicit prompt: the instruction is hardcoded inside the released library rather than passed from our evaluation script."
+  },
+  {
+   "id": "b0459",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0460",
+   "t": "text",
+   "w": "p",
+   "en": "At runtime, the library automatically prepends an image token before the instruction. The model outputs a two-letter code, which is then decoded back to a numerical score in ⟦SLOT_156⟧."
+  },
+  {
+   "id": "b0461",
+   "t": "text",
+   "w": "h4",
+   "en": "H.4.2 Q-Align"
+  },
+  {
+   "id": "b0462",
+   "t": "text",
+   "w": "p",
+   "en": "Q-Align also uses an implicit prompt. In our experiments, we use the aesthetic scorer by default; the library additionally exposes a quality scorer."
+  },
+  {
+   "id": "b0463",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0464",
+   "t": "text",
+   "w": "p",
+   "en": "The scorer reads the last-token logits over the five words excellent, good, fair, poor, and bad, applies a softmax, and computes a weighted sum with weights ⟦SLOT_157⟧."
+  },
+  {
+   "id": "b0465",
+   "t": "text",
+   "w": "h4",
+   "en": "H.4.3 Q-Instruct"
+  },
+  {
+   "id": "b0466",
+   "t": "text",
+   "w": "p",
+   "en": "Q-Instruct uses an explicit prompt passed through the command-line interface."
+  },
+  {
+   "id": "b0467",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0468",
+   "t": "text",
+   "w": "p",
+   "en": "The instruction is wrapped in the mplug_owl2 conversation format with a prepended DEFAULT_IMAGE_TOKEN. The default score is the logit difference between good and poor."
+  },
+  {
+   "id": "b0469",
+   "t": "text",
+   "w": "h4",
+   "en": "H.4.4 RealQA"
+  },
+  {
+   "id": "b0470",
+   "t": "text",
+   "w": "p",
+   "en": "RealQA uses an explicit prompt. Under the AVA adapter used in our experiments, the default instruction is:"
+  },
+  {
+   "id": "b0471",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0472",
+   "t": "text",
+   "w": "p",
+   "en": "The model generates free text, from which a numerical score in ⟦SLOT_158⟧ is parsed. If parsing fails, the library issues a second constrained prompt:"
+  },
+  {
+   "id": "b0473",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0474",
+   "t": "text",
+   "w": "h4",
+   "en": "H.4.5 PEAS"
+  },
+  {
+   "id": "b0475",
+   "t": "text",
+   "w": "p",
+   "en": "PEAS-aes and PEAS-ava use no prompt. They are pure vision models with no language instruction. The scorer outputs a 10-bin distribution over scores from 1 to 10, and the final score is the expected value of that distribution."
+  },
+  {
+   "id": "b0476",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0477",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix I Topic-Level Annotation Examples"
+  },
+  {
+   "id": "b0478",
+   "t": "text",
+   "w": "p",
+   "en": "This appendix provides one representative annotation example for each of the 24 topics in VAB, grouped by domain."
+  },
+  {
+   "id": "b0479",
+   "t": "text",
+   "w": "h3",
+   "en": "I.1 Fine Art"
+  },
+  {
+   "id": "b0480",
+   "t": "text",
+   "w": "p",
+   "en": "Landscape Color"
+  },
+  {
+   "id": "b0481",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0482",
+   "t": "text",
+   "w": "p",
+   "en": "Still Life Color"
+  },
+  {
+   "id": "b0483",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0484",
+   "t": "text",
+   "w": "p",
+   "en": "Calligraphy"
+  },
+  {
+   "id": "b0485",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0486",
+   "t": "text",
+   "w": "p",
+   "en": "Chinese Painting"
+  },
+  {
+   "id": "b0487",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0488",
+   "t": "text",
+   "w": "p",
+   "en": "Ink and Wash"
+  },
+  {
+   "id": "b0489",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0490",
+   "t": "text",
+   "w": "p",
+   "en": "Portrait Color"
+  },
+  {
+   "id": "b0491",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0492",
+   "t": "text",
+   "w": "p",
+   "en": "Portrait Sketch"
+  },
+  {
+   "id": "b0493",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0494",
+   "t": "text",
+   "w": "p",
+   "en": "Quick Sketch"
+  },
+  {
+   "id": "b0495",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0496",
+   "t": "text",
+   "w": "p",
+   "en": "Still Life Sketch"
+  },
+  {
+   "id": "b0497",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0498",
+   "t": "text",
+   "w": "h3",
+   "en": "I.2 Photography"
+  },
+  {
+   "id": "b0499",
+   "t": "text",
+   "w": "p",
+   "en": "Architecture"
+  },
+  {
+   "id": "b0500",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0501",
+   "t": "text",
+   "w": "p",
+   "en": "Food and Product"
+  },
+  {
+   "id": "b0502",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0503",
+   "t": "text",
+   "w": "p",
+   "en": "Landscape"
+  },
+  {
+   "id": "b0504",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0505",
+   "t": "text",
+   "w": "p",
+   "en": "Macro"
+  },
+  {
+   "id": "b0506",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0507",
+   "t": "text",
+   "w": "p",
+   "en": "Night and Astrophotography"
+  },
+  {
+   "id": "b0508",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0509",
+   "t": "text",
+   "w": "p",
+   "en": "Portrait"
+  },
+  {
+   "id": "b0510",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0511",
+   "t": "text",
+   "w": "p",
+   "en": "Sports"
+  },
+  {
+   "id": "b0512",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0513",
+   "t": "text",
+   "w": "p",
+   "en": "Street and City"
+  },
+  {
+   "id": "b0514",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0515",
+   "t": "text",
+   "w": "p",
+   "en": "Wildlife"
+  },
+  {
+   "id": "b0516",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0517",
+   "t": "text",
+   "w": "h3",
+   "en": "I.3 Illustration"
+  },
+  {
+   "id": "b0518",
+   "t": "text",
+   "w": "p",
+   "en": "Anime and Manga"
+  },
+  {
+   "id": "b0519",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0520",
+   "t": "text",
+   "w": "p",
+   "en": "Comic"
+  },
+  {
+   "id": "b0521",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0522",
+   "t": "text",
+   "w": "p",
+   "en": "Concept Art"
+  },
+  {
+   "id": "b0523",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0524",
+   "t": "text",
+   "w": "p",
+   "en": "Digital and AI Art"
+  },
+  {
+   "id": "b0525",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0526",
+   "t": "text",
+   "w": "p",
+   "en": "Pixel Art"
+  },
+  {
+   "id": "b0527",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0528",
+   "t": "text",
+   "w": "p",
+   "en": "Stylized 3D"
+  },
+  {
+   "id": "b0529",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  }
+ ]
+}

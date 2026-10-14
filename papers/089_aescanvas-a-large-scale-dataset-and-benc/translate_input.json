@@ -1,0 +1,2380 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "AesCanvas: A Large-Scale Dataset and Benchmark for Aesthetic Critique and Contextual Suitability"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Recent advances in Multimodal Large Language Models (MLLMs) have extended Image Aesthetic Assessment (IAA) beyond scalar scores toward interpretable critique and guidance. Yet existing benchmarks main"
+  },
+  {
+   "id": "b0003",
+   "t": "text",
+   "w": "p",
+   "en": "1School of Electronic Information and Communications, Huazhong University of Science and Technology, Wuhan, China"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "p",
+   "en": "2School of Electrical and Electronic Engineering, Nanyang Technological University, Singapore"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "kjwu@hust.edu.cn"
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "h2",
+   "en": "I Introduction"
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "Image Aesthetic Assessment (IAA) has progressed from scalar prediction and preference modeling (Murray et al. 2012; Talebi and Milanfar 2018; Yi et al. 2023) toward language-based aesthetic perception, critique, diagnosis, and guidance (Huang et al. 2024b; Huang et al. 2024a; Zhou et al. 2024; Zhang et al. 2025; Qi et al. 2025b; Cao et al. 2025b). In practical use, however, visual appeal alone is insufficient: an image must also suit a particular purpose, audience, and convention. Cultural knowledge is therefore not auxiliary to aesthetic judgment, since symbols, styles, dress, and genre conventions can directly change whether an image is an appropriate visual choice. Related multimodal studies likewise show that models remain fragile when judgments require criterion-sensitive reasoning, visual grounding, or culturally situated evidence (Xiong et al. 2026; Li et al. 2026; Wu et al. 2026b; Satar et al. 2025; Singh et al. 2026)."
+  },
+  {
+   "id": "b0008",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Fluent aesthetic critique does not guarantee contextually valid judgment. The top example shows an evidence-grounded critique, whereas the bottom shows a suitability error in which visually appealing attributes are mistaken for appropriateness in a mismatched use context. This contrast motivates evaluating critique grounding and contextual suitability as complementary capabilities."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 1 makes this distinction concrete: a model may produce a plausible aesthetic critique yet approve a mourning dress as festive evening wear by emphasizing its silhouette and material while ignoring its social function. Figure 2 further reveals two failure levels: critiques may rely on fabricated evidence or inappropriate domain priors, while suitability judgments may privilege surface appeal or stylistic plausibility over cultural fit. We call the latter tendency aesthetic context bias: following generic aesthetic priors while"
+  },
+  {
+   "id": "b0011",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Four recurring failure modes in practical aesthetic evaluation. Models may generate critiques that are visually ungrounded or rely on inappropriate domain priors, and may judge real-world suitability from surface aesthetics or stylistic plausibility rather than communicative and contextual fit."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "neglecting contextual evidence that should alter the decision. This task is not generic cultural question answering; contextual knowledge matters because it determines whether the image works as a visual choice."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "To study both capabilities, we introduce AesCanvas, a unified suite with two complementary components. CritiqueCanvas provides large-scale, multi-domain supervision for long-form critique across photography, painting, and virtual imagery, while ContextCanvas contains expert-reviewed use scenarios that distinguish visual appeal from contextual suitability. Across closed-source, open-weight, and aesthetic-specific MLLMs, we observe a clear capability gap: aesthetic specialists remain competitive on selected critique metrics, yet all score below 30% on ContextCanvas, compared with 91.69% for the strongest evaluated general-purpose model. Further analyses show that reference-based metrics only partially capture critique quality, aesthetic specialization does not reliably transfer to contextual judgment, and correct decisions may still lack grounding in decisive visual evidence."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "Contributions. (1) We introduce CritiqueCanvas, comprising 519,136 aesthetic instruction–response pairs built from 54,300 multi-domain images for instruction-tuning MLLMs on fine-grained image aesthetic assessment; (2) we construct ContextCanvas, a 301-case expert-curated benchmark for contextual aesthetic suitability judgment; (3) we evaluate closed-source, open-weight, and aesthetic-specific MLLMs, revealing a clear gap between producing fluent aesthetic critiques and correctly judging suitability under cultural, functional, and domain-specific constraints; and (4) we release the data, prompts, rationales, provenance records, and evaluation code."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "h2",
+   "en": "II Related Work"
+  },
+  {
+   "id": "b0017",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Construction of AesCanvas. (a) A shared multi-domain image pool is collected and filtered. (b) CritiqueCanvas is generated through dimension-aware prompt planning, MLLM-assisted annotation, and quality filtering. (c) ContextCanvas is constructed from realistic aesthetic-use scenarios followed by expert review."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "h3",
+   "en": "A Image Aesthetic Assessment"
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "Image Aesthetic Assessment (IAA) predicts human judgments of visual aesthetic quality. Early work formulated IAA as classification, ranking, or score-distribution prediction from crowd preferences, while incorporating photographic attributes, composition-preserving representations, and individual taste variation (Murray et al. 2012; Kong et al. 2016; Mai et al. 2016; Yang et al. 2022). Recent studies extend IAA to artistic images, fine-grained comparison within image series, and open-world criteria that vary across themes (Yi et al. 2023; Yang et al. 2026b; Liao et al. 2026). Nevertheless, these methods primarily assess aesthetic strength under intrinsic or task-fixed criteria, rather than whether an image is appropriate for a particular purpose, audience, cultural setting, or domain convention. Our work addresses this complementary problem of contextual aesthetic suitability."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h3",
+   "en": "B Aesthetic Multimodal Models"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "Aesthetic multimodal models extend conventional IAA from scalar prediction to language-based recognition, description, interpretation, scoring, and critique. Early studies benchmarked the aesthetic perception of general-purpose MLLMs and explored aesthetic instruction tuning (Huang et al. 2024b; Huang et al. 2024a; Zhou et al. 2024). Subsequent work connected textual supervision with visual scoring through language-defined rating levels or joint scoring-and-interpretation objectives (Wu et al. 2024; Zhang et al. 2025), while more recent models support professional critique, multi-attribute analysis, and unified perceptual assessment (Qi et al. 2025b; Cao et al. 2025b; Cao et al. 2025a). Existing evaluation, however, remains centered on aesthetic perception, scoring, reference-aligned critique, or domain-specific analysis. AesCanvas instead examines whether aesthetic articulation transfers to contextual decisions in which an attractive or stylistically plausible image may still conflict with its intended use. Beyond conventional visual inputs, recent multimodal foundation models have also explored semantic understanding and language generation over specialized or corrupted visual representations (Wu et al. 2026a; Liang et al. 2026)."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "h3",
+   "en": "C Contextual Multimodal Reasoning"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "Contextual multimodal reasoning requires models to combine visual evidence with task conditions, external knowledge, cultural conventions, and criterion-specific constraints. Recent benchmarks study real-world visual reasoning, context-dependent functional inference, and flexible judgment under varying criteria (Yin et al. 2026; Zhang et al. 2026; Xiong et al. 2026; Gao et al. 2024). Grounding-focused work further evaluates whether intermediate reasoning and final answers are supported by localized image evidence (Li et al. 2026; Wu et al. 2026b; Cai et al. 2024), while other studies expose failures under visual illusions, counterfactual or adversarial evidence, and conflicts between knowledge and images (Hou et al. 2026; Zhou et al. 2026; Moratelli et al. 2026). Culturally situated benchmarks likewise reveal fragility on region-specific artifacts and multilingual cultural evidence (Satar et al. 2025; Singh et al. 2026). However, these works primarily assess factual correctness, grounding, functional inference, or adherence to specified criteria, rather than whether contextual evidence should outweigh surface aesthetic appeal in a concrete visual-use decision. ContextCanvas targets this intersection through use-oriented aesthetic suitability judgments grounded in both visual and contextual evidence."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "h2",
+   "en": "III Dataset"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h3",
+   "en": "A Dataset Overview"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "We introduce AesCanvas, a unified suite built from 54,300 images to study two complementary aspects of aesthetic intelligence: articulating visual qualities and judging their suitability in context. CritiqueCanvas contains 519,136 instruction–response pairs across photography, painting, and virtual imagery for long-form, multi-dimensional critique generation. ContextCanvas comprises 301 expert-designed and reviewed cases that evaluate contextual aesthetic suitability—whether an image is an appropriate visual choice for a specified purpose, audience, cultural setting, or domain convention, beyond its intrinsic visual appeal. Together, the two components test whether models that can identify and articulate aesthetic evidence can also translate it into contextually valid decisions."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "h3",
+   "en": "B Dataset Curation"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "As illustrated in Fig. 3, our pipeline branches from a shared multi-domain image pool into CritiqueCanvas for structured aesthetic critique and ContextCanvas for closed-form contextual suitability judgment."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "h5",
+   "en": "Image Collection and Filtering."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "We collect candidate images from three visual domains: photography (e.g., natural scenes, architecture, portraiture, and commercial imagery), painting (primarily Western classical and related works), and virtual imagery (e.g., game scenes, animation-style images, and AI-generated content). Images are drawn from publicly accessible web sources and online museum and cultural-heritage collections, with available source URLs and provenance metadata retained. After removing low-quality, semantically uninformative, non-compliant, and duplicate samples, the pool contains 21,294 photographs, 17,939 paintings, and 15,067 virtual images, for a total of 54,300."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "h5",
+   "en": "CritiqueCanvas Annotation and Construction."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Fig. 3(b), we use a prompt-based pipeline that combines shared aesthetic dimensions with domain-specific criteria. The shared dimensions include Content and Narrative, Composition, Color, Lighting, Lines and Brushstrokes, Style, Emotion, Technique, Symbolism, and Visual Appeal. Annotating models select only the dimensions most relevant to each image rather than addressing all dimensions uniformly."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "Prompts are further conditioned on the visual domain. Photography emphasizes exposure, perspective, depth of field, focus, motion, and compositional control; painting emphasizes line, brushwork, genre, style, symbolism, and emotional expression; and virtual imagery emphasizes character design, scene construction, rendering consistency, narrative setting, and stylization. Multiple MLLMs generate structured annotations, which are converted into multi-turn instruction–response conversations covering description, evaluation, interpretation, technical analysis, and constructive improvement."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "An independent Claude Opus 5 verifier screens generated pairs for instruction consistency, visual grounding, and response quality. A stratified audit of 1,000 retained pairs yields 95.3% acceptance and 97% raw agreement; full criteria and statistics appear in the supplement."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h5",
+   "en": "ContextCanvas Construction and Review."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Fig. 3(c), ContextCanvas is constructed from a selected subset of the shared image pool. Four PhD-level researchers with interdisciplinary backgrounds developed and reviewed 1,060 candidate cases. Each places an image in a plausible use scenario—such as exhibition, publication, advertising, education, commemoration, or public communication—and asks whether it is an appropriate visual choice for the stated purpose, audience, and context. Some cases include a curator- or designer-proposed assessment that the model must independently evaluate."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "A case is retained only when it satisfies seven prespecified criteria: (1) aesthetic centrality, requiring a judgment about the image as a visual choice; (2) context dependence, such that intrinsic quality alone is insufficient; (3) visual necessity, such that the task cannot be reduced to text-only factual or cultural knowledge; (4) decisive evidence, such that relevant cultural, historical, or narrative evidence materially affects the answer; (5) scenario naturalness, requiring a plausible design or communication use; (6) answerability, requiring a unique closed-form answer from perceptible evidence; and (7) anti-shortcut validity, preventing wording, option length, or label priors from revealing the answer."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "All candidates were reviewed against these criteria, with borderline cases resolved through discussion. Qwen3.7-Plus was used only as a development-time probe for trivial, ambiguous, or shortcut-prone cases; model failure alone never determined retention. All inclusion decisions, gold labels, rationales, and source records were finalized solely by human reviewers, and its reported score is therefore marked as a development-model diagnostic."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "The final benchmark contains 301 cases (28.40%): 300 single-image and one paired-image case, covering 302 images, 291 binary questions, and 10 three-way questions. Each includes the visual input, use scenario, context, answer options, gold label, source-grounded rationale, and provenance. The cases span painting, sculpture, illustration and comics, animation and digital imagery, photography, and film."
+  },
+  {
+   "id": "b0041",
+   "t": "keep",
+   "w": "table",
+   "en": "Task Metric Family Metrics Critique Lexical overlap BLEU, ROUGE-L, METEOR Semantic similarity BERT-F1, SBERT-Cos Image–text alignment CLIPScore Descriptive statistics Avg. Length, Avg. Dim. Hits, Top-"
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Metrics used for the two evaluation tasks."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "h3",
+   "en": "C Evaluation Protocol"
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate critique generation on CritiqueCanvas and contextual suitability on ContextCanvas. Models receive identical inputs and instructions without web search, retrieval, or auxiliary recognition tools; Table 1 summarizes the metrics."
+  },
+  {
+   "id": "b0045",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Acc. Macro-F1 Yes (%) Closed-source MLLMs Claude Opus 5 91.69 90.45 30.24 Gemini 3.1 Pro 85.71 83.06 26.12 GPT-5.5 83.06 80.13 27.49 Claude Opus 4.6 72.76 67.96 27.15 GPT-5.2 71.43 64.51 20.96 G"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Contextual aesthetic suitability results. Acc. is exact-match accuracy on all 301 cases. Macro-F1 and Yes (%) are computed on the 291 binary cases; the gold Yes rate is 38.14%. Best Acc. and Macro-F1 are bolded. ⟦SLOT_0⟧ denotes the development model used for difficulty screening."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "h5",
+   "en": "Long-form Aesthetic Critique Generation."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate models on 6,000 open-ended samples balanced across photography, painting, and virtual imagery, requiring aesthetic analysis or image-grounded improvement suggestions. Image-level splits keep related conversations together."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "Because valid critiques may differ substantially in wording, we report complementary metric families. BLEU (Papineni et al. 2002), ROUGE-L (Lin 2004), and METEOR (Banerjee and Lavie 2005) measure lexical overlap; BERT-F1 (Zhang et al. 2020) and SBERT-Cos (Reimers and Gurevych 2019) measure token- and sentence-level semantic similarity; and CLIPScore (Hessel et al. 2021) measures image–text relevance. These metrics are interpreted jointly rather than as complete measures of aesthetic reasoning."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "To further characterize response behavior, we report average response length, average aesthetic-dimension coverage, and the three most frequently addressed dimensions in the supplementary material. Specifically, let ⟦SLOT_1⟧ denote the predefined set of aesthetic dimensions, and let ⟦SLOT_2⟧ indicate whether response ⟦SLOT_3⟧ explicitly addresses dimension ⟦SLOT_4⟧. The average number of dimensions addressed per response is"
+  },
+  {
+   "id": "b0051",
+   "t": "keep",
+   "w": "table",
+   "en": "DimHits = 1 N ​ ∑ i = 1 N ∑ d ∈ 𝒟 m ⁡ ( r ^ i , d ) . \\mathrm{DimHits}=\\frac{1}{N}\\sum_{i=1}^{N}\\sum_{d\\in\\mathcal{D}}m(\\hat{r}_{i},d). (1)"
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "This statistic measures the breadth of explicit aesthetic coverage rather than its correctness: a higher value does not necessarily indicate that the identified dimensions are relevant, accurate, or well grounded."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "h5",
+   "en": "Contextual Aesthetic Suitability Judgment."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "For each ContextCanvas case, the model receives an image, a realistic use scenario, and fixed answer options, and returns a single option label. Explanations are retained for qualitative analysis but do not affect the primary score. A prediction is correct only if a unique option is parsed and matches the gold answer; missing, conflicting, or unparsable responses are counted as incorrect."
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "p",
+   "en": "We report exact-match accuracy over all 301 cases. Macro-F1 and predicted Yes Rate are computed on the 291 binary cases after mapping the options to canonical Yes/No labels; the remaining 10 three-way cases are included only in accuracy. The gold Yes Rate is 38.14%, against which the predicted rate indicates a model’s tendency toward over-acceptance or over-rejection."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "h2",
+   "en": "IV Experiments"
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "h3",
+   "en": "A Experimental Setup"
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "h5",
+   "en": "Evaluated Models."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "We compare closed-source frontier MLLMs, open-weight general MLLMs, and aesthetic-specific models, separating general visual-language capability from specialization for aesthetic assessment or critique. Exact model variants are listed in Tables 2 and 3. Qwen3-VLFT denotes a variant adapted on CritiqueCanvas and evaluated only on critique generation."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "h5",
+   "en": "Implementation Details."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "p",
+   "en": "All models follow the protocol in Section III.C. Locally deployed models receive images resized or padded to ⟦SLOT_5⟧ pixels. We use deterministic decoding whenever supported and a maximum of 256 tokens for critique generation; model-specific settings are reported in the supplementary material."
+  },
+  {
+   "id": "b0062",
+   "t": "keep",
+   "w": "table",
+   "en": "Model BLEU ROUGE-L METEOR BERT-F1 SBERT-Cos CLIPScore Closed-source MLLMs Gemini 3.1 Pro 7.15 0.250 0.281 0.699 0.848 0.303 GPT-5.2 2.84 0.210 0.209 0.669 0.818 0.301 Open-weight General MLLMs GLM-4.6"
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Quantitative evaluation of long-form aesthetic critique generation on CritiqueCanvas. The reported metrics assess complementary aspects of generated critiques, including reference alignment through lexical and semantic similarity, and image–text relevance."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "h3",
+   "en": "B Main Results"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "h4",
+   "en": "Contextual Aesthetic Suitability Judgment"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "Table 2 reports results on ContextCanvas. The benchmark clearly separates model capability levels. Accuracy among closed-source MLLMs ranges from ⟦SLOT_6⟧ to ⟦SLOT_7⟧, while the strongest evaluated open-weight model, Qwen3-VL-Instruct, reaches only ⟦SLOT_8⟧. Within the Claude and GPT families, newer variants substantially outperform their predecessors: Claude Opus 5 improves over Claude Opus 4.6 by ⟦SLOT_9⟧ accuracy points and ⟦SLOT_10⟧ Macro-F1 points, while GPT-5.5 improves over GPT-5.2 by ⟦SLOT_11⟧ and ⟦SLOT_12⟧ points, respectively. These within-family gains are consistent with improved contextual aesthetic judgment in newer frontier models."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "p",
+   "en": "Most notably, all evaluated aesthetic-specific models achieve below ⟦SLOT_13⟧ accuracy. ArtQuant-APDD, the strongest model in this group, obtains ⟦SLOT_14⟧, compared with ⟦SLOT_15⟧ for Qwen3-VL-Instruct and ⟦SLOT_16⟧ for Claude Opus 5. ArtiMuse, Q-SiT, and AesExpert achieve only ⟦SLOT_17⟧, ⟦SLOT_18⟧, and ⟦SLOT_19⟧, respectively. Thus, specialization for aesthetic scoring, perception, or critique does not reliably transfer to judging suitability under cultural, communicative, or domain-specific constraints."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "p",
+   "en": "The Yes-rate column further reveals a shared prediction tendency. Against the gold rate of ⟦SLOT_20⟧, aesthetic-specific models predict Yes in ⟦SLOT_21⟧–⟦SLOT_22⟧ of the binary cases, indicating pronounced over-acceptance despite contextual mismatch. This pattern is consistent with aesthetic context bias, although similar marginal rates may arise from different instance-level failures. We examine these failure modes through category-level and qualitative analyses in the following section. Although the binary subset has a ⟦SLOT_23⟧ always-No majority baseline, weaker models often fall below it because they over-accept visually plausible but contextually unsuitable images. Meanwhile, frontier models achieve up to ⟦SLOT_24⟧ accuracy on the full benchmark, suggesting that ContextCanvas rewards context-sensitive judgment rather than majority-label guessing."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "h4",
+   "en": "Long-form Aesthetic Critique Generation"
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "Table 3 reports results on CritiqueCanvas. No model dominates across all metric families. Gemini 3.1 Pro achieves the highest SBERT-Cos (⟦SLOT_25⟧), while LLaVA-OneVision leads BERT-F1 (⟦SLOT_26⟧) and CLIPScore (⟦SLOT_27⟧). The adapted Qwen3-VLFT instead obtains the strongest lexical scores: ⟦SLOT_28⟧ BLEU, ⟦SLOT_29⟧ ROUGE-L, and ⟦SLOT_30⟧ METEOR. Compared with the base Qwen3-VL, these correspond to gains of ⟦SLOT_31⟧, ⟦SLOT_32⟧, and ⟦SLOT_33⟧, respectively. However, its SBERT-Cos decreases from ⟦SLOT_34⟧ to ⟦SLOT_35⟧, and CLIPScore from ⟦SLOT_36⟧ to ⟦SLOT_37⟧, showing that adaptation improves reference-style matching without uniform gains in semantic similarity or image grounding."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "Aesthetic-specific models remain competitive on selected critique metrics. ArtiMuse reaches ⟦SLOT_38⟧ BERT-F1, close to the best score of ⟦SLOT_39⟧, while UniPercept obtains a CLIPScore of ⟦SLOT_40⟧, only ⟦SLOT_41⟧ below the overall best. ArtQuant also reaches ⟦SLOT_42⟧ BLEU and ⟦SLOT_43⟧ ROUGE-L, whereas AesExpert and Q-SiT perform weakly across most metrics. Overall critique performance is heterogeneous across lexical, semantic, and image-grounding criteria."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "Together, the two tasks reveal a gap between reference-aligned critique generation and contextually valid aesthetic judgment. Additional response-level statistics are provided in the supplementary material."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "h3",
+   "en": "C Analysis"
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "Beyond aggregate scores, we examine why aesthetic competence fails to transfer to culturally situated judgment. In the compact tables, GPT, Gem., Qwen+, Qwen-FT, AQ, and AM abbreviate GPT-5.2, Gemini 3.1 Pro, Qwen3.7-Plus, the CritiqueCanvas-adapted Qwen3-VL, ArtQuant-APDD, and ArtiMuse, respectively; vertical rules follow the model groups in Section IV.A."
+  },
+  {
+   "id": "b0075",
+   "t": "keep",
+   "w": "table",
+   "en": "Rating GPT Gem. Qwen3-VL FT AM AQ Human 3.9 4.1 2.5 2.6 2.3 MLLM 5.0 4.5 2.5 2.6 2.2"
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Human and MLLM ratings of overall critique quality."
+  },
+  {
+   "id": "b0077",
+   "t": "keep",
+   "w": "table",
+   "en": "Metric GPT Gem. Qwen+ AQ AM Correct ↑ \\uparrow 13 10 11 3 6 Reverse ↓ \\downarrow 2 1 1 2 0 NCU ↑ \\uparrow 30.56 25.00 27.78 2.78 16.67"
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Results of the 36-pair counterfactual audit."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "h4",
+   "en": "Validity of Critique Metrics"
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "p",
+   "en": "We evaluate whether reference-based metrics reflect practical critique quality on 100 randomly sampled CritiqueCanvas cases. 2 human evaluators rate five representative models on visual grounding, aesthetic specificity, criterion appropriateness, and analytical usefulness, with Claude Opus 5 as the MLLM judge providing a complementary assessment."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Table 5, direct quality ratings do not consistently track the reference-similarity metrics in Table 3. Since valid critiques may emphasize different evidence and interpretations, lexical and semantic overlap capture only part of critique quality and should be complemented by direct judgments of grounding, specificity, and usefulness."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "h4",
+   "en": "Culture-Grounded Counterfactual Sensitivity"
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "We further examine whether contextual aesthetic decisions are grounded in culture-bearing visual evidence. We construct 36 paired counterfactual variants from ContextCanvas, keeping the evaluation scenario and overall visual presentation fixed while changing the decisive cue such that the intended judgment changes from No to Yes. These synthetic variants neither revise the original annotations nor constitute an additional accuracy split; they are used only as a matched diagnostic of directional decision updating. We report the numbers of correct (No⟦SLOT_44⟧ Yes) and reverse (Yes⟦SLOT_45⟧No) updates, as well as Net Correct Update computed as ⟦SLOT_46⟧."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Table 5, all three general-purpose MLLMs show positive net updating, with NCU values concentrated between 25.00 and 30.56 despite their substantially different benchmark accuracies. This suggests that absolute contextual competence and responsiveness to decisive visual evidence are related but separable. More importantly, both evaluated aesthetic specialists show weaker net updating than every general-purpose model, with ArtQuant exhibiting almost no measurable response. The results indicate that aesthetic specialization alone does not establish the visual–cultural binding required for reliable contextual aesthetic judgment."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "h4",
+   "en": "Transfer from Aesthetic Specialization"
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "p",
+   "en": "To test whether specialization for conventional aesthetic tasks transfers to contextual suitability judgment, we compare each aesthetic specialist with its corresponding base model on the same ContextCanvas cases."
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: Cross-task analysis. (a) Base–specialist transfer on ContextCanvas; * denotes Bonferroni-corrected McNemar ⟦SLOT_47⟧. (b) ContextCanvas accuracy against the mean percentile over six CritiqueCanvas metrics."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Figure 4, specialization significantly improves ArtQuant and AesExpert over their respective base models, but yields no measurable gain for ArtiMuse or Q-SiT. Moreover, strong CritiqueCanvas metric alignment does not consistently translate into ContextCanvas accuracy."
+  },
+  {
+   "id": "b0090",
+   "t": "keep",
+   "w": "table",
+   "en": "Metric Gem. GPT Qwen+ AM Accuracy ↑ \\uparrow 83 65 42 21 EGA ↑ \\uparrow 79 55 31 3 Unsupported ↓ \\downarrow 4.82 15.38 26.19 85.71"
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Decisive-cue attribution on 100 balanced cases."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "h4",
+   "en": "Decisive-Cue Grounding"
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "Binary accuracy does not show whether a model is correct for the right visual reason. We therefore evaluate 100 balanced ContextCanvas cases using human judgments of answer correctness, decisive-cue identification, and contextual explanation. Evidence-Grounded Accuracy (EGA) requires all three."
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "As shown in Table 6, general-purpose models preserve much of their accuracy under the stricter grounding criterion, whereas ArtiMuse drops from 21% accuracy to 3% EGA. Unsupported is the percentage of correct predictions that fail the decisive-cue grounding criterion. This gap indicates that fluent aesthetic rationales may still fail to identify the culture-bearing evidence that determines contextual suitability."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "h2",
+   "en": "V Conclusion"
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "We introduced AesCanvas, comprising CritiqueCanvas and ContextCanvas, to evaluate aesthetic critique and contextual suitability. Across closed-source, open-weight, and aesthetic-specific models, strong critique performance does not reliably translate into context-sensitive judgment: aesthetic specialists may remain competitive on critique metrics yet achieve low accuracy and exhibit over-acceptance on ContextCanvas. Paired and diagnostic analyses further reveal inconsistent benefits from aesthetic tuning and limited use of decisive contextual evidence. These findings support treating culturally situated suitability as a distinct training and evaluation objective that requires models to integrate visual evidence with cultural knowledge, intended use, and domain-specific constraints."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "An et al. (2025) X. An, Y. Xie, K. Yang, W. Zhang, X. Zhao, Z. Cheng, Y. Wang, S. Xu, C. Chen, D. Zhu, C. Wu, H. Tan, C. Li, J. Yang, J. Yu, X. Wang, B. Qin, Y. Wang, Z. Yan, Z. Feng, Z. Liu, B. Li, a"
+  },
+  {
+   "id": "b0099",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al. (2025) S. Bai, Y. Cai, R. Chen, K. Chen, X. Chen, Z. Cheng, L. Deng, W. Ding, C. Gao, C. Ge, W. Ge, Z. Guo, Q. Huang, J. Huang, F. Huang, B. Hui, S. Jiang, Z. Li, M. Li, M. Li, K. Li, Z. Li"
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Banerjee and Lavie (2005) S. Banerjee and A. Lavie METEOR: an automatic metric for MT evaluation with improved correlation with human judgments . In Proceedings of the ACL Workshop on Intrinsic and Ex"
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bird et al. (2009) S. Bird, E. Klein, and E. Loper Natural language processing with python . O’Reilly Media . Cited by: §S2.3.2 ."
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cai et al. (2024) C. Cai, R. Zhang, J. Gao, K. Wu, K. Yap, and Y. Wang Temporal sentence grounding with temporally global textual knowledge . In 2024 IEEE International Conference on Multimedia and Ex"
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cao et al. (2025a) S. Cao, J. Li, X. Li, Y. Pu, K. Zhu, Y. Gao, S. Luo, Y. Xin, Q. Qin, Y. Zhou, X. Chen, W. Zhang, B. Fu, Y. Qiao, and Y. Liu UniPercept: towards unified perceptual-level image unders"
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cao et al. (2025b) S. Cao, N. Ma, J. Li, X. Li, L. Shao, K. Zhu, Y. Zhou, Y. Pu, J. Wu, J. Wang, B. Qu, W. Wang, Y. Qiao, D. Yao, and Y. Liu ArtiMuse: fine-grained image aesthetics assessment with joi"
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cao et al. (2025c) S. Cao, N. Ma, J. Li, X. Li, L. Shao, K. Zhu, Y. Zhou, Y. Pu, J. Wu, J. Wang, B. Qu, W. Wang, Y. Qiao, D. Yao, and Y. Liu ArtiMuse: Fine-Grained Image Aesthetics Assessment with Joi"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024) D. Chen, R. Chen, S. Zhang, Y. Liu, Y. Wang, H. Zhou, Q. Zhang, Y. Wan, P. Zhou, and L. Sun MLLM-as-a-Judge: assessing multimodal LLM-as-a-judge with vision-language benchmark . arX"
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2020) L. Chen, X. Yan, J. Xiao, H. Zhang, S. Pu, and Y. Zhuang Counterfactual samples synthesizing for robust visual question answering . In Proceedings of the IEEE/CVF Conference on Comp"
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dunn (1961) O. J. Dunn Multiple comparisons among means . Journal of the American Statistical Association 56 ( 293 ), pp. 52–64 . External Links: Document Cited by: §S2.3.3 ."
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Efron and Tibshirani (1993) B. Efron and R. J. Tibshirani An introduction to the bootstrap . Chapman and Hall/CRC . External Links: Document Cited by: §S2.3.3 ."
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gao et al. (2024) J. Gao, K. Yap, K. Wu, D. T. Phan, K. Garg, and B. S. Han Contextual human object interaction understanding from pre-trained large language model . In ICASSP 2024-2024 IEEE Internati"
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "GLM-V Team et al. (2026) GLM-V Team, W. Hong, W. Yu, X. Gu, G. Wang, et al. GLM-4.5V and GLM-4.1V-Thinking: towards versatile multimodal reasoning with scalable reinforcement learning . arXiv preprint"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hessel et al. (2021) J. Hessel, A. Holtzman, M. Forbes, R. Le Bras, and Y. Choi CLIPScore: a reference-free evaluation metric for image captioning . In Proceedings of the 2021 Conference on Empirical "
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hou et al. (2026) W. Hou, W. Liu, H. Hu, X. Sun, S. Yeung-Levy, and H. Fan Seeing is believing? a benchmark for multimodal large language models on visual illusions and anomalies . arXiv preprint arXi"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024a) Y. Huang, X. Sheng, Z. Yang, Q. Yuan, Z. Duan, P. Chen, L. Li, W. Lin, and G. Shi AesExpert: towards multi-modality foundation model for image aesthetics perception . External Lin"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024b) Y. Huang, Q. Yuan, X. Sheng, Z. Yang, H. Wu, P. Chen, Y. Yang, L. Li, and W. Lin AesBench: an expert benchmark for multimodal large language models on image aesthetics perception "
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024c) Y. Huang, Q. Yuan, X. Sheng, Z. Yang, H. Wu, P. Chen, Y. Yang, L. Li, and W. Lin AesBench: An expert benchmark for multimodal large language models on image aesthetics perception "
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kong et al. (2016) S. Kong, X. Shen, Z. Lin, R. Mech, and C. C. Fowlkes Photo aesthetics ranking network with attributes and content adaptation . In Computer Vision – ECCV 2016 , Lecture Notes in Comp"
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024) C. Li, Z. Zhang, H. Wu, W. Sun, X. Min, X. Liu, G. Zhai, and W. Lin AGIQA-3K: an open database for ai-generated image quality assessment . IEEE Transactions on Circuits and Systems fo"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2026) R. Li, L. Li, S. Ren, H. Tian, S. Gu, S. Li, Z. Yue, Y. Wang, W. Ma, Z. Yang, J. Ma, Z. Sui, and F. Luo GroundingME: exposing the visual grounding gap in MLLMs through multi-dimension"
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liang et al. (2026) J. Liang, K. Wu, X. Hu, and T. Liu Cibic: pixel-free foundation model for robust corrupted image bitstream captioning . Pattern Recognition , pp. 114238 . Cited by: §II.B ."
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liao et al. (2026) M. Liao, T. Ma, and X. Zhang Open world image aesthetic assessment . In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Findings , pp. 9791–9801 . "
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lin (2004) C. Lin ROUGE: a package for automatic evaluation of summaries . In Text Summarization Branches Out , Barcelona, Spain , pp. 74–81 . External Links: Link Cited by: §III.C , §S2.3.2 ."
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2024) H. Liu, C. Li, Y. Li, and Y. J. Lee Improved baselines with visual instruction tuning . In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pp. 262"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2026) H. Liu, N. Huang, C. Liu, J. Yan, H. Huang, J. Ying, T. Lee, P. Wan, and X. Ji Bridging cognitive gap: Hierarchical description learning for artistic image aesthetics assessment . Ex"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023) Y. Liu, D. Iter, Y. Xu, S. Wang, R. Xu, and C. Zhu G-Eval: NLG evaluation using GPT-4 with better human alignment . In Proceedings of the 2023 Conference on Empirical Methods in Natu"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mai et al. (2016) L. Mai, H. Jin, and F. Liu Composition-preserving deep photo aesthetics assessment . In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition , pp. 497–506 . "
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "McNemar (1947) Q. McNemar Note on the sampling error of the difference between correlated proportions or percentages . Psychometrika 12 ( 2 ), pp. 153–157 . External Links: Document Cited by: §S2.3.3 "
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Moratelli et al. (2026) N. Moratelli, C. Davis, L. F. R. Ribeiro, B. Byrne, and G. Iglesias Benchmarking deflection and hallucination in large vision-language models . arXiv preprint arXiv:2604.12033 "
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Murray et al. (2012) N. Murray, L. Marchesotti, and F. Perronnin AVA: a large-scale database for aesthetic visual analysis . In Proceedings of the IEEE Conference on Computer Vision and Pattern Recogn"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Papineni et al. (2002) K. Papineni, S. Roukos, T. Ward, and W. Zhu Bleu: a method for automatic evaluation of machine translation . In Proceedings of the 40th Annual Meeting of the Association for Com"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Post (2018) M. Post A call for clarity in reporting BLEU scores . In Proceedings of the Third Conference on Machine Translation: Research Papers , pp. 186–191 . External Links: Document Cited by: §S2."
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qi et al. (2025a) D. Qi, H. Zhao, J. Shi, S. Jenni, Y. Fan, F. Dernoncourt, S. Cohen, and S. Li The photographer eye: teaching multimodal large language models to see and critique like photographers ."
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qi et al. (2025b) D. Qi, H. Zhao, J. Shi, S. Jenni, Y. Fan, F. Dernoncourt, S. Cohen, and S. Li The photographer’s eye: teaching multimodal large language models to see, and critique like photographer"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Reimers and Gurevych (2019) N. Reimers and I. Gurevych Sentence-BERT: sentence embeddings using Siamese BERT-networks . In Proceedings of the 2019 Conference on Empirical Methods in Natural Language P"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Satar et al. (2025) B. Satar, Z. Ma, P. A. Irawan, W. A. Mulyawan, J. Jiang, E. Lim, and C. Ngo Seeing culture: a benchmark for visual reasoning and grounding . In Proceedings of the 2025 Conference o"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Singh et al. (2026) D. Singh, A. Nagrani, K. Manikantan, H. Singh, D. Tewari, T. Weyand, C. Schmid, A. Angelova, and S. Dave CURVE: a benchmark for cultural and multilingual long video reasoning . arX"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Talebi and Milanfar (2018) H. Talebi and P. Milanfar NIMA: neural image assessment . IEEE Transactions on Image Processing 27 ( 8 ), pp. 3998–4011 . External Links: Document Cited by: §I ."
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2023) J. Wang, H. Duan, J. Liu, S. Chen, X. Min, and G. Zhai AIGCIQA2023: a large-scale image quality assessment database for ai generated images: from the perspectives of quality, authen"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2025) W. Wang, Z. Gao, L. Gu, H. Pu, L. Cui, X. Wei, Z. Liu, L. Jing, S. Ye, J. Shao, Z. Wang, Z. Chen, H. Zhang, G. Yang, H. Wang, Q. Wei, J. Yin, W. Li, E. Cui, G. Chen, Z. Ding, C. Tia"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2024) H. Wu, Z. Zhang, W. Zhang, C. Chen, L. Liao, C. Li, Y. Gao, A. Wang, E. Zhang, W. Sun, Q. Yan, X. Min, G. Zhai, and W. Lin Q-Align: teaching LMMs for visual scoring via discrete text-"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2026a) K. Wu, F. Li, W. Liu, Q. Liu, and Y. Yang Corrupted bitstream semantic understanding by adaptive-modal large language models . Pattern Recognition 180 , pp. 114151 . Cited by: §II.B "
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2026b) Q. Wu, X. Yang, Y. Zhou, C. Fang, B. Song, X. Sun, and R. Ji Grounded chain-of-thought for multimodal large language models . In Proceedings of the IEEE/CVF Conference on Computer Vi"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xiong et al. (2026) T. Xiong, Y. Ge, M. Li, Z. Zhang, P. Kulkarni, K. Wang, Q. He, Z. Zhu, C. Liu, R. Chen, T. Zheng, Y. Chen, X. Wang, R. Zhang, W. Chen, and H. Huang Multi-Crit: benchmarking multimo"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2026a) S. Yang, Y. Liu, B. Zhai, X. Sun, Z. Liu, E. Barsoum, M. Li, and C. Xu CaptionQA: is your caption as useful as the image itself? . In Proceedings of the IEEE/CVF Conference on Comp"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2022) Y. Yang, L. Xu, L. Li, N. Qie, Y. Li, P. Zhang, and Y. Guo Personalized image aesthetics assessment with rich attributes . In Proceedings of the IEEE/CVF Conference on Computer Visi"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2026b) Z. Yang, J. Wang, Z. Zhang, P. Xie, X. Sheng, P. Chen, and L. Li Fine-grained image aesthetic assessment: learning discriminative scores from relative ranks . In Proceedings of the"
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ye et al. (2024) Q. Ye, H. Xu, J. Ye, M. Yan, A. Hu, H. Liu, Q. Qian, J. Zhang, and F. Huang Mplug-owl2: revolutionizing multi-modal large language model with modality collaboration . In Proceedings o"
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yi et al. (2023) R. Yi, H. Tian, Z. Gu, Y. Lai, and P. L. Rosin Towards artistic image aesthetics assessment: a large-scale dataset and a new method . In Proceedings of the IEEE/CVF Conference on Comp"
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yin et al. (2026) Y. Yin, H. Krishnakumar, C. P. Lee, B. Zeng, W. Chai, S. Tong, W. Chen, H. Xu, X. Fu, G. Sarch, A. Korolova, and Z. Liu WorldBench: a challenging and visually diverse multimodal reas"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2026) L. Zhang, J. Yang, S. Krishnan, J. Majmudar, X. Ge, P. Puri, P. Saraf, S. Bhargava, D. Piraviperumal, Y. Ling, C. Pan, H. Yu, A. Agrawal, and B. Tseng From where things are to what"
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2020) T. Zhang, V. Kishore, F. Wu, K. Q. Weinberger, and Y. Artzi BERTScore: evaluating text generation with bert . External Links: 1904.09675 , Link Cited by: §III.C , §S2.3.2 ."
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2025) Z. Zhang, H. Wu, Z. Jia, W. Lin, and G. Zhai Teaching LMMs for image quality scoring and interpreting . External Links: 2503.09197 Cited by: §I , §II.B , Table 2 , Table 3 ."
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhou et al. (2026) S. Zhou, B. Jia, K. Wu, Y. Shen, T. Li, Y. Wu, and S. Lin ReactBench: a cause-driven benchmark for multimodal hallucination via systematic evaluation . arXiv preprint arXiv:2605.295"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhou et al. (2024) Z. Zhou, Q. Wang, B. Lin, Y. Su, R. Chen, X. Tao, A. Zheng, L. Yuan, P. Wan, and D. Zhang UNIAA: a unified multi-modal image aesthetic assessment baseline and benchmark . External L"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2025) J. Zhu, W. Wang, Z. Chen, Z. Liu, S. Ye, L. Gu, H. Tian, Y. Duan, W. Su, J. Shao, Z. Gao, E. Cui, X. Wang, Y. Cao, Y. Liu, X. Wei, H. Zhang, H. Wang, W. Xu, H. Li, J. Wang, N. Deng, "
+  },
+  {
+   "id": "b0156",
+   "t": "text",
+   "w": "h2",
+   "en": "Supplementary Material"
+  },
+  {
+   "id": "b0157",
+   "t": "text",
+   "w": "p",
+   "en": "Supplementary Material"
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "p",
+   "en": "AesCanvas: A Large-Scale Dataset and Benchmark for Aesthetic Critique and Contextual Suitability"
+  },
+  {
+   "id": "b0159",
+   "t": "text",
+   "w": "h2",
+   "en": "S1 Supplement Overview and Positioning"
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "p",
+   "en": "This supplement documents AesCanvas and additional diagnostics. Section S2 provides the dataset, prompt, evaluation, and implementation materials; Section S3 presents model-output, robustness, and transfer analyses."
+  },
+  {
+   "id": "b0161",
+   "t": "text",
+   "w": "h3",
+   "en": "S1.1 Positioning Relative to Prior Datasets"
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "p",
+   "en": "Table S1 compares published dataset and supervision affordances. A checkmark requires explicit support in the corresponding paper or dataset documentation; a triangle denotes limited or indirect support. Use-context judgment specifically requires an auditable decision about whether an image is appropriate for a stated purpose, audience, or convention, rather than generic context reasoning or intrinsic aesthetic scoring."
+  },
+  {
+   "id": "b0163",
+   "t": "text",
+   "w": "p",
+   "en": "The comparison covers established photographic-aesthetics datasets (Murray et al., 2012; Kong et al., 2016; Yang et al., 2022), AI-generated-image quality datasets (Li et al., 2024; Wang et al., 2023), and recent multimodal aesthetic-critique and assessment resources (Huang et al., 2024c; Huang et al., 2024a; Qi et al., 2025a; Cao et al., 2025c; Liu et al., 2026)."
+  },
+  {
+   "id": "b0164",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table S1: Comparison of media coverage and aesthetic supervision."
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "table",
+   "en": "Dataset Scale Photo- graphy Painting / art AIGC / virtual Long-form critique Structured dimensions Grounded explanation Use-context judgment AVA > > 250K images ✓ \\checkmark – – – △ \\triangle – – AADB"
+  },
+  {
+   "id": "b0166",
+   "t": "text",
+   "w": "p",
+   "en": "Note. –denotes that the affordance is not established in the published dataset design. AVA provides score distributions and semantic/style labels; AGIQA-3K provides perceptual-quality and text–image-alignment scores; and PhotoCritique provides broad photographic feedback rather than a fixed multi-dimensional annotation schema. “Painting / art” includes broader artistic imagery, while “AIGC / virtual” includes generated and other virtual imagery."
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "p",
+   "en": "Prior resources already provide substantial supervision for intrinsic aesthetic perception and critique. AesCanvas complements them by coupling long-form critique with a closed-form benchmark in which cultural, narrative, functional, or domain-specific evidence can change whether an image is suitable for a concrete use."
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "h2",
+   "en": "S2 Dataset and Evaluation Materials"
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "p",
+   "en": "This section documents the record schemas, prompt templates and representative intervention specifications, evaluation procedures, and implementation details needed to interpret AesCanvas and the reported measurements."
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "h3",
+   "en": "S2.1 Dataset Documentation"
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "h4",
+   "en": "S2.1.1 AesCanvas Overview"
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "p",
+   "en": "AesCanvas contains two complementary components derived from a shared image pool. Table S2 summarizes their data units, scales, outputs, and evaluation roles."
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table S2: Suite-level data card for the two AesCanvas components."
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "table",
+   "en": "Field CritiqueCanvas ContextCanvas Primary task Long-form, multi-dimensional aesthetic critique Contextual aesthetic suitability judgment Data unit Image, instruction, selected dimensions, and respons"
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "p",
+   "en": "The shared pool comprises 21,294 photographs, 17,939 paintings, and 15,067 virtual images. Photography includes natural scenes, architecture, portraiture, commercial imagery, and other camera-based work; painting contains primarily Western classical and related painted work; and virtual imagery includes game scenes, animation-style illustration, and AI-generated content. Images were collected from publicly accessible web sources, museums, and cultural-heritage collections. Low-quality, semantically uninformative, non-compliant, duplicate, and near-duplicate candidates were removed. CritiqueCanvas conversations derived from the same image are grouped before splitting so that related records do not cross its train/evaluation partitions. ContextCanvas is used as a fixed diagnostic set rather than a training split."
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "p",
+   "en": "For documentation clarity, we provide the dataset cards, record schemas, prompts, metric definitions, evaluation and parsing procedures, and representative examples for both components. Task-specific model inputs, supervision fields, rationales, and provenance metadata are described below."
+  },
+  {
+   "id": "b0177",
+   "t": "text",
+   "w": "h4",
+   "en": "S2.1.2 CritiqueCanvas"
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "p",
+   "en": "CritiqueCanvas uses ten shared dimensions: Content/Narrative, Composition, Color, Lighting, Lines/Brushstrokes, Style, Emotion, Technique, Symbolism, and Visual Appeal. Only image-relevant dimensions are selected for a given record. The shared dimensions are complemented by domain-conditioned criteria: photography emphasizes exposure, perspective, depth of field, focus, motion, and compositional control; painting emphasizes line, brushwork, genre, style, symbolism, and emotion; and virtual imagery emphasizes character design, scene construction, rendering consistency, narrative setting, and stylization."
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "p",
+   "en": "The CritiqueCanvas record schema identifies the image and domain, selected dimensions, instruction, target response, conversation group, split, and associated provenance/governance metadata. The evaluation loader consumes a compact conversation form with id, image, and conversations; it takes the first user/human turn as the instruction and the first assistant/GPT turn as the reference. The image and instruction form the model input, while the reference is withheld until scoring. Each row records sample_id, relative and resolved image paths, the exact rendered prompt, reference, prediction, model, task, and timestamp. Each six-pair construction dialogue was converted into six pair-level records sharing a conversation-group identifier; the evaluation export therefore contains one human–assistant pair per record. Source, license, selected-dimension, split, audit, and governance fields are retained as metadata but are never supplied as model input. Representative examples spanning photography, illustration, and painting, as well as both open-ended and dimension-focused instruction functions, are shown in Fig. S1."
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure S1: Representative CritiqueCanvas examples across photography, illustration, and painting. Each example pairs an image with its rendered query and the corresponding aesthetic focus. The examples include both broad image-appreciation prompts and prompts targeting specific dimensions such as light and shadow, atmosphere, tonal treatment, and formal analysis."
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "p",
+   "en": "Gemini performs dimension-aware planning, GLM generates the corresponding domain-conditioned critique annotations, and an independent Claude Opus 5 verification stage screens instruction consistency, visual grounding, and response quality. Five human reviewers then independently inspected a stratified sample of 1,000 retained pairs using the rubric detailed below. The audit yielded 95.3% acceptance and 97.0% raw agreement."
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "h4",
+   "en": "S2.1.3 ContextCanvas"
+  },
+  {
+   "id": "b0184",
+   "t": "text",
+   "w": "p",
+   "en": "ContextCanvas was sampled from the same 54,300-image pool. The 1,060 initial candidate cases were collected primarily through a call circulated within the university. Graduate research assistants, doctoral researchers, and faculty spanning computer science and electrical engineering, visual arts and art history, design and visual communication, and cultural and media studies contributed source ideas and image–use proposals. A separate multidisciplinary panel of four PhD-level researchers developed these contributions into formal candidate cases and reviewed them through iterative refinement, standardization, cross-disciplinary checking, and final adjudication. A candidate was retained only if it satisfied aesthetic centrality, context dependence, visual necessity, decisive evidence, scenario naturalness, answerability, and anti-shortcut validity. Qwen3.7-Plus was used only as a development-time probe for trivial, ambiguous, or shortcut-prone candidates; model failure was never an inclusion condition. The four-person review panel finalized all questions, options, gold labels, source-grounded rationales, and source records."
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "p",
+   "en": "The 301 retained cases comprise 300 single-image cases and one paired-image case, covering 302 unique images. Each case record stores the stable evaluation ID, original case ID, image descriptor(s), question, options, gold option ID and text, source-grounded rationale, source basis, and provenance/rights fields. Only the image(s), question, and fixed options are model input; labels, rationales, source titles, URLs, development metadata, and model-probe results are excluded."
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "p",
+   "en": "A label-balanced demonstration of retained cases is shown in Fig. S2. The examples are organized by the mechanism that makes the aesthetic-use decision non-trivial: cultural or historical alignment; narrative meaning that reverses attractive, serene, or balanced surface qualities; apparent visual mismatch that strengthens a communicative purpose; and medium- or story-specific framing. Every example distinguishes the visible cue, the contextual knowledge it activates, and the resulting visual-use decision. This presentation makes clear that the task is neither artwork-title recall nor context-free cultural question answering."
+  },
+  {
+   "id": "b0187",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure S2: Representative retained ContextCanvas cases. Top row, from left to right: HB208 (Mid-Autumn cultural fit), HB014 (historical military identity), and HB159 (restorative return versus the Lotus-Eaters’ withdrawal). Bottom row: HB155 (fiction–reality confusion), HB181 (teamwork under visual tension), and HB186 (addiction in a refined setting). Each card separates visible form, use scenario, contextual evidence, decision, and gold label."
+  },
+  {
+   "id": "b0189",
+   "t": "text",
+   "w": "p",
+   "en": "Expert review also removed coherent human-drafted questions that failed one of the retention requirements. Figure S3 shows three such boundaries: a bridal image whose conspicuous negative affect makes the answer available through coarse emotion recognition; The Wolf and the Crane, whose decisive betrayal occurs outside the depicted moment and therefore weakens visual necessity; and the historical “DON’T MIX ’EM” poster, for which a contemporary campaign can defensibly reject the sensational design, preventing a uniquely compelled gold label. These examples demonstrate that professional wording and a plausible intended answer were insufficient for retention. They are illustrative and are not used to estimate a distribution of rejection reasons."
+  },
+  {
+   "id": "b0190",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0191",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure S3: Human-drafted candidates excluded after expert review. From left to right: R41Q05 was insufficiently challenging because conspicuous negative affect enabled a coarse shortcut; R41Q08 weakened visual necessity because the decisive betrayal occurs outside the depicted moment; and R69Q06 lacked a uniquely compelled gold label for a contemporary campaign."
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "h4",
+   "en": "S2.1.4 Provenance and Governance"
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "p",
+   "en": "For each ContextCanvas image, provenance metadata include the known title, creator, provider, source URL, license note, and redistribution status. Missing creator names are preserved as unknown rather than inferred. Synthetic counterfactual edits are clearly labeled as research diagnostics and are not treated as natural benchmark images or training annotations."
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "p",
+   "en": "The datasets necessarily reflect the source pool and the expertise of the case contributors and review panel. ContextCanvas is an expert diagnostic benchmark rather than exhaustive coverage of cultures, audiences, or design practice, and a source-grounded rationale does not eliminate every historically or culturally contestable interpretation. CritiqueCanvas similarly permits multiple valid analyses of the same image; its reference response is supervision, not the only legitimate critique."
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "h3",
+   "en": "S2.2 Prompts"
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "p",
+   "en": "We report the prompts used in dataset construction and in the experiments described in the main paper."
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "h4",
+   "en": "S2.2.1 CritiqueCanvas Prompts"
+  },
+  {
+   "id": "b0198",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0199",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0201",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0202",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "h4",
+   "en": "S2.2.2 ContextCanvas Prompts"
+  },
+  {
+   "id": "b0204",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "p",
+   "en": "Where supported, provider-side structured-output enforcement was requested for the required JSON schema. The reason and confidence fields are retained for qualitative analysis but do not affect exact-match grading, which is based solely on the predicted option ID."
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "p",
+   "en": "Counterfactual editing prompts. Each of the 36 edits replaces the decisive incompatible cue with a scenario-compatible alternative while aiming to preserve the source medium, composition, palette, viewpoint, and non-target content as closely as possible. We use GPT Image 2 for all edits. Pair-specific interventions were specified individually. For example, CF01 replaces Japanese-inspired wafuku and tea props with Chinese hanfu, a Chinese tea set, mooncakes, and a palace lantern; CF18 replaces the governess’s distressing letter with an open lesson book and makes the children engage with her while retaining the painted nursery and period style. All edited images were manually checked for successful cue replacement and preservation of non-target content; invalid edits were regenerated."
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "p",
+   "en": "Modality diagnostic. Motivated by caption-utility evaluation that treats captions as image surrogates (Yang et al., 2026a), we additionally evaluate text-only, identity- and verdict-free neutral-caption, and decisive-visible-cue conditions using the same questions, options, output schema, and scoring protocol. The condition construction and aggregate results are reported below."
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "h4",
+   "en": "S2.2.3 Evaluation and Judge Prompts"
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "Human critique-rating instructions. Two human evaluators independently assessed five anonymous critiques for each image without access to model identities or to each other’s ratings. For each critique, they assigned a binary judgment on four criteria: visual grounding, aesthetic specificity, criterion appropriateness, and analytical usefulness. A criterion received one point when the critique was comparatively strong on that dimension within the same image–prompt batch, and zero points when it was comparatively weak. The final human score was one plus the number of satisfied criteria, yielding a score from 1 to 5. Thus, a zero on an individual criterion denotes relative weakness among responses to the same prompt rather than the complete absence of that quality."
+  },
+  {
+   "id": "b0210",
+   "t": "text",
+   "w": "p",
+   "en": "MLLM critique judge. Following rubric-based model evaluation (Liu et al., 2023; Chen et al., 2024), Claude Opus 5 provides a complementary assessment. The judge assigns four criterion-specific scores and one holistic overall-quality score, each from 1 to 5. For each case, the five candidate critiques are anonymized and randomly permuted before evaluation, then assigned temporary aliases A–E; the alias-to-model mapping is restored after scoring. The reference critique is withheld. The fifth, holistic score is reported as the MLLM score in Table 4 of the main paper."
+  },
+  {
+   "id": "b0211",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "p",
+   "en": "The Claude Opus 5 judge is run at temperature 0 with returned reasoning disabled. Each image is resized to ⟦SLOT_48⟧ and JPEG-encoded at quality 90. The runner requests a strict JSON schema and permits at most 320 output tokens."
+  },
+  {
+   "id": "b0213",
+   "t": "text",
+   "w": "p",
+   "en": "Evidence-grounded human evaluation. Motivated by multi-dimensional visual-grounding evaluation (Li et al., 2026), two human evaluators assessed model responses on 100 ContextCanvas cases. Model identities were concealed. For each case, evaluators were shown the image, scenario, answer options, gold decision, expert decisive-cue rationale, and an anonymized response. They independently judged whether the response selected the correct answer, identified the decisive visible cue or a visually warranted equivalent, and correctly linked that cue to the stated use. Valid equivalent reasoning was accepted without requiring lexical overlap with the expert rationale. Disagreements were resolved through discussion. Evidence-Grounded Accuracy requires all three conditions."
+  },
+  {
+   "id": "b0214",
+   "t": "text",
+   "w": "h3",
+   "en": "S2.3 Evaluation Rubrics and Metrics"
+  },
+  {
+   "id": "b0215",
+   "t": "text",
+   "w": "h4",
+   "en": "S2.3.1 Dataset-Quality Rubrics"
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "p",
+   "en": "For CritiqueCanvas, five human reviewers independently inspected a stratified sample of 1,000 retained instruction–response pairs spanning photography, painting, and virtual imagery. The audit assessed instruction consistency, visual grounding, image-specific aesthetic analysis, and overall coherence and usefulness. Blocking issues include an instruction–image mismatch, failure to perform the requested task, material visual hallucination, an essentially generic or incomplete response, or a safety, rights, or compliance failure. Non-blocking issues are localized weaknesses, such as minor imprecision, awkward wording, limited repetition, or omission of a secondary point, that do not by themselves invalidate the pair. Blocking issues require rejection, whereas non-blocking issues alone do not."
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "p",
+   "en": "Of the 1,000 audited pairs, 970 received no blocking-issue flag from any of the five independent reviewers. The 97.0% “raw agreement” reported in the main paper denotes this unanimous no-blocking-issue rate, not a chance-corrected inter-rater reliability coefficient. A subsequent asset-level validation, conducted separately from response-quality voting, removed 17 otherwise acceptable pairs whose source images did not meet the final clarity threshold. The resulting 953 pairs constitute the reported 95.3% accepted set."
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "p",
+   "en": "For ContextCanvas, four PhD-level researchers rechecked and adjudicated the candidate cases. A case was retained only when all seven criteria held: aesthetic centrality requires judgment of the image as a visual choice; context dependence requires the use, audience, or convention to affect the decision; visual necessity prevents reduction to text-only factual recall; decisive evidence requires the cultural, historical, narrative, or functional evidence to materially affect the answer; scenario naturalness requires a plausible design or communication use; answerability requires a uniquely supportable closed-form label; and anti-shortcut validity prevents wording, option length, or label priors from exposing the answer. Figure S3 supplies boundary examples for target difficulty, visual necessity, and answerability."
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "h4",
+   "en": "S2.3.2 Critique Evaluation"
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "p",
+   "en": "We use BLEU (Papineni et al., 2002), ROUGE-L (Lin, 2004), and METEOR (Banerjee and Lavie, 2005) for lexical overlap; BERT-F1 (Zhang et al., 2020) and SBERT cosine similarity (Reimers and Gurevych, 2019) for token- and sentence-level semantic similarity; and a CLIP image–text cosine score (Hessel et al., 2021) for image relevance. Let ⟦SLOT_49⟧ and ⟦SLOT_50⟧ denote the generated and reference critiques for item ⟦SLOT_51⟧."
+  },
+  {
+   "id": "b0221",
+   "t": "text",
+   "w": "p",
+   "en": "BLEU is SacreBLEU corpus BLEU (Post, 2018) with maximum order four and effective_order=True. With clipped corpus precision ⟦SLOT_52⟧ and brevity penalty ⟦SLOT_53⟧ if ⟦SLOT_54⟧, otherwise ⟦SLOT_55⟧, and SacreBLEU’s default exponential smoothing for zero higher-order counts, the percentage-form value in the main table is"
+  },
+  {
+   "id": "b0222",
+   "t": "keep",
+   "w": "table",
+   "en": "BLEU = 100 ​ BP ​ exp ⁡ ( 1 4 ​ ∑ n = 1 4 log ⁡ p n ) . \\mathrm{BLEU}=100\\,\\mathrm{BP}\\exp\\!\\left(\\frac{1}{4}\\sum_{n=1}^{4}\\log p_{n}\\right). (S1)"
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "p",
+   "en": "The evaluation output stores this value divided by 100; the paper multiplies it by 100 for presentation. ROUGE-L is computed per item with stemming enabled. If ⟦SLOT_56⟧ is the longest-common-subsequence length, ⟦SLOT_57⟧, and ⟦SLOT_58⟧, then"
+  },
+  {
+   "id": "b0224",
+   "t": "keep",
+   "w": "table",
+   "en": "ROUGE ​ - ​ L = 1 N ​ ∑ i 2 ​ P i ​ R i P i + R i , \\mathrm{ROUGE\\mbox{-}L}=\\frac{1}{N}\\sum_{i}\\frac{2P_{i}R_{i}}{P_{i}+R_{i}}, (S2)"
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "p",
+   "en": "with a zero contribution when the denominator is zero."
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "p",
+   "en": "METEOR uses NLTK’s default English matcher (Bird et al., 2009) on whitespace-tokenized texts. For the matcher-selected unigram alignment with ⟦SLOT_59⟧ matches and ⟦SLOT_60⟧ chunks,"
+  },
+  {
+   "id": "b0227",
+   "t": "keep",
+   "w": "table",
+   "en": "P i \\displaystyle P_{i} = m i / | h i | , \\displaystyle=m_{i}/|h_{i}|, (S3) R i \\displaystyle R_{i} = m i / | r i | , \\displaystyle=m_{i}/|r_{i}|, (S4) F i \\displaystyle F_{i} = P i ​ R i 0.9 ​ P i + "
+  },
+  {
+   "id": "b0228",
+   "t": "text",
+   "w": "p",
+   "en": "Items with no alignment contribute zero. The implementation also inherits NLTK’s exact, stemmed, and WordNet-based synonym matching behavior."
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "p",
+   "en": "BERTScore uses microsoft/deberta-base-mnli, no IDF weighting, and no baseline rescaling. For contextual token embeddings, its item-level precision and recall are the mean maximum cosine matches from hypothesis to reference and reference to hypothesis; BERT-F1 is the corpus mean of ⟦SLOT_61⟧. SBERT-Cos uses sentence-transformers/all-mpnet-base-v2; masked mean pooling over the last hidden state is ⟦SLOT_62⟧, followed by ⟦SLOT_63⟧ normalization and"
+  },
+  {
+   "id": "b0230",
+   "t": "keep",
+   "w": "table",
+   "en": "SBERT ​ - ​ Cos = 1 N ​ ∑ i e ​ ( h i ) ⊤ ​ e ​ ( r i ) . \\mathrm{SBERT\\mbox{-}Cos}=\\frac{1}{N}\\sum_{i}e(h_{i})^{\\top}e(r_{i}). (S8)"
+  },
+  {
+   "id": "b0231",
+   "t": "text",
+   "w": "p",
+   "en": "Both text encoders truncate at 512 tokens."
+  },
+  {
+   "id": "b0232",
+   "t": "text",
+   "w": "p",
+   "en": "The reported CLIP value uses openai/clip-vit-base-patch32. For normalized CLIP text and image features ⟦SLOT_64⟧ and ⟦SLOT_65⟧,"
+  },
+  {
+   "id": "b0233",
+   "t": "keep",
+   "w": "table",
+   "en": "CLIPCos = 1 N ​ ∑ i t ​ ( h i ) ⊤ ​ v ​ ( I i ) . \\mathrm{CLIPCos}=\\frac{1}{N}\\sum_{i}t(h_{i})^{\\top}v(I_{i}). (S9)"
+  },
+  {
+   "id": "b0234",
+   "t": "text",
+   "w": "p",
+   "en": "This implementation is the raw mean cosine: it does not apply the ⟦SLOT_66⟧ truncation or ⟦SLOT_67⟧ scaling sometimes used by the named CLIPScore metric. We retain the main-table column name for continuity but make the operational definition explicit here. All six metrics are interpreted jointly because no single reference exhausts the valid analyses of an image."
+  },
+  {
+   "id": "b0235",
+   "t": "text",
+   "w": "p",
+   "en": "For response-level statistics, text is lowercased and tokenized with the regular expression [a-z]+; lightweight Markdown headings and markers are removed before dimension matching. For generated response ⟦SLOT_68⟧, average length and explicit dimension coverage are"
+  },
+  {
+   "id": "b0236",
+   "t": "keep",
+   "w": "table",
+   "en": "AvgLen \\displaystyle\\mathrm{AvgLen} = 1 N ​ ∑ i = 1 N | words ⁡ ( r ^ i ) | , \\displaystyle=\\frac{1}{N}\\sum_{i=1}^{N}|\\operatorname{words}(\\hat{r}_{i})|, (S10) DimHits \\displaystyle\\mathrm{DimHits} = "
+  },
+  {
+   "id": "b0237",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_69⟧ only when response ⟦SLOT_70⟧ explicitly addresses dimension ⟦SLOT_71⟧. Top-3 Dimensions are those with the largest corpus-level ⟦SLOT_72⟧. The ten categories and their fixed lexical/phrase triggers are Content, Composition, Color, Lighting, Brushstroke/Texture, Style, Emotion, Technique, Symbolism, and Visual Appeal. If ⟦SLOT_73⟧ counts all matched lexical/phrase occurrences and ⟦SLOT_74⟧ and ⟦SLOT_75⟧ are the prompt-focused and response-matched dimension sets, respectively, then"
+  },
+  {
+   "id": "b0238",
+   "t": "keep",
+   "w": "table",
+   "en": "Density \\displaystyle\\mathrm{Density} = 100 ​ ∑ i q ⁡ ( r ^ i ) ∑ i | words ⁡ ( r ^ i ) | , \\displaystyle=100\\frac{\\sum_{i}q(\\hat{r}_{i})}{\\sum_{i}|\\operatorname{words}(\\hat{r}_{i})|}, (S12) PromptAli"
+  },
+  {
+   "id": "b0239",
+   "t": "text",
+   "w": "p",
+   "en": "Thus density counts repeated mentions rather than merely distinct categories. Generic Top-3 excludes prompts in which the current question explicitly names an aesthetic dimension; few-shot examples are removed before focus detection. These lexical diagnostics measure verbosity, breadth, and controllability rather than correctness, relevance, or grounding."
+  },
+  {
+   "id": "b0240",
+   "t": "text",
+   "w": "p",
+   "en": "The human critique-quality evaluation applies four binary criteria: visual grounding, aesthetic specificity, criterion appropriateness, and analytical usefulness. For critique ⟦SLOT_76⟧, evaluator ⟦SLOT_77⟧, and criterion ⟦SLOT_78⟧, the item-level score is"
+  },
+  {
+   "id": "b0241",
+   "t": "keep",
+   "w": "table",
+   "en": "H i ​ j = 1 + ∑ k = 1 4 b i ​ j ​ k , b i ​ j ​ k ∈ { 0 , 1 } . H_{ij}=1+\\sum_{k=1}^{4}b_{ijk},\\qquad b_{ijk}\\in\\{0,1\\}. (S14)"
+  },
+  {
+   "id": "b0242",
+   "t": "text",
+   "w": "p",
+   "en": "With two evaluators, Table 4 reports"
+  },
+  {
+   "id": "b0243",
+   "t": "keep",
+   "w": "table",
+   "en": "HumanScore = 1 2 ​ N ​ ∑ i = 1 N ∑ j = 1 2 H i ​ j . \\mathrm{HumanScore}=\\frac{1}{2N}\\sum_{i=1}^{N}\\sum_{j=1}^{2}H_{ij}. (S15)"
+  },
+  {
+   "id": "b0244",
+   "t": "text",
+   "w": "p",
+   "en": "The MLLM judge assigns four criterion-specific scores and a fifth holistic overall_quality score, each from 1 to 5. Table 4 in the main paper reports the mean of the fifth score:"
+  },
+  {
+   "id": "b0245",
+   "t": "keep",
+   "w": "table",
+   "en": "MLLMScore = 1 N ​ ∑ i = 1 N s i overall . \\mathrm{MLLMScore}=\\frac{1}{N}\\sum_{i=1}^{N}s_{i}^{\\mathrm{overall}}. (S16)"
+  },
+  {
+   "id": "b0246",
+   "t": "text",
+   "w": "p",
+   "en": "The human and MLLM protocols for the 100-case critique-metric validity analysis, including anonymization, response permutation, rating criteria, and score aggregation, are specified in Section S2.2.3."
+  },
+  {
+   "id": "b0247",
+   "t": "text",
+   "w": "h4",
+   "en": "S2.3.3 Contextual-Suitability Evaluation"
+  },
+  {
+   "id": "b0248",
+   "t": "text",
+   "w": "p",
+   "en": "Exact-match accuracy uses all 301 cases:"
+  },
+  {
+   "id": "b0249",
+   "t": "keep",
+   "w": "table",
+   "en": "Accuracy = 1 301 ∑ i = 1 301 𝟏 [ y ^ i = y i ] . \\mathrm{Accuracy}=\\frac{1}{301}\\sum_{i=1}^{301}\\mathbf{1}[\\hat{y}_{i}=y_{i}]. (S17)"
+  },
+  {
+   "id": "b0250",
+   "t": "text",
+   "w": "p",
+   "en": "Macro-F1 and predicted Yes Rate are computed on the 291 two-option cases; the 10 three-option cases contribute only to Accuracy. The scorer operates on option IDs A and B. In 287 cases these are explicitly Yes and No; four cases use context-specific binary alternatives and retain the same A/B class mapping. The paper therefore reports A as the canonical Yes/target-aligned class and B as No/non-target class. For class ⟦SLOT_79⟧,"
+  },
+  {
+   "id": "b0251",
+   "t": "keep",
+   "w": "table",
+   "en": "P k = T ​ P k T ​ P k + F ​ P k , R k = T ​ P k T ​ P k + F ​ N k , F ​ 1 k = 2 ​ P k ​ R k P k + R k , P_{k}=\\frac{TP_{k}}{TP_{k}+FP_{k}},\\quad R_{k}=\\frac{TP_{k}}{TP_{k}+FN_{k}},\\quad F1_{k}=\\frac{2"
+  },
+  {
+   "id": "b0252",
+   "t": "text",
+   "w": "p",
+   "en": "and"
+  },
+  {
+   "id": "b0253",
+   "t": "keep",
+   "w": "table",
+   "en": "MacroF1 = F ​ 1 A + F ​ 1 B 2 , YesRate = 1 291 ∑ i 𝟏 [ y ^ i = A ] . \\mathrm{MacroF1}=\\frac{F1_{A}+F1_{B}}{2},\\qquad\\mathrm{YesRate}=\\frac{1}{291}\\sum_{i}\\mathbf{1}[\\hat{y}_{i}=A]. (S19)"
+  },
+  {
+   "id": "b0254",
+   "t": "text",
+   "w": "p",
+   "en": "The gold Yes Rate is 38.14%. Missing, conflicting, ambiguous, and unparseable answers are incorrect."
+  },
+  {
+   "id": "b0255",
+   "t": "text",
+   "w": "p",
+   "en": "Evidence-Grounded Accuracy requires a correct label, identification of the decisive visible cue or a warranted equivalent, and a correct link from that cue to the stated use:"
+  },
+  {
+   "id": "b0256",
+   "t": "keep",
+   "w": "table",
+   "en": "EGA = 1 N ​ ∑ i 𝟏 ​ [ correct i ∧ grounded i ∧ contextLink i ] . \\mathrm{EGA}=\\frac{1}{N}\\sum_{i}\\mathbf{1}[\\mathrm{correct}_{i}\\land\\mathrm{grounded}_{i}\\land\\mathrm{contextLink}_{i}]. (S20)"
+  },
+  {
+   "id": "b0257",
+   "t": "text",
+   "w": "p",
+   "en": "Among correct predictions, the unsupported rate is"
+  },
+  {
+   "id": "b0258",
+   "t": "keep",
+   "w": "table",
+   "en": "Unsupported = 100 × # ​ { correct ​ but ​ not ​ grounded } # ​ { correct } . \\mathrm{Unsupported}=100\\times\\frac{\\#\\{\\mathrm{correct\\ but\\ not\\ grounded}\\}}{\\#\\{\\mathrm{correct}\\}}. (S21)"
+  },
+  {
+   "id": "b0259",
+   "t": "text",
+   "w": "p",
+   "en": "For the 36 matched counterfactual pairs, Net Correct Update is"
+  },
+  {
+   "id": "b0260",
+   "t": "keep",
+   "w": "table",
+   "en": "NCU = 100 × N correct ​ change − N reverse ​ change 36 . \\mathrm{NCU}=100\\times\\frac{N_{\\mathrm{correct\\ change}}-N_{\\mathrm{reverse\\ change}}}{36}. (S22)"
+  },
+  {
+   "id": "b0261",
+   "t": "text",
+   "w": "p",
+   "en": "NCU is reported together with correct, reverse, unchanged-correct, and unchanged-wrong counts and original/edit accuracies; it is not interpreted as a standalone causal score. Bootstrap 95% confidence intervals (Efron and Tibshirani, 1993) are used for accuracy and diagnostic rates. Base–specialist comparisons use exact two-sided McNemar tests (McNemar, 1947) on paired predictions with Bonferroni correction (Dunn, 1961) across the four reported pairs. Descriptive case studies receive no significance claim."
+  },
+  {
+   "id": "b0262",
+   "t": "text",
+   "w": "h3",
+   "en": "S2.4 Implementation Details"
+  },
+  {
+   "id": "b0263",
+   "t": "text",
+   "w": "h4",
+   "en": "S2.4.1 Model and Inference Configuration"
+  },
+  {
+   "id": "b0264",
+   "t": "text",
+   "w": "p",
+   "en": "All models receive the same task content—the image(s), record-level question or scenario, and fixed options where applicable—without web search, retrieval, reverse-image search, metadata access, or auxiliary recognition tools. Images are converted to RGB and resized or padded to ⟦SLOT_80⟧ before being serialized with each checkpoint’s native multimodal chat template. This model-specific serialization does not alter the task content."
+  },
+  {
+   "id": "b0265",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluation uses deterministic decoding whenever supported. Local runs decode greedily with at most 256 new tokens. Closed-API runs use temperature 0, four concurrent requests, a 180-second timeout, and at most three transport retries. The ContextCanvas evaluator permits up to 800 output tokens for GPT-5.2 and Gemini 3.1 Pro and 500 for Qwen3.7-Plus. For the single paired-image item, checkpoints accepting only one image tensor receive a labeled horizontal contact sheet."
+  },
+  {
+   "id": "b0266",
+   "t": "text",
+   "w": "p",
+   "en": "Table S3 summarizes the CritiqueCanvas inference configurations used in evaluation."
+  },
+  {
+   "id": "b0267",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table S3: CritiqueCanvas inference configurations. “Native” means the checkpoint’s own processor and chat template after the common ⟦SLOT_81⟧ RGB resize."
+  },
+  {
+   "id": "b0268",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Requested model/checkpoint Precision Generation Adapter details GPT-5.2 openai/gpt-5.2 API T = 0 T=0 , 256 OpenRouter; reasoning excluded Gemini 3.1 Pro google/gemini-3.1-pro-preview API T = 0 T"
+  },
+  {
+   "id": "b0269",
+   "t": "text",
+   "w": "h4",
+   "en": "S2.4.2 Fine-Tuning Configuration"
+  },
+  {
+   "id": "b0270",
+   "t": "text",
+   "w": "p",
+   "en": "Qwen3-VL-FT is adapted on CritiqueCanvas and evaluated on critique generation in the main paper. At evaluation time, the resulting PEFT adapter is loaded onto Qwen3-VL-8B-Instruct without merging. Evaluation uses bfloat16 precision and SDPA, applies the base processor’s multimodal chat template to the image and record question, resizes the image to ⟦SLOT_82⟧, and decodes greedily for at most 256 new tokens."
+  },
+  {
+   "id": "b0271",
+   "t": "text",
+   "w": "h4",
+   "en": "S2.4.3 Output Processing and Aggregation"
+  },
+  {
+   "id": "b0272",
+   "t": "text",
+   "w": "p",
+   "en": "The ContextCanvas parser first accepts schema-valid JSON and verifies that the answer belongs to the supplied option IDs. Narrow compatibility fallbacks accept one unambiguous answer field, a single leading option ID, or an exact Yes/No string for specialist outputs. Rationales and confidence never change the grade. The evaluator permits at most four transport attempts; retries recover a missing transport or model response and never allow revision of a valid answer."
+  },
+  {
+   "id": "b0273",
+   "t": "text",
+   "w": "p",
+   "en": "The evaluation pipeline performs answer parsing and computes Accuracy, Macro-F1, Yes Rate, counterfactual directional counts, EGA, and the reported critique metrics from prediction files. Its output schema and aggregation rules are specified above."
+  },
+  {
+   "id": "b0274",
+   "t": "text",
+   "w": "h2",
+   "en": "S3 Additional Analyses and Insights"
+  },
+  {
+   "id": "b0275",
+   "t": "text",
+   "w": "p",
+   "en": "This section complements the main tables with response-level evidence and paired diagnostics. We first examine acceptance tendency and decisive-cue grounding, then combine visual counterfactuals, modality decomposition, and base–specialist comparisons to distinguish surface aesthetic fluency, visual evidence extraction, and context-sensitive judgment."
+  },
+  {
+   "id": "b0276",
+   "t": "text",
+   "w": "h3",
+   "en": "S3.1 Model-Output Analysis"
+  },
+  {
+   "id": "b0277",
+   "t": "text",
+   "w": "h4",
+   "en": "S3.1.1 Aggregate Behavioral Patterns"
+  },
+  {
+   "id": "b0278",
+   "t": "text",
+   "w": "p",
+   "en": "The main ContextCanvas table shows differences not only in exact-match accuracy but also in the direction of errors. Against a 38.14% gold Yes rate, the four aesthetic-specific models predict Yes for 59.11–76.98% of the 291 two-option cases. The strongest closed-source models instead predict Yes for 20.96–30.24% of cases. These rates expose a systematic difference in decision tendency: aesthetic specialists more often accept images whose formal or surface qualities appear plausible despite a contextual mismatch."
+  },
+  {
+   "id": "b0279",
+   "t": "text",
+   "w": "p",
+   "en": "Table S4 expands the main results into class-specific F1. The strongest closed-source models remain effective on both labels, whereas several open-weight and aesthetic-specific models have very low No-class F1. Q-SiT is the clearest example: its 76.98% Yes rate is accompanied by only 4.05 No-class F1. Conversely, GPT-5.2 is conservative, with a 20.96% Yes rate and a much larger gap between Yes- and No-class F1. Thus similar overall scores can conceal different failure profiles."
+  },
+  {
+   "id": "b0280",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table S4: Class-specific behavior on the 291 two-option ContextCanvas cases. All values are percentages. The gold Yes rate is 38.14%."
+  },
+  {
+   "id": "b0281",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Yes F1 No F1 Pred. Yes Claude Opus 5 87.44 93.47 30.24 Gemini 3.1 Pro 77.01 89.11 26.12 GPT-5.5 73.30 86.96 27.49 Claude Opus 4.6 56.84 79.08 27.15 GPT-5.2 50.00 79.02 20.96 GLM-5V-Turbo 47.06 6"
+  },
+  {
+   "id": "b0282",
+   "t": "text",
+   "w": "p",
+   "en": "Prediction tendency does not by itself reveal whether the rationale uses the decisive image evidence. On the 100-case grounding audit, Gemini retains 79 of 83 correct decisions under EGA, while GPT-5.2 retains 55 of 65 and Qwen3.7-Plus retains 31 of 42. ArtiMuse falls from 21 correct labels to only three answers that are also grounded and correctly linked to the use scenario. The Accuracy-to-EGA reduction therefore complements predicted Yes rate by separating label tendency from grounded success."
+  },
+  {
+   "id": "b0283",
+   "t": "text",
+   "w": "h4",
+   "en": "S3.1.2 Cross-Model Case Studies"
+  },
+  {
+   "id": "b0284",
+   "t": "text",
+   "w": "p",
+   "en": "Cultural-aesthetic alignment. Figure S4 compares five models on HB208. The image has an attractive moon-centered composition, but its characters and visual language are tied to Japanese Touhou fan culture rather than an unqualified Chinese Mid-Autumn identity. Gemini 3.1 Pro and GPT-5.2 reject the image. Qwen3.7-Plus instead maps the full moon, tea, bamboo, and rabbits directly to Chinese Mid-Autumn symbolism. ArtiMuse repeats the positive formal framing and accepts it. ArtQuant-APDD also predicts Yes, accompanied only by the title-like phrase “A Serene Moment in a Chinese Landscape,” which misidentifies the cultural setting. The disagreement is therefore not whether the image is appealing, but whether that aesthetic reading is culturally valid for the stated use."
+  },
+  {
+   "id": "b0285",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0286",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure S4: Cross-model outputs for ContextCanvas case HB208 (gold: No). GPT-5.2 and Gemini 3.1 Pro reject the image, whereas Qwen3.7-Plus, ArtiMuse, and ArtQuant-APDD accept it. The displayed responses illustrate whether models recognize the culturally specific visual identity rather than relying only on surface festival cues."
+  },
+  {
+   "id": "b0287",
+   "t": "text",
+   "w": "p",
+   "en": "Aesthetic valence versus communicative function. Figure S5 compares five models on HB181, which tests whether models can distinguish pleasant appearance from effective visual rhetoric. Several models reject the painting because its rough water, dark tonal range, tilted boat, and forceful diagonal net produce instability and tension rather than a conventionally uplifting image. Yet these formal qualities intensify the visible coordination of the two workers: their aligned bodies and shared control of the net make cooperation legible precisely under pressure. The case shows that contextual aesthetic suitability may depend on how composition, tone, and visual tension serve a communicative purpose, rather than on positive surface affect alone."
+  },
+  {
+   "id": "b0288",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0289",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure S5: ArtQuant-APDD returns a bare Yes response without an explanatory rationale;"
+  },
+  {
+   "id": "b0290",
+   "t": "text",
+   "w": "p",
+   "en": "Critique quality. Figure S6 supplies a complementary generation-side comparison. Valid critiques of the same image may emphasize different visual evidence or aesthetic criteria, so low overlap with one reference does not necessarily imply low practical quality. The three selected cases contrast grounded image-specific analysis with hallucinated subjects, medium-inappropriate criteria, and fluent but generic interpretations."
+  },
+  {
+   "id": "b0291",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0292",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure S6: Three CritiqueCanvas cases compared across five models. From top to bottom: CC001 (illustration), CC003 (photograph), and CC002 (painting). The panel preserves each prompt and representative output excerpt, exposing differences in visual grounding, medium specificity, and analytical focus."
+  },
+  {
+   "id": "b0293",
+   "t": "text",
+   "w": "h4",
+   "en": "S3.1.3 Failure Modes and Representative Outputs"
+  },
+  {
+   "id": "b0294",
+   "t": "text",
+   "w": "p",
+   "en": "The qualitative outputs instantiate the four failure levels introduced in the main paper. Fluent but visually ungrounded critiques invent objects or properties absent from the image. Domain-blind quality priors apply a photographic defect vocabulary, such as blur or noise, to intentional painterly texture. Surface aesthetics over communicative fit treats attractive or unattractive affect as sufficient evidence of suitability. Stylistic plausibility over contextual fit accepts an image because its palette, composition, or period atmosphere appears coherent while overlooking the identity, convention, or narrative that determines the use."
+  },
+  {
+   "id": "b0295",
+   "t": "text",
+   "w": "p",
+   "en": "The ContextCanvas casebook further illustrates three recurrent subtypes without claiming corpus-wide frequencies. In cultural-neighbor substitution, a nearby visual convention is mapped to the wrong occasion or identity (HB208, HB014). In aesthetic-halo errors, refinement or spectacle is treated as proof of contextual appropriateness (HB037, HB186). In salient-composition myopia, a dominant formal cue suppresses a smaller but decisive action or relation (HB106, HB181). These labels summarize reviewed examples; a frequency claim would require an independent coding pass over all 301 cases."
+  },
+  {
+   "id": "b0296",
+   "t": "text",
+   "w": "p",
+   "en": "Figure S7 distinguishes a correct grounded response, a correct but unsupported label, a fluent but incorrect rationale, and a free-form response illustrating output-format sensitivity."
+  },
+  {
+   "id": "b0297",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0298",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure S7: Response-level scoring diagnostics on E004 (top) and HB208 (bottom). E004 contrasts a grounded GPT-5.2 rationale with an unsupported ArtQuant-APDD label. HB208 contrasts fluent but incorrect Qwen3.7-Plus reasoning with an ArtQuant-APDD free-form response that illustrates output-format and parser sensitivity."
+  },
+  {
+   "id": "b0299",
+   "t": "text",
+   "w": "h3",
+   "en": "S3.2 Extended and Robustness Analyses"
+  },
+  {
+   "id": "b0300",
+   "t": "text",
+   "w": "h4",
+   "en": "S3.2.1 Extended Main Results"
+  },
+  {
+   "id": "b0301",
+   "t": "text",
+   "w": "p",
+   "en": "The binary error decomposition in Table S4 explains why Macro-F1 is lower than exact-match accuracy for many models: the gold set is No-majority, while several models disproportionately predict Yes. In particular, matching the marginal gold Yes rate is not sufficient—Grok’s 37.80% predicted Yes rate is close to 38.14%, but its Macro-F1 is only 39.09%. Contextual competence depends on instance-level alignment rather than calibration of the marginal label count."
+  },
+  {
+   "id": "b0302",
+   "t": "text",
+   "w": "p",
+   "en": "The main paper also promises response-level statistics beyond reference-matching metrics. Table S5 reports output length, average dimension coverage, dimension density, adherence to dimension-focused prompts, and the most frequent dimensions in otherwise generic critiques. As defined in Section S2.3, these are descriptive measures of response form and explicit coverage rather than direct measures of correctness or critique quality."
+  },
+  {
+   "id": "b0303",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table S5: Generation style and aesthetic-dimension coverage on CritiqueCanvas. Len/Ref is average output length relative to the reference; DimHits is the average number of explicitly addressed dimensions; aesthetic-term density is the number of matched lexical/phrase occurrences per 100 words. Prompt Align requires every dimension detected in a focused prompt to be detected in the response. Generic Top 3 excludes prompts that explicitly request a dimension."
+  },
+  {
+   "id": "b0304",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Length Len/Ref DimHits Density Prompt Align Generic Top 3 Dimensions Closed-source Models Gemini 3.1 Pro 166.58 1.241 6.53 11.87 90.8% Composition, Emotion, Lighting GPT-5.2 141.52 1.054 5.71 8."
+  },
+  {
+   "id": "b0305",
+   "t": "text",
+   "w": "p",
+   "en": "The statistics expose three complementary patterns. First, response length is not a proxy for useful aesthetic analysis: Qwen3-VL produces the longest critiques (199.07 words under the evaluation tokenizer), whereas UniPercept is substantially shorter (102.12) but has the highest dimension density (13.26). Second, breadth and controllability vary independently. Gemini obtains the broadest dimension coverage (6.53 dimensions), while Qwen3-VL has the strongest focused-prompt alignment (95.2%); by contrast, ArtQuant and AesExpert follow such prompts much less reliably (66.7% and 34.4%). Third, generic critiques concentrate heavily on composition, content, and emotion across model families. Lighting, color, and brushstrokes appear among the top dimensions for only a few models, while technique, symbolism, and style never enter the generic top three. Thus, models differ markedly in verbosity and response concentration, but their open-ended critiques still rely on a relatively narrow set of salient aesthetic concepts. These patterns complement—rather than replace—the direct quality audit below, since greater length or dimension coverage does not establish that the corresponding claims are relevant, correct, or visually grounded."
+  },
+  {
+   "id": "b0306",
+   "t": "text",
+   "w": "h4",
+   "en": "S3.2.2 Critique Metric Validity"
+  },
+  {
+   "id": "b0307",
+   "t": "text",
+   "w": "p",
+   "en": "Using the 100-case audit protocol described in Section S2.3.2, Table S6 reproduces the aggregate direct ratings reported in the main paper."
+  },
+  {
+   "id": "b0308",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table S6: Aggregate human and MLLM ratings of critique quality on 100 randomly sampled CritiqueCanvas cases."
+  },
+  {
+   "id": "b0309",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Human MLLM judge GPT-5.2 3.9 5.0 Gemini 3.1 Pro 4.1 4.5 Qwen3-VL-FT 2.5 2.5 ArtiMuse 2.6 2.6 ArtQuant-APDD 2.3 2.2"
+  },
+  {
+   "id": "b0310",
+   "t": "text",
+   "w": "p",
+   "en": "The human ordering is consistent with the complementary judge at the group level: GPT-5.2 and Gemini receive higher direct-quality ratings than the adapted or aesthetic-specific models, although they do not dominate all reference-similarity metrics. This supports a narrow conclusion. Lexical and semantic reference alignment captures similarity to one expert answer but only partially reflects grounding, image specificity, criterion choice, and practical usefulness when multiple analyses are defensible. It does not show that BLEU, SBERT, or CLIPScore is generally invalid. Figure S6 provides illustrative examples of this mismatch: critiques with lower reference similarity can remain visually grounded and analytically useful, whereas closer stylistic alignment does not necessarily prevent generic analysis or unsupported visual claims."
+  },
+  {
+   "id": "b0311",
+   "t": "text",
+   "w": "h4",
+   "en": "S3.2.3 Counterfactual and Grounding Analyses"
+  },
+  {
+   "id": "b0312",
+   "t": "text",
+   "w": "h5",
+   "en": "Visual counterfactual sensitivity."
+  },
+  {
+   "id": "b0313",
+   "t": "text",
+   "w": "p",
+   "en": "Controlled visual counterfactuals can diagnose reliance on decisive image evidence (Chen et al., 2020). We construct 36 matched No-to-Yes pairs by replacing a decisive incompatible visual cue with a scenario-compatible alternative while keeping the use scenario fixed."
+  },
+  {
+   "id": "b0314",
+   "t": "text",
+   "w": "p",
+   "en": "Table S7 reports original and edited accuracy, Pair Accuracy, directional updates, and the NCU defined in Section S2.3.3. Pair Accuracy requires both the incompatible original and compatible edit to be classified correctly."
+  },
+  {
+   "id": "b0315",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table S7: Counterfactual audit on 36 pairs. Full and Orig. are accuracies on the complete benchmark and selected incompatible originals; Edit is accuracy on compatible edits. Pair requires both labels to be correct. C/R are correct and reverse directional updates. NCU confidence intervals are paired bootstrap intervals."
+  },
+  {
+   "id": "b0316",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Full Orig. Edit Pair C/R NCU 95% CI GPT-5.2 71.43 72.22 58.33 36.11 13/2 30.56 [11.11, 50.00] Gemini 3.1 Pro 85.71 86.11 38.89 27.78 10/1 25.00 [8.33, 41.67] Qwen3.7-Plus 51.83 52.78 75.00 30.56"
+  },
+  {
+   "id": "b0317",
+   "t": "text",
+   "w": "p",
+   "en": "The three general-purpose models occupy a narrow 25.00–30.56 NCU range despite substantially different original accuracy. ArtQuant changes its decision on only five pairs, with three correct and two reverse updates, producing an NCU of 2.78 whose interval includes zero. ArtiMuse makes six correct and no reverse updates, but predicts Yes for 64 of the 72 original/edit images. Its 97.22% edited accuracy therefore largely reflects an acceptance tendency; Pair Accuracy and NCU provide the more discriminative diagnosis. The mean NCU is 27.78 for the three general-purpose models and 9.72 for the two specialists."
+  },
+  {
+   "id": "b0318",
+   "t": "text",
+   "w": "p",
+   "en": "The rationale audit additionally reveals source-scene anchoring: some responses repeat a canonical narrative even after its supporting visual cue is removed."
+  },
+  {
+   "id": "b0319",
+   "t": "text",
+   "w": "p",
+   "en": "Figure S8 presents representative interventions with each model’s before–after prediction."
+  },
+  {
+   "id": "b0320",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0321",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure S8: Four No-to-Yes counterfactual interventions. From left to right: CF20/HB163 (coercion to reassurance), CF18/HB084 (isolation to inclusion), CF28/E108 (incomplete to completed journey), and CF35/HB075 (incompatibility to friendliness). Each column shows the original and edited image, the targeted intervention, and each model’s before–after prediction; colored boxes indicate agreement or disagreement with the corresponding gold label."
+  },
+  {
+   "id": "b0322",
+   "t": "text",
+   "w": "h5",
+   "en": "Evidence-grounded accuracy."
+  },
+  {
+   "id": "b0323",
+   "t": "text",
+   "w": "p",
+   "en": "Using the EGA and Unsupported definitions in Section S2.3.3, Table S8 expands the 100-case audit."
+  },
+  {
+   "id": "b0324",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table S8: Decisive-cue grounding on 100 ContextCanvas cases."
+  },
+  {
+   "id": "b0325",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Accuracy EGA Unsupported (%) Gemini 3.1 Pro 83 79 4.82 GPT-5.2 65 55 15.38 Qwen3.7-Plus 42 31 26.19 ArtiMuse 21 3 85.71 ArtQuant-APDD 27 0 100.00"
+  },
+  {
+   "id": "b0326",
+   "t": "text",
+   "w": "p",
+   "en": "ArtiMuse is the cleaner specialist diagnosis because it always generates a substantive rationale: its fall from 21 correct labels to 3 grounded correct answers cannot be attributed to missing explanation text. Its prose is often fluent and aesthetically framed, but it seldom identifies and correctly binds the culture- or context-bearing cue. The audit therefore addresses the concern that binary accuracy alone may reward lucky labels or unsupported agreement."
+  },
+  {
+   "id": "b0327",
+   "t": "text",
+   "w": "h5",
+   "en": "Perception–reasoning decomposition."
+  },
+  {
+   "id": "b0328",
+   "t": "text",
+   "w": "p",
+   "en": "Following the view of captions as task-facing visual surrogates (Yang et al., 2026a), Table S9 evaluates a 100-case diagnostic subset distinct from the 100 cases used for the evidence-grounding audit. Four conditions are compared: question and options only (Text); an identity- and verdict-free description of visible content (Neutral); the same description with the decisive visible cue made explicit (Evidence); and the original image (Image)."
+  },
+  {
+   "id": "b0329",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table S9: Accuracy under different visual-information conditions on 100 ContextCanvas cases."
+  },
+  {
+   "id": "b0330",
+   "t": "keep",
+   "w": "table",
+   "en": "Model Text Neutral Evidence Image GPT-5.2 45 77 84 71 Gemini 3.1 Pro 58 86 90 86 Qwen3.7-Plus 44 78 88 52 ArtQuant-APDD 16 20 19 27 ArtiMuse 16 32 47 20"
+  },
+  {
+   "id": "b0331",
+   "t": "text",
+   "w": "p",
+   "en": "Text-only performance does not exceed the 61% majority baseline. Supplying a neutral visual description improves the three general-purpose models by 28–34 points; for each model, the paired exact two-sided McNemar test gives ⟦SLOT_83⟧. This confirms that the judgments depend materially on visual content. The modality gap is model-specific: Gemini matches its image accuracy from a neutral description, whereas Qwen rises from 52% with images to 78% with neutral descriptions and 88% when the decisive cue is explicit. ArtiMuse is partly rescued by explicit evidence but remains far below the general-purpose models; ArtQuant remains weak across all conditions. Together with the counterfactual and EGA results, these conditions provide a diagnostic of whether errors are more consistent with limited visual-evidence extraction or with failure to use explicitly supplied contextual evidence; they are not a definitive causal decomposition."
+  },
+  {
+   "id": "b0332",
+   "t": "text",
+   "w": "h4",
+   "en": "S3.2.4 Base-to-Specialist Transfer"
+  },
+  {
+   "id": "b0333",
+   "t": "text",
+   "w": "p",
+   "en": "Table S10 compares four aesthetic specialists with the base checkpoint identified by their implementation and model documentation. Because every pair is evaluated on the same 301 cases, we report the two discordant counts, a paired bootstrap interval for the accuracy change, an exact two-sided McNemar test, and the Bonferroni-adjusted value across four lineages."
+  },
+  {
+   "id": "b0334",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table S10: Paired base-to-specialist ContextCanvas transfer. ⟦SLOT_84⟧ counts cases correct only for the base and ⟦SLOT_85⟧ cases correct only for the specialist. Raw McNemar ⟦SLOT_86⟧-values and Bonferroni-adjusted values are both shown."
+  },
+  {
+   "id": "b0335",
+   "t": "keep",
+   "w": "table",
+   "en": "Base → \\rightarrow specialist Base Spec. Δ \\Delta b / c b/c 95% CI p / p adj p/p_{\\mathrm{adj}} mPLUG-Owl2 → \\rightarrow ArtQuant 20.27 29.57 +9.30 29/57 [3.32, 15.28] .0034/.0134 InternVL3-8B → \\righ"
+  },
+  {
+   "id": "b0336",
+   "t": "text",
+   "w": "p",
+   "en": "Specialization has a heterogeneous effect. ArtQuant and AesExpert significantly improve over their corresponding bases after correction, while ArtiMuse and Q-SiT show no measurable ContextCanvas gain. Thus, specialization does not produce consistent gains in contextual judgment."
+  },
+  {
+   "id": "b0337",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0338",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "An et al. (2025) X. An, Y. Xie, K. Yang, W. Zhang, X. Zhao, Z. Cheng, Y. Wang, S. Xu, C. Chen, D. Zhu, C. Wu, H. Tan, C. Li, J. Yang, J. Yu, X. Wang, B. Qin, Y. Wang, Z. Yan, Z. Feng, Z. Liu, B. Li, a"
+  },
+  {
+   "id": "b0339",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bai et al. (2025) S. Bai, Y. Cai, R. Chen, K. Chen, X. Chen, Z. Cheng, L. Deng, W. Ding, C. Gao, C. Ge, W. Ge, Z. Guo, Q. Huang, J. Huang, F. Huang, B. Hui, S. Jiang, Z. Li, M. Li, M. Li, K. Li, Z. Li"
+  },
+  {
+   "id": "b0340",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Banerjee and Lavie (2005) S. Banerjee and A. Lavie METEOR: an automatic metric for MT evaluation with improved correlation with human judgments . In Proceedings of the ACL Workshop on Intrinsic and Ex"
+  },
+  {
+   "id": "b0341",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bird et al. (2009) S. Bird, E. Klein, and E. Loper Natural language processing with python . O’Reilly Media . Cited by: §S2.3.2 ."
+  },
+  {
+   "id": "b0342",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cai et al. (2024) C. Cai, R. Zhang, J. Gao, K. Wu, K. Yap, and Y. Wang Temporal sentence grounding with temporally global textual knowledge . In 2024 IEEE International Conference on Multimedia and Ex"
+  },
+  {
+   "id": "b0343",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cao et al. (2025a) S. Cao, J. Li, X. Li, Y. Pu, K. Zhu, Y. Gao, S. Luo, Y. Xin, Q. Qin, Y. Zhou, X. Chen, W. Zhang, B. Fu, Y. Qiao, and Y. Liu UniPercept: towards unified perceptual-level image unders"
+  },
+  {
+   "id": "b0344",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cao et al. (2025b) S. Cao, N. Ma, J. Li, X. Li, L. Shao, K. Zhu, Y. Zhou, Y. Pu, J. Wu, J. Wang, B. Qu, W. Wang, Y. Qiao, D. Yao, and Y. Liu ArtiMuse: fine-grained image aesthetics assessment with joi"
+  },
+  {
+   "id": "b0345",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cao et al. (2025c) S. Cao, N. Ma, J. Li, X. Li, L. Shao, K. Zhu, Y. Zhou, Y. Pu, J. Wu, J. Wang, B. Qu, W. Wang, Y. Qiao, D. Yao, and Y. Liu ArtiMuse: Fine-Grained Image Aesthetics Assessment with Joi"
+  },
+  {
+   "id": "b0346",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024) D. Chen, R. Chen, S. Zhang, Y. Liu, Y. Wang, H. Zhou, Q. Zhang, Y. Wan, P. Zhou, and L. Sun MLLM-as-a-Judge: assessing multimodal LLM-as-a-judge with vision-language benchmark . arX"
+  },
+  {
+   "id": "b0347",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2020) L. Chen, X. Yan, J. Xiao, H. Zhang, S. Pu, and Y. Zhuang Counterfactual samples synthesizing for robust visual question answering . In Proceedings of the IEEE/CVF Conference on Comp"
+  },
+  {
+   "id": "b0348",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dunn (1961) O. J. Dunn Multiple comparisons among means . Journal of the American Statistical Association 56 ( 293 ), pp. 52–64 . External Links: Document Cited by: §S2.3.3 ."
+  },
+  {
+   "id": "b0349",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Efron and Tibshirani (1993) B. Efron and R. J. Tibshirani An introduction to the bootstrap . Chapman and Hall/CRC . External Links: Document Cited by: §S2.3.3 ."
+  },
+  {
+   "id": "b0350",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gao et al. (2024) J. Gao, K. Yap, K. Wu, D. T. Phan, K. Garg, and B. S. Han Contextual human object interaction understanding from pre-trained large language model . In ICASSP 2024-2024 IEEE Internati"
+  },
+  {
+   "id": "b0351",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "GLM-V Team et al. (2026) GLM-V Team, W. Hong, W. Yu, X. Gu, G. Wang, et al. GLM-4.5V and GLM-4.1V-Thinking: towards versatile multimodal reasoning with scalable reinforcement learning . arXiv preprint"
+  },
+  {
+   "id": "b0352",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hessel et al. (2021) J. Hessel, A. Holtzman, M. Forbes, R. Le Bras, and Y. Choi CLIPScore: a reference-free evaluation metric for image captioning . In Proceedings of the 2021 Conference on Empirical "
+  },
+  {
+   "id": "b0353",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hou et al. (2026) W. Hou, W. Liu, H. Hu, X. Sun, S. Yeung-Levy, and H. Fan Seeing is believing? a benchmark for multimodal large language models on visual illusions and anomalies . arXiv preprint arXi"
+  },
+  {
+   "id": "b0354",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024a) Y. Huang, X. Sheng, Z. Yang, Q. Yuan, Z. Duan, P. Chen, L. Li, W. Lin, and G. Shi AesExpert: towards multi-modality foundation model for image aesthetics perception . External Lin"
+  },
+  {
+   "id": "b0355",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024b) Y. Huang, Q. Yuan, X. Sheng, Z. Yang, H. Wu, P. Chen, Y. Yang, L. Li, and W. Lin AesBench: an expert benchmark for multimodal large language models on image aesthetics perception "
+  },
+  {
+   "id": "b0356",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024c) Y. Huang, Q. Yuan, X. Sheng, Z. Yang, H. Wu, P. Chen, Y. Yang, L. Li, and W. Lin AesBench: An expert benchmark for multimodal large language models on image aesthetics perception "
+  },
+  {
+   "id": "b0357",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kong et al. (2016) S. Kong, X. Shen, Z. Lin, R. Mech, and C. C. Fowlkes Photo aesthetics ranking network with attributes and content adaptation . In Computer Vision – ECCV 2016 , Lecture Notes in Comp"
+  },
+  {
+   "id": "b0358",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024) C. Li, Z. Zhang, H. Wu, W. Sun, X. Min, X. Liu, G. Zhai, and W. Lin AGIQA-3K: an open database for ai-generated image quality assessment . IEEE Transactions on Circuits and Systems fo"
+  },
+  {
+   "id": "b0359",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2026) R. Li, L. Li, S. Ren, H. Tian, S. Gu, S. Li, Z. Yue, Y. Wang, W. Ma, Z. Yang, J. Ma, Z. Sui, and F. Luo GroundingME: exposing the visual grounding gap in MLLMs through multi-dimension"
+  },
+  {
+   "id": "b0360",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liang et al. (2026) J. Liang, K. Wu, X. Hu, and T. Liu Cibic: pixel-free foundation model for robust corrupted image bitstream captioning . Pattern Recognition , pp. 114238 . Cited by: §II.B ."
+  },
+  {
+   "id": "b0361",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liao et al. (2026) M. Liao, T. Ma, and X. Zhang Open world image aesthetic assessment . In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Findings , pp. 9791–9801 . "
+  },
+  {
+   "id": "b0362",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lin (2004) C. Lin ROUGE: a package for automatic evaluation of summaries . In Text Summarization Branches Out , Barcelona, Spain , pp. 74–81 . External Links: Link Cited by: §III.C , §S2.3.2 ."
+  },
+  {
+   "id": "b0363",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2024) H. Liu, C. Li, Y. Li, and Y. J. Lee Improved baselines with visual instruction tuning . In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pp. 262"
+  },
+  {
+   "id": "b0364",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2026) H. Liu, N. Huang, C. Liu, J. Yan, H. Huang, J. Ying, T. Lee, P. Wan, and X. Ji Bridging cognitive gap: Hierarchical description learning for artistic image aesthetics assessment . Ex"
+  },
+  {
+   "id": "b0365",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023) Y. Liu, D. Iter, Y. Xu, S. Wang, R. Xu, and C. Zhu G-Eval: NLG evaluation using GPT-4 with better human alignment . In Proceedings of the 2023 Conference on Empirical Methods in Natu"
+  },
+  {
+   "id": "b0366",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mai et al. (2016) L. Mai, H. Jin, and F. Liu Composition-preserving deep photo aesthetics assessment . In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition , pp. 497–506 . "
+  },
+  {
+   "id": "b0367",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "McNemar (1947) Q. McNemar Note on the sampling error of the difference between correlated proportions or percentages . Psychometrika 12 ( 2 ), pp. 153–157 . External Links: Document Cited by: §S2.3.3 "
+  },
+  {
+   "id": "b0368",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Moratelli et al. (2026) N. Moratelli, C. Davis, L. F. R. Ribeiro, B. Byrne, and G. Iglesias Benchmarking deflection and hallucination in large vision-language models . arXiv preprint arXiv:2604.12033 "
+  },
+  {
+   "id": "b0369",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Murray et al. (2012) N. Murray, L. Marchesotti, and F. Perronnin AVA: a large-scale database for aesthetic visual analysis . In Proceedings of the IEEE Conference on Computer Vision and Pattern Recogn"
+  },
+  {
+   "id": "b0370",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Papineni et al. (2002) K. Papineni, S. Roukos, T. Ward, and W. Zhu Bleu: a method for automatic evaluation of machine translation . In Proceedings of the 40th Annual Meeting of the Association for Com"
+  },
+  {
+   "id": "b0371",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Post (2018) M. Post A call for clarity in reporting BLEU scores . In Proceedings of the Third Conference on Machine Translation: Research Papers , pp. 186–191 . External Links: Document Cited by: §S2."
+  },
+  {
+   "id": "b0372",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qi et al. (2025a) D. Qi, H. Zhao, J. Shi, S. Jenni, Y. Fan, F. Dernoncourt, S. Cohen, and S. Li The photographer eye: teaching multimodal large language models to see and critique like photographers ."
+  },
+  {
+   "id": "b0373",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qi et al. (2025b) D. Qi, H. Zhao, J. Shi, S. Jenni, Y. Fan, F. Dernoncourt, S. Cohen, and S. Li The photographer’s eye: teaching multimodal large language models to see, and critique like photographer"
+  },
+  {
+   "id": "b0374",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Reimers and Gurevych (2019) N. Reimers and I. Gurevych Sentence-BERT: sentence embeddings using Siamese BERT-networks . In Proceedings of the 2019 Conference on Empirical Methods in Natural Language P"
+  },
+  {
+   "id": "b0375",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Satar et al. (2025) B. Satar, Z. Ma, P. A. Irawan, W. A. Mulyawan, J. Jiang, E. Lim, and C. Ngo Seeing culture: a benchmark for visual reasoning and grounding . In Proceedings of the 2025 Conference o"
+  },
+  {
+   "id": "b0376",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Singh et al. (2026) D. Singh, A. Nagrani, K. Manikantan, H. Singh, D. Tewari, T. Weyand, C. Schmid, A. Angelova, and S. Dave CURVE: a benchmark for cultural and multilingual long video reasoning . arX"
+  },
+  {
+   "id": "b0377",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Talebi and Milanfar (2018) H. Talebi and P. Milanfar NIMA: neural image assessment . IEEE Transactions on Image Processing 27 ( 8 ), pp. 3998–4011 . External Links: Document Cited by: §I ."
+  },
+  {
+   "id": "b0378",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2023) J. Wang, H. Duan, J. Liu, S. Chen, X. Min, and G. Zhai AIGCIQA2023: a large-scale image quality assessment database for ai generated images: from the perspectives of quality, authen"
+  },
+  {
+   "id": "b0379",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2025) W. Wang, Z. Gao, L. Gu, H. Pu, L. Cui, X. Wei, Z. Liu, L. Jing, S. Ye, J. Shao, Z. Wang, Z. Chen, H. Zhang, G. Yang, H. Wang, Q. Wei, J. Yin, W. Li, E. Cui, G. Chen, Z. Ding, C. Tia"
+  },
+  {
+   "id": "b0380",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2024) H. Wu, Z. Zhang, W. Zhang, C. Chen, L. Liao, C. Li, Y. Gao, A. Wang, E. Zhang, W. Sun, Q. Yan, X. Min, G. Zhai, and W. Lin Q-Align: teaching LMMs for visual scoring via discrete text-"
+  },
+  {
+   "id": "b0381",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2026a) K. Wu, F. Li, W. Liu, Q. Liu, and Y. Yang Corrupted bitstream semantic understanding by adaptive-modal large language models . Pattern Recognition 180 , pp. 114151 . Cited by: §II.B "
+  },
+  {
+   "id": "b0382",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2026b) Q. Wu, X. Yang, Y. Zhou, C. Fang, B. Song, X. Sun, and R. Ji Grounded chain-of-thought for multimodal large language models . In Proceedings of the IEEE/CVF Conference on Computer Vi"
+  },
+  {
+   "id": "b0383",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xiong et al. (2026) T. Xiong, Y. Ge, M. Li, Z. Zhang, P. Kulkarni, K. Wang, Q. He, Z. Zhu, C. Liu, R. Chen, T. Zheng, Y. Chen, X. Wang, R. Zhang, W. Chen, and H. Huang Multi-Crit: benchmarking multimo"
+  },
+  {
+   "id": "b0384",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2026a) S. Yang, Y. Liu, B. Zhai, X. Sun, Z. Liu, E. Barsoum, M. Li, and C. Xu CaptionQA: is your caption as useful as the image itself? . In Proceedings of the IEEE/CVF Conference on Comp"
+  },
+  {
+   "id": "b0385",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2022) Y. Yang, L. Xu, L. Li, N. Qie, Y. Li, P. Zhang, and Y. Guo Personalized image aesthetics assessment with rich attributes . In Proceedings of the IEEE/CVF Conference on Computer Visi"
+  },
+  {
+   "id": "b0386",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2026b) Z. Yang, J. Wang, Z. Zhang, P. Xie, X. Sheng, P. Chen, and L. Li Fine-grained image aesthetic assessment: learning discriminative scores from relative ranks . In Proceedings of the"
+  },
+  {
+   "id": "b0387",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ye et al. (2024) Q. Ye, H. Xu, J. Ye, M. Yan, A. Hu, H. Liu, Q. Qian, J. Zhang, and F. Huang Mplug-owl2: revolutionizing multi-modal large language model with modality collaboration . In Proceedings o"
+  },
+  {
+   "id": "b0388",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yi et al. (2023) R. Yi, H. Tian, Z. Gu, Y. Lai, and P. L. Rosin Towards artistic image aesthetics assessment: a large-scale dataset and a new method . In Proceedings of the IEEE/CVF Conference on Comp"
+  },
+  {
+   "id": "b0389",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yin et al. (2026) Y. Yin, H. Krishnakumar, C. P. Lee, B. Zeng, W. Chai, S. Tong, W. Chen, H. Xu, X. Fu, G. Sarch, A. Korolova, and Z. Liu WorldBench: a challenging and visually diverse multimodal reas"
+  },
+  {
+   "id": "b0390",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2026) L. Zhang, J. Yang, S. Krishnan, J. Majmudar, X. Ge, P. Puri, P. Saraf, S. Bhargava, D. Piraviperumal, Y. Ling, C. Pan, H. Yu, A. Agrawal, and B. Tseng From where things are to what"
+  },
+  {
+   "id": "b0391",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2020) T. Zhang, V. Kishore, F. Wu, K. Q. Weinberger, and Y. Artzi BERTScore: evaluating text generation with bert . External Links: 1904.09675 , Link Cited by: §III.C , §S2.3.2 ."
+  },
+  {
+   "id": "b0392",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2025) Z. Zhang, H. Wu, Z. Jia, W. Lin, and G. Zhai Teaching LMMs for image quality scoring and interpreting . External Links: 2503.09197 Cited by: §I , §II.B , Table 2 , Table 3 ."
+  },
+  {
+   "id": "b0393",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhou et al. (2026) S. Zhou, B. Jia, K. Wu, Y. Shen, T. Li, Y. Wu, and S. Lin ReactBench: a cause-driven benchmark for multimodal hallucination via systematic evaluation . arXiv preprint arXiv:2605.295"
+  },
+  {
+   "id": "b0394",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhou et al. (2024) Z. Zhou, Q. Wang, B. Lin, Y. Su, R. Chen, X. Tao, A. Zheng, L. Yuan, P. Wan, and D. Zhang UNIAA: a unified multi-modal image aesthetic assessment baseline and benchmark . External L"
+  },
+  {
+   "id": "b0395",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhu et al. (2025) J. Zhu, W. Wang, Z. Chen, Z. Liu, S. Ye, L. Gu, H. Tian, Y. Duan, W. Su, J. Shao, Z. Gao, E. Cui, X. Wang, Y. Cao, Y. Liu, X. Wei, H. Zhang, H. Wang, W. Xu, H. Li, J. Wang, N. Deng, "
+  }
+ ]
+}

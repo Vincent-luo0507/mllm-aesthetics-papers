@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>视觉语言模型中空间注意力偏置的考察 | 双语对照</title>
+<script>
+window.MathJax={
+  tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']],processEscapes:true},
+  svg:{fontCache:'global'},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}
+};
+</script>
+<script src="../../assets/mathjax/es5/tex-mml-chtml.js" async></script>
+<style>
+:root{--fg:#1f2937;--pri:#1e3a8a;--bd:#e2e8f0;--alt:#f8fafc;}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+color:var(--fg);background:#fff;line-height:1.85;font-size:15.5px;}
+.wrap{max-width:1500px;margin:0 auto;padding:0 20px 80px;}
+header.paperhead{border-bottom:2px solid var(--pri);padding:24px 0 18px;margin-bottom:18px;}
+.zh-title{font-size:25px;font-weight:700;color:var(--pri);line-height:1.35;margin:0 0 8px;}
+.en-title{font-size:16px;color:#4b5563;line-height:1.5;margin:0 0 12px;font-style:italic;}
+.meta{font-size:13px;color:#4b5563;display:flex;flex-wrap:wrap;gap:14px;}
+.meta a{color:#2563eb;}
+.toolbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);border-bottom:1px solid var(--bd);
+padding:9px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;backdrop-filter:blur(6px);}
+.toolbar button{border:1px solid var(--bd);background:#fff;color:var(--pri);border-radius:5px;
+padding:5px 13px;font-size:13px;cursor:pointer;font-family:inherit;}
+.toolbar button.on{background:var(--pri);color:#fff;border-color:var(--pri);}
+.toolbar .sp{flex:1;}
+.abs{background:var(--alt);border:1px solid var(--bd);border-radius:6px;padding:14px 18px;margin:16px 0 24px;font-size:14.5px;}
+.abs h4{margin:0 0 6px;font-size:14px;color:var(--pri);}
+.blk{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid #f1f5f9;}
+.blk>div{padding:10px 16px;}
+.blk>.en{border-right:1px solid var(--bd);color:#334155;}
+.blk>.zh{background:#fff;}
+.blk.atomic{grid-template-columns:1fr;background:var(--alt);}
+.blk.atomic>div{padding:12px 16px;text-align:center;}
+h1,h2,h3,h4{color:var(--pri);line-height:1.45;}
+.blk h2{font-size:19px;margin:16px 0 8px;}
+.blk h3{font-size:16.5px;margin:12px 0 6px;}
+.blk h4{font-size:15px;margin:10px 0 5px;}
+p{margin:0 0 10px;text-align:justify;}
+img{max-width:100%;height:auto;display:block;margin:10px auto;border:1px solid var(--bd);}
+table{border-collapse:collapse;margin:10px auto;font-size:13.5px;background:#fff;}
+td,th{border:1px solid #dbe2ea;padding:5px 9px;}
+figure{margin:8px 0;} figcaption{font-size:13px;color:#4b5563;text-align:center;margin-top:6px;}
+body.view-zh .blk{grid-template-columns:1fr;} body.view-zh .blk>.en{display:none;}
+body.view-en .blk{grid-template-columns:1fr;} body.view-en .blk>.zh{display:none;}
+.mathwarn{background:#fef2f2;border-left:4px solid #b91c1c;padding:8px 12px;font-size:13px;color:#7f1d1d;}
+</style>
+</head><body class="view-both">
+<div class="wrap">
+<header class="paperhead">
+<h1 class="zh-title">视觉语言模型中空间注意力偏置的考察</h1>
+<p class="en-title">Investigating Spatial Attention Bias in Vision-Language Models</p>
+<div class="meta"><span>arXiv:2512.18231</span> · <span>作者：Aryan Chaudhary, Sanchit Goyal, Pratik Narang, Dhruv Kumar</span> · <span>发布：2025-12-20</span> · <a href="https://arxiv.org/abs/2512.18231" target="_blank">arXiv 页面</a> · <a href="paper.pdf" target="_blank">原版 PDF</a> · <a href="orig.html" target="_blank">原文 HTML</a></div>
+</header>
+<div class="toolbar">
+<button data-v="view-both" class="on">中英双栏</button>
+<button data-v="view-zh">仅中文</button>
+<button data-v="view-en">仅英文</button>
+<span class="sp"></span>
+<a href="../index.html" style="font-size:13px;color:#2563eb;">← 返回总目录</a>
+</div>
+<div class="abs">
+<h4>中文摘要</h4><div>视觉语言模型在理解视觉内容上展现出卓越能力，但其空间处理中的系统性偏置仍基本未被探索。本文识别并刻画了一种系统性的空间注意力偏置：在水平拼接的图像中，VLM 一致地优先描述左侧内容，而后才描述右侧内容。通过在图像对上对开源与闭源模型开展受控实验，我们证明这一偏置在不同架构间持续存在——在中性提示条件下，模型约有 97% 的情形先描述左侧内容。在一个阿拉伯语微调模型上的测试显示，即便经过从右到左语言的训练，该偏置依然存在，从而排除了语言阅读方向作为主因的可能。对 PixMo 与 Visual Genome 训练数据集标注指南的考察发现，其中并不存在明确的「先左」排序指令，提示该偏置与架构因素相符，而非源自训练数据中的明确指令。这些发现揭示了当前 VLM 处理空间信息时的根本性局限。</div>
+<h4 style="margin-top:10px;">Abstract (原文)</h4><div style="color:#475569;">Vision-Language Models have demonstrated remarkable capabilities in understanding visual content, yet systematic biases in their spatial processing remain largely unexplored. This work identifies and characterizes a systematic spatial attention bias where VLMs consistently prioritize describing left-positioned content before right-positioned content in horizontally concatenated images. Through controlled experiments on image pairs using both open-source and closed-source models, we demonstrate that this bias persists across different architectures, with models describing left-positioned content first in approximately 97% of cases under neutral prompting conditions. Testing on an Arabic-finetuned model reveals that the bias persists despite right-to-left language training, ruling out language reading direction as the primary cause. Investigation of training dataset annotation guidelines from PixMo and Visual Genome reveals no explicit left-first ordering instructions, suggesting the bias is consistent with architectural factors rather than explicit training data instructions. These findings reveal fundamental limitations in how current VLMs process spatial information.</div>
+</div>
+<div id="body">
+<div class="blk atomic"><div><p class="ltx_p" id="abstract1.1">Vision-Language Models have demonstrated remarkable capabilities in understanding visual content, yet systematic biases in their spatial processing remain largely unexplored. This work identifies and characterizes a systematic spatial attention bias where VLMs consistently prioritize describing left-positioned content before right-positioned content in horizontally concatenated images. Through controlled experiments on image pairs using both open-source and closed-source models, we demonstrate that this bias persists across different architectures, with models describing left-positioned content first in approximately 97% of cases under neutral prompting conditions. Testing on an Arabic-finetuned model reveals that the bias persists despite right-to-left language training, ruling out language reading direction as the primary cause. Investigation of training dataset annotation guidelines from PixMo and Visual Genome reveals no explicit left-first ordering instructions, suggesting the bias is consistent with architectural factors rather than explicit training data instructions. These findings reveal fundamental limitations in how current VLMs process spatial information.</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2></div><div class="zh"><h2>1 引言</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p1.1">Vision-Language Models (VLMs) have achieved significant advances in multimodal understanding by jointly modeling visual and textual modalities, enabling applications such as image captioning, visual question answering, and multimodal reasoning <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib6" title="">Krishna and others (2017)</a>; <a class="ltx_ref" href="#bib.bib16" title="">Lu et al. (2019)</a>; <a class="ltx_ref" href="#bib.bib17" title="">Li et al. (2020)</a>; <a class="ltx_ref" href="#bib.bib18" title="">Radford and others (2021)</a></cite>. Large-scale pretrained VLMs now serve as general-purpose multimodal systems and exhibit strong zero-shot and in-context learning capabilities <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib24" title="">Alayrac et al. (2022)</a>; <a class="ltx_ref" href="#bib.bib25" title="">Li et al. (2023a)</a></cite>.</p></div><div class="zh"><p>视觉语言模型（VLM）通过联合建模视觉与文本模态，在多模态理解上取得了显著进展，支撑了图像描述、视觉问答与多模态推理等应用 Krishna 等（2017）；Lu 等（2019）；Li 等（2020）；Radford 等（2021）。大规模预训练 VLM 如今已成为通用多模态系统，并展现出强大的零样本与上下文学习能力 Alayrac 等（2022）；Li 等（2023a）。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p2.1">Despite these achievements, systematic biases in how VLMs process spatial information remain poorly understood <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib19" title="">Zhu et al. (2025)</a></cite>. Such biases can compromise model reliability in real-world applications, particularly those requiring fair and balanced visual interpretation, including user interfaces, robotics, and decision-support systems.</p></div><div class="zh"><p>尽管取得了这些成就，VLM 处理空间信息时的系统性偏置仍未得到充分理解 Zhu 等（2025）。这类偏置会损害模型在真实应用中的可靠性，尤其是那些要求公平、均衡地解读视觉内容的场景，包括用户界面、机器人与决策支持系统。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p3.1">This work investigates a specific manifestation of spatial processing bias: when presented with horizontally concatenated images containing two distinct objects, do VLMs exhibit systematic preferences in the order they describe spatial content? We focus on two fundamental questions. First, do VLMs demonstrate consistent spatial attention bias across different architectures and model generations? Second, what factors contribute to this bias. Does it stem from language reading direction, training data annotation patterns, or architectural design choices?</p></div><div class="zh"><p>本文考察空间处理偏置的一种具体表现：当输入是包含两个不同物体的水平拼接图像时，VLM 在描述空间内容的顺序上是否表现出系统性偏好？我们聚焦两个基本问题。第一，VLM 在不同架构与不同代际的模型上是否表现出一致的空间注意力偏置？第二，哪些因素造成了这种偏置——它源于语言的阅读方向、训练数据的标注模式，还是架构设计选择？</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p4.1">We conduct experiments using a controlled dataset of 100 image pairs from Caltech-101 <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib5" title="">Fei-Fei et al. (2004)</a></cite>, where 50 unique pairs are presented alongside their horizontal flips to isolate positional effects from content-specific biases. We evaluate seven models spanning both open-source architectures including InternVL2-8B and InternVL3-8B <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib32" title="">Chen et al. (2024)</a>; <a class="ltx_ref" href="#bib.bib12" title="">OpenGVLab (2025a)</a>; <a class="ltx_ref" href="#bib.bib13" title="">OpenGVLab (2025b)</a></cite>, Qwen2-VL-7B <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib9" title="">Qwen Team (2024)</a>; <a class="ltx_ref" href="#bib.bib14" title="">Qwen Team (2025)</a></cite>, and Qwen2.5-VL-7B <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib2" title="">Bai and others (2025)</a></cite> and closed-source systems, including GPT-5 Nano <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib7" title="">OpenAI (2025)</a></cite>, Gemini 2.0 Flash <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib15" title="">Google (2025)</a></cite>, and Claude 4.5 Haiku <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib1" title="">Anthropic (2025)</a></cite>. Each model is tested with both simple directional prompts and structured JSON-format prompts to assess natural behavior and responsiveness to explicit instructions.The key contributions of this work are as <span class="ltx_text" id="S1.p4.1.1">follows</span>:</p></div><div class="zh"><p>我们使用一个受控数据集开展实验，该数据集包含来自 Caltech-101 的 100 个图像对 Fei-Fei 等（2004）：其中 50 个独特图像对与其水平翻转版本一并呈现，以把位置效应与内容特有的偏置分离开。我们评测了七个模型，涵盖开源架构——包括 InternVL2-8B 与 InternVL3-8B Chen 等（2024）；OpenGVLab（2025a）；OpenGVLab（2025b）、Qwen2-VL-7B Qwen Team（2024）；Qwen Team（2025）以及 Qwen2.5-VL-7B Bai 等（2025）——以及闭源系统，包括 GPT-5 Nano OpenAI（2025）、Gemini 2.0 Flash Google（2025）与 Claude 4.5 Haiku Anthropic（2025）。每个模型都用简单的方向性提示与结构化 JSON 格式提示进行测试，以评估其自然行为以及对明确指令的响应程度。本文的主要贡献如下：</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1">We provide a systematic characterization of spatial attention bias across seven diverse VLM architectures, identifying a consistent left-to-right processing preference in open-source models.</p>
+</div></li></div><div class="zh"><p>• 我们在七种多样的 VLM 架构上对空间注意力偏置做了系统性刻画，识别出开源模型中一致的从左到右处理偏好。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1">We demonstrate through Arabic-finetuned model testing <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib8" title="">MBZUAI Oryx-Lab (2025)</a></cite> that this bias persists regardless of language reading direction (right-to-left), ruling out language priors as the primary cause.</p>
+</div></li></div><div class="zh"><p>• 我们通过对阿拉伯语微调模型的测试 MBZUAI Oryx-Lab（2025）证明，无论语言阅读方向如何（从右到左），这种偏置依然存在，从而排除了语言先验作为主要原因的可能。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1">We analyze annotation guidelines from PixMo <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib4" title="">Deitke and others (2024)</a></cite> and Visual Genome <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib6" title="">Krishna and others (2017)</a></cite>, showing that explicit left-first ordering instructions are absent from major training datasets.</p>
+</div></li></div><div class="zh"><p>• 我们分析了 PixMo Deitke 等（2024）与 Visual Genome Krishna 等（2017）的标注指南，表明主流训练数据集中并不存在明确的「先左」排序指令。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S1.I1.i4" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i4.p1">
+<p class="ltx_p" id="S1.I1.i4.p1.1">We evaluate bias on a <em class="ltx_emph ltx_font_italic" id="S1.I1.i4.p1.1.1">Desktop UI</em> dataset consisting of dense interface elements, highlighting how spatial preferences shift in information-rich contexts.</p>
+</div></li></div><div class="zh"><p>• 我们在一个由密集界面元素构成的 Desktop UI 数据集上评估了偏置，凸显空间偏好在信息丰富的语境中如何发生偏移。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2></div><div class="zh"><h2>2 相关工作</h2></div></div>
+<div class="blk atomic"><div><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="267" id="S2.F1.g1" src="figures/LLM.jpg" style="aspect-ratio:476/267;" width="476"/></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Overview of the experimental setup for detecting spatial attention bias.</figcaption></div><div class="zh"><p>图 1：检测空间注意力偏置的实验设置总览。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.1 </span>Vision-Language Models</h3></div><div class="zh"><h3>2.1 视觉语言模型</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS1.p1.1">Vision-Language Models (VLMs) typically feature a modular architecture comprising a frozen visual encoder <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib20" title="">Radford et al. (2021)</a>; <a class="ltx_ref" href="#bib.bib21" title="">Zhai et al. (2023)</a></cite>, a large language model backbone <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib22" title="">Touvron et al. (2023)</a>; <a class="ltx_ref" href="#bib.bib23" title="">Chiang et al. (2023)</a></cite>, and a cross-modal alignment projector <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib24" title="">Alayrac et al. (2022)</a>; <a class="ltx_ref" href="#bib.bib25" title="">Li et al. (2023a)</a>; <a class="ltx_ref" href="#bib.bib26" title="">Liu et al. (2024)</a></cite> that bridges the semantic gap between modalities. These systems are initially grounded on massive image-text corpora <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib27" title="">Schuhmann et al. (2022)</a></cite> and subsequently refined through visual instruction tuning <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib28" title="">Dai et al. (2024)</a></cite> or direct preference optimization <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib29" title="">Zhao et al. (2023)</a>; <a class="ltx_ref" href="#bib.bib30" title="">Yu et al. (2023)</a></cite> to enhance instruction adherence. This paradigm has yielded remarkable proficiency across diverse applications, including open-ended dialogue <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib31" title="">Bai et al. (2023)</a>; <a class="ltx_ref" href="#bib.bib32" title="">Chen et al. (2024)</a></cite>, complex visual reasoning <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib33" title="">Wang et al. (2023b)</a>; <a class="ltx_ref" href="#bib.bib34" title="">Zhu et al. (2023)</a></cite>, and domain-specific tasks such as biomedical analysis <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib35" title="">Li et al. (2024)</a></cite>. However, despite these advancements, recent research suggests that mapping high-dimensional visual features into the causal attention mechanisms of LLMs introduces structural vulnerabilities, particularly regarding how spatial information is encoded, preserved, and prioritized during cross-modal interactions.</p></div><div class="zh"><p>视觉语言模型（VLM）通常采用模块化架构，包含一个冻结的视觉编码器 Radford 等（2021）；Zhai 等（2023）、一个大语言模型主干 Touvron 等（2023）；Chiang 等（2023），以及一个弥合模态间语义鸿沟的跨模态对齐投影器 Alayrac 等（2022）；Li 等（2023a）；Liu 等（2024）。这些系统先在大规模图文语料上打基础 Schuhmann 等（2022），随后通过视觉指令微调 Dai 等（2024）或直接偏好优化 Zhao 等（2023）；Yu 等（2023）加以精炼，以提升指令遵循能力。这一范式在开放域对话 Bai 等（2023）；Chen 等（2024）、复杂视觉推理 Wang 等（2023b）；Zhu 等（2023）以及生物医学分析等领域专属任务 Li 等（2024）等多种应用中都取得了出色表现。然而，尽管取得了上述进展，近期研究表明，把高维视觉特征映射进 LLM 的因果注意力机制会引入结构性脆弱，尤其是在跨模态交互过程中空间信息如何被编码、保留与优先处理这一问题上。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.2 </span>Biases in Multimodal Models</h3></div><div class="zh"><h3>2.2 多模态模型中的偏置</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS2.p1.1">Recent work has identified various biases in VLMs. Gender bias in image captioning has been extensively documented, with models often making stereotypical associations based on statistical correlations in training data <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib36" title="">Hendricks et al. (2018)</a>; <a class="ltx_ref" href="#bib.bib37" title="">Zhao et al. (2021)</a></cite>. Object co-occurrence biases are also prevalent, causing models to hallucinate commonly associated objects even when the object is absent from the image <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib38" title="">Rohrbach et al. (2018)</a>; <a class="ltx_ref" href="#bib.bib39" title="">Li et al. (2023b)</a></cite>. While these semantic biases have been widely studied, systematic biases in spatial processing remain comparatively underexplored.</p></div><div class="zh"><p>近期工作已识别出 VLM 中的各类偏置。图像描述中的性别偏置被大量记录：模型常基于训练数据中的统计相关做出刻板关联 Hendricks 等（2018）；Zhao 等（2021）。物体共现偏置同样普遍，它使模型即便在目标物体并未出现在图像中时也会幻觉出常与之关联的物体 Rohrbach 等（2018）；Li 等（2023b）。尽管这类语义偏置已被广泛研究，空间处理中的系统性偏置相比之下仍未被充分探索。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.3 </span>Spatial and Positional Bias</h3></div><div class="zh"><h3>2.3 空间与位置偏置</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS3.p1.1">Recent investigations have begun to explore the spatial robustness of LVLMs, though the focus has largely remained on reasoning accuracy rather than scanning priority. Notably, <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib19" title="">Zhu et al. (2025)</a></cite> conducted a systematic study demonstrating that current LVLMs often produce inconsistent semantic outputs when identical visual content is shifted to different spatial locations. More recently, <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib3" title="">Tian et al. (2025)</a></cite> investigated position bias in multi-image contexts, identifying a "recency bias" in open-source models (preferring the last image) and a "lost-in-the-middle" phenomenon in proprietary models when performing specific reasoning tasks.</p></div><div class="zh"><p>近期的考察开始关注大视觉语言模型（LVLM）的空间鲁棒性，但焦点主要停留在推理准确率上，而非扫描优先级。其中，Zhu 等（2025）开展了一项系统研究，表明当前的 LVLM 在相同的视觉内容被移到不同空间位置时，往往产生不一致的语义输出。更近期地，Tian 等（2025）考察了多图像语境中的位置偏置，在开源模型中识别出一种「近因偏置」（偏好最后一张图像），并在专有模型执行特定推理任务时发现了「中部丢失」现象。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS3.p2.1">While these studies highlight vulnerabilities in performance stability (specifically whether a model answers correctly depending on image placement), they do not address the distinct phenomenon of <span class="ltx_text ltx_font_italic" id="S2.SS3.p2.1.1">sequential attention bias</span>, or the intrinsic preference to describe specific spatial regions first. Furthermore, existing literature has not sufficiently isolated visual scanning biases from linguistic reading directionality, nor evaluated how these spatial priors manifest in information-dense environments like user interfaces. Our work addresses these gaps by decoupling text generation order from visual processing and examining how entrenched spatial habits can lead to instruction-following failures in state-of-the-art models.</p></div><div class="zh"><p>这些研究揭示了性能稳定性上的脆弱（具体地说，即模型是否因图像摆放位置而答对），但它们并未涉及另一类截然不同的现象——顺序注意力偏置，也就是优先描述特定空间区域的内在偏好。此外，现有文献也没有充分把视觉扫描偏置与语言阅读方向性分离开来，更没有评估这些空间先验在用户界面等信息密集环境中如何显现。我们的工作通过把文本生成顺序与视觉处理解耦，并考察根深蒂固的空间习惯如何导致前沿模型出现指令遵循失败，来填补这些空白。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">3 </span>Methodology</h2></div><div class="zh"><h2>3 方法</h2></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.1 </span>Dataset Construction</h3></div><div class="zh"><h3>3.1 数据集构建</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS1.p1.1">To evaluate spatial bias across different levels of visual complexity and information density, we constructed two distinct datasets: one focusing on object-centric natural images and another on dense, text-rich user interfaces.</p></div><div class="zh"><p>为在不同视觉复杂度与信息密度层级上评估空间偏置，我们构建了两个不同的数据集：一个聚焦以物体为中心的自然图像，另一个聚焦密集、富文本的界面。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">3.1.1 </span>Caltech-101 Controlled Pairs</h4></div><div class="zh"><h4>3.1.1 Caltech-101 受控图像对</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS1.SSS1.p1.1">We constructed a controlled dataset to isolate positional bias from content-specific effects. From Caltech-101 <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib5" title="">Fei-Fei et al. (2004)</a></cite>, we selected 50 diverse image pairs from different object categories. For each pair, we created the original left-right arrangement and a horizontally flipped version, yielding 100 total test images. This design ensures that observed bias cannot be attributed to specific image content being inherently more description-worthy. All images were resized to 512×512 pixels using bicubic interpolation before horizontal concatenation.</p></div><div class="zh"><p>我们构建了一个受控数据集，以把位置偏置与内容特有的效应分离开。我们从 Caltech-101 Fei-Fei 等（2004）中选出 50 个来自不同物体类别的多样图像对。对每个图像对，我们生成原始的左右排布以及一个水平翻转版本，共得到 100 张测试图像。这一设计保证了观测到的偏置不能归因于某类图像内容本身更值得描述。所有图像在水平拼接前都用双三次插值缩放至 512×512 像素。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">3.1.2 </span>Desktop UI Dataset</h4></div><div class="zh"><h4>3.1.2 Desktop UI 数据集</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS1.SSS2.p1.1">To investigate model behavior in high-density information contexts, we curated a "Desktop UI" dataset comprising 10 distinct screenshots of common digital interfaces (e.g., LinkedIn feed, Google News, Twitter/X feed, YouTube homepage, Gmail inbox, and LeetCode). From these 10 base screenshots, we generated all unordered pairwise combinations (10C2 = 45 unique pairs), and horizontally concatenated each pair to form the evaluation set. This design allows us to systematically evaluate spatial bias across diverse UI layouts while controlling for the underlying content. Unlike the object-centric Caltech dataset, these images contain dense textual information and complex UI elements, testing whether spatial scanning habits shift when models are presented with reading-heavy tasks.</p></div><div class="zh"><p>为考察模型在高密度信息语境下的行为，我们整理了一个「Desktop UI」数据集，包含 10 张常见数字界面的不同截图（如 LinkedIn 信息流、Google News、Twitter/X 信息流、YouTube 首页、Gmail 收件箱与 LeetCode）。基于这 10 张基础截图，我们生成了全部无序两两组合（10C2 = 45 个独特图像对），并把每一对水平拼接，构成评测集。这一设计使我们能够在控制底层内容的同时，系统评估不同 UI 布局下的空间偏置。与以物体为中心的 Caltech 数据集不同，这些图像包含密集的文本信息与复杂的 UI 元素，用以检验当模型面对阅读量大的任务时，其空间扫描习惯是否会发生偏移。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.2 </span>Experimental Design</h3></div><div class="zh"><h3>3.2 实验设计</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS2.p1.1">We conducted three sets of experiments to investigate different aspects of spatial bias.</p></div><div class="zh"><p>我们开展了三组实验，考察空间偏置的不同方面。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">3.2.1 </span>Neutral Prompting Experiment</h4></div><div class="zh"><h4>3.2.1 中性提示实验</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS2.SSS1.p1.1">To establish baseline spatial preference without explicit directional instructions, we tested Qwen2.5-VL-7B and the Arabic-finetuned AIN model using the neutral prompt "Describe the image" with no directional guidance. Responses were analyzed to determine which image (left or right) was mentioned first in the description.</p></div><div class="zh"><p>为在没有明确方向指令的情况下确立基线空间偏好，我们用中性提示「Describe the image」（描述这张图像）测试了 Qwen2.5-VL-7B 与阿拉伯语微调的 AIN 模型，不施加任何方向性引导。我们分析回答，判断描述中先提到的是哪一张图像（左或右）。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">3.2.2 </span>Directional Prompting Experiments</h4></div><div class="zh"><h4>3.2.2 方向性提示实验</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS2.SSS2.p1.1">Models were evaluated under two prompting conditions. Simple prompts used "Describe the image from left to right" and "Describe the image from right to left." Structured prompts used "Describe the image from left to right in structured JSON format, Left image: &lt;Description&gt; Right Image: &lt;Description&gt;" and the corresponding right-to-left variant. These conditions test both natural behavior and responsiveness to explicit format constraints.</p></div><div class="zh"><p>模型在两种提示条件下被评测。简单提示使用「Describe the image from left to right」（从左到右描述这张图像）与「Describe the image from right to left」（从右到左描述这张图像）。结构化提示使用「Describe the image from left to right in structured JSON format, Left image: &lt;Description&gt; Right Image: &lt;Description&gt;」（以结构化 JSON 格式从左到右描述这张图像，左图：&lt;描述&gt; 右图：&lt;描述&gt;）以及对应的从右到左变体。这些条件同时检验模型的自然行为与对明确格式约束的响应程度。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">3.2.3 </span>Dataset Annotation Analysis</h4></div><div class="zh"><h4>3.2.3 数据集标注分析</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS2.SSS3.p1.1">We examined annotation guidelines from two major vision-language training datasets: PixMo, which uses high-quality human annotations collected through speech-based descriptions, and Visual Genome, a widely-used dataset for vision-language pretraining. This analysis aimed to determine whether explicit left-to-right ordering instructions exist in dataset creation protocols.</p></div><div class="zh"><p>我们考察了两个主流视觉语言训练数据集的标注指南：PixMo，它使用通过语音描述采集的高质量人工标注；以及 Visual Genome，一个广泛用于视觉语言预训练的数据集。该分析旨在判断数据集创建流程中是否存在明确的从左到右排序指令。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.3 </span>Models Evaluated</h3></div><div class="zh"><h3>3.3 受评模型</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS3.p1.1">We selected seven models representing diverse architectures and training approaches. Open-source models include InternVL2-8B <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib12" title="">OpenGVLab (2025a)</a></cite>, InternVL3-8B <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib13" title="">OpenGVLab (2025b)</a></cite>, Qwen2-VL-7B <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib9" title="">Qwen Team (2024)</a>; <a class="ltx_ref" href="#bib.bib14" title="">Qwen Team (2025)</a></cite>, and Qwen2.5-VL-7B <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib2" title="">Bai and others (2025)</a></cite>. Closed-source systems include GPT-5 Nano <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib7" title="">OpenAI (2025)</a></cite>, Gemini 2.0 Flash <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib15" title="">Google (2025)</a></cite>, and Claude 4.5 Haiku <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib1" title="">Anthropic (2025)</a></cite>. Additionally, we tested the AIN model fine-tuned for Arabic <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib8" title="">MBZUAI Oryx-Lab (2025)</a></cite> to examine whether language reading direction influences spatial processing bias.</p></div><div class="zh"><p>我们选取了代表不同架构与训练路线的七个模型。开源模型包括 InternVL2-8B OpenGVLab（2025a）、InternVL3-8B OpenGVLab（2025b）、Qwen2-VL-7B Qwen Team（2024）；Qwen Team（2025）与 Qwen2.5-VL-7B Bai 等（2025）。闭源系统包括 GPT-5 Nano OpenAI（2025）、Gemini 2.0 Flash Google（2025）与 Claude 4.5 Haiku Anthropic（2025）。此外，我们还测试了针对阿拉伯语微调的 AIN 模型 MBZUAI Oryx-Lab（2025），以考察语言阅读方向是否影响空间处理偏置。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS3.p2.1">All models were run using consistent inference configuration with temperature set to 0.5 and top-p sampling at 0.9 to balance generation diversity with consistency.</p></div><div class="zh"><p>所有模型均使用一致的推理配置运行，温度设为 0.5，top-p 采样设为 0.9，以在生成多样性与一致性之间取得平衡。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.4 </span>Evaluation Metrics</h3></div><div class="zh"><h3>3.4 评测指标</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS4.p1.1">For the neutral prompting experiment, we determined which spatial position was mentioned first in model responses and calculated the percentage of left-first descriptions.</p></div><div class="zh"><p>对于中性提示实验，我们判定模型回答中先提到的是哪个空间位置，并计算「先描述左侧」的百分比。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS4.p2.1">For the Directional Prompting Experiments we measured bias through description length analysis, calculating the difference between response lengths for left-to-right versus right-to-left prompting. The metric is defined as the length of the left-to-right response minus the length of the right-to-left response. Positive values indicate longer descriptions when prompted to describe from left to right, suggesting models allocate more descriptive attention to left-positioned content even when explicitly instructed to prioritize right-positioned content.</p></div><div class="zh"><p>对于方向性提示实验，我们通过描述长度分析来度量偏置，计算从左到右提示与从右到左提示下回答长度之差。该指标定义为从左到右提示的回答长度减去从右到左提示的回答长度。正值表示在被要求从左到右描述时回答更长，说明即便被明确指示优先描述右侧内容，模型仍把更多的描述性注意力分配给左侧内容。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS4.p3.1">We established a threshold of ±60 characters to identify cases of substantial bias while tracking the full distribution of differences. For each model and prompting condition, we calculated the percentage of cases exceeding +60 character difference (strong left bias), percentage below -60 characters (strong right bias), percentage within ±60 characters (relatively balanced), average difference across all test cases, and maximum and minimum observed differences.</p></div><div class="zh"><p>我们设定 ±60 个字符的阈值来识别显著偏置的情形，同时追踪差值的完整分布。对于每个模型与每种提示条件，我们计算了以下几项：差值超过 +60 个字符（强左偏置）的案例百分比、低于 −60 个字符（强右偏置）的百分比、落在 ±60 个字符之内（相对均衡）的百分比、全部测试案例上的平均差值，以及观测到的最大与最小差值。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">4 </span>Results</h2></div><div class="zh"><h2>4 结果</h2></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.1 </span>Neutral Prompting Baseline</h3></div><div class="zh"><h3>4.1 中性提示基线</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS1.p1.1">Before evaluating the magnitude of bias using character counts, we first established the baseline scanning preference of VLMs using a neutral prompt. We evaluated <span class="ltx_text ltx_font_bold" id="S4.SS1.p1.1.1">Qwen2.5-VL-7B</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib2" title="">Bai and others (2025)</a></cite> and the Arabic-finetuned <span class="ltx_text ltx_font_bold" id="S4.SS1.p1.1.2">AIN</span> model <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib8" title="">MBZUAI Oryx-Lab (2025)</a></cite> on the 100-pair Caltech-101 dataset.</p></div><div class="zh"><p>在用字符数衡量偏置幅度之前，我们先用中性提示确立了 VLM 的基线扫描偏好。我们在 100 个图像对的 Caltech-101 数据集上评测了 Qwen2.5-VL-7B Bai 等（2025）与阿拉伯语微调的 AIN 模型 MBZUAI Oryx-Lab（2025）。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS1.p2.1">Both models were given the instruction <span class="ltx_text ltx_font_italic" id="S4.SS1.p2.1.1">"Describe the image"</span> with no directional constraints or formatting cues. We manually analyzed the responses to identify which image in the pair was described first.</p></div><div class="zh"><p>两个模型都只收到「Describe the image」这一指令，没有任何方向性约束或格式提示。我们人工分析了回答，以识别图像对中哪一张被先描述。</p></div></div>
+<div class="blk atomic"><div><table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T1.2">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S4.T1.2.1.1"><span class="ltx_text ltx_font_bold" id="S4.T1.2.1.1.1">Model</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S4.T1.2.1.2"><span class="ltx_text ltx_font_bold" id="S4.T1.2.1.2.1">Training Prior</span></th>
+<th class="ltx_td ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.2.1.3"><span class="ltx_text ltx_font_bold" id="S4.T1.2.1.3.1">Left-First Preference</span></th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T1.2.2">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T1.2.2.1">Qwen2.5-VL-7B</td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T1.2.2.2">English (LTR)</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T1.2.2.3"><span class="ltx_text ltx_font_bold" id="S4.T1.2.2.3.1">97%</span></td></tr>
+<tr class="ltx_tr" id="S4.T1.2.3">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S4.T1.2.3.1">AIN (Arabic)</td>
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S4.T1.2.3.2">Arabic (RTL)</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb" id="S4.T1.2.3.3"><span class="ltx_text ltx_font_bold" id="S4.T1.2.3.3.1">97%</span></td></tr>
+</tbody>
+</table></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Results of the <span class="ltx_text ltx_font_bold" id="S4.T1.4">Neutral Prompting Experiment</span>. Despite the AIN model being fine-tuned on Right-to-Left (RTL) Arabic data, it exhibits an identical Left-to-Right scanning bias to the English-trained Qwen2.5-VL.</figcaption></div><div class="zh"><p>表 1：中性提示实验的结果。尽管 AIN 模型在从右到左（RTL）的阿拉伯语数据上做了微调，它仍表现出与英语训练的 Qwen2.5-VL 完全相同的从左到右扫描偏置。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS1.p3.1">The results, presented in Table <a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ 4.1 Neutral Prompting Baseline ‣ 4 Results ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">1</span></a>, reveal a near-universal preference for left-to-right processing. Both models described the left image first in <span class="ltx_text ltx_font_bold" id="S4.SS1.p3.1.1">97%</span> of cases. This finding is critical because the AIN model is specifically fine-tuned on Arabic instructions and data, which naturally follows a Right-to-Left (RTL) reading order. If the spatial bias were driven by the language model’s learned text generation direction, the Arabic model should favor a Right-to-Left description order. The fact that it instead adheres to a Left-to-Right visual scan strongly suggests that this bias is intrinsic to the visual encoder or the cross-modal alignment process, operating independently of the language decoder’s textual training.</p></div><div class="zh"><p>表 1 中的结果揭示了一种近乎普遍的从左到右处理偏好：两个模型都在 97% 的情形中先描述左侧图像。这一发现至关重要，因为 AIN 模型专门在阿拉伯语指令与数据上做了微调，而阿拉伯语天然遵循从右到左（RTL）的阅读顺序。如果空间偏置是由语言模型习得的文本生成方向所驱动，那么阿拉伯语模型就应当偏向从右到左的描述顺序。事实却是它依然遵循从左到右的视觉扫描，这有力地表明该偏置内生于视觉编码器或跨模态对齐过程，独立于语言解码器的文本训练而运作。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.2 </span>Spatial Bias in Object-Centric Images</h3></div><div class="zh"><h3>4.2 以物体为中心的图像中的空间偏置</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS2.p1.1">Our initial experiments on the Caltech-101 dataset reveal significant spatial bias across all tested models, though with considerable variation in magnitude. Table <a class="ltx_ref" href="#S4.T2" title="Table 2 ‣ 4.2 Spatial Bias in Object-Centric Images ‣ 4 Results ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">2</span></a> presents the key findings for object-centric image pairs.</p></div><div class="zh"><p>我们在 Caltech-101 数据集上的初步实验揭示了所有被测模型中都存在显著的空间偏置，但幅度差异很大。表 2 给出了以物体为中心的图像对的关键发现。</p></div></div>
+<div class="blk atomic"><div><table class="ltx_tabular ltx_centering ltx_align_middle" id="S4.T2.2">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T2.2.1">
+<td class="ltx_td ltx_border_tt" id="S4.T2.2.1.1" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" colspan="3" id="S4.T2.2.1.2" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T2.2.1.2.1">Bias Frequency (%)</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" colspan="3" id="S4.T2.2.1.3" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T2.2.1.3.1">Character Difference Magnitude</span></td></tr>
+<tr class="ltx_tr" id="S4.T2.2.2">
+<td class="ltx_td ltx_align_left" id="S4.T2.2.2.1" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T2.2.2.1.1">Model</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.2.2" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T2.2.2.2.1">Left Bias</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.2.3" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T2.2.2.3.1">Balanced</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.2.4" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T2.2.2.4.1">Right Bias</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.2.5" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T2.2.2.5.1">Avg Diff</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.2.6" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T2.2.2.6.1">Max</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T2.2.2.7" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T2.2.2.7.1">Min</span></td></tr>
+<tr class="ltx_tr" id="S4.T2.2.3">
+<td class="ltx_td" id="S4.T2.2.3.1" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.3.2" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_italic" id="S4.T2.2.3.2.1">(&gt;+60)</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.3.3" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_italic" id="S4.T2.2.3.3.1">(Within <math alttext="\pm" class="ltx_Math" display="inline" id="S4.T2.m1" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math>60)</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.3.4" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_italic" id="S4.T2.2.3.4.1">(&lt;-60)</span></td>
+<td class="ltx_td" id="S4.T2.2.3.5" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td" id="S4.T2.2.3.6" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td ltx_nopad_r" id="S4.T2.2.3.7" style="padding-left:5.0pt;padding-right:5.0pt;"></td></tr>
+<tr class="ltx_tr" id="S4.T2.2.4">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T2.2.4.1" style="padding-left:5.0pt;padding-right:5.0pt;">InternVL2-8B</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.4.2" style="padding-left:5.0pt;padding-right:5.0pt;">80</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.4.3" style="padding-left:5.0pt;padding-right:5.0pt;">12</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.4.4" style="padding-left:5.0pt;padding-right:5.0pt;">8</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.4.5" style="padding-left:5.0pt;padding-right:5.0pt;">+472.8</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.4.6" style="padding-left:5.0pt;padding-right:5.0pt;">+1619</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T2.2.4.7" style="padding-left:5.0pt;padding-right:5.0pt;">-600</td></tr>
+<tr class="ltx_tr" id="S4.T2.2.5">
+<td class="ltx_td ltx_align_left" id="S4.T2.2.5.1" style="padding-left:5.0pt;padding-right:5.0pt;">InternVL3-8B</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.5.2" style="padding-left:5.0pt;padding-right:5.0pt;">77</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.5.3" style="padding-left:5.0pt;padding-right:5.0pt;">18</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.5.4" style="padding-left:5.0pt;padding-right:5.0pt;">5</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.5.5" style="padding-left:5.0pt;padding-right:5.0pt;">+393.5</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.5.6" style="padding-left:5.0pt;padding-right:5.0pt;">+1330</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T2.2.5.7" style="padding-left:5.0pt;padding-right:5.0pt;">-242</td></tr>
+<tr class="ltx_tr" id="S4.T2.2.6">
+<td class="ltx_td ltx_align_left" id="S4.T2.2.6.1" style="padding-left:5.0pt;padding-right:5.0pt;">Qwen2-VL-7B</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.6.2" style="padding-left:5.0pt;padding-right:5.0pt;">39</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.6.3" style="padding-left:5.0pt;padding-right:5.0pt;">47</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.6.4" style="padding-left:5.0pt;padding-right:5.0pt;">14</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.6.5" style="padding-left:5.0pt;padding-right:5.0pt;">+81.1</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.6.6" style="padding-left:5.0pt;padding-right:5.0pt;">+1194</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T2.2.6.7" style="padding-left:5.0pt;padding-right:5.0pt;">-1538</td></tr>
+<tr class="ltx_tr" id="S4.T2.2.7">
+<td class="ltx_td ltx_align_left" id="S4.T2.2.7.1" style="padding-left:5.0pt;padding-right:5.0pt;">Qwen2.5-VL-7B</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.7.2" style="padding-left:5.0pt;padding-right:5.0pt;">48</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.7.3" style="padding-left:5.0pt;padding-right:5.0pt;">19</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.7.4" style="padding-left:5.0pt;padding-right:5.0pt;">33</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.7.5" style="padding-left:5.0pt;padding-right:5.0pt;">+54.3</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.7.6" style="padding-left:5.0pt;padding-right:5.0pt;">+794</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T2.2.7.7" style="padding-left:5.0pt;padding-right:5.0pt;">-374</td></tr>
+<tr class="ltx_tr" id="S4.T2.2.8">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T2.2.8.1" style="padding-left:5.0pt;padding-right:5.0pt;">GPT-5 Nano</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.8.2" style="padding-left:5.0pt;padding-right:5.0pt;">14</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.8.3" style="padding-left:5.0pt;padding-right:5.0pt;">77</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.8.4" style="padding-left:5.0pt;padding-right:5.0pt;">9</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.8.5" style="padding-left:5.0pt;padding-right:5.0pt;">+3.3</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.2.8.6" style="padding-left:5.0pt;padding-right:5.0pt;">+186</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T2.2.8.7" style="padding-left:5.0pt;padding-right:5.0pt;">-116</td></tr>
+<tr class="ltx_tr" id="S4.T2.2.9">
+<td class="ltx_td ltx_align_left" id="S4.T2.2.9.1" style="padding-left:5.0pt;padding-right:5.0pt;">Gemini 2.0 Flash</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.9.2" style="padding-left:5.0pt;padding-right:5.0pt;">37</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.9.3" style="padding-left:5.0pt;padding-right:5.0pt;">47</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.9.4" style="padding-left:5.0pt;padding-right:5.0pt;">16</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.9.5" style="padding-left:5.0pt;padding-right:5.0pt;">+43.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.2.9.6" style="padding-left:5.0pt;padding-right:5.0pt;">+345</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T2.2.9.7" style="padding-left:5.0pt;padding-right:5.0pt;">-249</td></tr>
+<tr class="ltx_tr" id="S4.T2.2.10">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S4.T2.2.10.1" style="padding-left:5.0pt;padding-right:5.0pt;">Claude 4.5 Haiku</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T2.2.10.2" style="padding-left:5.0pt;padding-right:5.0pt;">39</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T2.2.10.3" style="padding-left:5.0pt;padding-right:5.0pt;">30</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T2.2.10.4" style="padding-left:5.0pt;padding-right:5.0pt;">31</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T2.2.10.5" style="padding-left:5.0pt;padding-right:5.0pt;">+14.0</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T2.2.10.6" style="padding-left:5.0pt;padding-right:5.0pt;">+392</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb" id="S4.T2.2.10.7" style="padding-left:5.0pt;padding-right:5.0pt;">-263</td></tr>
+</tbody>
+</table></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Summary of spatial bias on the <span class="ltx_text ltx_font_bold" id="S4.T2.7">Caltech-101 dataset</span> under <span class="ltx_text ltx_font_bold" id="S4.T2.8">Simple Prompt</span>. <span class="ltx_text ltx_font_bold" id="S4.T2.9">Left Bias</span> indicates the percentage of cases where the Left-to-Right description was significantly longer (&gt;60 chars) than the Right-to-Left description. <span class="ltx_text ltx_font_bold" id="S4.T2.10">Balanced</span> indicates cases with negligible difference (<math alttext="\pm" class="ltx_Math" display="inline" id="S4.T2.m3" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math>60 chars).</figcaption></div><div class="zh"><p>表 2：简单提示下 Caltech-101 数据集上空间偏置的汇总。Left Bias（左偏置）表示从左到右描述显著长于从右到左描述（&gt;60 个字符）的案例百分比。Balanced（均衡）表示差异可忽略（<math alttext="\pm" class="ltx_Math" display="inline" id="S4.T2.m3" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math>60 个字符）的案例。</p></div></div>
+<div class="blk atomic"><div><table class="ltx_tabular ltx_centering ltx_align_middle" id="S4.T3.2">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T3.2.1">
+<td class="ltx_td ltx_border_tt" id="S4.T3.2.1.1" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" colspan="3" id="S4.T3.2.1.2" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T3.2.1.2.1">Bias Frequency (%)</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" colspan="3" id="S4.T3.2.1.3" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T3.2.1.3.1">Character Difference Magnitude</span></td></tr>
+<tr class="ltx_tr" id="S4.T3.2.2">
+<td class="ltx_td ltx_align_left" id="S4.T3.2.2.1" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T3.2.2.1.1">Model</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.2.2" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T3.2.2.2.1">Left Bias</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.2.3" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T3.2.2.3.1">Balanced</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.2.4" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T3.2.2.4.1">Right Bias</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.2.5" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T3.2.2.5.1">Avg Diff</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.2.6" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T3.2.2.6.1">Max</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T3.2.2.7" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T3.2.2.7.1">Min</span></td></tr>
+<tr class="ltx_tr" id="S4.T3.2.3">
+<td class="ltx_td" id="S4.T3.2.3.1" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.3.2" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_italic" id="S4.T3.2.3.2.1">(&gt;+60)</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.3.3" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_italic" id="S4.T3.2.3.3.1">(Within <math alttext="\pm" class="ltx_Math" display="inline" id="S4.T3.m1" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math>60)</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.3.4" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_italic" id="S4.T3.2.3.4.1">(&lt;-60)</span></td>
+<td class="ltx_td" id="S4.T3.2.3.5" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td" id="S4.T3.2.3.6" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td ltx_nopad_r" id="S4.T3.2.3.7" style="padding-left:5.0pt;padding-right:5.0pt;"></td></tr>
+<tr class="ltx_tr" id="S4.T3.2.4">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T3.2.4.1" style="padding-left:5.0pt;padding-right:5.0pt;">InternVL2-8B</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.4.2" style="padding-left:5.0pt;padding-right:5.0pt;">47</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.4.3" style="padding-left:5.0pt;padding-right:5.0pt;">24</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.4.4" style="padding-left:5.0pt;padding-right:5.0pt;">29</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.4.5" style="padding-left:5.0pt;padding-right:5.0pt;">+33.8</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.4.6" style="padding-left:5.0pt;padding-right:5.0pt;">+445</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T3.2.4.7" style="padding-left:5.0pt;padding-right:5.0pt;">-413</td></tr>
+<tr class="ltx_tr" id="S4.T3.2.5">
+<td class="ltx_td ltx_align_left" id="S4.T3.2.5.1" style="padding-left:5.0pt;padding-right:5.0pt;">InternVL3-8B</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.5.2" style="padding-left:5.0pt;padding-right:5.0pt;">44</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.5.3" style="padding-left:5.0pt;padding-right:5.0pt;">40</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.5.4" style="padding-left:5.0pt;padding-right:5.0pt;">16</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.5.5" style="padding-left:5.0pt;padding-right:5.0pt;">+41.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.5.6" style="padding-left:5.0pt;padding-right:5.0pt;">+296</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T3.2.5.7" style="padding-left:5.0pt;padding-right:5.0pt;">-238</td></tr>
+<tr class="ltx_tr" id="S4.T3.2.6">
+<td class="ltx_td ltx_align_left" id="S4.T3.2.6.1" style="padding-left:5.0pt;padding-right:5.0pt;">Qwen2.5-VL-7B</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.6.2" style="padding-left:5.0pt;padding-right:5.0pt;">45</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.6.3" style="padding-left:5.0pt;padding-right:5.0pt;">25</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.6.4" style="padding-left:5.0pt;padding-right:5.0pt;">30</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.6.5" style="padding-left:5.0pt;padding-right:5.0pt;">+41.4</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.6.6" style="padding-left:5.0pt;padding-right:5.0pt;">+632</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T3.2.6.7" style="padding-left:5.0pt;padding-right:5.0pt;">-505</td></tr>
+<tr class="ltx_tr" id="S4.T3.2.7">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T3.2.7.1" style="padding-left:5.0pt;padding-right:5.0pt;">GPT-5 Nano</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.7.2" style="padding-left:5.0pt;padding-right:5.0pt;">11</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.7.3" style="padding-left:5.0pt;padding-right:5.0pt;">75</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.7.4" style="padding-left:5.0pt;padding-right:5.0pt;">14</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.7.5" style="padding-left:5.0pt;padding-right:5.0pt;">-1.9</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.7.6" style="padding-left:5.0pt;padding-right:5.0pt;">+137</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T3.2.7.7" style="padding-left:5.0pt;padding-right:5.0pt;">-139</td></tr>
+<tr class="ltx_tr" id="S4.T3.2.8">
+<td class="ltx_td ltx_align_left" id="S4.T3.2.8.1" style="padding-left:5.0pt;padding-right:5.0pt;">Gemini 2.0 Flash</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.8.2" style="padding-left:5.0pt;padding-right:5.0pt;">20</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.8.3" style="padding-left:5.0pt;padding-right:5.0pt;">44</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.8.4" style="padding-left:5.0pt;padding-right:5.0pt;">36</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.8.5" style="padding-left:5.0pt;padding-right:5.0pt;">-30.2</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.2.8.6" style="padding-left:5.0pt;padding-right:5.0pt;">+377</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T3.2.8.7" style="padding-left:5.0pt;padding-right:5.0pt;">-290</td></tr>
+<tr class="ltx_tr" id="S4.T3.2.9">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S4.T3.2.9.1" style="padding-left:5.0pt;padding-right:5.0pt;">Claude 4.5 Haiku</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T3.2.9.2" style="padding-left:5.0pt;padding-right:5.0pt;">35</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T3.2.9.3" style="padding-left:5.0pt;padding-right:5.0pt;">37</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T3.2.9.4" style="padding-left:5.0pt;padding-right:5.0pt;">28</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T3.2.9.5" style="padding-left:5.0pt;padding-right:5.0pt;">+11.4</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T3.2.9.6" style="padding-left:5.0pt;padding-right:5.0pt;">+441</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb" id="S4.T3.2.9.7" style="padding-left:5.0pt;padding-right:5.0pt;">-312</td></tr>
+</tbody>
+</table></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>Summary of spatial bias on the <span class="ltx_text ltx_font_bold" id="S4.T3.5">Caltech-101 dataset</span> under <span class="ltx_text ltx_font_bold" id="S4.T3.6">Structured Prompting</span> (JSON format). Explicit formatting instructions increase the frequency of Balanced responses, particularly in closed-source models.</figcaption></div><div class="zh"><p>表 3：结构化提示（JSON 格式）下 Caltech-101 数据集上空间偏置的汇总。明确的格式指令提高了均衡回答的比例，在闭源模型中尤为明显。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS2.p2.1">Open-source models demonstrate a pronounced left-to-right bias. InternVL2-8B exhibits the strongest effect, with an average difference of +472.8 characters, indicating substantially longer descriptions when following the natural left-to-right tendency. InternVL3-8B shows similar patterns (+393.5 characters), suggesting architectural improvements did not resolve this spatial preference.</p></div><div class="zh"><p>开源模型表现出明显的从左到右偏置。InternVL2-8B 的效应最强，平均差值为 +472.8 个字符，表明在顺应自然的从左到右倾向时，其描述明显更长。InternVL3-8B 呈现相似模式（+393.5 个字符），说明架构上的改进并未消除这一空间偏好。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS2.p3.1">Closed-source models generally show better balance on object-centric data. GPT-5 Nano achieves near-zero average difference (+3.3), and Claude 4.5 Haiku shows only a modest preference (+14.0). However, individual variance remains high, indicating that while the aggregate behavior is balanced, specific instances still trigger directional preferences.</p></div><div class="zh"><p>闭源模型在以物体为中心的数据上通常更为均衡。GPT-5 Nano 的平均差值接近零（+3.3），Claude 4.5 Haiku 只表现出轻微的偏好（+14.0）。然而，个体差异仍然很大，说明尽管聚合行为是均衡的，具体实例仍会触发方向性偏好。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.3 </span>Spatial Bias in Dense UI Contexts</h3></div><div class="zh"><h3>4.3 密集 UI 语境中的空间偏置</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS3.p1.1">We extended our evaluation to the "Desktop UI" dataset to determine if spatial bias persists or shifts in dense, text-rich UI contexts. The results, summarized in Table <a class="ltx_ref" href="#S4.T4" title="Table 4 ‣ 4.3 Spatial Bias in Dense UI Contexts ‣ 4 Results ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">4</span></a>, indicate that high information density significantly alters scanning behaviors for certain models.</p></div><div class="zh"><p>我们把评测扩展到「Desktop UI」数据集，以确定在密集、富文本的 UI 语境中空间偏置是持续存在还是发生偏移。汇总于表 4 的结果表明，高信息密度显著改变了某些模型的扫描行为。</p></div></div>
+<div class="blk atomic"><div><table class="ltx_tabular ltx_centering ltx_align_middle" id="S4.T4.2">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T4.2.1">
+<td class="ltx_td ltx_border_tt" id="S4.T4.2.1.1" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" colspan="3" id="S4.T4.2.1.2" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.2.1.2.1">Bias Frequency (%)</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" colspan="3" id="S4.T4.2.1.3" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.2.1.3.1">Character Difference Magnitude</span></td></tr>
+<tr class="ltx_tr" id="S4.T4.2.2">
+<td class="ltx_td ltx_align_left" id="S4.T4.2.2.1" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.2.2.1.1">Model</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.2.2" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.2.2.2.1">Left Bias</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.2.3" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.2.2.3.1">Balanced</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.2.4" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.2.2.4.1">Right Bias</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.2.5" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.2.2.5.1">Avg Diff</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.2.6" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.2.2.6.1">Max</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T4.2.2.7" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T4.2.2.7.1">Min</span></td></tr>
+<tr class="ltx_tr" id="S4.T4.2.3">
+<td class="ltx_td" id="S4.T4.2.3.1" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.3.2" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_italic" id="S4.T4.2.3.2.1">(&gt;+60)</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.3.3" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_italic" id="S4.T4.2.3.3.1">(Within <math alttext="\pm" class="ltx_Math" display="inline" id="S4.T4.m1" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math>60)</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.3.4" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_italic" id="S4.T4.2.3.4.1">(&lt;-60)</span></td>
+<td class="ltx_td" id="S4.T4.2.3.5" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td" id="S4.T4.2.3.6" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td ltx_nopad_r" id="S4.T4.2.3.7" style="padding-left:5.0pt;padding-right:5.0pt;"></td></tr>
+<tr class="ltx_tr" id="S4.T4.2.4">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T4.2.4.1" style="padding-left:5.0pt;padding-right:5.0pt;">InternVL2-8B</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.4.2" style="padding-left:5.0pt;padding-right:5.0pt;">42</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.4.3" style="padding-left:5.0pt;padding-right:5.0pt;">27</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.4.4" style="padding-left:5.0pt;padding-right:5.0pt;">31</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.4.5" style="padding-left:5.0pt;padding-right:5.0pt;">+30.7</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.4.6" style="padding-left:5.0pt;padding-right:5.0pt;">+344</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T4.2.4.7" style="padding-left:5.0pt;padding-right:5.0pt;">-301</td></tr>
+<tr class="ltx_tr" id="S4.T4.2.5">
+<td class="ltx_td ltx_align_left" id="S4.T4.2.5.1" style="padding-left:5.0pt;padding-right:5.0pt;">InternVL3-8B</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.5.2" style="padding-left:5.0pt;padding-right:5.0pt;">60</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.5.3" style="padding-left:5.0pt;padding-right:5.0pt;">7</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.5.4" style="padding-left:5.0pt;padding-right:5.0pt;">33</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.5.5" style="padding-left:5.0pt;padding-right:5.0pt;">+114.6</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.5.6" style="padding-left:5.0pt;padding-right:5.0pt;">+886</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T4.2.5.7" style="padding-left:5.0pt;padding-right:5.0pt;">-761</td></tr>
+<tr class="ltx_tr" id="S4.T4.2.6">
+<td class="ltx_td ltx_align_left" id="S4.T4.2.6.1" style="padding-left:5.0pt;padding-right:5.0pt;">Qwen2.5-VL-7B</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.6.2" style="padding-left:5.0pt;padding-right:5.0pt;">36</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.6.3" style="padding-left:5.0pt;padding-right:5.0pt;">30</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.6.4" style="padding-left:5.0pt;padding-right:5.0pt;">34</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.6.5" style="padding-left:5.0pt;padding-right:5.0pt;">-7.6</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.6.6" style="padding-left:5.0pt;padding-right:5.0pt;">+735</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T4.2.6.7" style="padding-left:5.0pt;padding-right:5.0pt;">-1181</td></tr>
+<tr class="ltx_tr" id="S4.T4.2.7">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T4.2.7.1" style="padding-left:5.0pt;padding-right:5.0pt;">GPT-5 Nano</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.7.2" style="padding-left:5.0pt;padding-right:5.0pt;">24</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.7.3" style="padding-left:5.0pt;padding-right:5.0pt;">9</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.7.4" style="padding-left:5.0pt;padding-right:5.0pt;">67</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.7.5" style="padding-left:5.0pt;padding-right:5.0pt;">-179.7</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.2.7.6" style="padding-left:5.0pt;padding-right:5.0pt;">+463</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T4.2.7.7" style="padding-left:5.0pt;padding-right:5.0pt;">-776</td></tr>
+<tr class="ltx_tr" id="S4.T4.2.8">
+<td class="ltx_td ltx_align_left" id="S4.T4.2.8.1" style="padding-left:5.0pt;padding-right:5.0pt;">Gemini 2.0 Flash</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.8.2" style="padding-left:5.0pt;padding-right:5.0pt;">43</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.8.3" style="padding-left:5.0pt;padding-right:5.0pt;">5</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.8.4" style="padding-left:5.0pt;padding-right:5.0pt;">52</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.8.5" style="padding-left:5.0pt;padding-right:5.0pt;">-33.9</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.2.8.6" style="padding-left:5.0pt;padding-right:5.0pt;">+1504</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T4.2.8.7" style="padding-left:5.0pt;padding-right:5.0pt;">-1651</td></tr>
+<tr class="ltx_tr" id="S4.T4.2.9">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S4.T4.2.9.1" style="padding-left:5.0pt;padding-right:5.0pt;">Claude 4.5 Haiku</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.2.9.2" style="padding-left:5.0pt;padding-right:5.0pt;">44</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.2.9.3" style="padding-left:5.0pt;padding-right:5.0pt;">33</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.2.9.4" style="padding-left:5.0pt;padding-right:5.0pt;">23</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.2.9.5" style="padding-left:5.0pt;padding-right:5.0pt;">+45.7</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.2.9.6" style="padding-left:5.0pt;padding-right:5.0pt;">+355</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb" id="S4.T4.2.9.7" style="padding-left:5.0pt;padding-right:5.0pt;">-293</td></tr>
+</tbody>
+</table></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 4: </span>Summary of spatial bias on the <span class="ltx_text ltx_font_bold" id="S4.T4.5">Desktop UI dataset</span> under <span class="ltx_text ltx_font_bold" id="S4.T4.6">Simple Prompt</span>. High information density triggers a shift toward Right Bias (negative Average Difference) in models like GPT-5 Nano and Gemini 2.0 Flash.</figcaption></div><div class="zh"><p>表 4：简单提示下 Desktop UI 数据集上空间偏置的汇总。高信息密度触发了向右侧偏置（负的平均差值）的偏移，GPT-5 Nano 与 Gemini 2.0 Flash 等模型即如此。</p></div></div>
+<div class="blk atomic"><div><table class="ltx_tabular ltx_centering ltx_align_middle" id="S4.T5.2">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T5.2.1">
+<td class="ltx_td ltx_border_tt" id="S4.T5.2.1.1" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" colspan="3" id="S4.T5.2.1.2" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.2.1.2.1">Bias Frequency (%)</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" colspan="3" id="S4.T5.2.1.3" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.2.1.3.1">Character Difference Magnitude</span></td></tr>
+<tr class="ltx_tr" id="S4.T5.2.2">
+<td class="ltx_td ltx_align_left" id="S4.T5.2.2.1" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.2.2.1.1">Model</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.2.2" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.2.2.2.1">Left Bias</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.2.3" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.2.2.3.1">Balanced</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.2.4" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.2.2.4.1">Right Bias</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.2.5" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.2.2.5.1">Avg Diff</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.2.6" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.2.2.6.1">Max</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T5.2.2.7" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.2.2.7.1">Min</span></td></tr>
+<tr class="ltx_tr" id="S4.T5.2.3">
+<td class="ltx_td" id="S4.T5.2.3.1" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td ltx_align_center" id="S4.T5.2.3.2" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_italic" id="S4.T5.2.3.2.1">(&gt;+60)</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T5.2.3.3" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_italic" id="S4.T5.2.3.3.1">(Within <math alttext="\pm" class="ltx_Math" display="inline" id="S4.T5.m1" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math>60)</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T5.2.3.4" style="padding-left:5.0pt;padding-right:5.0pt;"><span class="ltx_text ltx_font_italic" id="S4.T5.2.3.4.1">(&lt;-60)</span></td>
+<td class="ltx_td" id="S4.T5.2.3.5" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td" id="S4.T5.2.3.6" style="padding-left:5.0pt;padding-right:5.0pt;"></td>
+<td class="ltx_td ltx_nopad_r" id="S4.T5.2.3.7" style="padding-left:5.0pt;padding-right:5.0pt;"></td></tr>
+<tr class="ltx_tr" id="S4.T5.2.4">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T5.2.4.1" style="padding-left:5.0pt;padding-right:5.0pt;">InternVL2-8B</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.4.2" style="padding-left:5.0pt;padding-right:5.0pt;">44</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.4.3" style="padding-left:5.0pt;padding-right:5.0pt;">16</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.4.4" style="padding-left:5.0pt;padding-right:5.0pt;">40</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.4.5" style="padding-left:5.0pt;padding-right:5.0pt;">-17.4</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.4.6" style="padding-left:5.0pt;padding-right:5.0pt;">+1558</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T5.2.4.7" style="padding-left:5.0pt;padding-right:5.0pt;">-2032</td></tr>
+<tr class="ltx_tr" id="S4.T5.2.5">
+<td class="ltx_td ltx_align_left" id="S4.T5.2.5.1" style="padding-left:5.0pt;padding-right:5.0pt;">InternVL3-8B</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.2.5.2" style="padding-left:5.0pt;padding-right:5.0pt;">33</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.2.5.3" style="padding-left:5.0pt;padding-right:5.0pt;">16</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.2.5.4" style="padding-left:5.0pt;padding-right:5.0pt;">51</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.2.5.5" style="padding-left:5.0pt;padding-right:5.0pt;">-75.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.2.5.6" style="padding-left:5.0pt;padding-right:5.0pt;">+812</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T5.2.5.7" style="padding-left:5.0pt;padding-right:5.0pt;">-1932</td></tr>
+<tr class="ltx_tr" id="S4.T5.2.6">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T5.2.6.1" style="padding-left:5.0pt;padding-right:5.0pt;">GPT-5 Nano</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.6.2" style="padding-left:5.0pt;padding-right:5.0pt;">41</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.6.3" style="padding-left:5.0pt;padding-right:5.0pt;">15</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.6.4" style="padding-left:5.0pt;padding-right:5.0pt;">44</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.6.5" style="padding-left:5.0pt;padding-right:5.0pt;">+11.2</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.2.6.6" style="padding-left:5.0pt;padding-right:5.0pt;">+711</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T5.2.6.7" style="padding-left:5.0pt;padding-right:5.0pt;">-839</td></tr>
+<tr class="ltx_tr" id="S4.T5.2.7">
+<td class="ltx_td ltx_align_left" id="S4.T5.2.7.1" style="padding-left:5.0pt;padding-right:5.0pt;">Gemini 2.0 Flash</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.2.7.2" style="padding-left:5.0pt;padding-right:5.0pt;">34</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.2.7.3" style="padding-left:5.0pt;padding-right:5.0pt;">9</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.2.7.4" style="padding-left:5.0pt;padding-right:5.0pt;">57</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.2.7.5" style="padding-left:5.0pt;padding-right:5.0pt;">-115.9</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.2.7.6" style="padding-left:5.0pt;padding-right:5.0pt;">+1759</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T5.2.7.7" style="padding-left:5.0pt;padding-right:5.0pt;">-1094</td></tr>
+<tr class="ltx_tr" id="S4.T5.2.8">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S4.T5.2.8.1" style="padding-left:5.0pt;padding-right:5.0pt;">Claude 4.5 Haiku</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.2.8.2" style="padding-left:5.0pt;padding-right:5.0pt;">46</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.2.8.3" style="padding-left:5.0pt;padding-right:5.0pt;">21</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.2.8.4" style="padding-left:5.0pt;padding-right:5.0pt;">33</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.2.8.5" style="padding-left:5.0pt;padding-right:5.0pt;">+41.0</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.2.8.6" style="padding-left:5.0pt;padding-right:5.0pt;">+556</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb" id="S4.T5.2.8.7" style="padding-left:5.0pt;padding-right:5.0pt;">-683</td></tr>
+</tbody>
+</table></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 5: </span>Summary of spatial bias on the <span class="ltx_text ltx_font_bold" id="S4.T5.5">Desktop UI dataset</span> under <span class="ltx_text ltx_font_bold" id="S4.T5.6">Structured Prompting</span>. In dense UI contexts, structured formatting fails to enforce balance, with models like Gemini 2.0 Flash and InternVL3 exhibiting significant Right Bias.</figcaption></div><div class="zh"><p>表 5：结构化提示下 Desktop UI 数据集上空间偏置的汇总。在密集 UI 语境中，结构化格式无法强制实现均衡，Gemini 2.0 Flash 与 InternVL3 等模型表现出显著的右侧偏置。</p></div></div>
+<div class="blk"><div class="en"><h5 class="ltx_title ltx_title_paragraph">Shift in Polarity</h5></div><div class="zh"><h5>极性的偏移</h5></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS3.SSS0.Px1.p1.1">Unlike the consistent left-bias seen in object recognition, the Desktop UI dataset induced a strong right-favoring bias (negative average difference) in several capable models. GPT-5 Nano shifted from a low bias on Caltech to a significant -179.7 on Dense UI data, with 67% of cases favoring the right image. Similarly, Gemini 2.0 Flash shifted to -33.9. This suggests that when presented with dense text or UI feeds, these models may allocate more attention to the latter half of the context window or the right side of the visual field.</p></div><div class="zh"><p>与物体识别中一致的左侧偏置不同，Desktop UI 数据集在若干能力较强的模型中诱发了强烈的偏右倾向（负的平均差值）。GPT-5 Nano 从 Caltech 上的低偏置转为在密集 UI 数据上的 −179.7，有 67% 的案例偏向右侧图像。类似地，Gemini 2.0 Flash 转为 −33.9。这说明当面对密集文本或 UI 信息流时，这些模型可能把更多注意力分配给上下文窗口的后半部分或视野的右侧。</p></div></div>
+<div class="blk"><div class="en"><h5 class="ltx_title ltx_title_paragraph">Qualitative Observation: Directional Refusal in Qwen2.5</h5></div><div class="zh"><h5>定性观察：Qwen2.5 中的方向性拒斥</h5></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS3.SSS0.Px2.p1.1">A distinct behavioral anomaly emerged with Qwen2.5-VL-7B <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib2" title="">Bai and others (2025)</a></cite>. While the quantitative metrics show a balanced average difference of -7.6, qualitative analysis reveals a systematic failure in instruction following. In a majority of cases under the "Right-to-Left" simple prompt, the model failed to start its description from the right image. Instead, it described the left image first before transitioning to the right, effectively ignoring the directional constraint.</p></div><div class="zh"><p>Qwen2.5-VL-7B Bai 等（2025）出现了一种独特的行为异常。虽然量化指标显示其平均差值为 −7.6、较为均衡，但定性分析揭示了一种系统性指令遵循失败：在「从右到左」的简单提示下，模型在多数情形中并未从右侧图像开始描述，而是先描述左侧图像再转向右侧，实际上忽略了方向性约束。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.4 </span>Mitigation via Structured Prompting</h3></div><div class="zh"><h3>4.4 通过结构化提示缓解</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS4.p1.1">Structured prompting (requesting JSON output) significantly reduced bias magnitude in open-source models, though it did not eliminate it. For InternVL2-8B on Caltech data, structured prompting reduced the percentage of strongly left-biased cases from 80% to 47%, and the average difference from +472.8 to +33.8 characters.</p></div><div class="zh"><p>结构化提示（要求 JSON 输出）显著降低了开源模型中的偏置幅度，但并未消除它。对于 InternVL2-8B 在 Caltech 数据上的表现，结构化提示把强左偏置案例的百分比从 80% 降到 47%，平均差值从 +472.8 个字符降到 +33.8 个字符。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.5 </span>Investigating the Origins of Spatial Bias</h3></div><div class="zh"><h3>4.5 探究空间偏置的成因</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS5.p1.1">Having established the consistent presence of spatial bias across models and datasets, we investigated three potential sources: language reading direction, explicit dataset annotation instructions, and architectural design choices.</p></div><div class="zh"><p>在确立空间偏置在多个模型与数据集上一致存在之后，我们考察了三种可能的来源：语言阅读方向、明确的数据集标注指令，以及架构设计选择。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">4.5.1 </span>Language Reading Direction</h4></div><div class="zh"><h4>4.5.1 语言阅读方向</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS5.SSS1.p1.1">The neutral prompting experiment with the Arabic-finetuned AIN model provides crucial evidence. Despite being fine-tuned on right-to-left (RTL) Arabic text, the model described left-positioned content first in 97% of cases identical to the English-trained Qwen2.5-VL-7B.</p></div><div class="zh"><p>用阿拉伯语微调的 AIN 模型开展的中性提示实验提供了关键证据。尽管在从右到左（RTL）的阿拉伯语文本上做了微调，该模型仍在 97% 的情形中先描述左侧内容，与英语训练的 Qwen2.5-VL-7B 完全相同。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS5.SSS1.p2.1">This finding suggests language reading direction is not the primary driver of spatial bias. However, we acknowledge a limitation: AIN is fine-tuned on an existing architecture rather than trained from scratch on RTL languages. While this indicates architectural priors may dominate over fine-tuning, a model pre-trained entirely on RTL data would provide more conclusive evidence.</p></div><div class="zh"><p>这一发现说明语言阅读方向并非空间偏置的主要驱动因素。不过我们也承认一处局限：AIN 是在既有架构上微调的，而非在 RTL 语言上从零训练。虽然这表明架构先验可能压过微调的影响，但一个完全在 RTL 数据上预训练的模型会给出更确定的证据。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">4.5.2 </span>Training Data Annotation Patterns</h4></div><div class="zh"><h4>4.5.2 训练数据标注模式</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS5.SSS2.p1.1">We examined annotation protocols from two major vision-language datasets: PixMo <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib4" title="">Deitke and others (2024)</a></cite> and Visual Genome <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib6" title="">Krishna and others (2017)</a></cite>. Neither dataset contains explicit instructions mandating left-to-right description ordering. PixMo annotators are instructed to describe salient objects first through speech-based descriptions, while Visual Genome guidelines emphasize prominent elements without specifying spatial sequences.</p></div><div class="zh"><p>我们考察了两个主流视觉语言数据集的标注规程：PixMo Deitke 等（2024）与 Visual Genome Krishna 等（2017）。两个数据集都不包含强制从左到右描述顺序的明确指令。PixMo 的标注者被要求通过语音描述先讲显著的物体，而 Visual Genome 的指南强调突出元素，并未规定空间次序。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS5.SSS2.p2.1">This rules out explicit annotation directives as the source. However, implicit human tendencies could still influence training data annotators might naturally describe images left-to-right despite lacking explicit instructions. A quantitative analysis of actual annotations (rather than just guidelines) would be needed to assess this possibility.</p></div><div class="zh"><p>这排除了明确标注指令作为来源的可能。然而，隐含的人类倾向仍可能产生影响：即便没有明确指示，标注者也可能天然地从左到右描述图像。要评估这种可能，需要对实际标注（而不只是指南）做定量分析。</p></div></div>
+<div class="blk"><div class="en"><h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">4.5.3 </span>Architectural Factors</h4></div><div class="zh"><h4>4.5.3 架构因素</h4></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS5.SSS3.p1.1">With explicit language and dataset instructions eliminated, we hypothesize architectural origins. Two mechanisms warrant investigation:</p></div><div class="zh"><p>在排除了语言与数据集的明确指令之后，我们假设偏置源自架构。有两个机制值得考察：</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS5.SSS3.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS5.SSS3.p2.1.1">Positional Embeddings:</span> The encoding of spatial location for image tokens may introduce systematic processing differences between left and right positions. If positional embeddings (such as RoPE) create asymmetric attention patterns, this could manifest as the observed bias. This hypothesis is consistent with prior work by <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib19" title="">Zhu et al. (2025)</a></cite>, which identified unbalanced position embedding design in the language model component as a root cause of spatial inconsistencies.</p></div><div class="zh"><p>位置嵌入：图像词元空间位置的编码方式，可能在左右位置之间引入系统性的处理差异。如果位置嵌入（例如 RoPE）造成不对称的注意力模式，就可能表现为所观测到的偏置。这一假设与 Zhu 等（2025）的前期工作一致，该工作指出语言模型组件中位置嵌入设计的不均衡是空间不一致的根本原因。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS5.SSS3.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS5.SSS3.p3.1.1">Vision Encoder Design:</span> Vision transformers process images by dividing them into patches. If patch ordering or spatial relationship encoding favors left-to-right patterns, this architectural choice could produce positional bias independent of language or training data.</p></div><div class="zh"><p>视觉编码器设计：视觉 Transformer 通过把图像切分为 patch 来处理图像。如果 patch 的排序方式或空间关系编码偏向从左到右的模式，这一架构选择就可能产生独立于语言与训练数据的位置偏置。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">5 </span>Discussion</h2></div><div class="zh"><h2>5 讨论</h2></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">5.1 </span>Need for Mechanistic Understanding</h3></div><div class="zh"><h3>5.1 对机制性理解的必要性</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S5.SS1.p1.1">Our work identifies behavioral manifestations of bias but does not reveal underlying mechanisms. Future research should employ mechanistic interpretability techniques:</p></div><div class="zh"><p>我们的工作识别了偏置的行为表现，但并未揭示其底层机制。未来研究应采用机制可解释性技术：</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S5.I1.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S5.I1.i1.p1">
+<p class="ltx_p" id="S5.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S5.I1.i1.p1.1.1">Attention Pattern Analysis:</span> Visualizing attention weights <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib10" title="">Vig (2019)</a></cite> across spatial positions during generation could reveal which regions receive preferential processing.</p>
+</div></li></div><div class="zh"><p>• 注意力模式分析：在生成过程中跨空间位置可视化注意力权重 Vig（2019），可揭示哪些区域获得了优先处理。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S5.I1.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S5.I1.i2.p1">
+<p class="ltx_p" id="S5.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S5.I1.i2.p1.1.1">Activation Patching:</span> Systematically modifying representations at specific components <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib11" title="">Wang et al. (2023a)</a></cite> could identify which architectural elements are necessary and sufficient for producing spatial bias.</p>
+</div></li></div><div class="zh"><p>• 激活修补：系统性地修改特定组件处的表示 Wang 等（2023a），可识别出哪些架构要素对产生空间偏置是必要且充分的。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S5.I1.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S5.I1.i3.p1">
+<p class="ltx_p" id="S5.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S5.I1.i3.p1.1.1">Intervention Studies:</span> Testing models with modified positional embeddings or altered patch ordering could causally test the architectural hypothesis.</p>
+</div></li></div><div class="zh"><p>• 干预研究：用修改过的位置嵌入或改变过的 patch 排序测试模型，可对架构假设做因果检验。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S5.SS1.p3.1">Additionally, quantitative analysis of training data annotations (beyond just guidelines) is needed to measure implicit human left-first tendencies that could influence learned behavior despite the absence of explicit instructions.</p></div><div class="zh"><p>此外，还需要对训练数据标注（而不只是指南）做定量分析，以衡量隐含的人类「先左」倾向——即便没有明确指令，这种倾向也可能影响习得行为。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">6 </span>Conclusion</h2></div><div class="zh"><h2>6 结论</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S6.p1.1">This work demonstrates that Vision-Language Models exhibit systematic spatial attention bias, describing left-positioned content first in 97% of neutral prompting cases. Through experiments across seven architectures and two datasets, we show this bias persists despite Arabic fine-tuning and explicit spatial instructions, suggesting architectural rather than linguistic origins.</p></div><div class="zh"><p>本文证明视觉语言模型表现出系统性的空间注意力偏置：在中性提示下有 97% 的情形先描述左侧内容。通过在七种架构与两个数据集上的实验，我们表明这一偏置即便在阿拉伯语微调与明确空间指令之下依然存在，提示其成因是架构性的，而非语言性的。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S6.p2.1">Key findings include: (1) near-universal left-first description preference under neutral prompting, (2) substantial residual bias even under explicit directional instructions, (3) variations in bias magnitude across different visual contexts, and (4) the elimination of language direction and explicit dataset instructions as primary causes.</p></div><div class="zh"><p>主要发现包括：（1）中性提示下近乎普遍的「先左」描述偏好；（2）即便在明确方向指令下仍存在可观的残余偏置；（3）偏置幅度随视觉语境不同而变化；（4）排除了语言方向与明确数据集指令作为主要原因。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S6.p3.1">Achieving position-invariant spatial processing will require explicit architectural interventions informed by mechanistic understanding of how positional embeddings and visual encoders interact during multimodal reasoning. Future VLM development must prioritize interpretability-driven design to identify and address the components responsible for spatial biases.</p></div><div class="zh"><p>要实现位置无关的空间处理，需要有针对性的架构干预，而干预又须建立在对位置嵌入与视觉编码器在多模态推理中如何相互作用的机制性理解之上。未来的 VLM 开发必须把可解释性驱动的设计放在优先位置，以识别并处理造成空间偏置的组件。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">7 </span>Limitations and Future Work</h2></div><div class="zh"><h2>7 局限与未来工作</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S7.p1.1">Several limitations should be considered when interpreting these results. Our experiments use horizontally concatenated image pairs from Caltech-101, which contains relatively simple, centered objects. Real-world scenes with complex spatial relationships may exhibit different bias patterns. We tested seven models, but the VLM landscape continues evolving rapidly, and newer architectures may show different characteristics.</p></div><div class="zh"><p>解读这些结果时应考虑若干局限。我们的实验使用来自 Caltech-101 的水平拼接图像对，该数据集中的物体相对简单且居中；具有复杂空间关系的真实场景可能呈现不同的偏置模式。我们测试了七个模型，但 VLM 的格局仍在快速演进，更新的架构可能表现出不同的特征。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S7.p2.1">Our analysis focuses on behavioral manifestations of bias rather than internal mechanisms producing it. While we propose architectural origins based on elimination of other hypotheses, direct evidence through interpretability studies is needed to confirm these proposals. Future research should investigate mechanistic interpretability studies using attention visualization <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib10" title="">Vig (2019)</a></cite> and activation patching <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib11" title="">Wang et al. (2023a)</a></cite> to reveal which architectural components produce spatial bias. Additionally, "LLM-as-a-Judge" evaluation pipelines should be utilized to verify semantic adherence to spatial instructions.</p></div><div class="zh"><p>我们的分析聚焦于偏置的行为表现，而非产生偏置的内部机制。尽管我们在排除其他假设的基础上提出了架构性成因，但仍需通过可解释性研究获得直接证据来确认这些推断。未来研究应开展机制可解释性研究，运用注意力可视化 Vig（2019）与激活修补 Wang 等（2023a）来揭示哪些架构组件产生了空间偏置。此外，还应利用「LLM-as-a-Judge」评测流程来核验模型在语义上是否遵循了空间指令。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section">Acknowledgments</h2></div><div class="zh"><h2>致谢</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="Sx1.p1.1">The authors wish to acknowledge the use of <span class="ltx_text" id="Sx1.p1.1.1">ChatGPT</span> in improving the presentation and grammar of the paper. The paper remains an accurate representation of the authors’ underlying contributions.</p></div><div class="zh"><p>作者希望说明，本文在改进表述与语法时使用了 ChatGPT。论文仍然如实反映作者的实质性贡献。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_bibliography">References</h2></div><div class="zh"><h2>参考文献</h2></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib24"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Alayrac <span class="ltx_text ltx_bib_etal">et al.</span> (2022)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Alayrac, J. Donahue, P. Luc, A. Miech, I. Barr, Y. Hasson, K. Lenc, A. Mensch, K. Millican, M. Reynolds, <span class="ltx_text ltx_bib_etal">et al.</span></span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Flamingo: a visual language model for few-shot learning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume">35</span>, <span class="ltx_text ltx_bib_pages">pp. 23716–23736</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_misc" id="bib.bib1"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Anthropic (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Anthropic</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Introducing claude haiku 4.5</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://www.anthropic.com/news/claude-haiku-4-5" title="">https://www.anthropic.com/news/claude-haiku-4-5</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S3.SS3.p1.1" title="3.3 Models Evaluated ‣ 3 Methodology ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§3.3</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_article" id="bib.bib31"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Bai <span class="ltx_text ltx_bib_etal">et al.</span> (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Bai, S. Bai, S. Yang, S. Wang, S. Tan, P. Wang, J. Lin, C. Zhou, and J. Zhou</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Qwen-vl: a versatile vision-language model for understanding, localization, text reading, and beyond</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2308.12966</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_article" id="bib.bib2"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Bai <span class="ltx_text ltx_bib_etal">et al.</span> (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Bai <span class="ltx_text ltx_bib_etal">et al.</span></span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Qwen2.5-vl: a family of strong vision-language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2502.13923</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2502.13923" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S3.SS3.p1.1" title="3.3 Models Evaluated ‣ 3 Methodology ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§3.3</span></a>,
+<a class="ltx_ref" href="#S4.SS1.p1.1" title="4.1 Neutral Prompting Baseline ‣ 4 Results ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§4.1</span></a>,
+<a class="ltx_ref" href="#S4.SS3.SSS0.Px2.p1.1" title="Qualitative Observation: Directional Refusal in Qwen2.5 ‣ 4.3 Spatial Bias in Dense UI Contexts ‣ 4 Results ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§4.3</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib32"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Chen <span class="ltx_text ltx_bib_etal">et al.</span> (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Z. Chen, J. Wu, W. Wang, W. Su, G. Chen, S. Xing, M. Zhong, Q. Zhang, X. Zhu, L. Lu, <span class="ltx_text ltx_bib_etal">et al.</span></span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Internvl: scaling up vision foundation models and aligning for generic visual-linguistic tasks</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages">pp. 24185–24198</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_article" id="bib.bib23"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Chiang <span class="ltx_text ltx_bib_etal">et al.</span> (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">W. Chiang, Z. Li, Z. Lin, Y. Sheng, Z. Wu, H. Zhang, L. Zheng, S. Zhuang, Y. Zhuang, J. E. Gonzalez, <span class="ltx_text ltx_bib_etal">et al.</span></span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Vicuna: an open-source chatbot impressing gpt-4 with 90%* chatgpt quality</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">See https://vicuna. lmsys. org (accessed 14 April 2023)</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib28"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Dai <span class="ltx_text ltx_bib_etal">et al.</span> (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">W. Dai, J. Li, D. Li, A. M. H. Tiong, J. Zhao, W. Weis, B. Li, P. Fung, and S. Hoi</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Instructblip: towards general-purpose vision-language models with instruction tuning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume">36</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_article" id="bib.bib4"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Deitke <span class="ltx_text ltx_bib_etal">et al.</span> (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Deitke <span class="ltx_text ltx_bib_etal">et al.</span></span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Molmo and pixmo: open weights and open data for state-of-the-art vision-language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2409.17146</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2409.17146" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.I1.i3.p1.1" title="In 1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">3rd item</span></a>,
+<a class="ltx_ref" href="#S4.SS5.SSS2.p1.1" title="4.5.2 Training Data Annotation Patterns ‣ 4.5 Investigating the Origins of Spatial Bias ‣ 4 Results ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§4.5.2</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib5"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Fei-Fei <span class="ltx_text ltx_bib_etal">et al.</span> (2004)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">L. Fei-Fei, R. Fergus, and P. Perona</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Learning generative visual models from few training examples: an incremental bayesian approach tested on 101 object categories</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR) Workshops</span>,
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://ieeexplore.ieee.org/document/1384978" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S3.SS1.SSS1.p1.1" title="3.1.1 Caltech-101 Controlled Pairs ‣ 3.1 Dataset Construction ‣ 3 Methodology ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§3.1.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_misc" id="bib.bib15"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Google (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Google</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Gemini 2.0 flash model card</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://modelcards.withgoogle.com/assets/documents/gemini-2-flash.pdf" title="">https://modelcards.withgoogle.com/assets/documents/gemini-2-flash.pdf</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S3.SS3.p1.1" title="3.3 Models Evaluated ‣ 3 Methodology ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§3.3</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib36"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Hendricks <span class="ltx_text ltx_bib_etal">et al.</span> (2018)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">L. A. Hendricks, K. Burns, K. Saenko, T. Darrell, and A. Rohrbach</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Women also snowboard: overcoming bias in captioning models</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the European Conference on Computer Vision (ECCV)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages">pp. 771–787</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2 Biases in Multimodal Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_article" id="bib.bib6"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Krishna <span class="ltx_text ltx_bib_etal">et al.</span> (2017)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">R. Krishna <span class="ltx_text ltx_bib_etal">et al.</span></span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Visual genome: connecting language and vision using crowdsourced dense image annotations</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:1602.07332</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/1602.07332" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.I1.i3.p1.1" title="In 1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">3rd item</span></a>,
+<a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S4.SS5.SSS2.p1.1" title="4.5.2 Training Data Annotation Patterns ‣ 4.5 Investigating the Origins of Spatial Bias ‣ 4 Results ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§4.5.2</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib35"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Li <span class="ltx_text ltx_bib_etal">et al.</span> (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Li, C. Wong, S. Zhang, N. Usuyama, H. Liu, J. Yang, T. Naumann, H. Poon, and J. Gao</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Llava-med: training a large language-and-vision assistant for biomedicine in one day</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume">36</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib25"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Li <span class="ltx_text ltx_bib_etal">et al.</span> (2023a)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Li, D. Li, S. Savarese, and S. Hoi</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Blip-2: bootstrapping language-image pre-training with frozen image encoders and large language models</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">International conference on machine learning</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages">pp. 19730–19742</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib17"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Li <span class="ltx_text ltx_bib_etal">et al.</span> (2020)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Li, X. Yin, C. Li, P. Zhang, X. Zhang, X. Hu, J. Wang, J. Tang, and F. Wei</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Oscar: object-semantics aligned pre-training for vision-language tasks</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">European Conference on Computer Vision (ECCV)</span>,
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2004.06165" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib39"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Li <span class="ltx_text ltx_bib_etal">et al.</span> (2023b)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Li, Y. Du, K. Zhou, J. Wang, W. X. Zhao, and J. Wen</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Evaluating object hallucination in large vision-language models</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages">pp. 292–305</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2 Biases in Multimodal Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib26"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Liu <span class="ltx_text ltx_bib_etal">et al.</span> (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">H. Liu, C. Li, Q. Wu, and Y. J. Lee</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Visual instruction tuning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in neural information processing systems</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume">36</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib16"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Lu <span class="ltx_text ltx_bib_etal">et al.</span> (2019)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Lu, D. Batra, D. Parikh, and S. Lee</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">ViLBERT: pretraining task-agnostic visiolinguistic representations for vision-and-language tasks</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems (NeurIPS)</span>,
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/1908.02265" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_article" id="bib.bib8"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">MBZUAI Oryx-Lab (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">MBZUAI Oryx-Lab</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">AIN: the arabic inclusive large multimodal model</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2502.00094</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2502.00094" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.I1.i2.p1.1" title="In 1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">2nd item</span></a>,
+<a class="ltx_ref" href="#S3.SS3.p1.1" title="3.3 Models Evaluated ‣ 3 Methodology ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§3.3</span></a>,
+<a class="ltx_ref" href="#S4.SS1.p1.1" title="4.1 Neutral Prompting Baseline ‣ 4 Results ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§4.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_misc" id="bib.bib7"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">OpenAI (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">OpenAI</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">GPT-5 nano docs</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://platform.openai.com/docs/models/gpt-5-nano" title="">https://platform.openai.com/docs/models/gpt-5-nano</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S3.SS3.p1.1" title="3.3 Models Evaluated ‣ 3 Methodology ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§3.3</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_misc" id="bib.bib12"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">OpenGVLab (2025a)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">OpenGVLab</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">InternVL2-8b (model card)</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://huggingface.co/OpenGVLab/InternVL2-8B" title="">https://huggingface.co/OpenGVLab/InternVL2-8B</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S3.SS3.p1.1" title="3.3 Models Evaluated ‣ 3 Methodology ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§3.3</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_misc" id="bib.bib13"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">OpenGVLab (2025b)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">OpenGVLab</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">InternVL3-8b (model card)</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://huggingface.co/OpenGVLab/InternVL3-8B" title="">https://huggingface.co/OpenGVLab/InternVL3-8B</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S3.SS3.p1.1" title="3.3 Models Evaluated ‣ 3 Methodology ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§3.3</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_article" id="bib.bib9"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Qwen Team (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Qwen Team</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Qwen2-vl: enhancing vision-language model’s perception, reasoning, and compositionality</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2409.12191</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2409.12191" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S3.SS3.p1.1" title="3.3 Models Evaluated ‣ 3 Methodology ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§3.3</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_misc" id="bib.bib14"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Qwen Team (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Qwen Team</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Qwen2-vl-7b-instruct (model card)</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct" title="">https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S3.SS3.p1.1" title="3.3 Models Evaluated ‣ 3 Methodology ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§3.3</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib20"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Radford <span class="ltx_text ltx_bib_etal">et al.</span> (2021)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark, <span class="ltx_text ltx_bib_etal">et al.</span></span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Learning transferable visual models from natural language supervision</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">International Conference on Machine Learning</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages">pp. 8748–8763</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_article" id="bib.bib18"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Radford <span class="ltx_text ltx_bib_etal">et al.</span> (2021)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Radford <span class="ltx_text ltx_bib_etal">et al.</span></span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Learning transferable visual models from natural language supervision</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">International Conference on Machine Learning (ICML)</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2103.00020" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib38"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Rohrbach <span class="ltx_text ltx_bib_etal">et al.</span> (2018)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Rohrbach, L. A. Hendricks, K. Burns, T. Darrell, and K. Saenko</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Object hallucination in image captioning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages">pp. 4035–4045</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2 Biases in Multimodal Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib27"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Schuhmann <span class="ltx_text ltx_bib_etal">et al.</span> (2022)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Schuhmann, R. Beaumont, R. Vencu, C. Gordon, R. Wightman, M. Cherti, T. Coombes, A. Katta, C. Mullis, M. Wortsman, <span class="ltx_text ltx_bib_etal">et al.</span></span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Laion-5b: an open large-scale dataset for training next generation image-text models</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume">35</span>, <span class="ltx_text ltx_bib_pages">pp. 25278–25294</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib3"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Tian <span class="ltx_text ltx_bib_etal">et al.</span> (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Tian, S. Zou, Z. Yang, and J. Zhang</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Identifying and mitigating position bias of multi-image vision-language models</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the Computer Vision and Pattern Recognition Conference</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages">pp. 10599–10609</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p1.1" title="2.3 Spatial and Positional Bias ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.3</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_article" id="bib.bib22"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Touvron <span class="ltx_text ltx_bib_etal">et al.</span> (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">H. Touvron, T. Lavril, G. Izacard, X. Martinet, M. Lachaux, T. Lacroix, B. Rozière, N. Goyal, E. Hambro, F. Azhar, <span class="ltx_text ltx_bib_etal">et al.</span></span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Llama: open and efficient foundation language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2302.13971</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib10"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Vig (2019)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Vig</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A multiscale visualization of attention in the transformer model</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics: System Demonstrations</span>,
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/1906.05714" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S5.I1.i1.p1.1" title="In 5.1 Need for Mechanistic Understanding ‣ 5 Discussion ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">1st item</span></a>,
+<a class="ltx_ref" href="#S7.p2.1" title="7 Limitations and Future Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib11"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Wang <span class="ltx_text ltx_bib_etal">et al.</span> (2023a)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">K. Wang, A. Variengien, A. Conmy, B. Shlegeris, and J. Steinhardt</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Interpretability in the wild: a circuit for indirect object identification in gpt-2 small</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">International Conference on Learning Representations (ICLR)</span>,
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2211.00593" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S5.I1.i2.p1.1" title="In 5.1 Need for Mechanistic Understanding ‣ 5 Discussion ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">2nd item</span></a>,
+<a class="ltx_ref" href="#S7.p2.1" title="7 Limitations and Future Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_article" id="bib.bib33"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Wang <span class="ltx_text ltx_bib_etal">et al.</span> (2023b)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">W. Wang, Q. Lv, W. Yu, W. Hong, J. Qi, Y. Wang, J. Ji, Z. Yang, L. Zhao, X. Song, <span class="ltx_text ltx_bib_etal">et al.</span></span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Cogvlm: visual expert for pretrained language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2311.03079</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_article" id="bib.bib30"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Yu <span class="ltx_text ltx_bib_etal">et al.</span> (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. Yu, Y. Yao, Y. Zhang, Y. He, Y. Wu, and X. Han</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">RLHF-v: towards trustworthy mllms via behavior alignment from fine-grained correctional human feedback</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2312.00849</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib21"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Zhai <span class="ltx_text ltx_bib_etal">et al.</span> (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Zhai, B. Mustafa, A. Kolesnikov, and L. Beyer</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Sigmoid loss for language image pre-training</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE/CVF International Conference on Computer Vision</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages">pp. 11975–11986</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib37"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Zhao <span class="ltx_text ltx_bib_etal">et al.</span> (2021)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. Zhao, A. Wang, and O. Russakovsky</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Understanding and evaluating racial biases in image captioning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE/CVF International Conference on Computer Vision</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages">pp. 14830–14840</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2 Biases in Multimodal Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_article" id="bib.bib29"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Zhao <span class="ltx_text ltx_bib_etal">et al.</span> (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Z. Zhao, Y. Wang, J. Wu, and W. Li</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Silky: exploring internet-scale image-text data for multimedia foundation models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2312.06752</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_article" id="bib.bib34"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Zhu <span class="ltx_text ltx_bib_etal">et al.</span> (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. Zhu, J. Chen, X. Shen, X. Li, and M. Elhoseiny</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Minigpt-4: enhancing vision-language understanding with advanced large language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2304.10592</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Vision-Language Models ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem ltx_bib_article" id="bib.bib19"><span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Zhu <span class="ltx_text ltx_bib_etal">et al.</span> (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Zhu, X. Bai, K. Chen, Y. Xiang, W. Guan, J. Yu, and M. Zhang</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">From bias to balance: exploring and mitigating spatial bias in lvlms</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2509.21984</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS3.p1.1" title="2.3 Spatial and Positional Bias ‣ 2 Related Work ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§2.3</span></a>,
+<a class="ltx_ref" href="#S4.SS5.SSS3.p2.1" title="4.5.3 Architectural Factors ‣ 4.5 Investigating the Origins of Spatial Bias ‣ 4 Results ‣ Investigating Spatial Attention Bias in Vision-Language Models"><span class="ltx_text ltx_ref_tag">§4.5.3</span></a>.
+</span></li></div></div>
+</div></div>
+<script>
+document.querySelectorAll('.toolbar button').forEach(function(b){{
+  b.addEventListener('click',function(){{
+    document.querySelectorAll('.toolbar button').forEach(function(x){{x.classList.remove('on');}});
+    b.classList.add('on');
+    document.body.className=b.dataset.v;
+  }});
+}});
+</script>
+</body></html>

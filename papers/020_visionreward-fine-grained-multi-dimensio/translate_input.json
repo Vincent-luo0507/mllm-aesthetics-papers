@@ -1,0 +1,1714 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "VisionReward: Fine-Grained Multi-Dimensional Human Preference Learning for Image and Video Generation"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Visual generative models have achieved remarkable progress in synthesizing photorealistic images and videos, yet aligning their outputs with human preferences across critical dimensions remains a pers"
+  },
+  {
+   "id": "b0003",
+   "t": "text",
+   "w": "p",
+   "en": "1Tsinghua University"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "p",
+   "en": "2Z.AI"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "p",
+   "en": "{xjz22, h-y22}@mails.tsinghua.edu.cn, yuxiaod@tsinghua.edu.cn"
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "Code — https://github.com/THUDM/VisionReward"
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0008",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: Illustration of how VisionReward works for evaluation and optimization of visual generation. a) Evaluation: VisionReward performs comprehensive evaluation through dimension-specific binary visual QA testing, producing human-aligned, fine-grained assessment scores. b) Optimization: VisionReward enable better preference optimization, enhancing multiple key aspects."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "Visual generative models, including text-to-image (Ding et al. 2021; Ramesh et al. 2021; Saharia et al. 2022; Rombach et al. 2022; Betker et al. 2023; Podell et al. 2023) and text-to-video (Hong et al. 2022; Ho et al. 2022; Villegas et al. 2022; Zheng et al. 2024; Chen et al. 2024a; Yang et al. 2024) generation, have recently experienced rapid developments. Through large-scale pretraining, these models can effectively translate textual descriptions into photorealistic images or temporally coherent videos. To further align them with human preferences, reinforcement learning from human feedback (RLHF) (Ouyang et al. 2022)—initially introduced in large language models—has recently been adapted to visual generation tasks (Xu et al. 2023; He et al. 2024)."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "A key bottleneck in applying RLHF to visual generation lies in developing effective visual reward models. Recent studies (Xu et al. 2023; Kirstain et al. 2023; Wu et al. 2023) have explored training reward models to predict human visual preferences, enabling automatic evaluation and preference optimization for visual generative models. For evaluation, reward models function as automated metrics that quantitatively measure the alignment between generated outputs and human preference criteria (Li et al. 2023). For optimization, reward models identify reliable directions for improving visual generation models. Essentially, they can provide feedback in reinforcement learning or generate preference pairs, thus reducing dependence on human annotation (Black et al. 2023; Fan et al. 2023; Clark et al. 2023)."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "Despite recent progress in reward models (RMs) for visual generation, two primary challenges remain: First, lack of interpretability and risk of unexpected bias. Current RMs for visual generation often suffer from limited interpretability. These models inherently involve complex trade-offs among multiple factors, yet their scoring mechanisms lack transparency regarding how such trade-offs are performed. This opacity raises concerns about potential unexpected biases. Though multimodal LLMs like Gemini (Team et al. 2024) and GPT-4o (Achiam et al. 2023) enhance interpretability through explainable rating rationales, their general-purpose architectures usually underperform specialized black-box models in fine-grained assessments (Chen et al. 2024c). This raises a key dilemma: how to design preference prediction method to be interpretable while maintaining accuracy."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "Second, lack of effective reward models for video generation. The rapid development of text-to-video generative models has intensified the demand for video reward models. Although image reward models can assess individual frame quality, their frame-level nature inherently neglects essential temporal dependencies in video sequences. While VideoScore (He et al. 2024) has pioneered direct video evaluation through learnable metrics, it still suffers from limitations such as insufficient accuracy in preference prediction and optimization in video generation."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "Contribution. To address these challenges, we propose a general framework VisionReward to build accurate reward models for both image and video generation. VisionReward is trained with two steps: fine-grained visual assessment and interpretable preference learning. First, to capture human visual preferences, we identify nine major dimensions and decouple preferences into 64 fine-grained questions. Second, to ensure interpretable preference learning, we propose to use the classical linear weighting mechanism on the question outcomes. It enables intuitive visualization of each question’s impact."
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "To apply it as a reward model for visual generation models, we propose a multi-dimensional consistent strategy during preference optimization. The goal of this strategy is to mitigate unintended and unquantifiable biases. Specifically, a pair of visual samples is used for preference optimization (e.g., DPO (Wallace et al. 2024)) only if one sample is consistently preferred over the other across all dimensions."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "To summarize, we present VisionReward as a general framework for visual preference learning. Empirically, we show that VisionReward makes the following contributions:"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "li",
+   "en": "• We design fine-grained multi-dimensional preference annotation and build the most fine-grained dataset which contain 81K samples and 5M binary annotation, which enable the training of VisionReward."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "li",
+   "en": "• For visual preference prediction, VisionReward achieves state-of-the-art performance across multiple benchmarks, while maintaining interpretability via hierarchical diagnostic QA and explicit linear weighting. For instance, VisionReward outperforms VideoScore (He et al. 2024) by 17.2% in accuracy on preference prediction."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "li",
+   "en": "• For visual generation, VisionReward can serve as an effective reward model for preference optimization (e.g., DPO), significantly enhancing the text-to-image and text-to-video models. For example, video generation models with VisionReward achieve a 31.6% higher pairwise win rate compared to the same models using VideoScore."
+  },
+  {
+   "id": "b0020",
+   "t": "keep",
+   "w": "table",
+   "en": "Dataset Image Video #Samples #Dimensions #Fine-Grained #Annotation ImageReward ( Xu et al. 2023 ) ✓ 9K - - 0.1M Pick-a-Pic ( Kirstain et al. 2023 ) ✓ 38K - - 0.6M HPDv2 ( Wu et al. 2023 ) ✓ 430K - - 0"
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Comparison of dataset of VisionReward and other datasets."
+  },
+  {
+   "id": "b0022",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: Illustration of fine-grained multi-dimensional design. (Left) For image: 5 dimensions, 18 sub-dimensions, and 61 binary questions. (Right) For video: 9 dimensions, 20 sub-dimensions, and 64 binary questions."
+  },
+  {
+   "id": "b0024",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: Overall framework of VisionReward. 1) Fine-grained Visual Assessment: fine-tune multimodal LLM to perform binary visual question-answering through hierarchical dimensions. 2) Interpretable Preference Learning: utilize visual QA outputs to predict preferences through linear weighted summation. 3) Multi-Dimensional Preference Optimization: optimization strategy across multiple dimensions."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Work"
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "p",
+   "en": "Reinforcement Learning from Human Feedback (RLHF) (Stiennon et al. 2020; Nakano et al. 2021; Ouyang et al. 2022) refers to optimizing models with reinforcement learning based on human feedback, which is also explored in image and video generation."
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "Preference Learning for Visual Generation. There are many works learning from human preferences, which collect human annotation for text-to-image (Xu et al. 2023; Kirstain et al. 2023; Wu et al. 2023) and text-to-video (He et al. 2024). Note that existing approaches (Zhang et al. 2024b; Liang et al. 2024) have attempted to augment human annotations or expand dimensions of human preferences in visual generation. Different from them, VisionReward defines fine-grained multi-dimensional human preferences with the goal of disentangling distinct factors to decouple human preferences, to build more accurate and interpretable RM."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "RLHF for Visual Generation. For visual generation tasks, several works have explored RLHF, optimizing from the gradient (Xu et al. 2023; Wu et al. 2024) or using a policy-based RL approach (Black et al. 2023; Fan et al. 2023; Clark et al. 2023). All these methods require a reward model (RM) to provide feedback for online learning. Diffusion-DPO (Wallace et al. 2024) has proposed to optimize the diffusion model directly using human-labeled preference data. However, most RLHF methods face the issue of biased-optimization. By employing a multi-dimensional method, VisionReward achieves robust RLHF."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "p",
+   "en": "Preliminary for Diffusion-DPO. Given a data distribution ⟦SLOT_0⟧, Diffusion models (Sohl-Dickstein et al. 2015; Ho et al. 2020; Song et al. 2020) contains forward process and reverse process. Forward process ⟦SLOT_1⟧ gradually add noise to the data ⟦SLOT_2⟧ and reverse process ⟦SLOT_3⟧ learns transitions to recover data. Training diffusion model can be performed by evidence lower bound (Kingma et al. 2021; Song et al. 2021):"
+  },
+  {
+   "id": "b0031",
+   "t": "keep",
+   "w": "table",
+   "en": "L DM = 𝔼 𝒙 0 , ϵ ∼ 𝒩 ⁡ ( 0 , 𝑰 ) , t ​ [ ‖ ϵ − ϵ θ ​ ( 𝒙 t , t ) ‖ 2 2 ] , \\displaystyle L_{\\mathrm{DM}}=\\mathbb{E}_{\\boldsymbol{x}_{0},\\boldsymbol{\\epsilon}\\sim\\mathcal{N}(0,\\boldsymbol{I}),t}\\left[\\"
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "with ⟦SLOT_4⟧ and ⟦SLOT_5⟧."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "Diffusion-DPO (Wallace et al. 2024) introduces direct preference optimization based on preference pairs. We denote the “win” and “lose” samples as ⟦SLOT_6⟧, and the objective is as follows:"
+  },
+  {
+   "id": "b0034",
+   "t": "keep",
+   "w": "table",
+   "en": "ℒ ⁡ ( θ ) = − 𝔼 t ∼ 𝒰 ⁡ ( 0 , T ) , 𝒙 t w ∼ q ⁡ ( 𝒙 t w ∣ 𝒙 0 w ) , 𝒙 t l ∼ q ⁡ ( 𝒙 t l ∣ 𝒙 0 l ) \\displaystyle\\mathcal{L}(\\theta)=-\\mathbb{E}_{t\\sim\\mathcal{U}(0,T),\\boldsymbol{x}_{t}^{w}\\sim q\\left("
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "DPO is ordinarily based on overall preference, which may be biased. VisionReward enables Multi-Dimensional Preference Optimization to enhance it."
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "h2",
+   "en": "3 VisionReward"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 VisionReward Annotation"
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "Fine-Grained Design. Human preferences are often a result of the interplay of multiple factors (Palmer et al. 2013; Ibarra et al. 2017), necessitating a balance among various considerations. To deconstruct human preferences systematically, we develop a fine-grained multi-dimensional framework, as shown in Table 1 and Fig. 2. For each sub-dimension, we set options that vary gradually in degree, and decompose these options into a series of binary questions (Cf. Tables 15, 16, 17 and 18 in Appendix)."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "Dataset Preparation. For images, we sample images from multiple popular datasets, including ImageRewardDB (Xu et al. 2023), HPDv2 (Wu et al. 2023), and Pick-a-Pic (Kirstain et al. 2023), and obtain 48k images after filtering. For videos, we sample prompts from VidProM (Wang and Yang 2024). To ensure diversity of prompts, we use Rouge-L (Lin 2004) for initial filtering, follow UniFL (Zhang et al. 2024a) to perform a semantic-based filtering, and use ChatGPT (Achiam et al. 2023) for data cleaning, finally get 10k prompts. Then we use CogVideoX (Yang et al. 2024), VideoCrafter2 (Chen et al. 2024a) and OpenSora (Zheng et al. 2024) to generate 30k videos, sample from Panda-70M (Chen et al. 2024b) to get 3k real videos, leading to 33k videos for annotation. More details are provided in Appendix Section 6.1."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "Annotation Management. To avoid bias of annotators, our annotation management includes professional management and standard document. Cooperating with a specialized company, we strictly conduct annotation training for annotators, select qualified annotators, and perform quality inspection of annotation results. Our annotation document gives clear definitions and provides more than 10 examples for each judgment, to align the standard among annotators. Due to these efforts, the consistency of annotators in the binary results reaches 89.29% (images) and 89.33% (videos)."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "Annotation Analysis. Through specialized annotation, we obtain an image dataset containing 48k images and 3 million question-answer pairs, while a video dataset with 33k videos and 2 million pairs. More statistical analysis of the annotation results is in Appendix Section 6.2."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 VisionReward Training"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "The complete training process of VisionReward and its application methodology during preference optimization are illustrated in Fig. 3."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "Fine-grained Visual Assessment. Specifically, we use CogVLM2 (Hong et al. 2024b) as the base model for image understanding, and CogVLM2-Video (Hong et al. 2024b) as the base model for video understanding. In terms of data, we have obtained millions of annotated binary question-answering pairs. Initially, we performed a balanced sampling on each binary question by addressing the imbalance between positive and negative examples, ensuring a roughly equal number of positive and negative instances associated with each binary question. Then we use balanced instruction tuning dataset consisting of binary questions to fine-tune base VLM."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "Interpretable Preference Learning. After trained on fine-grained dataset, VisionReward can be adopt to give a series of binary response answers (“yes” or “no”) ⟦SLOT_7⟧, where ⟦SLOT_8⟧ represents the number of binary questions. We define reward of every binary question as ⟦SLOT_9⟧:"
+  },
+  {
+   "id": "b0046",
+   "t": "keep",
+   "w": "table",
+   "en": "x i = 𝟙 [ A i = “yes” ] . \\displaystyle x_{i}=\\mathds{1}\\left[A_{i}=\\text{``yes''}\\right]. (3)"
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "p",
+   "en": "We construct a feature vector ⟦SLOT_10⟧, and use a set of linear weights ⟦SLOT_11⟧ to obtain the final reward ⟦SLOT_12⟧:"
+  },
+  {
+   "id": "b0048",
+   "t": "keep",
+   "w": "table",
+   "en": "R = ∑ i = 1 N w i 𝟙 [ A i = “yes” ] . \\displaystyle R=\\sum_{i=1}^{N}w_{i}\\mathds{1}\\left[A_{i}=\\text{``yes''}\\right]. (4)"
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "In order to learn linear weights ⟦SLOT_13⟧, we collect human preferences for pairs of ⟦SLOT_14⟧. Specifically, we compute the feature difference for each pair, given by ⟦SLOT_15⟧, and the corresponding label is assigned as ⟦SLOT_16⟧ or ⟦SLOT_17⟧ depending on the human preference. We then perform logistic regression ⟦SLOT_18⟧ to learn linear weights ⟦SLOT_19⟧:"
+  },
+  {
+   "id": "b0050",
+   "t": "keep",
+   "w": "table",
+   "en": "ℒ ⁡ ( W ) = \\displaystyle\\mathcal{L}(W)= − 𝔼 [ y log ( σ ( Δ X W T ) ) \\displaystyle-\\mathbb{E}\\left[y\\log\\left(\\sigma(\\Delta XW^{T})\\right)\\right. + ( 1 − y ) log ( 1 − σ ( Δ X W T ) ) ] . \\displayst"
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "By calculating dimension-specific scores through intra-dimensional weighting, VisionReward facilitates multi-dimensional preference prediction. We note dimensions as ⟦SLOT_20⟧ where ⟦SLOT_21⟧ contains questions belonging to the dimension. Then we define reward for certain dimension as:"
+  },
+  {
+   "id": "b0052",
+   "t": "keep",
+   "w": "table",
+   "en": "R ( dim k ) = ∑ i ∈ dim k w i 𝟙 [ A i = “yes” ] . \\displaystyle R({\\text{dim}_{k}})=\\sum_{i\\in\\text{dim}_{k}}w_{i}\\mathds{1}\\left[A_{i}=\\text{``yes''}\\right]. (6)"
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Multi-Dimensional Preference Optimization"
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "To empirically validate the model’s capacity, we leverage Direct Preference Optimization (DPO) (Wallace et al. 2024) for Diffusion Models in our experiments, where VisionReward generates multi-dimensional preference pairs to guide the optimization process while maintaining inter-dimensional balance."
+  },
+  {
+   "id": "b0055",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a) Data analysis."
+  },
+  {
+   "id": "b0057",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(b) DPO analysis."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: (a) We sample 10,000 human preference pairs from Pick-a-Pic dataset and analyze score deviations across 18 sub-dimensions (represented by the average yes-proportion of checklist questions within each sub-dimension). (b) We show score deviations for images generated by SDXL after Diffusion-DPO, using the same 10,000 prompts."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "Challenges. We replicate the Diffusion-DPO training procedure using SDXL (Podell et al. 2023) on the Pick-a-Pic (Kirstain et al. 2023) dataset, employing VisionReward for comprehensive data analysis and model evaluation. As demonstrated in Fig. 4, both the preference data and optimized model exhibit biases across several fine-grained dimensions. These findings not only underscore VisionReward’s capability for fine-grained analysis but also emphasize the necessity for optimization approaches that account for multi-dimensional representation."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "p",
+   "en": "MPO: Insight and Solution. Compared to ordinary DPO method which select pairs using overall preference, we propose MPO-enhanced DPO that take account fine-grained multi-dimensional preference. For reward of two samples ⟦SLOT_22⟧ and ⟦SLOT_23⟧, we define ⟦SLOT_24⟧ as dominating ⟦SLOT_25⟧ if ⟦SLOT_26⟧ holds for every dimension ⟦SLOT_27⟧. The key differences between the MPO strategy and standard DPO are:"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "li",
+   "en": "• Ordinary DPO: During DPO optimization, we directly select the pair based on the total reward ⟦SLOT_28⟧."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "li",
+   "en": "• MPO-enhanced DPO: MPO strategy introduces an additional constraint: we only select pairs that ⟦SLOT_29⟧ dominates ⟦SLOT_30⟧, then proceed with standard DPO."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "We analyze the effects of MPO in Section 4.3. The MPO strategy can also be applied to other algorithms, which we leave for future exploration."
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "Method Image Video HPDv2 MonetBench GenAI-Bench MonetBench tau∗ diff∗∗ tau diff tau diff task-specific discriminative models ImageReward (Xu et al. 2023) 74.0 48.8 56.5 48.4 72.1 55.8 58.4 PickScore (Kirstain et al. 2023) 79.8 49.8 57.6 52.4 75.4 57.7 61.6 HPSv2 (Wu et al. 2023) 83.3 48.4 55.6 49.3 73.0 59.3 62.5 MPS (Zhang et al. 2024b) 83.5 44.2 50.7 46.9 67.6 55.8 58.9 generative models GPT-4o (Achiam et al. 2023) 77.5 38.9 52.7 41.8 54.3 45.7 48.3 Gemini (Team et al. 2024) 60.7 27.4 55.1 46.9 61.7 52.2 56.8 VQAScore (Lin et al. 2025) 69.7 49.4 56.5 45.2 68.0 56.1 59.5 VideoScore (He et al. 2024) 76.8 45.8 52.5 47.8 71.4 49.1 54.9 VisionReward (Ours) 81.7 51.8 59.5 51.8 74.4 64.0 72.1"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Preference accuracy on multiple dataset. Bold denotes the best score within the generative models, while underline signifies the best score among all categories. Tau∗ means taking account of ties (Deutsch et al. 2023), and diff∗∗ means dropping ties in labels (we drop ties both in labels and responses for GPT-4o and Gemini in diff∗∗ because too many ties are given by them)."
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Experiments"
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1 VisionReward for Text-to-Vision Evaluation"
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "Dataset & Training Setting. After balanced sampling, we obtain 40,743 images and corresponding 97,680 judgment questions for training, leaving 6,910 images for subsequent validation and test. For videos, we obtain 28,605 videos and corresponding 89,473 judgment questions for training, with 3,080 videos reserved."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "To fine-tune CogVLM2 (Hong et al. 2024b), we set a batch size of 64, a learning rate of 1e-6, and train for 1,500 steps. For CogVLM-Video, we set a batch size of 64, a learning rate of 4e-6, and train for 1,500 steps."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "To learn linear weights for preference prediction, we sample human preference pairs and perform logistic regression. For images, We sample 44k pairs (24k from HPDv2 (Wu et al. 2023) and 20k from ImageRewardDB (Xu et al. 2023)); and for videos, we sample prompts from VidProM (Wang and Yang 2024) and generate videos (using CogVideoX (Yang et al. 2024), VideoCrafter2 (Chen et al. 2024a) and OpenSora (Zheng et al. 2024)), getting 1,795 annotated video pairs with preference."
+  },
+  {
+   "id": "b0072",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: The accuracy of VisionReward on GenAI-Bench improves as the number of binary questions increases. After masking weights from full regression, VisionReward maintains high performance."
+  },
+  {
+   "id": "b0074",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: Human evaluation results of DPO using different reward models or preference datasets. We require five annotators to comprehensively evaluate two samples and select the better one. VisionReward achieve the best performance."
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "p",
+   "en": "To establish a comprehensive evaluation benchmark for both image and video generation, we construct MonetBench, which contains separate test sets for images and videos, each consisting of 1,000 prompts. More details are introduced in Appendix Section 12."
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "Main Results: Preference Accuracy. Preference accuracy means the probability that a reward model has the same judgment as humans about which image is better. We use MonetBench to construct our test set for human preference, using SDXL (Podell et al. 2023) to generate images and CogVideoX (Yang et al. 2024) / VideoCrafter2 (Chen et al. 2024a) / OpenSora (Zheng et al. 2024) to generate videos, resulting in 500 pairs for image and 1,000 pairs for video. We employ annotators to assess the generated images using a preference rating scale from 1 to 5 (with 3 indicating no preference). The average preference score is used as the final preference label. We also take HPDv2 (Wu et al. 2023) and GenAI-Bench (Jiang et al. 2024) as test set."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "p",
+   "en": "Table 2 shows that VisionReward obtains state-of-the-state results in multiple datasets. Notably, in video evaluation, image reward models demonstrate competitive performance when the video duration is within 2 seconds (GenAI-Bench). However, when the video duration reaches 6 seconds (MonetBench), only VisionReward is capable of accurately predicting human preference, being twice (22.1% over random) as high as the best (12.5% over random) among other methods. This indicates that dynamic information in longer videos poses a challenge for RMs, while VisionReward can effectively address this issue after fine-grained visual learning."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "Ablation Study: Scalability of Question Scale. Fig. 5 shows that accuracy of preference prediction exhibits significant improvement as the question scale increases, and masking minimal weights maintains performance (Details in Appendix Section 7). Scalability validates the effects of decomposing preferences via fine-grained questions. We do more analysis of VisionReward in Appendix Section 7 and analysis of fine-grained results in Section 10."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2 VisionReward for Preference Optimization"
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "To evaluate the efficacy of VisionReward in preference optimization for visual generative systems, we conduct a series of comparative experiments against current state-of-the-art reward models and established preference datasets. We use SDXL as text-to-image base model and CogVideoX as text-to-video base model. The empirical results presented in Fig. 6 demonstrate VisionReward’s superior performance, achieving statistically significant improvements in human preference metrics over competing approaches."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "This section focuses on preference optimization for text-to-video using different reward models. Details of text-to-image are provided in Appendix Section 8.2."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "Dataset & Training Settings. For our backbone model, we select CogVideoX-2B. The training prompts are sampled from VidProM (Wang and Yang 2024) (details in Appendix Section 8.1). To adapt these prompts for video generation, we have optimized them following guidelines from CogVideoX (Yang et al. 2024), which results in roughly 22,000 samples. We generate 4 videos for each prompt, and use VisionReward to score these videos and apply the MPO strategy to select approximately 9,400 effective preference pairs. In all our experiments, we maintain a batch size of 32, a learning rate of 5e-6, and employ 100 warmup steps followed by linear decay. We set the DPO parameter ⟦SLOT_31⟧ to 500. The MPO training process spans around 500 steps, equivalent to about 2 epochs. During training, we save a checkpoint every 40 steps and use a validation set split from the training set to pick the checkpoint with the highest reward."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluation Settings. To comprehensively assess the MPO models, we have conducted both automatic and human evaluations. The automatic evaluation is conducted across various benchmarks, including VBench (Huang et al. 2024) and our Video-MonetBench. For VBench, we focus on commonly reported key metrics, including Human Action, Scene, Multiple Objects, and Appearance Style. In all these experiments, we utilize prompt optimization recommended in CogVideoX. Our baseline comparisons include the original CogVideoX-2B and DPO with VideoScore."
+  },
+  {
+   "id": "b0085",
+   "t": "keep",
+   "w": "table",
+   "en": "Methods Action Human Scene Objects Multiple Style Appear. Original 98.20 55.60 68.43 24.20 VideoScore 97.60 56.25 68.66 23.96 VisionReward 98.40 57.57 71.54 24.02"
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Evaluation results on VBench."
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "Experimental Results. The main results are shown in Table 3. When compared to the original CogVideoX-2B, optimization with VisionReward significantly enhances model performance across these benchmarks. In contrast, optimization with VideoScore tends to degrade performance. The empirical evidence substantiates VisionReward’s advanced capacity for multi-dimensional optimization. (Case study in Appendix Section 8.3.)"
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3 Ablation Study of MPO"
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "To comprehensively illustrate how MPO addresses the factor optimization bias inherent in DPO, We conduct experiments based on CogVideoX-5B. We set the threshold of the total score to 0.8 for DPO and 0.6 for MPO, ensuring that the number of pairs obtained through all three strategies is 5k. We use a batch size of 64, a learning rate of 2e-6, the DPO parameter ⟦SLOT_32⟧ of 500, and the training steps of 300. VisionReward is employed to evaluate scores across various dimensions, with the detailed results presented in Table 4. Through the implementation of the MPO strategy, CogVideoX is optimized in such a manner that it avoids the degradation of certain factors (e.g., alignment), thereby achieving improved trade-offs, such as maintaining good preservation while avoiding excessively slow dynamic changes. The empirical evidence further substantiates VisionReward’s capacity for algorithm-agnostic preference alignment, as evidenced by comparative testing with other approaches like MaPO (Hong et al. 2024a)."
+  },
+  {
+   "id": "b0090",
+   "t": "keep",
+   "w": "table",
+   "en": "Method Align. Quality Dynamic Physics Preserv. Overall Original 1.733 0.660 0.053 0.344 0.653 4.303 DPO 1.697 0.680 0.034 0.356 0.741 4.515 DPO w/ MPO 1.766 0.688 0.042 0.356 0.721 4.573 MaPO 1.736 0."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Ablation Study of MPO strategy. Scores are given by VisionReward on MonetBench."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "For efficiency discussion, the experimental results in Table 5 reveal the comparative effectiveness of the MPO and DPO methods. We analyze the pairs selected in perspective of “⟦SLOT_33⟧ dominating ⟦SLOT_34⟧” mentioned in Section 3.3. These results suggest that MPO outperforms the DPO approach in terms of both efficiency and effectiveness. These findings highlight promising directions for future research in developing novel optimization algorithms and adapting VisionReward for multi-dimensional optimization."
+  },
+  {
+   "id": "b0093",
+   "t": "keep",
+   "w": "table",
+   "en": "Method #Dom. #Not-Dom. Reward Original - - 4.303 DPO w/o MPO 3814 1456 4.515 (+0.212) DPO w/ MPO 5028 0 4.573 (+0.270) Δ \\Delta ( vs w/o MPO) +31.8% -100% +27.4%"
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Comparison of MPO and DPO on MonetBench. “#Dom.” means the number of pairs that match the rule of “⟦SLOT_35⟧ dominating ⟦SLOT_36⟧”, while “#Not-Dom.” pairs not match."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Conclusion"
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "We introduce VisionReward, a reward model for visual generation, which is fine-grained and multi-dimensional. By enabling Vision-Language Model (VLM) to perform binary assessments and applying linear summation with weighting coefficients derived from preference learning, VisionReward achieves highly accurate and interpretable. For visual generative optimization, VisionReward surpasses other reward models and enable multi-dimensional strategy."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "h2",
+   "en": "Acknowledgments"
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "This research was supported by Natural Science Foundation of China (NSFC) No. 62276148, NSFC No. 62495063. The authors would like to thank Z.AI for sponsoring the computation resources used in this work."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Achiam et al. (2023) J. Achiam, S. Adler, S. Agarwal, L. Ahmad, I. Akkaya, F. L. Aleman, D. Almeida, J. Altenschmidt, S. Altman, S. Anadkat, et al. Gpt-4 technical report . arXiv preprint arXiv:2303.0"
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Betker et al. (2023) J. Betker, G. Goh, L. Jing, T. Brooks, J. Wang, L. Li, L. Ouyang, J. Zhuang, J. Lee, et al. Improving image generation with better captions . Computer Science. https://cdn. openai"
+  },
+  {
+   "id": "b0102",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Black et al. (2023) K. Black, M. Janner, Y. Du, I. Kostrikov, and S. Levine Training diffusion models with reinforcement learning . arXiv preprint arXiv:2305.13301 . Cited by: §1 , §2 ."
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024a) H. Chen, Y. Zhang, X. Cun, M. Xia, X. Wang, C. Weng, and Y. Shan Videocrafter2: overcoming data limitations for high-quality video diffusion models . In Proceedings of the IEEE/CVF"
+  },
+  {
+   "id": "b0104",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024b) T. Chen, A. Siarohin, W. Menapace, E. Deyneka, H. Chao, B. E. Jeon, Y. Fang, H. Lee, J. Ren, M. Yang, et al. Panda-70m: captioning 70m videos with multiple cross-modality teachers "
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024c) Z. Chen, Y. Du, Z. Wen, Y. Zhou, C. Cui, Z. Weng, H. Tu, C. Wang, Z. Tong, Q. Huang, et al. MJ-bench: is your multimodal reward model really a good judge for text-to-image generati"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Clark et al. (2023) K. Clark, P. Vicol, K. Swersky, and D. J. Fleet Directly fine-tuning diffusion models on differentiable rewards . arXiv preprint arXiv:2309.17400 . Cited by: §1 , §2 ."
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Deutsch et al. (2023) D. Deutsch, G. Foster, and M. Freitag Ties matter: meta-evaluating modern metrics with pairwise accuracy and tie calibration . In Proceedings of the 2023 Conference on Empirical "
+  },
+  {
+   "id": "b0108",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ding et al. (2021) M. Ding, Z. Yang, W. Hong, W. Zheng, C. Zhou, D. Yin, J. Lin, X. Zou, Z. Shao, H. Yang, et al. Cogview: mastering text-to-image generation via transformers . Advances in Neural Info"
+  },
+  {
+   "id": "b0109",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fan et al. (2023) Y. Fan, O. Watkins, Y. Du, H. Liu, M. Ryu, C. Boutilier, P. Abbeel, M. Ghavamzadeh, K. Lee, and K. Lee DPOK: reinforcement learning for fine-tuning text-to-image diffusion models . I"
+  },
+  {
+   "id": "b0110",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "GLM (2024) T. GLM ChatGLM: a family of large language models from glm-130b to glm-4 all tools . External Links: 2406.12793 , Link Cited by: §12 ."
+  },
+  {
+   "id": "b0111",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "He et al. (2024) X. He, D. Jiang, G. Zhang, M. Ku, A. Soni, S. Siu, H. Chen, A. Chandra, Z. Jiang, A. Arulraj, et al. VideoScore: building automatic metrics to simulate fine-grained human feedback for"
+  },
+  {
+   "id": "b0112",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ho et al. (2022) J. Ho, W. Chan, C. Saharia, J. Whang, R. Gao, A. Gritsenko, et al. Imagen video: high definition video generation with diffusion models . arXiv preprint arXiv:2210.02303 . Cited by: §"
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ho et al. (2020) J. Ho, A. Jain, and P. Abbeel Denoising diffusion probabilistic models . Advances in neural information processing systems 33 , pp. 6840–6851 . Cited by: §2 ."
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hong et al. (2024a) J. Hong, S. Paul, N. Lee, K. Rasul, J. Thorne, and J. Jeong Margin-aware preference optimization for aligning diffusion models without reference . arXiv preprint arXiv:2406.06424 ."
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hong et al. (2022) W. Hong, M. Ding, W. Zheng, X. Liu, and J. Tang Cogvideo: large-scale pretraining for text-to-video generation via transformers . arXiv preprint arXiv:2205.15868 . Cited by: §1 ."
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hong et al. (2024b) W. Hong, W. Wang, M. Ding, W. Yu, Q. Lv, Y. Wang, Y. Cheng, S. Huang, J. Ji, Z. Xue, et al. Cogvlm2: visual language models for image and video understanding . arXiv preprint arXiv"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024) Z. Huang, Y. He, J. Yu, F. Zhang, C. Si, Y. Jiang, Y. Zhang, T. Wu, Q. Jin, N. Chanpaisit, et al. Vbench: comprehensive benchmark suite for video generative models . In Proceedings"
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ibarra et al. (2017) F. F. Ibarra, O. Kardan, M. R. Hunter, H. P. Kotabe, F. A. Meyer, and M. G. Berman Image feature types and their predictions of aesthetic preference and naturalness . Frontiers in"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jiang et al. (2024) D. Jiang, M. Ku, T. Li, Y. Ni, S. Sun, R. Fan, and W. Chen GenAI arena: an open evaluation platform for generative models . arXiv preprint arXiv:2406.04485 . Cited by: §4.1 ."
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kingma et al. (2021) D. Kingma, T. Salimans, B. Poole, and J. Ho Variational diffusion models . Advances in neural information processing systems 34 , pp. 21696–21707 . Cited by: §2 ."
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kirstain et al. (2023) Y. Kirstain, A. Polyak, U. Singer, S. Matiana, J. Penna, and O. Levy Pick-a-pic: an open dataset of user preferences for text-to-image generation . Advances in Neural Informatio"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2023) C. Li, Z. Zhang, H. Wu, W. Sun, X. Min, X. Liu, G. Zhai, and W. Lin Agiqa-3k: an open database for ai-generated image quality assessment . IEEE Transactions on Circuits and Systems fo"
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024) F. Li, R. Zhang, H. Zhang, Y. Zhang, B. Li, W. Li, Z. Ma, and C. Li Llava-next-interleave: tackling multi-image, video, and 3d in large multimodal models . arXiv preprint arXiv:2407.0"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liang et al. (2024) Y. Liang, J. He, G. Li, P. Li, A. Klimovskiy, N. Carolan, J. Sun, J. Pont-Tuset, S. Young, F. Yang, et al. Rich human feedback for text-to-image generation . In Proceedings of the "
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lin (2004) C. Lin ROUGE: a package for automatic evaluation of summaries . In Text Summarization Branches Out , Barcelona, Spain , pp. 74–81 . External Links: Link Cited by: §12 , §3.1 ."
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lin et al. (2025) Z. Lin, D. Pathak, B. Li, J. Li, X. Xia, G. Neubig, P. Zhang, and D. Ramanan Evaluating text-to-visual generation with image-to-text generation . In European Conference on Computer V"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Liu et al. (2023) H. Liu, C. Li, Q. Wu, and Y. J. Lee Visual instruction tuning . NeurIPS . Cited by: Table 10 ."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Nakano et al. (2021) R. Nakano, J. Hilton, S. Balaji, J. Wu, L. Ouyang, et al. Webgpt: browser-assisted question-answering with human feedback . arXiv preprint arXiv:2112.09332 . Cited by: §2 ."
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ouyang et al. (2022) L. Ouyang, J. Wu, X. Jiang, D. Almeida, C. Wainwright, P. Mishkin, C. Zhang, S. Agarwal, K. Slama, A. Ray, et al. Training language models to follow instructions with human feedba"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Palmer et al. (2013) S. E. Palmer, K. B. Schloss, and J. Sammartino Visual aesthetics and human preference . Annual review of psychology 64 ( 1 ), pp. 77–107 . Cited by: §3.1 ."
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Podell et al. (2023) D. Podell, Z. English, K. Lacey, A. Blattmann, T. Dockhorn, J. Müller, J. Penna, and R. Rombach Sdxl: improving latent diffusion models for high-resolution image synthesis . arXiv"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Radford et al. (2021) A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark, et al. Learning transferable visual models from natural language sup"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ramesh et al. (2021) A. Ramesh, M. Pavlov, G. Goh, S. Gray, C. Voss, A. Radford, M. Chen, and I. Sutskever Zero-shot text-to-image generation . In International conference on machine learning , pp. 88"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Rombach et al. (2022) R. Rombach, A. Blattmann, D. Lorenz, P. Esser, and B. Ommer High-resolution image synthesis with latent diffusion models . In 2022 IEEE/CVF Conference on Computer Vision and Patt"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Saharia et al. (2022) C. Saharia, W. Chan, S. Saxena, L. Li, J. Whang, E. L. Denton, K. Ghasemipour, et al. Photorealistic text-to-image diffusion models with deep language understanding . Advances in"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Schuhmann et al. (2022) C. Schuhmann, R. Beaumont, R. Vencu, C. W. Gordon, R. Wightman, et al. LAION-5b: an open large-scale dataset for training next generation image-text models . In Thirty-sixth Co"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sohl-Dickstein et al. (2015) J. Sohl-Dickstein, E. Weiss, N. Maheswaranathan, and S. Ganguli Deep unsupervised learning using nonequilibrium thermodynamics . In International conference on machine lea"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Song et al. (2021) Y. Song, C. Durkan, I. Murray, and S. Ermon Maximum likelihood training of score-based diffusion models . Advances in neural information processing systems 34 , pp. 1415–1428 . Cite"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Song et al. (2020) Y. Song, J. Sohl-Dickstein, D. P. Kingma, A. Kumar, S. Ermon, and B. Poole Score-based generative modeling through stochastic differential equations . arXiv preprint arXiv:2011.1345"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Stiennon et al. (2020) N. Stiennon, L. Ouyang, J. Wu, D. Ziegler, R. Lowe, C. Voss, A. Radford, D. Amodei, and P. F. Christiano Learning to summarize with human feedback . Advances in Neural Informati"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Team et al. (2024) G. Team, P. Georgiev, V. I. Lei, R. Burnell, L. Bai, et al. Gemini 1.5: unlocking multimodal understanding across millions of tokens of context . arXiv preprint arXiv:2403.05530 . C"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Villegas et al. (2022) R. Villegas, M. Babaeizadeh, P. Kindermans, H. Moraldo, H. Zhang, M. T. Saffar, S. Castro, J. Kunze, and D. Erhan Phenaki: variable length video generation from open domain text"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wallace et al. (2024) B. Wallace, M. Dang, R. Rafailov, L. Zhou, A. Lou, S. Purushwalkam, S. Ermon, C. Xiong, S. Joty, and N. Naik Diffusion model alignment using direct preference optimization . In P"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang and Yang (2024) W. Wang and Y. Yang Vidprom: a million-scale real prompt-gallery dataset for text-to-video diffusion models . arXiv preprint arXiv:2403.06098 . Cited by: §12 , §3.1 , §4.1 , §4.2 "
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2019) H. Wu, J. Mao, Y. Zhang, Y. Jiang, L. Li, W. Sun, and W. Ma Unified visual-semantic embeddings: bridging vision and language with structured meaning representations . In 2019 IEEE/CVF"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2023) X. Wu, Y. Hao, K. Sun, Y. Chen, F. Zhu, R. Zhao, and H. Li Human preference score v2: a solid benchmark for evaluating human preferences of text-to-image synthesis . arXiv preprint ar"
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wu et al. (2024) X. Wu, Y. Hao, M. Zhang, K. Sun, Z. Huang, G. Song, Y. Liu, and H. Li Deep reward supervisions for tuning text-to-image diffusion models . arXiv preprint arXiv:2405.00760 . Cited by: "
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Xu et al. (2023) J. Xu, X. Liu, Y. Wu, Y. Tong, Q. Li, M. Ding, J. Tang, and Y. Dong ImageReward: learning and evaluating human preferences for text-to-image generation . In Proceedings of the 37th In"
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yang et al. (2024) Z. Yang, J. Teng, W. Zheng, M. Ding, S. Huang, J. Xu, Y. Yang, W. Hong, X. Zhang, G. Feng, et al. Cogvideox: text-to-video diffusion models with an expert transformer . arXiv prepri"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2024a) J. Zhang, J. Wu, Y. Ren, X. Xia, H. Kuang, P. Xie, J. Li, X. Xiao, M. Zheng, L. Fu, and G. Li UniFL: improve stable diffusion via unified feedback learning . External Links: 2404."
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zhang et al. (2024b) S. Zhang, B. Wang, J. Wu, Y. Li, T. Gao, D. Zhang, and Z. Wang Learning multi-dimensional human preference for text-to-image generation . In Proceedings of the IEEE/CVF Conference"
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zheng et al. (2024) Open-sora: democratizing efficient video production for all External Links: Link Cited by: §1 , §3.1 , §4.1 , §4.1 , Table 6 ."
+  },
+  {
+   "id": "b0153",
+   "t": "text",
+   "w": "p",
+   "en": "Appendix"
+  },
+  {
+   "id": "b0154",
+   "t": "text",
+   "w": "h2",
+   "en": "6 More Details of Annotation"
+  },
+  {
+   "id": "b0155",
+   "t": "text",
+   "w": "h3",
+   "en": "6.1 Details of Annotation Design"
+  },
+  {
+   "id": "b0156",
+   "t": "text",
+   "w": "p",
+   "en": "To ensure the diversity of our annotation, we collect our annotated data from various sources, as presented in Table 6. The prompt and example for data cleaning is shown in Table 8. Table 7 illustrates our preference dimensions and the checklist count. We identify 5 dimensions for text-to-image generation and expand to 9 dimensions for text-to-video."
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "table",
+   "en": "Type Source #Samples #Checklist Image ImageRewardDB ( Xu et al. 2023 ) 16K 1M Pick-a-Pic ( Kirstain et al. 2023 ) 16K 1M HPDv2 ( Wu et al. 2023 ) 16K 1M Video CogVideoX ( Yang et al. 2024 ) 10K 0.6M O"
+  },
+  {
+   "id": "b0158",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Statistics of source data and annotation."
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "table",
+   "en": "Dimension #Sub-dimension #Checklist Image Video Image Video Alignment 1 1 1 4 Composition 5 1 13 2 Quality 5 4 14 14 Fidelity 5 3 25 9 Safety&Emotion 2 1 8 4 Stability - 5 - 12 Dynamic - 2 - 8 Physics"
+  },
+  {
+   "id": "b0160",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Taxonomy of annotation for VisionReward."
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0162",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a) Text-to-image"
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0164",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(b) Text-to-video"
+  },
+  {
+   "id": "b0165",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Annotation statistics of different sub-dimensions."
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "table",
+   "en": "SYSTEM Assume you are a model responsible for refining and polishing English expressions. You will receive an English prompt that may contain abbreviations or non-standard expressions. Your task is to"
+  },
+  {
+   "id": "b0167",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8: Prompt template and example for prompt cleaning."
+  },
+  {
+   "id": "b0168",
+   "t": "text",
+   "w": "h3",
+   "en": "6.2 Statistics of Annotation Result"
+  },
+  {
+   "id": "b0169",
+   "t": "text",
+   "w": "p",
+   "en": "Fig. 7 is the statistical results of the labeled data for images and videos. When compiling the statistics, higher labels indicate better performance for the image or video sub-dimension, while a label of 0 indicates neutrality. For video data, the original labels only had positive values and the neutral value was inconsistent. Hence, a neutral value was determined for each sub-dimension, and the original labels were adjusted by subtracting this neutral value to make 0 represent neutrality. In sub-dimensions such as Background, Face, and Hand, there might be cases where these elements are not present in the image or video. In such instances, ”Not Contain” is treated as a separate category for statistical purposes."
+  },
+  {
+   "id": "b0170",
+   "t": "text",
+   "w": "p",
+   "en": "There are two main characteristics to note."
+  },
+  {
+   "id": "b0171",
+   "t": "text",
+   "w": "li",
+   "en": "• For most sub-dimensions, the distribution of options roughly follows a normal distribution, with the majority being ordinary, and the quantities of instances with extreme characteristics, either very good or very bad, are reduced. To assist the model in learning the features of each sub-dimension, we can impose a quantitative limit on the predominant options."
+  },
+  {
+   "id": "b0172",
+   "t": "text",
+   "w": "li",
+   "en": "• Certain sub-dimensions, such as the presence of hands, require a mask when predicting human preferences. This means that the sub-dimension should only be evaluated when the image indicates the presence of hands. We also annotate the sub-dimensions that require a mask and record the relevant counts."
+  },
+  {
+   "id": "b0173",
+   "t": "text",
+   "w": "h2",
+   "en": "7 More Details and Results of VisionReward"
+  },
+  {
+   "id": "b0174",
+   "t": "text",
+   "w": "p",
+   "en": "VisionReward comprises two steps: visual judgment and linear regression."
+  },
+  {
+   "id": "b0175",
+   "t": "text",
+   "w": "p",
+   "en": "Visual Judgment Process. As the options for each sub-dimension are progressive, for any given option corresponding to a judgment question in the checklist, samples with an option greater than or equal to the given one are considered positive examples for the judgment question, whereas samples with an option less than the given one are considered negative. To balance the number of positive and negative examples for each binary question, we screen out any excess positive and negative examples for each question, ensuring that the number of positive and negative examples used for training is balanced. For alignment, we use different methods on images and videos. For images, we use VQAScore (Lin et al. 2025) as an alignment judgment. For videos, we train five levels of judgment for VisionReward."
+  },
+  {
+   "id": "b0176",
+   "t": "text",
+   "w": "p",
+   "en": "Main Results: Accuracy on Judgment. To evaluate the effectiveness of judgment learning, we construct a visual quality QA set to assess the visual assessment capabilities of VisionReward compared to other VLMs. We collect 1,364 test cases for images involving 14 types of questions across 4 dimensions, and additionally 1,308 cases covering 8 types of questions across 4 dimensions related to dynamic content in videos. To ensure the generality of these questions, we combine adjacent degrees in the checklists under each sub-dimension, enhancing distinctiveness and minimizing incidental subjectivity. Table 10 demonstrates VisionReward’s superiority in judging visual quality over existing generalized multimodal LLMs, which remains a challenge for generalized multimodal LLMs."
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "table",
+   "en": "Composition Quality Fidelity Safety 97.9 98.2 98.3 99.1 Stability Dynamic Physics Preservation 97.4 99.9 88.2 99.8"
+  },
+  {
+   "id": "b0178",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 9: Consistency of VisionReward in each dimension."
+  },
+  {
+   "id": "b0179",
+   "t": "text",
+   "w": "p",
+   "en": "Main Results: Consistency on Judgment. As questions corresponding to each sub-dimension assess varying degrees of a particular factor, it’s important to measure consistency of VisionReward across multiple questions of the same sub-dimension. Consistency measures the likelihood that the model provides consistent responses across a series of judgments concerning this factor. Table 9 shows that VisionReward has high consistency (more than 97 %) in most (7 of 8) dimensions."
+  },
+  {
+   "id": "b0180",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Algorithm 1 Iterative Regression with Weight Masking"
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0182",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0184",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0186",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0187",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0188",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0189",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0190",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0191",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0192",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0193",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0194",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0195",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0196",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "p",
+   "en": "Method Image Video Composition Quality Fidelity Safety Stability Dynamic Physics Preservation LLaVa∗ 59.9 65.7 59.8 64.4 52.5 53.8 50.6 47.5 CogVLM2 (Hong et al. 2024b) 65.8 67.1 53.1 74.7 49.3 57.1 51.2 47.8 GPT-4o (Achiam et al. 2023) 73.1 62.7 61.9 70.1 57.9 69.1 62.4 58.8 Gemini (Team et al. 2024) 69.4 59.9 59.7 74.9 58.1 71.1 58.1 59.6 VisionReward (Ours) 78.8 81.1 80.9 83.9 64.8 75.4 68.1 72.0"
+  },
+  {
+   "id": "b0198",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 10: Accuracy of VisionReward and other vision-language models (VLMs) on vision quality questions constructed from our annotation. ∗We test LLaVA-v1.5-7B (Liu et al. 2023) for image and LLava-Next-Video-34B (Li et al. 2024) for video."
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "p",
+   "en": "Weight Masking. In the linear regression step, we learn the correlation between human preferences and the results of visual judgment. In our design, if the result of the visual judgment is “yes”, human preference improves. We examine the correlation between human preference and each judgment result, and the numerical results indicate a positive correlation. However, in linear regression, we observe that some coefficients corresponding to the judgment results were negative. This is because there are correlations among the judgment results themselves. To enhance the robustness of the regression outcomes, we employ an iterative masking algorithm during the regression."
+  },
+  {
+   "id": "b0200",
+   "t": "text",
+   "w": "p",
+   "en": "Ablation Study: Impact of Training Set Size. We conduct experiments with varying sizes of the training set to investigate its influence on regression performance. As demonstrated in Table 11, the accuracy improves monotonically as the training set size increases up to 4,000 samples, beyond which the accuracy stabilizes."
+  },
+  {
+   "id": "b0201",
+   "t": "keep",
+   "w": "table",
+   "en": "Size 200 500 1k 2k 4k 8k Acc. 77.6 80.3 80.6 80.9 81.3 81.3"
+  },
+  {
+   "id": "b0202",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 11: Accuracy on HPDv2-test for different sizes of train set."
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "h2",
+   "en": "8 More Details and Results of MPO"
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "h3",
+   "en": "8.1 Details of Prompt for MPO"
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "p",
+   "en": "We employ the prompt filtering approach proposed by UniFL (Zhang et al. 2024a) to curate our dataset. This strategy comprises two pivotal steps:"
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "li",
+   "en": "• Semantic-Based Filtering: Utilizing an existing scene graph parser (Wu et al. 2019), we evaluate the semantic richness of prompts by analyzing the number of subjective and objective relationships. Prompts with fewer than one meaningful relationship are filtered out to reduce noise data."
+  },
+  {
+   "id": "b0207",
+   "t": "text",
+   "w": "li",
+   "en": "• Cosine Similarity-Based Selection: Following the semantic filtering process, we apply a cosine similarity-based iterative selection mechanism. By maintaining a maximum similarity threshold of 0.8 between any two prompts, we ensure dataset diversity and effectively eliminate redundant entries."
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "h3",
+   "en": "8.2 VisionReward for Text-to-Image Optimization"
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "Dataset & Training Settings. We strategically sample 63,165 prompts from existing datasets and generate 8 images per prompt using SDXL (this procedure theoretically produces 1.76M text-image pairs). Employing the MPO algorithm, we obtain 760k dominant pairs with 63,069 unique prompts. For comparison, we use HPSv2 with a threshold of 0.0015, getting 770k pairs with 63,107 unique prompts from the same source. We also compare with human annotated pairs, sampling 780k human preference pairs with 57,674 unique prompts from Pick-a-Pic v2 dataset."
+  },
+  {
+   "id": "b0210",
+   "t": "text",
+   "w": "p",
+   "en": "We maintain consistent training parameters and dataset sizes across all experiments to ensure fair comparison. For all three experiments, we used an effective batch size of 256 (with GAS set to 4 and train batch size set to 1), set ⟦SLOT_37⟧ to 5000, and a learning rate of 5e-9 (before scaling). We employ a constant warmup strategy with 100 steps and the training is conducted over 3,000 steps (approximately 1 epoch)."
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "p",
+   "en": "Evaluation Settings. We conducted both automatic and human evaluation on DrawBench (Saharia et al. 2022). Automatic evaluation includes multiple metrics such as human preference RMs, CLIP (Radford et al. 2021) and LAION-Aesthetic (Schuhmann et al. 2022)."
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "p",
+   "en": "Experimental Results. Main results are demonstrated in Table 12 and Table 13. VisionReward gets leading results across multiple machine metrics and achieves significant improvements across all four dimensions of VisionReward."
+  },
+  {
+   "id": "b0213",
+   "t": "keep",
+   "w": "table",
+   "en": "Methods CLIP Aes HPSv2 PickScore Original 0.273 5.463 0.282 22.25 Pick-a-Pic 0.279 5.511 0.286 22.45 HPSv2 0.277 5.599 0.292 22.58 VisionReward 0.279 5.612 0.289 22.61"
+  },
+  {
+   "id": "b0214",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 12: Evaluation results of multiple metrics on DrawBench."
+  },
+  {
+   "id": "b0215",
+   "t": "keep",
+   "w": "table",
+   "en": "Methods Composition Quality Fidelity Safety Original 0.755 0.550 0.009 -0.008 Pick-a-Pic 0.765 0.588 0.009 -0.009 HPSv2 0.874 0.630 0.010 -0.004 VisionReward 0.894 0.670 0.017 -0.001"
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 13: Evaluation results on MonetBench."
+  },
+  {
+   "id": "b0217",
+   "t": "text",
+   "w": "h3",
+   "en": "8.3 More Results of MPO"
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "p",
+   "en": "Case Study. Fig. 8 shows MPO cases for text-to-image, while Fig. 9 and Fig. 10 show MPO cases for text-to-video. MPO fine-tuned model surpasses the original model in multiple aspects and also outperforms other scoring methods."
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "p",
+   "en": "Training Curve. Fig. 11 shows the variation of the dimensional scores during the MPO process with respect to the number of training samples. The results demonstrate that the MPO method enables the model to avoid trade-offs during training, thereby achieving simultaneous improvements across various sub-dimensions. In contrast, the DPO (Wallace et al. 2024) method fails to achieve this level of concurrent enhancement."
+  },
+  {
+   "id": "b0220",
+   "t": "text",
+   "w": "p",
+   "en": "Ablation Study: Different Strategy for MPO. In using the MPO strategy, we define the way in which ⟦SLOT_38⟧ dominates ⟦SLOT_39⟧ (given two images ⟦SLOT_40⟧ and ⟦SLOT_41⟧) to select pairs. The definition of “dominate” includes at least three methods for different reward objective: score of each dimension, score of each sub-dimension, and score of each binary question. To investigate the impact of different definitions of “dominate”, we conduct experiments based on CogVideoX-5B. Specifically, we employ three different strategies, setting the threshold of the total score to 0.6, 0.5, and 0.4 respectively, ensuring that the number of pairs obtained through all three strategies is 5k. We use a batch size of 64, a learning rate of 2e-6, the DPO parameter ⟦SLOT_42⟧ of 500, and the training steps of 300. After training, we compare the evaluation results of VisionReward on MonetBench. Table 14 shows that using the score for each dimension as objective yields the best results."
+  },
+  {
+   "id": "b0221",
+   "t": "keep",
+   "w": "table",
+   "en": "Methods Baseline Dimension Sub-dimension Question Reward 4.303 4.573 4.539 4.514"
+  },
+  {
+   "id": "b0222",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 14: Score of VisionReward after different strategies of MPO. Dimension: “dominate” based on score of each dimension. Sub-dimension: “dominate” based on score of each sub-dimension. Question: “dominate” based on score of each binary question."
+  },
+  {
+   "id": "b0223",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0224",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8: Qualitative result of MPO in text-to-image."
+  },
+  {
+   "id": "b0225",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0226",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9: Qualitative result of MPO in text-to-video."
+  },
+  {
+   "id": "b0227",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0228",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 10: Qualitative result of MPO in text-to-video."
+  },
+  {
+   "id": "b0229",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0230",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(a) Overall Score"
+  },
+  {
+   "id": "b0231",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0232",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(b) Composition Score"
+  },
+  {
+   "id": "b0233",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0234",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(c) Fidelity Score"
+  },
+  {
+   "id": "b0235",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0236",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(d) Alignment Score"
+  },
+  {
+   "id": "b0237",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0238",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(e) Quality Score"
+  },
+  {
+   "id": "b0239",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0240",
+   "t": "text",
+   "w": "figcaption",
+   "en": "(f) Safety & Emotion Score"
+  },
+  {
+   "id": "b0241",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 11: Variation of dimensional scores during the MPO process with respect to the number of training samples."
+  },
+  {
+   "id": "b0242",
+   "t": "text",
+   "w": "h2",
+   "en": "9 Details of Fine-Grained Questions"
+  },
+  {
+   "id": "b0243",
+   "t": "text",
+   "w": "p",
+   "en": "Table 15 and Table 16 show the annotation taxonomy of images, while Table 17 and Table 18 show for videos."
+  },
+  {
+   "id": "b0244",
+   "t": "text",
+   "w": "h2",
+   "en": "10 More Results of Fine-Grained Design"
+  },
+  {
+   "id": "b0245",
+   "t": "text",
+   "w": "p",
+   "en": "Weight and Accuracy of Checklist. We curate separate test sets of images and videos from outside the training set to evaluate the accuracy of judgment questions. The test set comprises 1,209 images and 1,000 videos, respectively. We report the accuracy of judgment questions (Cf. Table 19 and Table 20 for text-to-image, Table 21 and Table 22 for text-to-video). As a reference, we specifically record the linear weights obtained from linear regression on human preference data as well as the Spearman rank correlation coefficient between human preference and the results of each judgment question."
+  },
+  {
+   "id": "b0246",
+   "t": "text",
+   "w": "p",
+   "en": "Correlation of Sub Dimensions. To mine the correlation between the sub-dimensions after preference decoupling, we show the correlation coefficients between the sub-dimensions in a heat map (Cf. Fig. 12)."
+  },
+  {
+   "id": "b0247",
+   "t": "text",
+   "w": "p",
+   "en": "Dimension Sub-dimension Option Checklist Composition Symmetry symmetrical Is the image symmetrical? ordinary Does the image avoid asymmetry? asymmetrical Composition Object pairing coordinated Are the objects well-coordinated? ordinary Does the image avoid poorly coordinated objects? uncoordinated Composition Main object prominent Is the main subject prominent? ordinary Does the image avoid an unclear main subject? prominent Composition Richness very rich Is the image very rich? rich Is the image rich? ordinary Is the image not monotonous? monotonous Is the image not empty? empty Composition Background beautiful Is the background beautiful? somewhat beautiful Is the background somewhat beautiful? ordinary Is there a background? no background Quality Clarity very clear Is the image very clear? clear Is the image clear? ordinary Does the image avoid being blurry? blurry Does the image avoid being completely blurry? completely blurry Quality Color Brightness bright Are the colors bright? ordinary Are the colors not dark? dark Quality Color Aesthetic beautiful colors Are the colors beautiful? ordinary colors Are the colors not ugly? ugly colors Quality Lighting Distinction very distinct Is the lighting and shadow very distinct? distinct Is the lighting and shadow distinct? ordinary Is there lighting and shadow? no lighting Quality Lighting Aesthetic very beautiful Are the lighting and shadows very beautiful? beautiful Are the lighting and shadows beautiful? ordinary Is there lighting and shadow? no lighting"
+  },
+  {
+   "id": "b0248",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 15: Annotation taxonomy and checklist details for text-to-image evaluation. (part 1)"
+  },
+  {
+   "id": "b0249",
+   "t": "text",
+   "w": "p",
+   "en": "Dimension Sub-dimension Option Checklist Fidelity Detail reality realistic Are the image details realistic? neutral Do the image details avoid being unrealistic? unrealistic Do the image details avoid being very unrealistic? very unrealistic Do the image details avoid being greatly unrealistic? greatly unrealistic Fidelity Detail refinement very refined Are the image details very exquisite? refined Are the image details exquisite? ordinary Do the image details avoid being coarse? rough Do the image details avoid being very coarse? very rough Does the image avoid being hard to recognize? indistinguishable Does the image avoid being fragmented? fragmented Fidelity Body no errors Is the human body in the image completely correct? neutral Does the human body in the image avoid errors? some errors Does the human body in the image avoid obvious errors? obvious errors Does the human body in the image avoid serious errors? serious errors Is there a human body in the image? no human figure Fidelity Face very beautiful Is the human face very beautiful? beautiful Is the human face beautiful? normal Does the human face avoid errors? some errors Does the human face avoid serious errors? serious errors Is there a human face in the image? no human face Fidelity Hands perfect Are the human hands perfect? mostly correct Are the human hands essentially correct? minor errors Do the human hands avoid obvious errors? obvious errors Do the human hands avoid serious errors? serious errors Are there human hands in the image? no human hands Safety & Emotion Emotion very positive Can the image evoke a very positive emotional response? positive Can the image evoke a positive emotional response? ordinary Does the image avoid evoking a negative emotional response? negative Does the image avoid evoking a very negative emotional response? very negative Safety & Emotion Safety safe Is the image completely safe? neutral Is the image harmless? potentially harmful Does the image avoid obvious harmfulness? harmful Does the image avoid serious harmfulness? very harmful"
+  },
+  {
+   "id": "b0250",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 16: Annotation taxonomy and checklist details for text-to-image evaluation. (part 2)"
+  },
+  {
+   "id": "b0251",
+   "t": "text",
+   "w": "p",
+   "en": "Dimension Sub-dimension Option Checklist Alignment Alignment meet 100% Does the video meet all the requirements stated in the text ”[[prompt]]”? meet 80%-100% Does the video meet most of the requirements stated in the text ”[[prompt]]”? meet 60%-80% Does the video meet some of the requirements stated in the text ”[[prompt]]”? meet 40%-60% Does the video not completely fail to meet the requirements stated in the text ”[[prompt]]”? meet 0-40% Composition Composition good Is the composition aesthetically pleasing? normal Does the composition have no obvious flaws? bad Quality Color very beautiful Are the colors exceptionally beautiful? beautiful Are the colors beautiful? normal Are the colors not unattractive? unattractive Are the colors not significantly unattractive? very unattractive Quality Lighting Accurate good Is the lighting perfectly accurate? normal Does the lighting have no obvious errors? bad Is there any lighting present? no lighting Quality Lighting Aes very good Is the lighting exceptionally beautiful? good Is the lighting beautiful? normal Is the lighting not unattractive? bad Quality Clear very clear Is it very clear? clear Is it clear? normal Is it not blurry? blurry Is it not completely blurry? completely blurry Fidelity Detail Refinement very refined Are the details very refined? refined Are the details refined? normal Are the details not rough? rough Are the details not significantly rough? very rough Fidelity Movement Reality good Is the object’s movement completely realistic? normal Does the object’s movement have no obvious realism issues? bad Fidelity Letters good Are all the letters correct? normal Do the letters have no obvious errors? bad Are there any letters present? no letter Safety Safety 100% safe Is the video content safe? 80%-100% safe Is the video content definitely free of harmful material? 60%-80% safe Does the video content contain no harmful material? 40%-60% safe Does the video content contain no extremely harmful material? 0-40% safe"
+  },
+  {
+   "id": "b0252",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 17: Annotation taxonomy and checklist details for text-to-video evaluation. (part 1)"
+  },
+  {
+   "id": "b0253",
+   "t": "text",
+   "w": "p",
+   "en": "Dimension Sub-dimension Option Checklist Stability Movement smoothness good Is the smoothness of the object’s movement good? normal Does the smoothness of the object’s movement have no obvious issues? bad Stability Image quality stability very stable Is the image quality very stable? stable Is the image quality stable? normal Is the image quality not unstable? unstable Is the image quality free of noticeable instability? very unstable Stability Focus good Is the focus aesthetically pleasing? normal Does the focus have no obvious flaws? bad Stability Camera movement good Is the camera movement aesthetically pleasing? normal Does the camera movement have no obvious flaws? bad Stability Camera stability stable Is the camera stable? normal Is the camera not unstable? unstable Preservation Shape at beginning completely accurate Is the shape of the object at the beginning of the video completely accurate? no errors Does the shape of the object at the beginning have no obvious errors? not chaotic Is the shape of the object at the beginning not chaotic? flawed Preservation Shape throughout perfectly maintained Is the shape of the object perfectly maintained throughout the video? no issues Does the shape of the object have no obvious issues throughout the video? normal Does the shape of the object generally have no major issues throughout the video? not chaotic Is the shape of the object not chaotic throughout the video? flawed Dynamic Object Motion dynamic highly dynamic Is the object’s motion highly dynamic? dynamic Is the object’s motion dynamic? normal Is the object’s motion not minimal? not static Is the object’s motion not static? static Dynamic Camera motion dynamic highly dynamic Is the camera motion highly dynamic? dynamic Is the camera motion dynamic? not minimal Is the camera motion not minimal? not static Is the camera motion not static? static Physics Physics law full compliance Does it fully comply with the laws of physics? partial compliance Does it partially comply with the laws of physics? no obvious violations Does it have no obvious violations of the laws of physics? physical world Is the video content part of the physical world? non-compliance"
+  },
+  {
+   "id": "b0254",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 18: Annotation taxonomy and checklist details for text-to-video evaluation. (part 2)"
+  },
+  {
+   "id": "b0255",
+   "t": "keep",
+   "w": "table",
+   "en": "ID Checklist Acc ρ \\rho Weight 1 Is there a human body in the image? 93.13 0.090 mask 2 Is there a human face in the image? 96.20 0.110 mask 3 Are there human hands in the image? 93.30 0.022 mask 4 Is"
+  },
+  {
+   "id": "b0256",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 19: Accuracy, spearman correlation, and linear weights of VisionReward in text-to-image. (Part 1)"
+  },
+  {
+   "id": "b0257",
+   "t": "keep",
+   "w": "table",
+   "en": "ID Checklist Acc ρ \\rho Weight 41 Do the image details avoid being unrealistic? 63.94 0.140 0.000 42 Do the image details avoid being very unrealistic? 74.19 0.156 0.000 43 Do the image details avoid "
+  },
+  {
+   "id": "b0258",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 20: Accuracy, spearman correlation, and linear weights of VisionReward in text-to-image. (Part 2)"
+  },
+  {
+   "id": "b0259",
+   "t": "keep",
+   "w": "table",
+   "en": "ID Checklist Acc ρ \\rho Weight 1 Does the video meet all the requirements stated in the text ”[[prompt]]”? 69.5 0.315 0.954 2 Does the video meet most of the requirements stated in the text ”[[prompt]"
+  },
+  {
+   "id": "b0260",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 21: Accuracy, spearman correlation, and linear weights of VisionReward in text-to-video. (Part 1)"
+  },
+  {
+   "id": "b0261",
+   "t": "keep",
+   "w": "table",
+   "en": "ID Checklist Acc ρ \\rho Weight 21 Is the shape of the object at the beginning of the video completely accurate? 63.0 0.292 0.129 22 Does the shape of the object at the beginning have no obvious errors"
+  },
+  {
+   "id": "b0262",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 22: Accuracy, spearman correlation, and linear weights of VisionReward in text-to-video. (Part 2)"
+  },
+  {
+   "id": "b0263",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0264",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 12: Correlation heatmap of text-to-video sub dimensions."
+  },
+  {
+   "id": "b0265",
+   "t": "text",
+   "w": "h2",
+   "en": "11 Limitations"
+  },
+  {
+   "id": "b0266",
+   "t": "text",
+   "w": "p",
+   "en": "This section outlines several limitations of the VisionReward framework that emerged during its development."
+  },
+  {
+   "id": "b0267",
+   "t": "text",
+   "w": "p",
+   "en": "Supported Video Frame Rate and Length. While training datasets of VisionReward contain videos up to 6 seconds in duration at 4 frames per second (fps), this may be insufficient for evaluating the outputs of next-generation video generation models, which are capable of producing longer and more complex content. Therefore, extending the model’s capacity to handle longer video sequences is a critical direction for future work."
+  },
+  {
+   "id": "b0268",
+   "t": "text",
+   "w": "p",
+   "en": "Leverage of Foundation Model. The model’s performance is inherently tied to the capabilities of its base Vision-Language Model (VLM). Our current approach utilizes a question-answering (QA) mechanism to tap into the VLM’s foundational knowledge. However, with the rise of sophisticated reasoning models, a more effective avenue for enhancing our reward model would be to integrate explicit reasoning abilities. This represents a key area for future investigation to move beyond foundational understanding towards more complex evaluation."
+  },
+  {
+   "id": "b0269",
+   "t": "text",
+   "w": "h2",
+   "en": "12 More Details of MonetBench"
+  },
+  {
+   "id": "b0270",
+   "t": "keep",
+   "w": "table",
+   "en": "Type Image Video Content People, Objects, Animals, Story, Human Activity, Architecture, Landscape, Artificial Scene, Others, Vehicles, Plants, Food, Natural Animal Activity, Others, Scenes Physical Ph"
+  },
+  {
+   "id": "b0271",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 23: Content and Challenge of MonetBench."
+  },
+  {
+   "id": "b0272",
+   "t": "text",
+   "w": "p",
+   "en": "Image-MonetBench Construction. We first establish our dataset foundation by collecting 4,038 seed prompts through strategic sampling from established datasets (1,000 from ImageRewardDB (Xu et al. 2023), 1,000 from HPDv2 (Xu et al. 2023), and 2,038 from Pick-a-Pic (Kirstain et al. 2023)). Through systematic analysis of these prompts, we identify nine fundamental visual elements as content categories and twelve distinct aspects of generation complexity as challenge categories, maintaining the categorical distributions observed in the source datasets."
+  },
+  {
+   "id": "b0273",
+   "t": "text",
+   "w": "p",
+   "en": "Video-MonetBench Construction. For video prompt evaluation, we initially sample 20,000 prompts from the VproM (Wang and Yang 2024) dataset, which are filtered to 13,342 valid entries after removing duplicates and invalid content. Our video classification system comprises seven content categories reflecting different video scenarios, and thirteen challenge categories capturing various technical and creative aspects of video generation."
+  },
+  {
+   "id": "b0274",
+   "t": "text",
+   "w": "p",
+   "en": "Prompt Generation and Filtering. To ensure benchmark quality and diversity, we employ ChatGLM (GLM 2024) to generate 1,000 new prompts for each benchmark following the established category distributions. Each generated prompt undergoes a three-stage filtering process: (1) Rouge-L (Lin 2004) similarity checking for textual diversity, (2) semantic filtering with a cosine similarity threshold of 0.9, and (3) proportional sampling to maintain the intended category distributions."
+  },
+  {
+   "id": "b0275",
+   "t": "text",
+   "w": "p",
+   "en": "Table 23 shows content and challenge categories for MonetBench. The resulting benchmark achieves balanced coverage across all categories while maintaining high standards of prompt diversity and quality. This carefully crafted multi-dimensional design enables comprehensive evaluation of visual reward models across both fundamental content types and various generation challenges."
+  },
+  {
+   "id": "b0276",
+   "t": "text",
+   "w": "p",
+   "en": "For experimental efficiency, we provide a condensed version by randomly sampling 500 prompts from each benchmark while preserving the categorical distribution."
+  },
+  {
+   "id": "b0277",
+   "t": "text",
+   "w": "p",
+   "en": "Details of Classification Proportions. After completing the design of the comprehensive two-dimensional classification framework, we utilized ChatGLM to categorize each prompt in the dataset across content and challenge dimensions. We then calculated the proportions of different classification labels for content and challenges. The content and challenge categories and their respective examples are summarized in Tables 24 and 25. Based on these proportions, we used ChatGLM to construct Benchmark prompts (all prompts were generated by ChatGLM, not directly sampled from the dataset). During the construction process, we specified the investigation direction and randomly sampled four ”seed prompts” from the categorized prompts to generate new, higher-quality prompts with ChatGLM. This synthesis approach produced two benchmark datasets, containing 1,000 and 1,007 meticulously crafted prompts, respectively, preserving the statistical characteristics of the original data."
+  },
+  {
+   "id": "b0278",
+   "t": "text",
+   "w": "p",
+   "en": "The final datasets provide balanced and comprehensive coverage of content and challenge categories. Table 26 lists the specific content and challenge categories with detailed descriptions and example prompts, providing a clear understanding of the dataset’s composition. The structured methodology ensures the datasets’ diversity and alignment with real-world visual generation requirements, enabling nuanced benchmarking of visual models."
+  },
+  {
+   "id": "b0279",
+   "t": "keep",
+   "w": "table",
+   "en": "Image Video Type Ratio Count Type Ratio Count People 8 286 Story 5 265 Objects 4 143 Human Activity 4 212 Animals 4 143 Artificial Scene 3 159 Architecture 4 143 Natural Scenes 3 159 Others 2 72 Anima"
+  },
+  {
+   "id": "b0280",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 24: Content Categories for Image and Video"
+  },
+  {
+   "id": "b0281",
+   "t": "keep",
+   "w": "table",
+   "en": "Image Video Type Ratio Count Type Ratio Count Unreal 8 187 Style 13 465 Style & Format 8 187 Material/Texture 8 292 Fine-grained Detail 8 186 Emotional Expr. 7 249 Color 4 93 Color/Tone 7 261 Famous C"
+  },
+  {
+   "id": "b0282",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 25: Challenge Categories for Image and Video"
+  },
+  {
+   "id": "b0283",
+   "t": "keep",
+   "w": "table",
+   "en": "Categorie Description Example Prompt Content Human Activity Descriptions about daily human activities, sports, performing arts, and professional skills. A family enjoying a picnic in a park, children "
+  },
+  {
+   "id": "b0284",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 26: Video classification standards with example prompts."
+  }
+ ]
+}

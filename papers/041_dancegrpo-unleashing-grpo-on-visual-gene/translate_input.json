@@ -1,0 +1,1666 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "text",
+   "w": "p",
+   "en": "1]ByteDance Seed 2]The University of Hong Kong \\contribution[†]Corresponding authors \\contribution[‡]Project lead"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "DanceGRPO: Unleashing GRPO on Visual Generation"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Recent advances in generative AI have revolutionized visual content creation, yet aligning model outputs with human preferences remains a critical challenge. While Reinforcement Learning (RL) has emer"
+  },
+  {
+   "id": "b0004",
+   "t": "text",
+   "w": "p",
+   "en": "[Project Page]https://dancegrpo.github.io/ \\checkdata[Code]https://github.com/XueZeyue/DanceGRPO"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "p",
+   "en": "Recent advances in generative models—particularly diffusion models [1, 2, 3, 4] and rectified flows [5, 6, 7]—have transformed visual content creation by improving output quality and versatility in image and video generation. While pretraining establishes foundational data distributions, integrating human feedback during training proves critical for aligning outputs with human preferences and aesthetic criteria [8]. Existing methods face notable limitations: ReFL [9, 10, 11] relies on differentiable reward models, which introduce VRAM inefficiency in video generation and require several extensive engineering efforts, while DPO variants (Diffusion-DPO [12, 13], Flow-DPO [14], OnlineVPO [15]) achieve only marginal visual quality improvements. Reinforcement learning (RL)-based methods [16, 17], which optimize rewards as black-box objectives, offer potential solutions but introduce three unresolved challenges: (1) the Ordinary Differential Equations (ODEs)-based sampling of rectified flow models conflict with Markov Decision Process formulations; (2) prior policy gradient approaches (DDPO [18], DPOK [19]) show instability when scaling beyond small datasets (e.g., <100 prompts); and (3) existing methods remain unvalidated for video generation tasks."
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "This work addresses these gaps by reformulating the sampling of diffusion models and rectified flows via Stochastic Differential Equations (SDEs) and applying Group Relative Policy Optimization (GRPO) [20, 21] to stabilize the training process. In this paper, we pioneer the adaptation of GRPO to visual generation tasks through the DanceGRPO framework, establishing a \"harmonious dance\" between GRPO and visual generation tasks. Our key insight is that GRPO’s architectural stability properties provide a principled solution to the optimization instabilities that have limited previous RL approaches to visual generation."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "We extend a systematic study of DanceGRPO, evaluating its performance across generative paradigms (diffusion models, rectified flows) and tasks (text-to-image, text-to-video, image-to-video). Our analysis employs diverse foundation models [2, 22, 23, 24] and reward metrics to assess aesthetic quality, alignment, and motion dynamics. Furthermore, through the proposed framework, we discover insights regarding the rollout initialization noise, the reward model compatibility, the Best-of-N inference scaling, the timestep selection, and the learning on binary feedback."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Our contributions can be summarized as follows:"
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "li",
+   "en": "• Stability and Pioneering. We present the first discovery that GRPO’s inherent stability mechanisms effectively address the core optimization challenges in visual generation that have persistently hindered prior RL-based approaches. We achieve seamless integration between GRPO and visual generation tasks by carefully reformulating the SDEs, selecting appropriate optimized timesteps, initializing noise, and noise scales."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "li",
+   "en": "• Generalization and Scalability. To our knowledge, DanceGRPO is the first RL-based unified application framework capable of seamless adaptation across diverse generative paradigms, tasks, foundational models, and reward models. Unlike prior RL algorithms, primarily validated on text-to-image diffusion models on small-scale datasets, DanceGRPO demonstrates robust performance on large-scale datasets, showcasing both scalability and practical applicability."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "li",
+   "en": "• High Effectiveness. Our experiments demonstrate that DanceGRPO achieves significant performance gains, outperforming baselines by up to 181% across multiple academic benchmarks, including HPS-v2.1 [25], CLIP score [26], VideoAlign [14], and GenEval [27], in visual generation tasks. Notably, DanceGRPO also enables models to learn the denoising trajectory in Best-of-N inference scaling. We also make some initial attempts to enable models to capture the distribution of binary (0/1) reward models, showing its ability to capture sparse, thresholding feedback."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Approach"
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Preliminary"
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "Diffusion Model [1]. A diffusion process gradually destroys an observed datapoint ⟦SLOT_0⟧ over timestep ⟦SLOT_1⟧, by mixing data with noise, and the forward process of the diffusion model can be defined as :"
+  },
+  {
+   "id": "b0016",
+   "t": "keep",
+   "w": "table",
+   "en": "𝐳 t = α t ​ 𝐱 + σ t ​ ϵ , where ​ ϵ ∼ 𝒩 ​ ( 0 , 𝐈 ) , \\mathbf{z}_{t}=\\alpha_{t}\\mathbf{x}+\\sigma_{t}\\boldsymbol{\\epsilon},\\mathrm{\\leavevmode\\nobreak\\ where\\leavevmode\\nobreak\\ }\\boldsymbol{\\epsilon}\\"
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "and ⟦SLOT_2⟧ and ⟦SLOT_3⟧ denote the noise schedule. The noise schedule is designed in a way such that ⟦SLOT_4⟧ is close to clean data and ⟦SLOT_5⟧ is close to Gaussian noise. To generate a new sample, we initialize the sample ⟦SLOT_6⟧ and define the sample equation of the diffusion model given the denoising model output ⟦SLOT_7⟧ at time step ⟦SLOT_8⟧:"
+  },
+  {
+   "id": "b0018",
+   "t": "keep",
+   "w": "table",
+   "en": "𝐳 s = α s ​ 𝐱 ^ + σ s ​ ϵ ^ , \\mathbf{z}_{s}=\\alpha_{s}\\hat{\\mathbf{x}}+\\sigma_{s}\\hat{\\boldsymbol{\\epsilon}}, (2)"
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_9⟧ can be derived via Eq.(1) and then we can reach a lower noise level ⟦SLOT_10⟧. This is also a DDIM sampler [28]."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "Rectified Flow [6]. In rectified flow, we view the forward process as a linear interpolation between the data ⟦SLOT_11⟧ and a noise term ⟦SLOT_12⟧:"
+  },
+  {
+   "id": "b0021",
+   "t": "keep",
+   "w": "table",
+   "en": "𝐳 t = ( 1 − t ) ​ 𝐱 + t ​ ϵ , \\mathbf{z}_{t}=(1-t)\\mathbf{x}+t\\boldsymbol{\\epsilon}, (3)"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_13⟧ is always defined as a Gaussian noise. We define the ⟦SLOT_14⟧ as the \"velocity\" or \"vector field\". Similar to diffusion model, given the denoising model output ⟦SLOT_15⟧ at time step ⟦SLOT_16⟧, we can reach a lower noise level ⟦SLOT_17⟧ by:"
+  },
+  {
+   "id": "b0023",
+   "t": "keep",
+   "w": "table",
+   "en": "𝐳 s = 𝐳 t + 𝐮 ^ ⋅ ( s − t ) . \\mathbf{z}_{s}=\\mathbf{z}_{t}+\\hat{\\mathbf{u}}\\cdot(s-t). (4)"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "p",
+   "en": "Analysis. Although the diffusion model and rectified flow have different theoretical foundations, in practice, they are two sides of a coin, as shown in the following formula:"
+  },
+  {
+   "id": "b0025",
+   "t": "keep",
+   "w": "table",
+   "en": "𝐳 ~ s = 𝐳 ~ t + Network output ⋅ ( η s − η t ) . \\tilde{\\mathbf{z}}_{s}=\\tilde{\\mathbf{z}}_{t}+\\text{Network output}\\cdot(\\eta_{s}-\\eta_{t}). (5)"
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "For ⟦SLOT_18⟧-prediction (a.k.a. diffusion model), from Eq.(2), we have ⟦SLOT_19⟧, ⟦SLOT_20⟧, ⟦SLOT_21⟧, and ⟦SLOT_22⟧. For rectified flows, we have ⟦SLOT_23⟧, ⟦SLOT_24⟧, ⟦SLOT_25⟧, and ⟦SLOT_26⟧ from Eq.(4)."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 DanceGRPO"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we first formulate the sampling processes of diffusion models and rectified flows as Markov Decision Processes. Then, we introduce the sampling SDEs and the algorithm of DanceGRPO."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "Denoising as a Markov Decision Process. Following DDPO [18], we formulate the denoising process of the diffusion model and rectified flow as a Markov Decision Process (MDP):"
+  },
+  {
+   "id": "b0030",
+   "t": "keep",
+   "w": "table",
+   "en": "𝐬 t ≜ ( 𝐜 , t , 𝐳 t ) , π ​ ( 𝐚 t ∣ 𝐬 t ) ≜ p ​ ( 𝐳 t − 1 ∣ 𝐳 t , 𝐜 ) , P ​ ( 𝐬 t + 1 ∣ 𝐬 t , 𝐚 t ) ≜ ( δ 𝐜 , δ t − 1 , δ 𝐳 t − 1 ) 𝐚 t ≜ 𝐳 t − 1 , R ​ ( 𝐬 t , 𝐚 t ) ≜ { r ​ ( 𝐳 𝟎 , 𝐜 ) , if ​ t = 0 0"
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_27⟧ is the prompt, and ⟦SLOT_28⟧ is the probability from ⟦SLOT_29⟧ to ⟦SLOT_30⟧. And ⟦SLOT_31⟧ is the Dirac delta distribution with nonzero density only at ⟦SLOT_32⟧. Trajectories consist of ⟦SLOT_33⟧ timesteps, after which ⟦SLOT_34⟧ leads to a termination state. ⟦SLOT_35⟧ is the reward model, which is always parametrized by a Vision-Language model (such as CLIP [26] and Qwen-VL [29])."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "p",
+   "en": "Formulation of Sampling SDEs. Since GRPO requires stochastic exploration through multiple trajectory samples, where policy updates depend on the trajectory probability distribution and their associated reward signals, we unify the sampling processes of the diffusion model and rectified flows into the form of SDEs. For the diffusion model, as demonstrated in [30, 31], the forward SDE is given by: ⟦SLOT_36⟧. The corresponding reverse SDE can be expressed as:"
+  },
+  {
+   "id": "b0033",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝐳 t = ( f t ​ 𝐳 t − 1 + ε t 2 2 ​ g t 2 ​ ∇ log ⁡ p t ​ ( 𝐳 𝐭 ) ) ​ d ​ t + ε t ​ g t ​ d ​ 𝐰 , \\mathrm{d}\\mathbf{z}_{t}=\\left(f_{t}\\mathbf{z}_{t}-\\frac{1+\\varepsilon_{t}^{2}}{2}g_{t}^{2}\\nabla\\lo"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_37⟧ is a Brownian motion, and ⟦SLOT_38⟧ introduces the stochasticity during sampling."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "Similarly, the forward ODE of rectified flow is: ⟦SLOT_39⟧. The generative process reverses the ODE in time. However, this deterministic formulation cannot provide the stochastic exploration required for GRPO. Inspired by [32, 33, 34], we introduce an SDE case during the reverse process as follows:"
+  },
+  {
+   "id": "b0036",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝐳 t = ( 𝐮 t − 1 2 ​ ε t 2 ​ ∇ log ⁡ p t ​ ( 𝐳 t ) ) ​ d ​ t + ε t ​ d ​ 𝐰 , \\mathrm{d}\\mathbf{z}_{t}=(\\mathbf{u}_{t}-\\frac{1}{2}\\varepsilon_{t}^{2}\\nabla\\log p_{t}(\\mathbf{z}_{t}))\\mathrm{d}t+\\var"
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_40⟧ also introduces the stochasticity during sampling. Given a normal distribution ⟦SLOT_41⟧, we have ⟦SLOT_42⟧. We can insert this into the above two SDEs and obtain the ⟦SLOT_43⟧. More theoretical analysis can be found in Appendix 7."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "Algorithm. Motivated by Deepseek-R1 [20], given a prompt ⟦SLOT_44⟧, generative models will sample a group of outputs ⟦SLOT_45⟧ from the model ⟦SLOT_46⟧, and optimize the policy model ⟦SLOT_47⟧ by maximizing the following objective function:"
+  },
+  {
+   "id": "b0039",
+   "t": "keep",
+   "w": "table",
+   "en": "𝒥 ​ ( θ ) = 𝔼 { 𝐨 i } i = 1 G ∼ π θ old ( ⋅ | 𝐜 ) 𝐚 t , i ∼ π θ old ( ⋅ | 𝐬 t , i ) ​ [ 1 G ​ ∑ i = 1 G 1 T ​ ∑ t = 1 T min ⁡ ( ρ t , i ​ A i , clip ​ ( ρ t , i , 1 − ϵ , 1 + ϵ ) ​ A i ) ] , \\mathcal{"
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_48⟧, and ⟦SLOT_49⟧ is the policy function is MDP for output ⟦SLOT_50⟧ at time step ⟦SLOT_51⟧, ⟦SLOT_52⟧ is a hyper-parameter, and ⟦SLOT_53⟧ is the advantage function, computed using a group of rewards ⟦SLOT_54⟧ corresponding to the outputs within each group:"
+  },
+  {
+   "id": "b0041",
+   "t": "keep",
+   "w": "table",
+   "en": "A i = r i − mean ​ ( { r 1 , r 2 , ⋯ , r G } ) std ​ ( { r 1 , r 2 , ⋯ , r G } ) . A_{i}=\\frac{r_{i}-\\mathrm{mean}(\\{r_{1},r_{2},\\cdots,r_{G}\\})}{\\mathrm{std}(\\{r_{1},r_{2},\\cdots,r_{G}\\})}. (10)"
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "Due to reward sparsity in practice, we apply the same reward signal across all timesteps during optimization. While traditional GRPO formulations employ KL-regularization to prevent reward over-optimization, we empirically observe minimal performance differences when omitting this component. So, we omit the KL-regularization item by default. The full algorithm can be found in Algorithm 1. We also introduce how to train with Classifier-Free Guidance (CFG) [35] in Appendix 8. In summary, we formulate the sampling processes of diffusion model and rectified flow as MDPs, use SDE sampling equations, adopt a GRPO-style objective, and generalize to text-to-image, text-to-video, and image-to-video generation tasks."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "Initialization Noise. In the DanceGRPO framework, the initialization noise constitutes a critical component. Previous RL-based approaches like DDPO use different noise vectors to initialize training samples. However, as shown in Figure 8 in Appendix 11, assigning different noise vectors to samples with the same prompts always leads to reward hacking phenomena in video generation, including training instability. Therefore, in our framework, we assign shared initialization noise to samples originating from the same textual prompts."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "Timestep Selection. While the denoising process can be rigorously formalized within the MDP framework, empirical observations reveal that subsets of timesteps within a denoising trajectory can be omitted without compromising performance. This reduction in computational steps enhances efficiency while maintaining output quality, as further analyzed in Section 3.6."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "Incorporating Multiple Reward Models. In practice, we employ more than one reward model to ensure more stable training and higher-quality visual results. As illustrated in Figure 9 in Appendix, models trained exclusively with HPS-v2.1 rewards [25] tend to generate unnatural (\"oily\") outputs, whereas incorporating CLIP scores helps preserve more realistic image characteristics. Rather than directly combining rewards, we aggregate advantage functions, as different reward models often operate on different scales. This approach stabilizes optimization and leads to more balanced generations."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "Extension on Best-of-N Inference Scaling. As outlined in Section 3.6, our methodology prioritizes the use of efficient samples—specifically, those associated with the top k and bottom k candidates selected by the Best-of-N sampling. This selective sampling strategy optimizes training efficacy by focusing on high-reward and critical low-reward regions of the solution space. We use brute-force search to generate these samples. While alternative approaches, such as tree search or greedy search, remain promising avenues for further exploration, we defer their systematic integration to future research."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Algorithm 1 DanceGRPO Training Algorithm"
+  },
+  {
+   "id": "b0048",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0049",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0050",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0051",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0052",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0053",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0054",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0055",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0056",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0057",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0058",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0059",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0060",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0061",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0062",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0063",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0064",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0065",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0066",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0067",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0068",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0069",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0070",
+   "t": "keep",
+   "w": "math",
+   "en": ""
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "h3",
+   "en": "2.3 Application to Different Tasks with Different Rewards"
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "We verify the effectiveness of our algorithm in two generative paradigms (diffusion/rectified flow) and three tasks (text-to-image, text-to-video, image-to-video). For this, we choose four fundamental models (Stable Diffusion [2], HunyuanVideo [22], FLUX [23], SkyReels-I2V [24]) for the experiment. All of these methods can be precisely constructed within the framework of MDP during their sampling process. This allows us to unify the theoretical bases across these tasks and improve them via DanceGRPO. To our knowledge, this is the first work to apply the unified framework to diverse visual generation tasks."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "We use five reward models to optimize visual generation quality: (1) Image Aesthetics quantifies visual appeal using a pretrained model fine-tuned on human-rated data [25]; (2) Text-image Alignment employs CLIP [26] to maximize cross-modal consistency between prompts and outputs; (3) Video Aesthetics Quality extends image evaluation to temporal domains using VLMs [14, 29], assessing frame quality and coherence; (4) Video Motion Quality evaluates motion realism through physics-aware VLM[14] analysis of trajectories and deformations; (5) Thresholding Binary Reward employs a binary mechanism motivated by [20], where rewards are discretized via a fixed threshold (values exceeding the threshold receive 1, others 0), specifically designed to evaluate generative models’ ability to learn abrupt reward distributions under threshold-based optimization."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Comparison of alignment methods across key capabilities. VideoGen: Video generation generalization. Scalability: Scalability to datasets with a large number of prompts. Reward ↑ indicates a significant reward improvement. RFs: Applicable to Rectified Flows. No Diff-Reward: Don’t need differentiable reward models."
+  },
+  {
+   "id": "b0075",
+   "t": "keep",
+   "w": "table",
+   "en": "Method RL-based VideoGen Scalability Reward ↑ RFs No Diff-Reward DDPO/DPOK ✔ ✗ ✗ ✔ ✗ ✔ ReFL ✗ ✗ ✔ ✔ ✔ ✗ DPO ✗ ✔ ✔ ✗ ✔ ✔ Ours ✔ ✔ ✔ ✔ ✔ ✔"
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h3",
+   "en": "2.4 Comparisons with DDPO, DPOK, ReFL, and DPO"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "As evidenced by our comprehensive capability matrix in Table 1, DanceGRPO establishes new standards for diffusion model alignment. Our method achieves full-spectrum superiority across all evaluation dimensions: (1) seamless video generation, (2) large-scale dataset scalability, (3) significant reward improvements, (4) native compatibility with rectified flows, and (5) independence from differentiable rewards. This integrated capability profile – unobtainable by any single baseline method (DDPO/DPOK/ReFL/DPO) – enables simultaneous optimization across multiple generative domains while maintaining training stability. More comparisons can be found in Appendix 9."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Experiments"
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 General Setup"
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "p",
+   "en": "Text-to-Image Generation. We employ Stable Diffusion v1.4, FLUX, and HunyuanVideo-T2I (using one latent frame in HunyuanVideo) as foundation models, with HPS-v2.1 [25] and CLIP score [26]—alongside their binary rewards—serving as reward models. A curated prompt dataset, balancing diversity and complexity, guides optimization. For evaluation, we select 1,000 test prompts to assess CLIP scores and Pick-a-Pic performance in Section 3.2. We use the official prompts for GenEval and HPS-v2.1 benchmark."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "Text-to-Video Generation. Our foundation model is HunyuanVideo [22], with reward signals derived from VideoAlign [14]. Prompts are curated using the VidProM [36] dataset, and an additional 1,000 test prompts are filtered to evaluate the VideoAlign scores in Section 3.3."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "p",
+   "en": "Image-to-Video Generation. We use SkyReels-I2V [24] as our foundation model. VideoAlign [14] serves as the primary reward metric, while the prompt dataset, constructed via ConsisID [37], is paired with reference images synthesized by FLUX [23] to ensure conditional fidelity. An additional 1000 test prompts are filtered to evaluate the VideoAlign score in Section 3.4."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "Experimental Settings. We implemented all models with scaled computational resources appropriate to task complexity: 32 H800 GPUs for flow-based text-to-image models, 8 H800 GPUs for Stable Diffusion variants, 64 H800 GPUs for text-to-video generation systems, and 32 H800 GPUs for image-to-video transformation architectures. We develop our framework based on FastVideo [38, 39]. Comprehensive hyperparameter configurations and training protocols are detailed in Appendix 6. We always use more than 10,000 prompts to optimize the models. All reward curves presented in our paper are plotted using a moving average for smoother visualization. We use ODEs-based samplers for evaluation and visualization."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Results on Stable Diffusion v1.4. This table presents the performance of three Stable Diffusion variants: (1) the base model, (2) the model trained with HPS score, and (3) the model optimized with both HPS and CLIP scores. For evaluation, we report HPS-v2.1 and GenEval scores using their official prompts, while CLIP score and Pick-a-Pic metrics are computed on our test set of 1,000 prompts."
+  },
+  {
+   "id": "b0085",
+   "t": "keep",
+   "w": "table",
+   "en": "Models HPS-v2.1 [ 25 ] CLIP Score [ 26 ] Pick-a-Pic [ 40 ] GenEval [ 27 ] Stable Diffusion 0.239 0.363 0.202 0.421 Stable Diffusion with HPS-v2.1 0.365 0.380 0.217 0.521 Stable Diffusion with HPS-v2.1"
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Results on FLUX. In this table, we show the results of FLUX, FLUX trained with HPS score, and FLUX trained with both HPS score and CLIP score. We use the same evaluation prompts as Table 2."
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "table",
+   "en": "Models HPS-v2.1 [ 25 ] CLIP Score [ 26 ] Pick-a-Pic [ 40 ] GenEval [ 27 ] FLUX 0.304 0.405 0.224 0.659 FLUX with HPS-v2.1 0.372 0.376 0.230 0.561 FLUX with HPS-v2.1&CLIP Score 0.343 0.427 0.228 0.687"
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Comparison of different methods trained on diffusion and solely (not combined) with HPS score and CLIP score. \"Baseline\" denotes the original results of Stable Diffusion. More comparisons with DDPO can be found in Appendix 10."
+  },
+  {
+   "id": "b0089",
+   "t": "keep",
+   "w": "table",
+   "en": "Approach Baseline Ours DDPO ReFL DPO HPS-v2.1 0.239 0.365 0.297 0.357 0.241 CLIP Score 0.363 0.421 0.381 0.418 0.367"
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: The results of HunyuanVideo on Videoalign and VisionReward trained with VideoAlign VQ&MQ. \"Baseline\" denotes the original results of HunyuanVideo. We use the weighted sum of the probability for VisionReward-Video."
+  },
+  {
+   "id": "b0091",
+   "t": "keep",
+   "w": "table",
+   "en": "Benchmarks VQ MQ TA VisionReward Baseline 4.51 1.37 1.75 0.124 Ours 7.03 (+56%) 3.85 (+181%) 1.59 0.128"
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Text-to-Image Generation"
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "Stable Diffusion. Stable Diffusion v1.4, a diffusion-based text-to-image generation framework, comprises three core components: a UNet architecture for iterative denoising, a CLIP-based text encoder for semantic conditioning, and a variational autoencoder (VAE) for latent space modeling. As demonstrated in Table 2 and Figure 1(a), our proposed method, DanceGRPO, achieves a significant improvement in reward metrics, elevating the HPS score from 0.239 to 0.365, as well as the CLIP Score from 0.363 to 0.395. We also take the metric like the Pick-a-Pic [40] and GenEval [27] to evaluate our method. The results confirm the effectiveness of our method. Moreover, as shown in Table 3.1, our method exhibits the best performance in terms of metrics compared to other methods. We implement DPO as an online version following [15]."
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "Building on insights from rule-based reward models such as DeepSeek-R1, we conduct preliminary experiments with a binary reward formulation. By thresholding the continuous HPS reward at 0.28—assigning (CLIP score at 0.39) a value of 1 for rewards above this threshold and 0 otherwise, we construct a simplified reward model. Figure 3(a) illustrates that DanceGRPO effectively adapts to this discretized reward distribution, despite the inherent simplicity of the thresholding approach. These results indicate the effectiveness of binary reward models in visual generation tasks. In the future, we will also strive to explore more powerful rule-based visual reward models, for example, making judgments through a multimodal large language model."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "p",
+   "en": "Best-of-N Inference Scaling. We explore sample efficiency through Best-of-N inference scaling using Stable Diffusion, as detailed in Section 2.2. By training the model on subsets of 16 samples (with the top 8 and bottom 8 rewards) selected from progressively larger pools (16, 64, and 256 samples per prompt), we evaluate the impact of sample curation on convergence dynamics about Stable Diffusion. Figure 4(a) reveals that Best-of-N scaling substantially accelerates convergence. This underscores the utility of strategic sample selection in reducing training overhead while maintaining performance. For alternative approaches, such as tree search or greedy search, we defer their systematic integration to future research."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "FLUX. FLUX.1-dev is a flow-based text-to-image generation model that advances the state-of-the-art across multiple benchmarks, leveraging a more complex architecture than Stable Diffusion. To optimize performance, we integrate two reward models: HPS score and CLIP score. As illustrated in Figure 1(b) and Table 3, the proposed training paradigm achieves significant improvements across all reward metrics."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "HunyuanVideo-T2I. HunyuanVideo-T2I is a text-to-image adaptation of the HunyuanVideo framework, reconfigured by reducing the number of latent frames to one. This modification transforms the original video generation architecture into a flow-based image synthesis model. We further optimize the system using the publicly available HPS-v2.1 model, a human-preference-driven metric for visual quality. As demonstrated in Figure 1(c), this approach elevates the mean reward score from about 0.23 to 0.33, reflecting enhanced alignment with human aesthetic preferences."
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: We visualize the reward curves of Stable Diffusion, FLUX.1-dev, and HunyuanVideo-T2I on HPS score from left to right. After applying CLIP score, the HPS score decreases, but the generated images become more natural (Figure 9 in Appendix), and the CLIP score improves (Tables 2 and 3)."
+  },
+  {
+   "id": "b0100",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: We visualize the training curves of motion quality and visual aesthetics quality on HunyuanVideo, motion quality on SkyReels-I2V."
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Text-to-Video Generation"
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "p",
+   "en": "HunyuanVideo. Optimizing text-to-video generation models presents significantly greater challenges compared to text-to-image frameworks, primarily due to elevated computational costs during training and inference, as well as slower convergence rates. In the pretraining protocol, we always adopt a progressive strategy: initial training focuses on text-to-image generation, followed by low-resolution video synthesis, and culminates in high-resolution video refinement. However, empirical observations reveal that relying solely on image-centric optimization leads to suboptimal video generation outcomes. To address this, our implementation employs training video samples synthesized at a resolution of 480×480 pixels, but we can visualize the samples with larger pixels."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "p",
+   "en": "Furthermore, constructing an effective video reward model for training alignment poses substantial difficulties. Our experiments evaluated several candidates: the Videoscore [41] model exhibited unstable reward distributions, rendering it impractical for optimization, while Visionreward-Video [42], a 29-dimensional metric, yielded semantically coherent rewards but suffered from inaccuracies across individual dimensions. Consequently, we adopted VideoAlign [14], a multidimensional framework evaluating three critical aspects: visual aesthetics quality, motion quality, and text-video alignment. Notably, the text-video alignment dimension demonstrated significant instability, prompting its exclusion from our final analysis. We also increase the number of sampled frames per second for VideoAlign to improve the training stability. As illustrated in Figure 2(a) and Figure 2(b), our methodology achieves relative improvements of 56% and 181% in visual and motion quality metrics, respectively. Extended qualitative results are provided in the Table 3.1."
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "h3",
+   "en": "3.4 Image-to-Video Generation"
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "p",
+   "en": "SkyReels-I2V. SkyReels-I2V represents a state-of-the-art open-source image-to-video (I2V) generation framework, established as of February 2025 at the inception of this study. Derived from the HunyuanVideo architecture, the model is fine-tuned by integrating image conditions into the input concatenation process. A central finding of our investigation is that I2V models exclusively allow optimization of motion quality, encompassing motion coherence and aesthetic dynamics, since visual fidelity and text-video alignment are inherently constrained by the attributes of the input image rather than the parametric space of the model. Consequently, our optimization protocol leverages the motion quality metric from the VideoAlign reward model, achieving a 118% relative improvement in this dimension as shown in Figure 2(c). We must enable the CFG-training to ensure the sampling quality during the RLHF training process."
+  },
+  {
+   "id": "b0107",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: (a) We visualize the training curves of binary rewards. (b) We show the human evaluation results using FLUX (T2I), HunyuanVideo (T2V), and SkyReel (I2V), respectively."
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "h3",
+   "en": "3.5 Human Evaluation"
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "p",
+   "en": "We present the results of our human evaluation, conducted using in-house prompts and reference images. For text-to-image generation, we evaluate FLUX on 240 prompts. For text-to-video generation, we assess HunyuanVideo on 200 prompts, and for image-to-video generation, we test SkyReels-I2V on 200 prompts paired with their corresponding reference images. As shown in Figure 3(b), human artists consistently prefer outputs refined with RLHF. More visualization results can be found in Figure 10 in Appendix, and Appendix 11."
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "h3",
+   "en": "3.6 Ablation Study"
+  },
+  {
+   "id": "b0112",
+   "t": "text",
+   "w": "p",
+   "en": "Ablation on Timestep Selection. As detailed in Section 2.2, we investigate the impact of timestep selection on the training dynamics of the HunyuanVideo-T2I model. We conduct an ablation study across three experimental conditions: (1) training exclusively on the first 30% of timesteps from noise, (2) training on randomly sampled 30% of timesteps, (3) training on the final 40% of timesteps before outputs, (4) training on randomly sampled 60% of timesteps, and (5) training on sampled 100% of timesteps. As shown in Figure 4(b), empirical results indicate that the initial 30% of timesteps are critical for learning foundational generative patterns, as evidenced by their disproportionate contribution to model performance. However, restricting training solely to this interval leads to performance degradation compared to full-sequence training, likely due to insufficient exposure to late-stage refinement dynamics."
+  },
+  {
+   "id": "b0113",
+   "t": "text",
+   "w": "p",
+   "en": "To reconcile this trade-off between computational efficiency and model fidelity, we always implement a 40% stochastic timestep dropout strategy during training. This approach randomly masks 40% of timesteps across all phases while preserving temporal continuity in the latent diffusion process. The findings suggest that strategic timestep subsampling can optimize resource utilization in flow-based generative frameworks."
+  },
+  {
+   "id": "b0114",
+   "t": "text",
+   "w": "p",
+   "en": "Ablation on Noise Level ⟦SLOT_55⟧. We systematically investigate the impact of noise level ⟦SLOT_56⟧ during training on FLUX. Our analysis reveals that reducing ⟦SLOT_57⟧ leads to a significant performance degradation, as quantitatively demonstrated in Figure 4(c). Notably, experiments with alternative noise decay schedules (e.g., those used in DDPM) show no statistically significant differences in output quality compared to our baseline configuration. Futhermore, the noise level larger than 0.3 sometimes leads to noisy images after RLHF training."
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0116",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: This figure shows the rewards on Best-of-N inference scaling, the ablation on timestep selection, and the ablation on noise level, respectively. While Best-of-N inference scaling consistently improves performance with more samples, it reduces sampling efficiency. Therefore, we leave Best-of-N as an optional extension."
+  },
+  {
+   "id": "b0117",
+   "t": "text",
+   "w": "h2",
+   "en": "4 Related Work"
+  },
+  {
+   "id": "b0118",
+   "t": "text",
+   "w": "p",
+   "en": "Aligning Large Language Models. Large Language Models (LLMs) [43, 44, 45, 46, 47] are typically aligned with Reinforcement Learning from Human Feedback (RLHF) [48, 47, 46, 49, 50, 51]. RLHF involves training a reward function based on comparison data of model outputs to capture human preferences, which is then utilized in reinforcement learning to align the policy model. While some approaches leverage policy gradient methods, others focus on Direct Policy Optimization (DPO) [52]. Policy gradient methods have proven effective but are computationally expensive and require extensive hyperparameter tuning. In contrast, DPO offers a more cost-efficient alternative but consistently underperforms compared to policy gradient methods."
+  },
+  {
+   "id": "b0119",
+   "t": "text",
+   "w": "p",
+   "en": "Recently, DeepSeek-R1 [20] demonstrated that the application of large-scale reinforcement learning with formatting and result-only reward functions can guide LLMs toward the self-emergence of thought processes, enabling human-like complex chain-of-thought reasoning. This approach has achieved significant advantages in complex reasoning tasks, showcasing immense potential in advancing reasoning capabilities within Large Language Models."
+  },
+  {
+   "id": "b0120",
+   "t": "text",
+   "w": "p",
+   "en": "Aligning Diffusion Models and Rectified Flows. Diffusion models and rectified flows can also benefit significantly from alignment with human feedback, but the exploration remains primitive compared with LLMs. Key approaches in this area include: (1) Direct Policy Optimization (DPO)-style [53, 14, 42, 54, 12] methods, (2) direct backpropagation with reward signals [55], such as ReFL [9], and (3) policy gradient-based methods, including DPOK [19] and DDPO [18]. However, production-level models predominantly rely on DPO and ReFL, as previous policy gradient methods have demonstrated instability when applied to large-scale settings. Our work addresses this limitation, providing a robust solution to enhance stability and scalability. We also hope our work offers insights into its potential to unify optimization paradigms across different modalities (e.g. image and text) [56, 57]."
+  },
+  {
+   "id": "b0121",
+   "t": "text",
+   "w": "h2",
+   "en": "5 Conclusion and Future Work"
+  },
+  {
+   "id": "b0122",
+   "t": "text",
+   "w": "p",
+   "en": "This work pioneers the integration of Group Relative Policy Optimization (GRPO) into visual generation, establishing DanceGRPO as a unified framework for enhancing diffusion models and rectified flows across text-to-image, text-to-video, and image-to-video tasks. By bridging the gap between language and visual modalities, our approach addresses critical limitations of prior methods, achieving superior performance through efficient alignment with human preferences and robust scaling to complex, multi-task settings. Experiments demonstrate substantial improvements in visual fidelity, motion quality, and text-image alignment. Future work will explore GRPO’s extension to multimodal generation, further unifying optimization paradigms across Generative AI."
+  },
+  {
+   "id": "b0123",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising diffusion probabilistic models. Advances in neural information processing systems , 33:6840–6851, 2020."
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn Ommer. High-resolution image synthesis with latent diffusion models. In Proceedings of the IEEE/CVF conference on compute"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] Dustin Podell, Zion English, Kyle Lacey, Andreas Blattmann, Tim Dockhorn, Jonas Müller, Joe Penna, and Robin Rombach. Sdxl: Improving latent diffusion models for high-resolution image synthesis. a"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] Zeyue Xue, Guanglu Song, Qiushan Guo, Boxiao Liu, Zhuofan Zong, Yu Liu, and Ping Luo. Raphael: Text-to-image generation via large mixture of diffusion paths. Advances in Neural Information Process"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] Yaron Lipman, Ricky TQ Chen, Heli Ben-Hamu, Maximilian Nickel, and Matt Le. Flow matching for generative modeling. arXiv preprint arXiv:2210.02747 , 2022."
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] Xingchao Liu, Chengyue Gong, and Qiang Liu. Flow straight and fast: Learning to generate and transfer data with rectified flow. arXiv preprint arXiv:2209.03003 , 2022."
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] Patrick Esser, Sumith Kulal, Andreas Blattmann, Rahim Entezari, Jonas Müller, Harry Saini, Yam Levi, Dominik Lorenz, Axel Sauer, Frederic Boesel, et al. Scaling rectified flow transformers for hig"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] Lixue Gong, Xiaoxia Hou, Fanshi Li, Liang Li, Xiaochen Lian, Fei Liu, Liyang Liu, Wei Liu, Wei Lu, Yichun Shi, et al. Seedream 2.0: A native chinese-english bilingual image generation foundation m"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] Jiazheng Xu, Xiao Liu, Yuchen Wu, Yuxuan Tong, Qinkai Li, Ming Ding, Jie Tang, and Yuxiao Dong. Imagereward: Learning and evaluating human preferences for text-to-image generation. Advances in Neu"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] Jiacheng Zhang, Jie Wu, Yuxi Ren, Xin Xia, Huafeng Kuang, Pan Xie, Jiashi Li, Xuefeng Xiao, Weilin Huang, Shilei Wen, et al. Unifl: Improve latent diffusion model via unified feedback learning. a"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] Ming Li, Taojiannan Yang, Huafeng Kuang, Jie Wu, Zhaoning Wang, Xuefeng Xiao, and Chen Chen. Controlnet++: Improving conditional controls with efficient consistency feedback: Project page: liming"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] Bram Wallace, Meihua Dang, Rafael Rafailov, Linqi Zhou, Aaron Lou, Senthil Purushwalkam, Stefano Ermon, Caiming Xiong, Shafiq Joty, and Nikhil Naik. Diffusion model alignment using direct prefere"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] Ziyu Guo, Renrui Zhang, Chengzhuo Tong, Zhizheng Zhao, Peng Gao, Hongsheng Li, and Pheng-Ann Heng. Can we generate images with cot? let’s verify and reinforce image generation step by step. arXiv"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] Jie Liu, Gongye Liu, Jiajun Liang, Ziyang Yuan, Xiaokun Liu, Mingwu Zheng, Xiele Wu, Qiulin Wang, Wenyu Qin, Menghan Xia, et al. Improving video generation with human feedback. arXiv preprint arX"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] Jiacheng Zhang, Jie Wu, Weifeng Chen, Yatai Ji, Xuefeng Xiao, Weilin Huang, and Kai Han. Onlinevpo: Align video diffusion model with online video-centric preference optimization. arXiv preprint a"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] Richard S Sutton, Andrew G Barto, et al. Reinforcement learning: An introduction , volume 1. MIT press Cambridge, 1998."
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347 , 2017."
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] Kevin Black, Michael Janner, Yilun Du, Ilya Kostrikov, and Sergey Levine. Training diffusion models with reinforcement learning. arXiv preprint arXiv:2305.13301 , 2023."
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] Ying Fan, Olivia Watkins, Yuqing Du, Hao Liu, Moonkyung Ryu, Craig Boutilier, Pieter Abbeel, Mohammad Ghavamzadeh, Kangwook Lee, and Kimin Lee. Dpok: Reinforcement learning for fine-tuning text-t"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin Xu, Qihao Zhu, Shirong Ma, Peiyi Wang, Xiao Bi, et al. Deepseek-r1: Incentivizing reasoning capability in llms via reinforce"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK Li, Y Wu, et al. Deepseekmath: Pushing the limits of mathematical reasoning in open langua"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] Weijie Kong, Qi Tian, Zijian Zhang, Rox Min, Zuozhuo Dai, Jin Zhou, Jiangfeng Xiong, Xin Li, Bo Wu, Jianwei Zhang, et al. Hunyuanvideo: A systematic framework for large video generative models. a"
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] Black Forest Labs. Flux. https://github.com/black-forest-labs/flux , 2024."
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] SkyReels-AI. Skyreels v1: Human-centric video foundation model. https://github.com/SkyworkAI/SkyReels-V1 , 2025."
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] Xiaoshi Wu, Keqiang Sun, Feng Zhu, Rui Zhao, and Hongsheng Li. Better aligning text-to-image models with human preference. arXiv preprint arXiv:2303.14420 , 1(3), 2023."
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al. Learning transferable visual models from"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] Dhruba Ghosh, Hannaneh Hajishirzi, and Ludwig Schmidt. Geneval: An object-focused framework for evaluating text-to-image alignment. Advances in Neural Information Processing Systems , 36:52132–52"
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] Jiaming Song, Chenlin Meng, and Stefano Ermon. Denoising diffusion implicit models. arXiv preprint arXiv:2010.02502 , 2020."
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] Peng Wang, Shuai Bai, Sinan Tan, Shijie Wang, Zhihao Fan, Jinze Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, et al. Qwen2-vl: Enhancing vision-language model’s perception of the world at"
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] Yang Song and Stefano Ermon. Generative modeling by estimating gradients of the data distribution. Advances in neural information processing systems , 32, 2019."
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] Yang Song, Jascha Sohl-Dickstein, Diederik P Kingma, Abhishek Kumar, Stefano Ermon, and Ben Poole. Score-based generative modeling through stochastic differential equations. arXiv preprint arXiv:"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] Michael S Albergo and Eric Vanden-Eijnden. Building normalizing flows with stochastic interpolants. arXiv preprint arXiv:2209.15571 , 2022."
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] Michael S Albergo, Nicholas M Boffi, and Eric Vanden-Eijnden. Stochastic interpolants: A unifying framework for flows and diffusions, 2023. URL https://arxiv. org/abs/2303.08797 , 3."
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] Ruiqi Gao, Emiel Hoogeboom, Jonathan Heek, Valentin De Bortoli, Kevin P. Murphy, and Tim Salimans. Diffusion meets flow matching: Two sides of the same coin. 2024."
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] Jonathan Ho and Tim Salimans. Classifier-free diffusion guidance. arXiv preprint arXiv:2207.12598 , 2022."
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] Wenhao Wang and Yi Yang. Vidprom: A million-scale real prompt-gallery dataset for text-to-video diffusion models. arXiv preprint arXiv:2403.06098 , 2024."
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] Shenghai Yuan, Jinfa Huang, Xianyi He, Yunyang Ge, Yujun Shi, Liuhan Chen, Jiebo Luo, and Li Yuan. Identity-preserving text-to-video generation by frequency decomposition. In Proceedings of the C"
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] Hangliang Ding, Dacheng Li, Runlong Su, Peiyuan Zhang, Zhijie Deng, Ion Stoica, and Hao Zhang. Efficient-vdit: Efficient video diffusion transformers with attention tile, 2025."
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] Peiyuan Zhang, Yongqi Chen, Runlong Su, Hangliang Ding, Ion Stoica, Zhenghong Liu, and Hao Zhang. Fast video generation with sliding tile attention, 2025."
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] Yuval Kirstain, Adam Polyak, Uriel Singer, Shahbuland Matiana, Joe Penna, and Omer Levy. Pick-a-pic: An open dataset of user preferences for text-to-image generation. Advances in Neural Informati"
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] Xuan He, Dongfu Jiang, Ge Zhang, Max Ku, Achint Soni, Sherman Siu, Haonan Chen, Abhranil Chandra, Ziyan Jiang, Aaran Arulraj, et al. Videoscore: Building automatic metrics to simulate fine-graine"
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[42] Jiazheng Xu, Yu Huang, Jiale Cheng, Yuanming Yang, Jiajun Xu, Yuan Wang, Wenbo Duan, Shen Yang, Qunlin Jin, Shurun Li, et al. Visionreward: Fine-grained multi-dimensional human preference learnin"
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[43] Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia Leoni Aleman, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shyamal Anadkat, et al. Gpt-4 technical report. arXiv "
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[44] Yupeng Chang, Xu Wang, Jindong Wang, Yuan Wu, Linyi Yang, Kaijie Zhu, Hao Chen, Xiaoyuan Yi, Cunxiang Wang, Yidong Wang, et al. A survey on evaluation of large language models. ACM transactions o"
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[45] Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al. Language models are few-shot learn"
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[46] Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Alex Vaughan, et al. The llama 3 herd of models. a"
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[47] An Yang, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chengyuan Li, Dayiheng Liu, Fei Huang, Haoran Wei, et al. Qwen2. 5 technical report. arXiv preprint arXiv:2412.15115 , 2024."
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[48] Long Ouyang, Jeffrey Wu, Xu Jiang, Diogo Almeida, Carroll Wainwright, Pamela Mishkin, Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, et al. Training language models to follow instructio"
+  },
+  {
+   "id": "b0172",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[49] Harrison Lee, Samrat Phatale, Hassan Mansoor, Kellie Ren Lu, Thomas Mesnard, Johan Ferret, Colton Bishop, Ethan Hall, Victor Carbune, and Abhinav Rastogi. Rlaif: Scaling reinforcement learning fr"
+  },
+  {
+   "id": "b0173",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[50] Leo Gao, John Schulman, and Jacob Hilton. Scaling laws for reward model overoptimization. In International Conference on Machine Learning , pages 10835–10866. PMLR, 2023."
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[51] Yuntao Bai, Andy Jones, Kamal Ndousse, Amanda Askell, Anna Chen, Nova DasSarma, Dawn Drain, Stanislav Fort, Deep Ganguli, Tom Henighan, et al. Training a helpful and harmless assistant with reinf"
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[52] Rafael Rafailov, Archit Sharma, Eric Mitchell, Christopher D Manning, Stefano Ermon, and Chelsea Finn. Direct preference optimization: Your language model is secretly a reward model. Advances in "
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[53] Zhanhao Liang, Yuhui Yuan, Shuyang Gu, Bohan Chen, Tiankai Hang, Ji Li, and Liang Zheng. Step-aware preference optimization: Aligning preference with denoising performance at each step. arXiv pre"
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[54] Tao Zhang, Cheng Da, Kun Ding, Kun Jin, Yan Li, Tingting Gao, Di Zhang, Shiming Xiang, and Chunhong Pan. Diffusion model as a noise-aware latent reward model for step-level preference optimizatio"
+  },
+  {
+   "id": "b0178",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[55] Mihir Prabhudesai, Russell Mendonca, Zheyang Qin, Katerina Fragkiadaki, and Deepak Pathak. Video diffusion alignment via reward gradients. arXiv preprint arXiv:2407.08737 , 2024."
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[56] Yiyang Ma, Xingchao Liu, Xiaokang Chen, Wen Liu, Chengyue Wu, Zhiyu Wu, Zizheng Pan, Zhenda Xie, Haowei Zhang, Liang Zhao, et al. Janusflow: Harmonizing autoregression and rectified flow for unif"
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[57] Quan Sun, Yufeng Cui, Xiaosong Zhang, Fan Zhang, Qiying Yu, Yueze Wang, Yongming Rao, Jingjing Liu, Tiejun Huang, and Xinlong Wang. Generative multimodal models are in-context learners. In Procee"
+  },
+  {
+   "id": "b0181",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Experimental Settings"
+  },
+  {
+   "id": "b0182",
+   "t": "text",
+   "w": "p",
+   "en": "We provide detailed experimental settings in Table 6, which apply exclusively to training without classifier-free guidance (CFG). When enabling CFG, we configure one gradient update per iteration. Additionally, the sampling steps vary by model: we use 50 steps for Stable Diffusion, and 25 steps for FLUX and HunyuanVideo."
+  },
+  {
+   "id": "b0183",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Our Hyper-paramters."
+  },
+  {
+   "id": "b0184",
+   "t": "keep",
+   "w": "table",
+   "en": "Learning rate 1e-5 Optimizer AdamW Gradient clip norm 1.0 Prompts per iteration 32 Images per prompt 12 Gradient updates per iteration 4 Clip range ϵ \\epsilon 1e-4 Noise level ε t \\varepsilon_{t} 0.3 "
+  },
+  {
+   "id": "b0185",
+   "t": "text",
+   "w": "h2",
+   "en": "7 More Analysis"
+  },
+  {
+   "id": "b0186",
+   "t": "text",
+   "w": "h3",
+   "en": "7.1 Stochastic Interpolants"
+  },
+  {
+   "id": "b0187",
+   "t": "text",
+   "w": "p",
+   "en": "The stochastic interpolant framework, introduced by [33], offers a unifying perspective on generative models like rectified flows and score-based diffusion models. It achieves this by constructing a continuous-time stochastic process that bridges any two arbitrary probability densities, ⟦SLOT_58⟧ and ⟦SLOT_59⟧."
+  },
+  {
+   "id": "b0188",
+   "t": "text",
+   "w": "p",
+   "en": "In our work, we connect with a specific type of stochastic interpolant known as spatially linear interpolants, defined in Section 4 of [33]. Given densities ⟦SLOT_60⟧, a spatially linear stochastic interpolant process ⟦SLOT_61⟧ is defined as:"
+  },
+  {
+   "id": "b0189",
+   "t": "keep",
+   "w": "table",
+   "en": "𝐳 t = α ​ ( t ) ​ 𝐳 0 + β ​ ( t ) ​ 𝐳 1 + γ ​ ( t ) ​ ϵ , t ∈ [ 0 , 1 ] , \\mathbf{z}_{t}=\\alpha(t)\\mathbf{z}_{0}+\\beta(t)\\mathbf{z}_{1}+\\gamma(t)\\boldsymbol{\\epsilon},\\quad t\\in[0,1], (11)"
+  },
+  {
+   "id": "b0190",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_62⟧, ⟦SLOT_63⟧, and ⟦SLOT_64⟧ is a standard Gaussian random variable independent of ⟦SLOT_65⟧ and ⟦SLOT_66⟧. The functions ⟦SLOT_67⟧ are sufficiently smooth and satisfy the boundary conditions:"
+  },
+  {
+   "id": "b0191",
+   "t": "keep",
+   "w": "table",
+   "en": "α ​ ( 0 ) = β ​ ( 1 ) = 1 , α ​ ( 1 ) = β ​ ( 0 ) = γ ​ ( 0 ) = γ ​ ( 1 ) = 0 , \\alpha(0)=\\beta(1)=1,\\quad\\alpha(1)=\\beta(0)=\\gamma(0)=\\gamma(1)=0, (12)"
+  },
+  {
+   "id": "b0192",
+   "t": "text",
+   "w": "p",
+   "en": "with the additional constraint that ⟦SLOT_68⟧ for ⟦SLOT_69⟧. The term ⟦SLOT_70⟧ introduces latent noise, smoothing the path between densities."
+  },
+  {
+   "id": "b0193",
+   "t": "text",
+   "w": "p",
+   "en": "Specific choices within this framework recover familiar models:"
+  },
+  {
+   "id": "b0194",
+   "t": "text",
+   "w": "li",
+   "en": "• Rectified Flow (RF): Setting ⟦SLOT_71⟧ (removing the latent noise), ⟦SLOT_72⟧, and ⟦SLOT_73⟧ yields the linear interpolation ⟦SLOT_74⟧ used in Rectified Flow [6, 33]. The dynamics are typically governed by an ODE ⟦SLOT_75⟧, where ⟦SLOT_76⟧ is the learned velocity field."
+  },
+  {
+   "id": "b0195",
+   "t": "text",
+   "w": "li",
+   "en": "• Score-Based Diffusion Models (SBDM): The framework connects to SBDMs via one-sided linear interpolants (Section 4.4 of [33]), where ⟦SLOT_77⟧ is typically Gaussian. The interpolant takes the form ⟦SLOT_78⟧. The VP-SDE formulation [31] corresponds to choosing ⟦SLOT_79⟧ and ⟦SLOT_80⟧ after a time reparameterization."
+  },
+  {
+   "id": "b0196",
+   "t": "text",
+   "w": "p",
+   "en": "A pivotal insight is that: \"The law of the interpolant ⟦SLOT_81⟧ at any time ⟦SLOT_82⟧ can be realized by many different processes, including an ODE and forward and backward SDEs whose drifts can be learned from data.\""
+  },
+  {
+   "id": "b0197",
+   "t": "text",
+   "w": "p",
+   "en": "The stochastic interpolant framework provides a probability flow ODE for RF:"
+  },
+  {
+   "id": "b0198",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝐳 t = 𝐮 t ​ d ​ t . \\mathrm{d}\\mathbf{z}_{t}=\\mathbf{u}_{t}\\mathrm{d}t. (13)"
+  },
+  {
+   "id": "b0199",
+   "t": "text",
+   "w": "p",
+   "en": "The backward SDE associated with the interpolant’s density evolution is given by:"
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝐳 t = 𝐛 B ​ ( t , 𝐱 t ) ​ d ​ t + 2 ​ ϵ ​ ( t ) ​ d ​ 𝐳 , \\mathrm{d}\\mathbf{z}_{t}=\\mathbf{b}_{B}(t,\\mathbf{x}_{t})\\mathrm{d}t+\\sqrt{2\\epsilon(t)}\\mathrm{d}\\mathbf{z}, (14)"
+  },
+  {
+   "id": "b0201",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_83⟧ is the backward drift, ⟦SLOT_84⟧ is the score function, and ⟦SLOT_85⟧ is a tunable diffusion coefficient (noise schedule). If we set ⟦SLOT_86⟧, the backward SDE becomes:"
+  },
+  {
+   "id": "b0202",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝐳 t = ( 𝐮 t − ε t 2 2 ​ ∇ log ⁡ p t ​ ( 𝐳 t ) ) ​ d ​ t + ε t ​ d ​ 𝐳 , \\mathrm{d}\\mathbf{z}_{t}=\\left(\\mathbf{u}_{t}-\\frac{\\varepsilon_{t}^{2}}{2}\\nabla\\log p_{t}(\\mathbf{z}_{t})\\right)\\mathrm{d}"
+  },
+  {
+   "id": "b0203",
+   "t": "text",
+   "w": "p",
+   "en": "which is the same as [34]."
+  },
+  {
+   "id": "b0204",
+   "t": "text",
+   "w": "h3",
+   "en": "7.2 Connections between Rectified Flows and Diffusion Models"
+  },
+  {
+   "id": "b0205",
+   "t": "text",
+   "w": "p",
+   "en": "We aim to demonstrate the equivalence between certain formulations of diffusion models and flow matching (specifically, stochastic interpolants) by deriving the hyperparameters of one model from the other."
+  },
+  {
+   "id": "b0206",
+   "t": "text",
+   "w": "p",
+   "en": "The forward process of a diffusion model is described by an SDE:"
+  },
+  {
+   "id": "b0207",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝐳 t = f t ​ 𝐳 t ​ d ​ t + g t ​ d ​ 𝐰 , \\mathrm{d}\\mathbf{z}_{t}=f_{t}\\mathbf{z}_{t}\\mathrm{d}t+g_{t}\\mathrm{d}\\mathbf{w}, (16)"
+  },
+  {
+   "id": "b0208",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_87⟧ is a Brownian motion, and ⟦SLOT_88⟧ define the noise schedule."
+  },
+  {
+   "id": "b0209",
+   "t": "text",
+   "w": "p",
+   "en": "The corresponding generative (reverse) process SDE is given by:"
+  },
+  {
+   "id": "b0210",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝐳 t = ( f t ​ 𝐳 t − 1 + η t 2 2 ​ g t 2 ​ ∇ log ⁡ p t ​ ( 𝐳 t ) ) ​ d ​ t + η t ​ g t ​ d ​ 𝐰 , \\mathrm{d}\\mathbf{z}_{t}=\\left(f_{t}\\mathbf{z}_{t}-\\frac{1+\\eta_{t}^{2}}{2}g_{t}^{2}\\nabla\\log p_{t}"
+  },
+  {
+   "id": "b0211",
+   "t": "text",
+   "w": "p",
+   "en": "where ⟦SLOT_89⟧ is the marginal probability density of ⟦SLOT_90⟧ at time ⟦SLOT_91⟧."
+  },
+  {
+   "id": "b0212",
+   "t": "text",
+   "w": "p",
+   "en": "For flow matching, we consider an interpolant path between data ⟦SLOT_92⟧ and noise ⟦SLOT_93⟧ (typically ⟦SLOT_94⟧):"
+  },
+  {
+   "id": "b0213",
+   "t": "keep",
+   "w": "table",
+   "en": "𝐳 t = α t ​ 𝐱 + σ t ​ ϵ . \\mathbf{z}_{t}=\\alpha_{t}\\mathbf{x}+\\sigma_{t}\\mathbf{\\epsilon}. (18)"
+  },
+  {
+   "id": "b0214",
+   "t": "text",
+   "w": "p",
+   "en": "This path satisfies the ODE:"
+  },
+  {
+   "id": "b0215",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝐳 t = 𝐮 t ​ d ​ t , where ​ 𝐮 t = α ˙ t ​ 𝐱 + σ ˙ t ​ ϵ . \\mathrm{d}\\mathbf{z}_{t}=\\mathbf{u}_{t}\\mathrm{d}t,\\quad\\text{where }\\mathbf{u}_{t}=\\dot{\\alpha}_{t}\\mathbf{x}+\\dot{\\sigma}_{t}\\mathbf{\\ep"
+  },
+  {
+   "id": "b0216",
+   "t": "text",
+   "w": "p",
+   "en": "This can be generalized to a stochastic interpolant SDE:"
+  },
+  {
+   "id": "b0217",
+   "t": "keep",
+   "w": "table",
+   "en": "d ​ 𝐳 t = ( 𝐮 t − 1 2 ​ ε t 2 ​ ∇ log ⁡ p t ​ ( 𝐳 t ) ) ​ d ​ t + ε t ​ d ​ 𝐰 . \\mathrm{d}\\mathbf{z}_{t}=(\\mathbf{u}_{t}-\\frac{1}{2}\\varepsilon_{t}^{2}\\nabla\\log p_{t}(\\mathbf{z}_{t}))\\mathrm{d}t+\\var"
+  },
+  {
+   "id": "b0218",
+   "t": "text",
+   "w": "p",
+   "en": "The core idea is to match the marginal distributions ⟦SLOT_95⟧ generated by the forward diffusion process Eq.(16) with those implied by the interpolant path Eq.(18). We will derive ⟦SLOT_96⟧ and ⟦SLOT_97⟧ from this requirement, and then relate the noise terms of the generative SDEs Eq.(17) and Eq.(20) to find ⟦SLOT_98⟧."
+  },
+  {
+   "id": "b0219",
+   "t": "text",
+   "w": "p",
+   "en": "Deriving ⟦SLOT_99⟧ by Matching Means. From Eq.(18), assuming ⟦SLOT_100⟧ is fixed and ⟦SLOT_101⟧, the mean of ⟦SLOT_102⟧ is ⟦SLOT_103⟧. The mean ⟦SLOT_104⟧ of the process Eq.(16) starting from ⟦SLOT_105⟧ satisfies the ODE ⟦SLOT_106⟧. We require ⟦SLOT_107⟧ for all ⟦SLOT_108⟧. Substituting into the mean ODE:"
+  },
+  {
+   "id": "b0220",
+   "t": "keep",
+   "w": "table",
+   "en": "d d ​ t ​ ( α t ​ 𝐱 ) = f t ​ ( α t ​ 𝐱 ) , α ˙ t ​ 𝐱 = f t ​ α t ​ 𝐱 . \\frac{\\mathrm{d}}{\\mathrm{d}t}(\\alpha_{t}\\mathbf{x})=f_{t}(\\alpha_{t}\\mathbf{x}),\\qquad\\dot{\\alpha}_{t}\\mathbf{x}=f_{t}\\alpha_{t"
+  },
+  {
+   "id": "b0221",
+   "t": "text",
+   "w": "p",
+   "en": "Assuming this holds for any ⟦SLOT_109⟧ and ⟦SLOT_110⟧, we divide by ⟦SLOT_111⟧:"
+  },
+  {
+   "id": "b0222",
+   "t": "keep",
+   "w": "table",
+   "en": "f t = α ˙ t α t f_{t}=\\frac{\\dot{\\alpha}_{t}}{\\alpha_{t}} (22)"
+  },
+  {
+   "id": "b0223",
+   "t": "text",
+   "w": "p",
+   "en": "Using the identity ⟦SLOT_112⟧, we get:"
+  },
+  {
+   "id": "b0224",
+   "t": "keep",
+   "w": "table",
+   "en": "f t = ∂ t log ⁡ ( α t ) f_{t}=\\partial_{t}\\log(\\alpha_{t}) (23)"
+  },
+  {
+   "id": "b0225",
+   "t": "text",
+   "w": "p",
+   "en": "Deriving ⟦SLOT_113⟧ by Matching Variances. From Eq.(18), assuming ⟦SLOT_114⟧ is fixed and ⟦SLOT_115⟧ (identity matrix for standard Gaussian noise), the variance (covariance matrix) of ⟦SLOT_116⟧ is ⟦SLOT_117⟧. Let ⟦SLOT_118⟧ be the scalar variance magnitude. The variance ⟦SLOT_119⟧ for the process Eq.(16) evolves according to the Lyapunov equation: ⟦SLOT_120⟧ (Here, ⟦SLOT_121⟧ represents the magnitude of the noise injection rate). We require ⟦SLOT_122⟧. Substitute ⟦SLOT_123⟧ and ⟦SLOT_124⟧ into the variance evolution equation:"
+  },
+  {
+   "id": "b0226",
+   "t": "keep",
+   "w": "table",
+   "en": "d d ​ t ​ ( σ t 2 ) = 2 ​ ( α ˙ t α t ) ​ σ t 2 + g t 2 , 2 ​ σ t ​ σ ˙ t = 2 ​ α ˙ t α t ​ σ t 2 + g t 2 . \\frac{\\mathrm{d}}{\\mathrm{d}t}(\\sigma_{t}^{2})=2\\left(\\frac{\\dot{\\alpha}_{t}}{\\alpha_{t}}\\ri"
+  },
+  {
+   "id": "b0227",
+   "t": "text",
+   "w": "p",
+   "en": "Solving for ⟦SLOT_125⟧:"
+  },
+  {
+   "id": "b0228",
+   "t": "keep",
+   "w": "table",
+   "en": "g t 2 = 2 ​ σ t ​ σ ˙ t − 2 ​ α ˙ t α t ​ σ t 2 = 2 α t ​ ( α t ​ σ t ​ σ ˙ t − α ˙ t ​ σ t 2 ) = 2 ​ σ t α t ​ ( α t ​ σ ˙ t − α ˙ t ​ σ t ) g_{t}^{2}=2\\sigma_{t}\\dot{\\sigma}_{t}-2\\frac{\\dot{\\alpha}_"
+  },
+  {
+   "id": "b0229",
+   "t": "text",
+   "w": "p",
+   "en": "Using the quotient rule for differentiation, ⟦SLOT_126⟧, which implies ⟦SLOT_127⟧. Then we get:"
+  },
+  {
+   "id": "b0230",
+   "t": "keep",
+   "w": "table",
+   "en": "g t 2 = 2 ​ σ t α t ​ ( α t 2 ​ ∂ t ( σ t α t ) ) = 2 ​ α t ​ σ t ​ ∂ t ( σ t α t ) g_{t}^{2}=\\frac{2\\sigma_{t}}{\\alpha_{t}}\\left(\\alpha_{t}^{2}\\partial_{t}\\left(\\frac{\\sigma_{t}}{\\alpha_{t}}\\right)\\r"
+  },
+  {
+   "id": "b0231",
+   "t": "text",
+   "w": "p",
+   "en": "Thus, we have:"
+  },
+  {
+   "id": "b0232",
+   "t": "keep",
+   "w": "table",
+   "en": "g t 2 = 2 ​ α t ​ σ t ​ ∂ t ( σ t α t ) g_{t}^{2}=2\\alpha_{t}\\sigma_{t}\\partial_{t}\\left(\\frac{\\sigma_{t}}{\\alpha_{t}}\\right) (27)"
+  },
+  {
+   "id": "b0233",
+   "t": "text",
+   "w": "p",
+   "en": "Deriving ⟦SLOT_128⟧ by Matching Noise Terms in Generative SDEs. We compare the coefficients of the Brownian motion term (⟦SLOT_129⟧) in the reverse diffusion SDE Eq.(17) and the stochastic interpolant SDE Eq.(20). The diffusion coefficient (magnitude of the noise term) is ⟦SLOT_130⟧. The diffusion coefficient is ⟦SLOT_131⟧. To match the noise structure in these specific SDE forms, we set ⟦SLOT_132⟧: ⟦SLOT_133⟧. Solving for ⟦SLOT_134⟧ (assuming ⟦SLOT_135⟧):⟦SLOT_136⟧. Substitute ⟦SLOT_137⟧ using the result from Eq.(27):"
+  },
+  {
+   "id": "b0234",
+   "t": "keep",
+   "w": "table",
+   "en": "η t = ε t 2 ​ α t ​ σ t ​ ∂ t ( σ t / α t ) \\eta_{t}=\\frac{\\varepsilon_{t}}{\\sqrt{2\\alpha_{t}\\sigma_{t}\\partial_{t}(\\sigma_{t}/\\alpha_{t})}} (28)"
+  },
+  {
+   "id": "b0235",
+   "t": "text",
+   "w": "p",
+   "en": "Summary of Results. By requiring the forward diffusion process Eq.(16) to match the marginal mean and variance of the interpolant path Eq.(18) at all times ⟦SLOT_138⟧, we derived:"
+  },
+  {
+   "id": "b0236",
+   "t": "keep",
+   "w": "table",
+   "en": "f t = ∂ t log ⁡ ( α t ) , g t 2 = 2 ​ α t ​ σ t ​ ∂ t ( σ t / α t ) , η t = ε t / ( 2 ​ α t ​ σ t ​ ∂ t ( σ t / α t ) ) 1 / 2 . f_{t}=\\partial_{t}\\log(\\alpha_{t}),\\quad g_{t}^{2}=2\\alpha_{t}\\sigma_{t}"
+  },
+  {
+   "id": "b0237",
+   "t": "text",
+   "w": "p",
+   "en": "These relationships establish the equivalence between the parameters of the two frameworks under the specified conditions."
+  },
+  {
+   "id": "b0238",
+   "t": "text",
+   "w": "h2",
+   "en": "8 Classifier-Free Guidance (CFG) Training"
+  },
+  {
+   "id": "b0239",
+   "t": "text",
+   "w": "p",
+   "en": "Classifier-Free Guidance (CFG) [35] is a widely adopted technique for generating high-quality samples in conditional generative modeling. However, in our settings, integrating CFG into training pipelines introduces instability during optimization. To mitigate this, we empirically recommend disabling CFG during the sampling phase for models with high sample fidelity, such as HunyuanVideo and FLUX, as it reduces gradient oscillation while preserving output quality."
+  },
+  {
+   "id": "b0240",
+   "t": "text",
+   "w": "p",
+   "en": "For CFG-dependent models like SkyReels-I2V and Stable Diffusion, where CFG is critical for reasonable sample quality, we identify a key instability: training exclusively on the conditional objective leads to divergent optimization trajectories. This necessitates the joint optimization of both conditional and unconditional outputs, effectively doubling VRAM consumption due to dual-network computations. Morever, we propose reducing the frequency of parameter updates per training iteration. For instance, empirical validation shows that limiting updates to one per iteration significantly enhances training stability for SkyReels-I2V, with minimal impact on convergence rates."
+  },
+  {
+   "id": "b0241",
+   "t": "text",
+   "w": "h2",
+   "en": "9 Advantages over DDPO and DPOK"
+  },
+  {
+   "id": "b0242",
+   "t": "text",
+   "w": "p",
+   "en": "Our approach differs from prior RL-based methods for text-to-image diffusion models (e.g., DDPO, DPOK) in three key aspects: (1) We employ a GRPO-style objective function, (2) we compute advantages within prompt-level groups rather than globally, (3) we ensure noise consistency across samples from the same prompt, (4) we generalize these improvements beyond diffusion models by applying them to rectified flows and scaling to video generation tasks."
+  },
+  {
+   "id": "b0243",
+   "t": "text",
+   "w": "h2",
+   "en": "10 Inserting DDPO into Rectified Flow SDEs"
+  },
+  {
+   "id": "b0244",
+   "t": "text",
+   "w": "p",
+   "en": "We also insert DDPO-style objective function into rectified flow SDEs, but it always diverges, as shown in Figure 5, which demonstrates the superiority of DanceGRPO."
+  },
+  {
+   "id": "b0245",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0246",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: We visualize the results of DDPO and Ours. DDPO always diverges when applied to rectified flow SDEs."
+  },
+  {
+   "id": "b0247",
+   "t": "text",
+   "w": "h2",
+   "en": "11 More Visualization Results"
+  },
+  {
+   "id": "b0248",
+   "t": "text",
+   "w": "p",
+   "en": "We provide more visualization results on FLUX, Stable Diffusion, and HunyuanVideo as shown in Figure 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, and 18."
+  },
+  {
+   "id": "b0249",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0250",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: We visualize the results by selecting FLUX optimized with the HPS score at iterations 0, 60, 120, 180, 240, and 300. The optimized outputs tend to exhibit brighter tones and richer details. However, incorporating CLIP score regularization is crucial, as demonstrated in Figures 11, 12, and 13."
+  },
+  {
+   "id": "b0251",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0252",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Visualization of the diversity of the model before and after RLHF. Different seed tends to generate similar images after RLHF."
+  },
+  {
+   "id": "b0253",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0254",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8: Visualization of the results of reward hacking (with different initialization noise) and without reward hacking (with the same initialization noise) on HunyuanVideo. Prompt: A splash of water in a clear glass, with sparkling, clear radiant reflections, sunlight, sparkle"
+  },
+  {
+   "id": "b0255",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0256",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9: This figure demonstrates the impact of the CLIP score. The prompt is \"A photo of cup\". We find that the model trained solely with HPS-v2.1 rewards tends to produce unnatural (\"oily\") outputs, while incorporating CLIP scores helps maintain more natural image characteristics."
+  },
+  {
+   "id": "b0257",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0258",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 10: Overall visualization. We visualize the results before and after RLHF of FLUX and HunyuanVideo."
+  },
+  {
+   "id": "b0259",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0260",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 11: We present the original outputs of FLUX, alongside optimizations driven solely by the HPS score and those enhanced by both the HPS and CLIP scores."
+  },
+  {
+   "id": "b0261",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0262",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 12: We present the original outputs of FLUX, alongside optimizations driven solely by the HPS score and those enhanced by both the HPS and CLIP scores."
+  },
+  {
+   "id": "b0263",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0264",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 13: We present the original outputs of FLUX, alongside optimizations driven solely by the HPS score and those enhanced by both the HPS and CLIP scores."
+  },
+  {
+   "id": "b0265",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0266",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 14: We present the original outputs of HunyuanVideo-T2I, alongside optimizations driven solely by the HPS score and those enhanced by both the HPS and CLIP scores."
+  },
+  {
+   "id": "b0267",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0268",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 15: We present the original outputs of Stable Diffusion, alongside optimizations driven solely by the HPS score and those enhanced by both the HPS and CLIP scores."
+  },
+  {
+   "id": "b0269",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0270",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 16: Visualization results of HunyuanVideo."
+  },
+  {
+   "id": "b0271",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0272",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 17: Visualization results of HunyuanVideo."
+  },
+  {
+   "id": "b0273",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0274",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 18: Visualization results of HunyuanVideo."
+  },
+  {
+   "id": "b0275",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0276",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 19: Visualization results of SkyReels-I2V."
+  }
+ ]
+}

@@ -1,0 +1,508 @@
+{
+ "blocks": {
+  "b0003": {
+   "zh": "1清华大学"
+  },
+  "b0004": {
+   "zh": "2Z.AI"
+  },
+  "b0005": {
+   "zh": "{xjz22, h-y22}@mails.tsinghua.edu.cn, yuxiaod@tsinghua.edu.cn"
+  },
+  "b0006": {
+   "zh": "代码 — https://github.com/THUDM/VisionReward"
+  },
+  "b0007": {
+   "zh": "1 引言"
+  },
+  "b0009": {
+   "zh": "图 1：VisionReward 如何用于视觉生成的评测与优化。a）评测：VisionReward 通过面向特定维度的二值视觉问答测试完成综合评估，产出贴合人类的细粒度评分。b）优化：VisionReward 支持更好的偏好优化，在多个关键方面带来提升。"
+  },
+  "b0010": {
+   "zh": "视觉生成模型——包括文本到图像（Ding et al. 2021; Ramesh et al. 2021; Saharia et al. 2022; Rombach et al. 2022; Betker et al. 2023; Podell et al. 2023）与文本到视频（Hong et al. 2022; Ho et al. 2022; Villegas et al. 2022; Zheng et al. 2024; Chen et al. 2024a; Yang et al. 2024）生成——近来发展迅速。借助大规模预训练，这些模型能够把文本描述有效地转化为照片级真实的图像或时间连贯的视频。为使它们进一步对齐人类偏好，最初用于大语言模型的人类反馈强化学习（RLHF）（Ouyang et al. 2022）近来被引入视觉生成任务（Xu et al. 2023; He et al. 2024）。"
+  },
+  "b0011": {
+   "zh": "把 RLHF 应用于视觉生成的关键瓶颈，在于如何构建有效的视觉奖励模型。已有研究（Xu et al. 2023; Kirstain et al. 2023; Wu et al. 2023）探索训练奖励模型来预测人类视觉偏好，从而对视觉生成模型实现自动评测与偏好优化。在评测上，奖励模型充当自动化指标，定量衡量生成结果与人类偏好准则之间的一致性（Li et al. 2023）；在优化上，奖励模型为改进视觉生成模型指明可靠方向。本质上，它们可以在强化学习中提供反馈，或者生成偏好对，从而降低对人类标注的依赖（Black et al. 2023; Fan et al. 2023; Clark et al. 2023）。"
+  },
+  "b0012": {
+   "zh": "尽管面向视觉生成的奖励模型（RM）近来取得进展，仍存在两个主要挑战。其一，缺乏可解释性，且存在意外偏差的风险。当前的视觉生成 RM 往往可解释性有限：这些模型内在地涉及多个因素之间的复杂权衡，但其打分机制对这些权衡如何进行缺乏透明性，这种不透明引发了人们对潜在意外偏差的担忧。尽管 Gemini（Team et al. 2024）与 GPT-4o（Achiam et al. 2023）等多模态大语言模型通过可解释的评分理由提升了可解释性，其通用架构在细粒度评估上通常仍不及专用黑盒模型（Chen et al. 2024c）。这就提出了一个关键难题：如何设计既具备可解释性、又保持准确性的偏好预测方法。"
+  },
+  "b0013": {
+   "zh": "其二，缺少面向视频生成的有效奖励模型。文本到视频生成模型的快速发展，加大了对视频奖励模型的需求。图像奖励模型虽能评估单帧质量，但其帧级本质忽略了视频序列中至关重要的时间依赖。VideoScore（He et al. 2024）率先以可学习指标进行直接的视频评测，却仍存在局限，如偏好预测精度不足、以及在视频生成优化上的不足。"
+  },
+  "b0014": {
+   "zh": "贡献。为应对这些挑战，我们提出通用框架 VisionReward，用于构建面向图像与视频生成的准确奖励模型。VisionReward 的训练分两步：细粒度视觉评估与可解释的偏好学习。第一步，为捕捉人类视觉偏好，我们识别出九个主要维度，并把偏好解耦为 64 个细粒度问题。第二步，为保证偏好学习的可解释性，我们提出对问题结果使用经典的线性加权机制，从而直观呈现每个问题的影响。"
+  },
+  "b0015": {
+   "zh": "为将其用作视觉生成模型的奖励模型，我们在偏好优化过程中提出多维度一致性策略。该策略的目标是缓解非预期、不可量化的偏差。具体地，只有当某一视觉样本在所有维度上都一致地优于另一视觉样本时，这一对样本才被用于偏好优化（例如 DPO（Wallace et al. 2024））。"
+  },
+  "b0016": {
+   "zh": "综上，我们提出 VisionReward 作为视觉偏好学习的通用框架。实验表明，VisionReward 具有以下贡献："
+  },
+  "b0017": {
+   "zh": "• 我们设计了细粒度的多维度偏好标注，并构建了目前最细粒度的数据集，包含 81K 个样本与 5M 条二值标注，使 VisionReward 的训练成为可能。"
+  },
+  "b0018": {
+   "zh": "• 在视觉偏好预测上，VisionReward 在多个基准上取得当前最优表现，同时通过层次化诊断式问答与显式线性加权保持了可解释性。例如，VisionReward 在偏好预测准确率上比 VideoScore（He et al. 2024）高出 17.2%。"
+  },
+  "b0019": {
+   "zh": "• 在视觉生成上，VisionReward 可作为偏好优化（如 DPO）的有效奖励模型，显著提升文本到图像与文本到视频模型。例如，使用 VisionReward 的视频生成模型，其成对胜率比使用 VideoScore 的同款模型高出 31.6%。"
+  },
+  "b0021": {
+   "zh": "表 1：VisionReward 数据集与其他数据集的对比。"
+  },
+  "b0023": {
+   "zh": "图 2：细粒度多维度设计示意。（左）图像：5 个维度、18 个子维度、61 个二值问题。（右）视频：9 个维度、20 个子维度、64 个二值问题。"
+  },
+  "b0025": {
+   "zh": "图 3：VisionReward 总体框架。1）细粒度视觉评估：微调多模态大语言模型，按层次化维度执行二值视觉问答。2）可解释偏好学习：利用视觉问答输出，通过线性加权求和预测偏好。3）多维度偏好优化：跨多维度进行优化的策略。"
+  },
+  "b0026": {
+   "zh": "2 相关工作"
+  },
+  "b0027": {
+   "zh": "人类反馈强化学习（RLHF）（Stiennon et al. 2020; Nakano et al. 2021; Ouyang et al. 2022）指基于人类反馈用强化学习优化模型，在图像与视频生成中同样已有探索。"
+  },
+  "b0028": {
+   "zh": "面向视觉生成的偏好学习。许多工作从人类偏好中学习，为文本到图像（Xu et al. 2023; Kirstain et al. 2023; Wu et al. 2023）与文本到视频（He et al. 2024）收集人工标注。已有方法（Zhang et al. 2024b; Liang et al. 2024）尝试扩充人工标注或扩展视觉生成中人类偏好的维度。与之不同，VisionReward 定义细粒度的多维度人类偏好，目标是解耦不同因素，从而构建更准确、更可解释的奖励模型。"
+  },
+  "b0029": {
+   "zh": "面向视觉生成的 RLHF。在视觉生成任务上，若干工作探索了 RLHF：或从梯度直接优化（Xu et al. 2023; Wu et al. 2024），或采用基于策略的强化学习方法（Black et al. 2023; Fan et al. 2023; Clark et al. 2023）。这些方法都需要一个奖励模型（RM）为在线学习提供反馈。Diffusion-DPO（Wallace et al. 2024）提出直接用人工标注的偏好数据优化扩散模型。然而多数 RLHF 方法都面临有偏优化的问题。VisionReward 借助多维度方法，实现了稳健的 RLHF。"
+  },
+  "b0030": {
+   "zh": "Diffusion-DPO 预备知识。给定数据分布 ⟦SLOT_0⟧，扩散模型（Sohl-Dickstein et al. 2015; Ho et al. 2020; Song et al. 2020）包含前向过程与反向过程。前向过程 ⟦SLOT_1⟧ 逐步向数据 ⟦SLOT_2⟧ 加入噪声，反向过程 ⟦SLOT_3⟧ 则学习恢复数据的转移。扩散模型的训练可通过证据下界完成（Kingma et al. 2021; Song et al. 2021）："
+  },
+  "b0032": {
+   "zh": "其中 ⟦SLOT_4⟧ 与 ⟦SLOT_5⟧。"
+  },
+  "b0033": {
+   "zh": "Diffusion-DPO（Wallace et al. 2024）在偏好对的基础上引入直接偏好优化。我们把「胜出」与「落败」样本记为 ⟦SLOT_6⟧，其目标如下："
+  },
+  "b0035": {
+   "zh": "DPO 通常基于整体偏好，这可能带来偏差。VisionReward 通过多维度偏好优化对其加以改进。"
+  },
+  "b0036": {
+   "zh": "3 VisionReward"
+  },
+  "b0037": {
+   "zh": "3.1 VisionReward 标注"
+  },
+  "b0038": {
+   "zh": "细粒度设计。人类偏好往往是多种因素共同作用的结果（Palmer et al. 2013; Ibarra et al. 2017），需要在各种考量之间取得平衡。为系统性解构人类偏好，我们构建了细粒度的多维度框架，如表 1 与图 2 所示。对每个子维度，我们设置程度递进的选项，并把这些选项拆解为一系列二值问题（参见附录中的表 15、16、17 与 18）。"
+  },
+  "b0039": {
+   "zh": "数据集准备。图像方面，我们从多个主流数据集中采样，包括 ImageRewardDB（Xu et al. 2023）、HPDv2（Wu et al. 2023）与 Pick-a-Pic（Kirstain et al. 2023），经筛选后得到 48k 张图像。视频方面，我们从 VidProM（Wang and Yang 2024）采样提示词：为保证提示词多样性，先用 Rouge-L（Lin 2004）做初步过滤，再按 UniFL（Zhang et al. 2024a）做基于语义的过滤，并用 ChatGPT（Achiam et al. 2023）做数据清洗，最终得到 10k 条提示词。随后用 CogVideoX（Yang et al. 2024）、VideoCrafter2（Chen et al. 2024a）与 OpenSora（Zheng et al. 2024）生成 30k 个视频，并从 Panda-70M（Chen et al. 2024b）采样得到 3k 个真实视频，合计 33k 个视频用于标注。更多细节见附录第 6.1 节。"
+  },
+  "b0040": {
+   "zh": "标注管理。为避免标注者的偏差，我们的标注管理包含专业化管理与规范文档。我们与专业公司合作，严格开展标注者培训、筛选合格标注者，并对标注结果进行质量抽检。标注文档给出清晰定义，并为每一类判断提供 10 个以上示例，以统一标注者之间的标准。得益于这些措施，标注者在二值结果上的一致性达到 89.29%（图像）与 89.33%（视频）。"
+  },
+  "b0041": {
+   "zh": "标注分析。通过专业化标注，我们得到包含 48k 张图像、300 万问答对的图像数据集，以及包含 33k 个视频、200 万问答对的视频数据集。标注结果的更多统计分析见附录第 6.2 节。"
+  },
+  "b0042": {
+   "zh": "3.2 VisionReward 训练"
+  },
+  "b0043": {
+   "zh": "VisionReward 的完整训练流程及其在偏好优化中的应用方式如图 3 所示。"
+  },
+  "b0044": {
+   "zh": "细粒度视觉评估。具体地，我们使用 CogVLM2（Hong et al. 2024b）作为图像理解的基础模型，使用 CogVLM2-Video（Hong et al. 2024b）作为视频理解的基础模型。数据方面，我们已获得数百万条带标注的二值问答对。首先针对每个二值问题做均衡采样，消除正负样本之间的不平衡，使每个二值问题对应的正负例数量大致相等；随后用由二值问题构成的均衡指令微调数据集对基础视觉语言模型进行微调。"
+  },
+  "b0045": {
+   "zh": "可解释偏好学习。在细粒度数据集上训练完成后，VisionReward 可给出一系列二值回答（“yes” 或 “no”）⟦SLOT_7⟧，其中 ⟦SLOT_8⟧ 表示二值问题的数量。我们把每个二值问题的奖励定义为 ⟦SLOT_9⟧："
+  },
+  "b0047": {
+   "zh": "我们构造特征向量 ⟦SLOT_10⟧，并用一组线性权重 ⟦SLOT_11⟧ 得到最终奖励 ⟦SLOT_12⟧："
+  },
+  "b0049": {
+   "zh": "为学习线性权重 ⟦SLOT_13⟧，我们收集 ⟦SLOT_14⟧ 成对样本上的人类偏好。具体地，我们计算每一对样本的特征差，即 ⟦SLOT_15⟧；对应标签依人类偏好取 ⟦SLOT_16⟧ 或 ⟦SLOT_17⟧。随后通过逻辑回归 ⟦SLOT_18⟧ 学习线性权重 ⟦SLOT_19⟧："
+  },
+  "b0051": {
+   "zh": "通过维度内加权计算各维度得分，VisionReward 可实现多维度偏好预测。我们把维度记为 ⟦SLOT_20⟧，其中 ⟦SLOT_21⟧ 包含属于该维度的问题。于是某一维度的奖励定义为："
+  },
+  "b0053": {
+   "zh": "3.3 多维度偏好优化"
+  },
+  "b0054": {
+   "zh": "为实证检验模型能力，我们在实验中采用面向扩散模型的直接偏好优化（DPO）（Wallace et al. 2024），由 VisionReward 生成多维度偏好对来引导优化过程，同时保持维度间的平衡。"
+  },
+  "b0056": {
+   "zh": "（a）数据分析。"
+  },
+  "b0058": {
+   "zh": "（b）DPO 分析。"
+  },
+  "b0059": {
+   "zh": "图 4：（a）我们从 Pick-a-Pic 数据集中采样 10,000 个人类偏好对，并分析 18 个子维度上的分数偏差（以每个子维度内检查清单问题的 yes 比例均值表示）。（b）我们给出 SDXL 经 Diffusion-DPO 后生成图像的分数偏差，使用同样的 10,000 条提示词。"
+  },
+  "b0060": {
+   "zh": "挑战。我们在 Pick-a-Pic（Kirstain et al. 2023）数据集上用 SDXL（Podell et al. 2023）复现 Diffusion-DPO 训练流程，并采用 VisionReward 进行全面的数据分析与模型评测。如图 4 所示，偏好数据与优化后的模型在若干细粒度维度上都表现出偏差。这些发现既证明了 VisionReward 的细粒度分析能力，也说明优化方法必须考虑多维度表示。"
+  },
+  "b0061": {
+   "zh": "MPO：思路与方案。普通 DPO 方法依据整体偏好筛选样本对，我们则提出 MPO 增强的 DPO，把细粒度的多维度偏好纳入考量。对于两个样本 ⟦SLOT_22⟧ 与 ⟦SLOT_23⟧ 的奖励，若对每个维度 ⟦SLOT_27⟧ 都满足 ⟦SLOT_26⟧，我们定义 ⟦SLOT_24⟧ 支配 ⟦SLOT_25⟧。MPO 策略与标准 DPO 的关键区别在于："
+  },
+  "b0062": {
+   "zh": "• 普通 DPO：在 DPO 优化中，直接依据总奖励 ⟦SLOT_28⟧ 选择样本对。"
+  },
+  "b0063": {
+   "zh": "• MPO 增强的 DPO：MPO 策略引入了额外约束，只选择满足 ⟦SLOT_29⟧ 支配 ⟦SLOT_30⟧ 的样本对，然后再执行标准 DPO。"
+  },
+  "b0064": {
+   "zh": "我们在第 4.3 节分析 MPO 的效果。MPO 策略也可应用于其他算法，这部分留待未来探索。"
+  },
+  "b0065": {
+   "zh": "方法 图像 视频 HPDv2 MonetBench GenAI-Bench MonetBench tau∗ diff∗∗ tau diff tau diff 任务专用判别式模型 ImageReward (Xu et al. 2023) 74.0 48.8 56.5 48.4 72.1 55.8 58.4 PickScore (Kirstain et al. 2023) 79.8 49.8 57.6 52.4 75.4 57.7 61.6 HPSv2 (Wu et al. 2023) 83.3 48.4 55.6 49.3 73.0 59.3 62.5 MPS (Zhang et al. 2024b) 83.5 44.2 50.7 46.9 67.6 55.8 58.9 生成式模型 GPT-4o (Achiam et al. 2023) 77.5 38.9 52.7 41.8 54.3 45.7 48.3 Gemini (Team et al. 2024) 60.7 27.4 55.1 46.9 61.7 52.2 56.8 VQAScore (Lin et al. 2025) 69.7 49.4 56.5 45.2 68.0 56.1 59.5 VideoScore (He et al. 2024) 76.8 45.8 52.5 47.8 71.4 49.1 54.9 VisionReward（ ours）81.7 51.8 59.5 51.8 74.4 64.0 72.1"
+  },
+  "b0066": {
+   "zh": "表 2：在多个数据集上的偏好准确率。粗体表示生成式模型中的最优分数，下划线表示所有类别中的最优分数。Tau∗ 表示考虑并列情形（Deutsch et al. 2023），diff∗∗ 表示丢弃标签中的并列（由于 GPT-4o 与 Gemini 给出了过多并列，我们在 diff∗∗ 中同时丢弃标签与回答中的并列）。"
+  },
+  "b0067": {
+   "zh": "4 实验"
+  },
+  "b0068": {
+   "zh": "4.1 VisionReward 用于文本到视觉评测"
+  },
+  "b0069": {
+   "zh": "数据集与训练设置。经均衡采样后，我们得到 40,743 张图像及相应的 97,680 条判断问题用于训练，留出 6,910 张图像用于后续验证与测试。视频方面，我们得到 28,605 个视频及相应的 89,473 条判断问题用于训练，并保留 3,080 个视频。"
+  },
+  "b0070": {
+   "zh": "微调 CogVLM2（Hong et al. 2024b）时，批大小设为 64、学习率设为 1e-6，训练 1,500 步。微调 CogVLM-Video 时，批大小设为 64、学习率设为 4e-6，训练 1,500 步。"
+  },
+  "b0071": {
+   "zh": "为学习用于偏好预测的线性权重，我们采样人类偏好对并执行逻辑回归。图像方面，我们采样 44k 对（其中 24k 来自 HPDv2（Wu et al. 2023），20k 来自 ImageRewardDB（Xu et al. 2023））；视频方面，我们从 VidProM（Wang and Yang 2024）采样提示词并生成视频（使用 CogVideoX（Yang et al. 2024）、VideoCrafter2（Chen et al. 2024a）与 OpenSora（Zheng et al. 2024）），得到 1,795 个带偏好标注的视频对。"
+  },
+  "b0073": {
+   "zh": "图 5：VisionReward 在 GenAI-Bench 上的准确率随二值问题数量增加而提升。在对完整回归得到的权重做掩码之后，VisionReward 仍保持较高性能。"
+  },
+  "b0075": {
+   "zh": "图 6：使用不同奖励模型或偏好数据集时 DPO 的人工评测结果。我们要求五名标注者对两个样本进行综合评估并选出更优者。VisionReward 取得最佳表现。"
+  },
+  "b0076": {
+   "zh": "为建立覆盖图像与视频生成的综合评测基准，我们构建了 MonetBench，其中包含图像与视频两个独立的测试集，各含 1,000 条提示词。更多细节见附录第 12 节。"
+  },
+  "b0077": {
+   "zh": "主要结果：偏好准确率。偏好准确率指奖励模型在判断哪张图像更好时与人类做出相同判断的概率。我们用 MonetBench 构建人类偏好测试集：用 SDXL（Podell et al. 2023）生成图像，用 CogVideoX（Yang et al. 2024）/ VideoCrafter2（Chen et al. 2024a）/ OpenSora（Zheng et al. 2024）生成视频，得到 500 个图像对与 1,000 个视频对。我们请标注者用 1 到 5 的偏好评分量表评估生成的图像（3 表示无偏好），并以平均偏好分数作为最终偏好标签。我们还把 HPDv2（Wu et al. 2023）与 GenAI-Bench（Jiang et al. 2024）作为测试集。"
+  },
+  "b0078": {
+   "zh": "表 2 显示，VisionReward 在多个数据集上取得了当前最优的结果。其中，在视频评测中，当视频时长在 2 秒以内（GenAI-Bench）时，图像奖励模型表现出具有竞争力的性能；然而当视频时长达到 6 秒（MonetBench）时，只有 VisionReward 能够准确预测人类偏好，其相对随机的提升（22.1%）是其他方法中最好者（12.5%）的两倍。这说明较长视频中的动态信息对奖励模型构成了挑战，而 VisionReward 经细粒度视觉学习后能够有效应对这一问题。"
+  },
+  "b0079": {
+   "zh": "消融实验：问题规模的可扩展性。图 5 显示，偏好预测准确率随问题规模增大而显著提升，且对最小权重做掩码仍能保持性能（详见附录第 7 节）。这种可扩展性验证了通过细粒度问题分解偏好的效果。我们在附录第 7 节给出了对 VisionReward 的更多分析，并在第 10 节给出细粒度结果的分析。"
+  },
+  "b0080": {
+   "zh": "4.2 VisionReward 用于偏好优化"
+  },
+  "b0081": {
+   "zh": "为评估 VisionReward 在视觉生成系统偏好优化中的有效性，我们与当前最优的奖励模型以及已有的偏好数据集开展了一系列对比实验。我们以 SDXL 作为文本到图像的基础模型，以 CogVideoX 作为文本到视频的基础模型。图 6 中的实验结果表明，VisionReward 表现更优，在人类偏好指标上相对对比方法取得了统计显著的改进。"
+  },
+  "b0082": {
+   "zh": "本节聚焦使用不同奖励模型时的文本到视频偏好优化，文本到图像的相关细节见附录第 8.2 节。"
+  },
+  "b0083": {
+   "zh": "数据集与训练设置。骨干模型选用 CogVideoX-2B，训练提示词从 VidProM（Wang and Yang 2024）采样（细节见附录第 8.1 节）。为使这些提示词适配视频生成，我们按 CogVideoX（Yang et al. 2024）给出的指引对其加以优化，最终得到约 22,000 个样本。我们为每个提示词生成 4 个视频，用 VisionReward 为其打分，并应用 MPO 策略筛选出约 9,400 个有效偏好对。所有实验中，批大小固定为 32，学习率为 5e-6，采用 100 步预热后线性衰减。DPO 参数 ⟦SLOT_31⟧ 设为 500。MPO 训练过程约 500 步，相当于约 2 个轮次。训练期间每 40 步保存一次检查点，并用从训练集中划分出的验证集挑选奖励最高的检查点。"
+  },
+  "b0084": {
+   "zh": "评测设置。为全面评估 MPO 模型，我们同时进行了自动评测与人工评测。自动评测在多个基准上开展，包括 VBench（Huang et al. 2024）与我们的 Video-MonetBench。在 VBench 上，我们关注常被引用的关键指标，包括 Human Action、Scene、Multiple Objects 与 Appearance Style。所有实验中都采用了 CogVideoX 推荐的提示词优化。基线对比包括原始 CogVideoX-2B，以及使用 VideoScore 的 DPO。"
+  },
+  "b0086": {
+   "zh": "表 3：在 VBench 上的评测结果。"
+  },
+  "b0087": {
+   "zh": "实验结果。主要结果如表 3 所示。与原始 CogVideoX-2B 相比，用 VisionReward 做优化显著提升了模型在这些基准上的表现；而用 VideoScore 做优化则往往导致性能下降。这些实证结果证明 VisionReward 具备更强的多维度优化能力。（案例研究见附录第 8.3 节。）"
+  },
+  "b0088": {
+   "zh": "4.3 MPO 消融实验"
+  },
+  "b0089": {
+   "zh": "为充分说明 MPO 如何解决 DPO 固有的因素优化偏差，我们基于 CogVideoX-5B 开展实验。我们将总分阈值设为 DPO 用 0.8、MPO 用 0.6，以保证三种策略得到的样本对数量均为 5k。批大小设为 64，学习率为 2e-6，DPO 参数 ⟦SLOT_32⟧ 为 500，训练步数为 300。我们用 VisionReward 评估各维度得分，详细结果见表 4。通过实施 MPO 策略，CogVideoX 的优化方式避免了某些因素（如对齐）的退化，从而实现了更好的权衡，例如在保持良好保真度的同时避免动态变化过于缓慢。实证结果进一步证明 VisionReward 具备与算法无关的偏好对齐能力，这也在与 MaPO（Hong et al. 2024a）等其他方法的对比测试中得到了验证。"
+  },
+  "b0091": {
+   "zh": "表 4：MPO 策略的消融实验。分数由 VisionReward 在 MonetBench 上给出。"
+  },
+  "b0092": {
+   "zh": "关于效率的讨论，表 5 中的实验结果揭示了 MPO 与 DPO 方法的相对有效性。我们从第 3.3 节所述「⟦SLOT_33⟧ 支配 ⟦SLOT_34⟧」的视角分析所选样本对。结果表明，MPO 在效率与效果两方面都优于 DPO。这些发现为未来研究指明了有前景的方向：开发新的优化算法，并将 VisionReward 适配于多维度优化。"
+  },
+  "b0094": {
+   "zh": "表 5：MPO 与 DPO 在 MonetBench 上的比较。“#Dom.” 表示满足「⟦SLOT_35⟧ 支配 ⟦SLOT_36⟧」规则的样本对数量，“#Not-Dom.” 表示不满足的样本对数量。"
+  },
+  "b0095": {
+   "zh": "5 结论"
+  },
+  "b0096": {
+   "zh": "我们提出 VisionReward——一个面向视觉生成的细粒度、多维度奖励模型。通过让视觉语言模型（VLM）执行二值评估，并对偏好学习得到的权重系数做线性求和，VisionReward 实现了高精度与可解释性。在视觉生成优化上，VisionReward 优于其他奖励模型，并支持多维度策略。"
+  },
+  "b0097": {
+   "zh": "致谢"
+  },
+  "b0098": {
+   "zh": "本研究受到国家自然科学基金（NSFC）No. 62276148 与 NSFC No. 62495063 的资助。作者感谢 Z.AI 为本工作提供计算资源。"
+  },
+  "b0099": {
+   "zh": "参考文献"
+  },
+  "b0153": {
+   "zh": "附录"
+  },
+  "b0154": {
+   "zh": "6 标注的更多细节"
+  },
+  "b0155": {
+   "zh": "6.1 标注设计细节"
+  },
+  "b0156": {
+   "zh": "为保证标注的多样性，我们从多种来源采集标注数据，如表 6 所示。数据清洗所用的提示词与示例见表 8。表 7 展示了我们的偏好维度与检查清单条目数。我们为文本到图像生成识别出 5 个维度，并扩展为文本到视频的 9 个维度。"
+  },
+  "b0158": {
+   "zh": "表 6：来源数据与标注的统计。"
+  },
+  "b0160": {
+   "zh": "表 7：VisionReward 的标注分类体系。"
+  },
+  "b0162": {
+   "zh": "（a）文本到图像"
+  },
+  "b0164": {
+   "zh": "（b）文本到视频"
+  },
+  "b0165": {
+   "zh": "图 7：各子维度的标注统计。"
+  },
+  "b0167": {
+   "zh": "表 8：提示词清洗所用的提示词模板与示例。"
+  },
+  "b0168": {
+   "zh": "6.2 标注结果统计"
+  },
+  "b0169": {
+   "zh": "图 7 给出了图像与视频标注数据的统计结果。统计时，标签越高表示该图像或视频子维度表现越好，标签 0 表示中性。对于视频数据，原始标签只有正值，中性值也不一致，因此我们为每个子维度确定一个中性值，并将原始标签减去该值，使 0 代表中性。在背景、人脸、手部等子维度上，可能出现图像或视频中并不包含这些元素的情况；此时我们把“Not Contain”作为单独类别进行统计。"
+  },
+  "b0170": {
+   "zh": "有两个主要特征值得关注。"
+  },
+  "b0171": {
+   "zh": "• 对大多数子维度而言，选项分布大致服从正态分布：多数样本表现普通，表现极好或极差的样本数量递减。为帮助模型学习各子维度的特征，我们可以对占主导地位的选项施加数量限制。"
+  },
+  "b0172": {
+   "zh": "• 某些子维度（如是否存在手部）在预测人类偏好时需要掩码，即只有当图像表明存在手部时才评估该子维度。我们同样对需要掩码的子维度加以标注，并记录相应的计数。"
+  },
+  "b0173": {
+   "zh": "7 VisionReward 的更多细节与结果"
+  },
+  "b0174": {
+   "zh": "VisionReward 包含两个步骤：视觉判断与线性回归。"
+  },
+  "b0175": {
+   "zh": "视觉判断过程。由于每个子维度的选项是递进的，对于检查清单中某个判断问题所对应的选项，选项值大于等于该给定选项的样本被视为该判断问题的正例，选项值小于该给定选项的样本则被视为负例。为平衡每个二值问题的正负例数量，我们筛除每个问题上多余的正例与负例，确保用于训练的正负例数量均衡。在对齐方面，我们对图像与视频采用不同的方法：图像使用 VQAScore（Lin et al. 2025）作为对齐判断；视频则为 VisionReward 训练五个层级的判断。"
+  },
+  "b0176": {
+   "zh": "主要结果：判断准确率。为评估判断学习的有效性，我们构建了视觉质量问答集，用于比较 VisionReward 与其他视觉语言模型的视觉评估能力。我们收集了 1,364 个图像测试用例，涵盖 4 个维度下的 14 类问题；另外收集了 1,308 个与视频动态内容相关的用例，涵盖 4 个维度下的 8 类问题。为保证这些问题的通用性，我们把每个子维度下检查清单中相邻的程度加以合并，以增强区分度并尽量减少偶然的主观性。表 10 显示，VisionReward 在判断视觉质量上优于现有的通用多模态大语言模型，而这对通用多模态大语言模型而言仍是一项挑战。"
+  },
+  "b0178": {
+   "zh": "表 9：VisionReward 在各维度上的一致性。"
+  },
+  "b0179": {
+   "zh": "主要结果：判断一致性。由于每个子维度对应的问题评估的是某一因素的不同程度，衡量 VisionReward 在同一子维度多个问题上的一致性就显得重要。一致性衡量的是模型在围绕该因素的一系列判断中给出一致回答的可能性。表 9 显示，VisionReward 在多数（8 个中的 7 个）维度上一致性超过 97%。"
+  },
+  "b0180": {
+   "zh": "算法 1 带权重掩码的迭代回归"
+  },
+  "b0197": {
+   "zh": "方法 图像 视频 构图 质量 保真度 安全 稳定性 动态 物理 保持性 LLaVa∗ 59.9 65.7 59.8 64.4 52.5 53.8 50.6 47.5 CogVLM2 (Hong et al. 2024b) 65.8 67.1 53.1 74.7 49.3 57.1 51.2 47.8 GPT-4o (Achiam et al. 2023) 73.1 62.7 61.9 70.1 57.9 69.1 62.4 58.8 Gemini (Team et al. 2024) 69.4 59.9 59.7 74.9 58.1 71.1 58.1 59.6 VisionReward（ ours）78.8 81.1 80.9 83.9 64.8 75.4 68.1 72.0"
+  },
+  "b0198": {
+   "zh": "表 10：VisionReward 与其他视觉语言模型（VLM）在我们标注所构建的视觉质量问题上的准确率。∗我们在图像上测试 LLaVA-v1.5-7B（Liu et al. 2023），在视频上测试 LLava-Next-Video-34B（Li et al. 2024）。"
+  },
+  "b0199": {
+   "zh": "权重掩码。在线性回归步骤中，我们学习人类偏好与视觉判断结果之间的相关性。在我们的设计中，若视觉判断结果为“yes”，则人类偏好更高。我们考察了人类偏好与各判断结果之间的相关性，数值结果显示二者呈正相关。然而在线性回归中，我们观察到部分判断结果对应的系数为负，这是因为判断结果之间存在相关性。为提升回归结果的稳健性，我们在回归过程中采用了迭代掩码算法。"
+  },
+  "b0200": {
+   "zh": "消融实验：训练集规模的影响。我们用不同规模的训练集开展实验，考察其对回归性能的影响。如表 11 所示，准确率随训练集规模增大而单调提升，直到 4,000 个样本之后趋于稳定。"
+  },
+  "b0202": {
+   "zh": "表 11：不同训练集规模下在 HPDv2-test 上的准确率。"
+  },
+  "b0203": {
+   "zh": "8 MPO 的更多细节与结果"
+  },
+  "b0204": {
+   "zh": "8.1 MPO 的提示词细节"
+  },
+  "b0205": {
+   "zh": "我们采用 UniFL（Zhang et al. 2024a）提出的提示词过滤方法来整理数据集。该策略包含两个关键步骤："
+  },
+  "b0206": {
+   "zh": "• 基于语义的过滤：利用现有的场景图解析器（Wu et al. 2019），通过分析主客体关系的数量来评估提示词的语义丰富度。有意义关系少于一个的提示词会被过滤掉，以减少噪声数据。"
+  },
+  "b0207": {
+   "zh": "• 基于余弦相似度的选择：在语义过滤之后，我们应用基于余弦相似度的迭代选择机制，使任意两条提示词之间的相似度不超过 0.8 的阈值，从而保证数据集多样性并有效去除冗余条目。"
+  },
+  "b0208": {
+   "zh": "8.2 VisionReward 用于文本到图像优化"
+  },
+  "b0209": {
+   "zh": "数据集与训练设置。我们从已有数据集中策略性地采样 63,165 条提示词，并用 SDXL 为每条提示词生成 8 张图像（该流程理论上产出 1.76M 个文本-图像对）。采用 MPO 算法后，我们得到 760k 个支配对，涵盖 63,069 条不同的提示词。作为对比，我们使用 HPSv2 并以 0.0015 为阈值，从同一来源得到 770k 个样本对、涵盖 63,107 条不同提示词；我们还与人工标注的样本对进行比较，从 Pick-a-Pic v2 数据集中采样得到 780k 个人类偏好对、涵盖 57,674 条不同提示词。"
+  },
+  "b0210": {
+   "zh": "为保证公平比较，所有实验均采用一致的训练参数与数据集规模。三组实验中，有效批大小均为 256（GAS 设为 4，训练批大小设为 1），⟦SLOT_37⟧ 设为 5000，学习率为 5e-9（缩放前）。我们采用 100 步的恒定预热策略，共训练 3,000 步（约 1 个轮次）。"
+  },
+  "b0211": {
+   "zh": "评测设置。我们在 DrawBench（Saharia et al. 2022）上同时进行了自动评测与人工评测。自动评测包含多个指标，如人类偏好奖励模型、CLIP（Radford et al. 2021）与 LAION-Aesthetic（Schuhmann et al. 2022）。"
+  },
+  "b0212": {
+   "zh": "实验结果。主要结果如表 12 与表 13 所示。VisionReward 在多个机器指标上取得领先结果，并在 VisionReward 的全部四个维度上均实现显著改进。"
+  },
+  "b0214": {
+   "zh": "表 12：DrawBench 上多个指标的评测结果。"
+  },
+  "b0216": {
+   "zh": "表 13：在 MonetBench 上的评测结果。"
+  },
+  "b0217": {
+   "zh": "8.3 MPO 的更多结果"
+  },
+  "b0218": {
+   "zh": "案例研究。图 8 展示了文本到图像的 MPO 案例，图 9 与图 10 展示了文本到视频的 MPO 案例。经 MPO 微调的模型在多个方面超过原始模型，也优于其他打分方法。"
+  },
+  "b0219": {
+   "zh": "训练曲线。图 11 展示了 MPO 过程中各维度得分随训练样本数量的变化。结果表明，MPO 方法使模型在训练中避免权衡取舍，从而实现各子维度的同步提升；相比之下，DPO（Wallace et al. 2024）方法无法达到这种并发式的提升。"
+  },
+  "b0220": {
+   "zh": "消融实验：MPO 的不同策略。在使用 MPO 策略时，我们通过定义 ⟦SLOT_38⟧ 支配 ⟦SLOT_39⟧ 的方式（给定两张图像 ⟦SLOT_40⟧ 与 ⟦SLOT_41⟧）来筛选样本对。“支配”的定义针对不同奖励目标至少包含三种方式：每个维度的分数、每个子维度的分数，以及每个二值问题的分数。为考察不同「支配」定义的影响，我们基于 CogVideoX-5B 开展实验，具体采用三种不同策略，总分阈值分别设为 0.6、0.5 与 0.4，以保证三种策略得到的样本对数量均为 5k。批大小设为 64，学习率为 2e-6，DPO 参数 ⟦SLOT_42⟧ 为 500，训练步数为 300。训练完成后，我们比较 VisionReward 在 MonetBench 上的评测结果。表 14 显示，以每个维度的分数为目标时效果最佳。"
+  },
+  "b0222": {
+   "zh": "表 14：不同 MPO 策略下 VisionReward 的分数。Dimension：基于每个维度的分数判定「支配」；Sub-dimension：基于每个子维度的分数判定「支配」；Question：基于每个二值问题的分数判定「支配」。"
+  },
+  "b0224": {
+   "zh": "图 8：MPO 在文本到图像上的定性结果。"
+  },
+  "b0226": {
+   "zh": "图 9：MPO 在文本到视频上的定性结果。"
+  },
+  "b0228": {
+   "zh": "图 10：MPO 在文本到视频上的定性结果。"
+  },
+  "b0230": {
+   "zh": "（a）总分"
+  },
+  "b0232": {
+   "zh": "（b）构图分数"
+  },
+  "b0234": {
+   "zh": "（c）保真度分数"
+  },
+  "b0236": {
+   "zh": "（d）对齐分数"
+  },
+  "b0238": {
+   "zh": "（e）质量分数"
+  },
+  "b0240": {
+   "zh": "（f）安全与情感分数"
+  },
+  "b0241": {
+   "zh": "图 11：MPO 过程中各维度得分随训练样本数量的变化。"
+  },
+  "b0242": {
+   "zh": "9 细粒度问题详情"
+  },
+  "b0243": {
+   "zh": "表 15 与表 16 给出了图像的标注分类体系，表 17 与表 18 给出了视频的标注分类体系。"
+  },
+  "b0244": {
+   "zh": "10 细粒度设计的更多结果"
+  },
+  "b0245": {
+   "zh": "检查清单的权重与准确率。我们从训练集之外整理出独立的图像与视频测试集，用于评估判断问题的准确率。测试集分别包含 1,209 张图像与 1,000 个视频。我们报告了判断问题的准确率（文本到图像见表 19 与表 20，文本到视频见表 21 与表 22）。作为参考，我们还专门记录了在人类偏好数据上通过线性回归得到的线性权重，以及人类偏好与各判断问题结果之间的 Spearman 秩相关系数。"
+  },
+  "b0246": {
+   "zh": "子维度的相关性。为挖掘偏好解耦之后各子维度之间的相关性，我们用热力图展示了子维度之间的相关系数（参见图 12）。"
+  },
+  "b0248": {
+   "zh": "表 15：文本到图像评测的标注分类体系与检查清单详情。（第 1 部分）"
+  },
+  "b0250": {
+   "zh": "表 16：文本到图像评测的标注分类体系与检查清单详情。（第 2 部分）"
+  },
+  "b0252": {
+   "zh": "表 17：文本到视频评测的标注分类体系与检查清单详情。（第 1 部分）"
+  },
+  "b0254": {
+   "zh": "表 18：文本到视频评测的标注分类体系与检查清单详情。（第 2 部分）"
+  },
+  "b0256": {
+   "zh": "表 19：VisionReward 在文本到图像上的准确率、Spearman 相关系数与线性权重。（第 1 部分）"
+  },
+  "b0258": {
+   "zh": "表 20：VisionReward 在文本到图像上的准确率、Spearman 相关系数与线性权重。（第 2 部分）"
+  },
+  "b0260": {
+   "zh": "表 21：VisionReward 在文本到视频上的准确率、Spearman 相关系数与线性权重。（第 1 部分）"
+  },
+  "b0262": {
+   "zh": "表 22：VisionReward 在文本到视频上的准确率、Spearman 相关系数与线性权重。（第 2 部分）"
+  },
+  "b0264": {
+   "zh": "图 12：文本到视频各子维度的相关性热力图。"
+  },
+  "b0265": {
+   "zh": "11 局限性"
+  },
+  "b0266": {
+   "zh": "本节列出 VisionReward 框架在开发过程中显现的若干局限。"
+  },
+  "b0267": {
+   "zh": "支持的视频帧率与时长。VisionReward 的训练数据集包含时长最多 6 秒、帧率为每秒 4 帧（fps）的视频，这可能不足以评测下一代视频生成模型的输出——它们能够生成更长、更复杂的内容。因此，扩展模型以处理更长的视频序列，是未来工作的一个关键方向。"
+  },
+  "b0268": {
+   "zh": "基础模型的利用。模型性能本质上受制于其基础视觉语言模型（VLM）的能力。我们当前的方法通过问答（QA）机制来调用 VLM 的基础知识。然而，随着复杂推理模型的兴起，提升奖励模型的一条更有效途径是融入显式的推理能力。这是未来研究的关键方向，可使评测从基础理解走向更复杂的评估。"
+  },
+  "b0269": {
+   "zh": "12 MonetBench 的更多细节"
+  },
+  "b0271": {
+   "zh": "表 23：MonetBench 的内容类别与挑战类别。"
+  },
+  "b0272": {
+   "zh": "Image-MonetBench 构建。我们首先通过对已有数据集策略性采样，收集 4,038 条种子提示词（1,000 条来自 ImageRewardDB（Xu et al. 2023），1,000 条来自 HPDv2（Xu et al. 2023），2,038 条来自 Pick-a-Pic（Kirstain et al. 2023）），以此奠定数据集基础。通过对这些提示词的系统分析，我们识别出九种基本视觉元素作为内容类别，以及十二个不同的生成复杂度方面作为挑战类别，并保持源数据集中观察到的类别分布。"
+  },
+  "b0273": {
+   "zh": "Video-MonetBench 构建。在视频提示词评测方面，我们先从 VproM（Wang and Yang 2024）数据集中采样 20,000 条提示词，去重并剔除无效内容后筛选出 13,342 条有效条目。我们的视频分类体系包含反映不同视频场景的七个内容类别，以及涵盖视频生成中各类技术与创意方面的十三个挑战类别。"
+  },
+  "b0274": {
+   "zh": "提示词生成与过滤。为保证基准的质量与多样性，我们使用 ChatGLM（GLM 2024）按既定的类别分布为每个基准生成 1,000 条新提示词。每条生成的提示词都要经过三阶段过滤：（1）用 Rouge-L（Lin 2004）相似度检验文本多样性；（2）以 0.9 为余弦相似度阈值进行语义过滤；（3）按比例采样以维持预期的类别分布。"
+  },
+  "b0275": {
+   "zh": "表 23 给出了 MonetBench 的内容与挑战类别。最终基准在各类别上实现了均衡覆盖，同时保持提示词的高多样性与高质量。这种精心构造的多维度设计，使得可以从基础内容类型到各种生成挑战，对视觉奖励模型进行全面评测。"
+  },
+  "b0276": {
+   "zh": "为提高实验效率，我们提供一个精简版本：在保持类别分布的前提下，从每个基准中随机采样 500 条提示词。"
+  },
+  "b0277": {
+   "zh": "分类比例细节。在完成这套二维分类框架的设计之后，我们用 ChatGLM 对数据集中每条提示词在内容与挑战两个维度上进行归类，并计算不同内容与挑战标签的占比。内容与挑战类别及其示例分别汇总于表 24 与表 25。基于这些占比，我们用 ChatGLM 构建基准提示词（所有提示词均由 ChatGLM 生成，而非直接从数据集采样）。在构建过程中，我们指定调研方向，并从已归类的提示词中随机采样四条「种子提示词」，由 ChatGLM 生成质量更高的新提示词。这种合成方式产出了两个基准数据集，分别包含 1,000 条与 1,007 条精心构造的提示词，并保留了原始数据的统计特征。"
+  },
+  "b0278": {
+   "zh": "最终数据集在内容与挑战类别上实现了均衡而全面的覆盖。表 26 列出了具体的内容与挑战类别，并给出详细描述与示例提示词，便于清楚理解数据集的构成。这套结构化方法确保了数据集的多样性，以及与真实世界视觉生成需求的契合，从而支持对视觉模型进行细粒度的基准评测。"
+  },
+  "b0280": {
+   "zh": "表 24：图像与视频的内容类别"
+  },
+  "b0282": {
+   "zh": "表 25：图像与视频的挑战类别"
+  },
+  "b0284": {
+   "zh": "表 26：视频分类标准及示例提示词。"
+  },
+  "b0247": {
+   "zh": "Dimension Sub-dimension Option Checklist Composition Symmetry symmetrical Is the image symmetrical? ordinary Does the image avoid asymmetry? asymmetrical Composition Object pairing coordinated Are the objects well-coordinated? ordinary Does the image avoid poorly coordinated objects? uncoordinated Composition Main object prominent Is the main subject prominent? ordinary Does the image avoid an unclear main subject? prominent Composition Richness very rich Is the image very rich? rich Is the image rich? ordinary Is the image not monotonous? monotonous Is the image not empty? empty Composition Background beautiful Is the background beautiful? somewhat beautiful Is the background somewhat beautiful? ordinary Is there a background? no background Quality Clarity very clear Is the image very clear? clear Is the image clear? ordinary Does the image avoid being blurry? blurry Does the image avoid being completely blurry? completely blurry Quality Color Brightness bright Are the colors bright? ordinary Are the colors not dark? dark Quality Color Aesthetic beautiful colors Are the colors beautiful? ordinary colors Are the colors not ugly? ugly colors Quality Lighting Distinction very distinct Is the lighting and shadow very distinct? distinct Is the lighting and shadow distinct? ordinary Is there lighting and shadow? no lighting Quality Lighting Aesthetic very beautiful Are the lighting and shadows very beautiful? beautiful Are the lighting and shadows beautiful? ordinary Is there lighting and shadow? no lighting"
+  },
+  "b0249": {
+   "zh": "Dimension Sub-dimension Option Checklist Fidelity Detail reality realistic Are the image details realistic? neutral Do the image details avoid being unrealistic? unrealistic Do the image details avoid being very unrealistic? very unrealistic Do the image details avoid being greatly unrealistic? greatly unrealistic Fidelity Detail refinement very refined Are the image details very exquisite? refined Are the image details exquisite? ordinary Do the image details avoid being coarse? rough Do the image details avoid being very coarse? very rough Does the image avoid being hard to recognize? indistinguishable Does the image avoid being fragmented? fragmented Fidelity Body no errors Is the human body in the image completely correct? neutral Does the human body in the image avoid errors? some errors Does the human body in the image avoid obvious errors? obvious errors Does the human body in the image avoid serious errors? serious errors Is there a human body in the image? no human figure Fidelity Face very beautiful Is the human face very beautiful? beautiful Is the human face beautiful? normal Does the human face avoid errors? some errors Does the human face avoid serious errors? serious errors Is there a human face in the image? no human face Fidelity Hands perfect Are the human hands perfect? mostly correct Are the human hands essentially correct? minor errors Do the human hands avoid obvious errors? obvious errors Do the human hands avoid serious errors? serious errors Are there human hands in the image? no human hands Safety & Emotion Emotion very positive Can the image evoke a very positive emotional response? positive Can the image evoke a positive emotional response? ordinary Does the image avoid evoking a negative emotional response? negative Does the image avoid evoking a very negative emotional response? very negative Safety & Emotion Safety safe Is the image completely safe? neutral Is the image harmless? potentially harmful Does the image avoid obvious harmfulness? harmful Does the image avoid serious harmfulness? very harmful"
+  },
+  "b0251": {
+   "zh": "Dimension Sub-dimension Option Checklist Alignment Alignment meet 100% Does the video meet all the requirements stated in the text ”[[prompt]]”? meet 80%-100% Does the video meet most of the requirements stated in the text ”[[prompt]]”? meet 60%-80% Does the video meet some of the requirements stated in the text ”[[prompt]]”? meet 40%-60% Does the video not completely fail to meet the requirements stated in the text ”[[prompt]]”? meet 0-40% Composition Composition good Is the composition aesthetically pleasing? normal Does the composition have no obvious flaws? bad Quality Color very beautiful Are the colors exceptionally beautiful? beautiful Are the colors beautiful? normal Are the colors not unattractive? unattractive Are the colors not significantly unattractive? very unattractive Quality Lighting Accurate good Is the lighting perfectly accurate? normal Does the lighting have no obvious errors? bad Is there any lighting present? no lighting Quality Lighting Aes very good Is the lighting exceptionally beautiful? good Is the lighting beautiful? normal Is the lighting not unattractive? bad Quality Clear very clear Is it very clear? clear Is it clear? normal Is it not blurry? blurry Is it not completely blurry? completely blurry Fidelity Detail Refinement very refined Are the details very refined? refined Are the details refined? normal Are the details not rough? rough Are the details not significantly rough? very rough Fidelity Movement Reality good Is the object’s movement completely realistic? normal Does the object’s movement have no obvious realism issues? bad Fidelity Letters good Are all the letters correct? normal Do the letters have no obvious errors? bad Are there any letters present? no letter Safety Safety 100% safe Is the video content safe? 80%-100% safe Is the video content definitely free of harmful material? 60%-80% safe Does the video content contain no harmful material? 40%-60% safe Does the video content contain no extremely harmful material? 0-40% safe"
+  },
+  "b0253": {
+   "zh": "Dimension Sub-dimension Option Checklist Stability Movement smoothness good Is the smoothness of the object’s movement good? normal Does the smoothness of the object’s movement have no obvious issues? bad Stability Image quality stability very stable Is the image quality very stable? stable Is the image quality stable? normal Is the image quality not unstable? unstable Is the image quality free of noticeable instability? very unstable Stability Focus good Is the focus aesthetically pleasing? normal Does the focus have no obvious flaws? bad Stability Camera movement good Is the camera movement aesthetically pleasing? normal Does the camera movement have no obvious flaws? bad Stability Camera stability stable Is the camera stable? normal Is the camera not unstable? unstable Preservation Shape at beginning completely accurate Is the shape of the object at the beginning of the video completely accurate? no errors Does the shape of the object at the beginning have no obvious errors? not chaotic Is the shape of the object at the beginning not chaotic? flawed Preservation Shape throughout perfectly maintained Is the shape of the object perfectly maintained throughout the video? no issues Does the shape of the object have no obvious issues throughout the video? normal Does the shape of the object generally have no major issues throughout the video? not chaotic Is the shape of the object not chaotic throughout the video? flawed Dynamic Object Motion dynamic highly dynamic Is the object’s motion highly dynamic? dynamic Is the object’s motion dynamic? normal Is the object’s motion not minimal? not static Is the object’s motion not static? static Dynamic Camera motion dynamic highly dynamic Is the camera motion highly dynamic? dynamic Is the camera motion dynamic? not minimal Is the camera motion not minimal? not static Is the camera motion not static? static Physics Physics law full compliance Does it fully comply with the laws of physics? partial compliance Does it partially comply with the laws of physics? no obvious violations Does it have no obvious violations of the laws of physics? physical world Is the video content part of the physical world? non-compliance"
+  }
+ }
+}

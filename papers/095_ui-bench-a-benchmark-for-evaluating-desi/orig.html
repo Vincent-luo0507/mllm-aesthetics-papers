@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>095_ui-bench-a-benchmark-for-evaluating-desi</title>
+<script>
+window.MathJax={
+  tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']],processEscapes:true},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+body{max-width:1180px;margin:0 auto;padding:24px 20px;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+color:#1f2937;line-height:1.8;font-size:15.5px;background:#fff;}
+img{max-width:100%;height:auto;display:block;margin:12px auto;}
+table{border-collapse:collapse;margin:14px 0;font-size:14px;} td,th{border:1px solid #d8dee6;padding:6px 9px;}
+h1,h2,h3,h4{color:#1e3a8a;}
+</style></head><body>
+<html><body><h1 class="ltx_title ltx_title_document">UI-Bench: A Benchmark for Evaluating Design Capabilities of AI Text-to-App Tools</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Sam Jung<sup class="ltx_sup" id="id1"><span class="ltx_text ltx_font_italic" id="id1.1">♡♢</span></sup>   Agustin Garcinuno<sup class="ltx_sup" id="id2">♢</sup>   Spencer Mateega<sup class="ltx_sup" id="id3">♢</sup>
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span><sup class="ltx_sup" id="id4">♡</sup>University of Pennsylvania  <sup class="ltx_sup" id="id5">♢</sup>AfterQuery
+
+</span>
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span><span class="ltx_text ltx_font_typewriter" id="id6">{samj,agustin,spencer}@afterquery.com</span><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://uibench.ai/leaderboard" title="">https://uibench.ai/leaderboard</a>
+</span>
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>
+</span></span></span></span></div>
+<div class="ltx_abstract" id="abstract1"><h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p class="ltx_p" id="abstract1.1">AI text-to-app tools promise high quality applications and websites in minutes, yet no public benchmark rigorously verifies those claims.
+We introduce <span class="ltx_text ltx_font_smallcaps" id="abstract1.1.1">UI-Bench</span>, the first large-scale benchmark that evaluates visual excellence across competing AI text-to-app tools through expert pairwise comparison. Spanning <span class="ltx_text ltx_font_italic" id="abstract1.1.2">10</span> tools, <span class="ltx_text ltx_font_italic" id="abstract1.1.3">30</span> prompts, <span class="ltx_text ltx_font_italic" id="abstract1.1.4">300</span> generated sites, and <span class="ltx_text ltx_font_italic" id="abstract1.1.5">4000+</span> expert judgments, <span class="ltx_text ltx_font_smallcaps" id="abstract1.1.6">UI-Bench</span> ranks systems with a TrueSkill-derived model that yields calibrated confidence intervals. <span class="ltx_text ltx_font_smallcaps" id="abstract1.1.7">UI-Bench</span> establishes a reproducible standard for advancing AI-driven web design. We release (i) the complete prompt set, (ii) an open-source evaluation framework, and (iii) a public leaderboard. The generated sites rated by participants will be released soon.</p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+<section class="ltx_subsection" id="S1.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">1.1 </span>Rapid Emergence of of AI App and Website Tools</h3>
+<div class="ltx_para" id="S1.SS1.p1">
+<p class="ltx_p" id="S1.SS1.p1.1">Low-code and no-code development platforms have emerged as powerful prototyping tools, allowing organizations to rapidly create applications with minimal coding effort. This wave has accelerated the market for AI text-to-app tools.
+TechRadar’s 2025 survey alone
+“tested, rated, and ranked” the <span class="ltx_text ltx_font_italic" id="S1.SS1.p1.1.1">nine</span> best AI tools out of more than eighty tools reviewed
+<cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib39" title="">Williams, 2025</a>]</cite>. While marketing copy promises “professional quality in one click,” most discourse remains anecdotal, consisting mostly of feature lists and speed claims. They offer little systematic evidence about the visual quality these tools actually produce.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S1.SS2">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">1.2 </span>Design Quality Matters</h3>
+<div class="ltx_para" id="S1.SS2.p1">
+<p class="ltx_p" id="S1.SS2.p1.1">Visual excellence directly impacts business outcomes. The seminal Stanford Web Credibility
+study found that 46% user comments cited a site’s <em class="ltx_emph ltx_font_italic" id="S1.SS2.p1.1.1">look and feel</em> when judging
+credibility <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib11" title="">Fogg et al., 2001</a>]</cite>, and other studies support this fact as well <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib32" title="">Robins and Holmes, 2008</a>]</cite>. Empirical UX studies show that both high visual intensity (e.g., animation, flashing, cluttered interfaces) and excessive content volume impair user engagement; visual overload triggers strong negative reactions before conversions climb, and simpler, content-light landing pages consistently convert better than dense, information-heavy versions
+<cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib17" title="">Jankowski et al., 2019</a>; <a class="ltx_ref" href="#bib.bib10" title="">Dvir and Gafni, 2018</a>]</cite>. For AI tools to succeed in market adoption, their output must excel on these perception-critical dimensions.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S1.SS3">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">1.3 </span>The Evaluation Challenge</h3>
+<div class="ltx_para" id="S1.SS3.p1">
+<p class="ltx_p" id="S1.SS3.p1.1">Aesthetic quality lacks a single objective ground truth, and is fundamentally perception-driven <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib20" title="">Lavie and Tractinsky, 2004</a>; <a class="ltx_ref" href="#bib.bib25" title="">Moshagen and Thielsch, 2010</a>; <a class="ltx_ref" href="#bib.bib27" title="">Ngo et al., 2003</a>]</cite>. Previous HCI work reports only moderate agreement across raters and substantial unexplained variance in aesthetic evaluations <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib37" title="">von Wangenheim et al., 2018</a>; <a class="ltx_ref" href="#bib.bib31" title="">Reinecke et al., 2013</a>]</cite>. Public, non<span class="ltx_text" id="S1.SS3.p1.1.1">-</span>blind crowd voting also suffers from social<span class="ltx_text" id="S1.SS3.p1.1.2">-</span>influence herding: a single early up<span class="ltx_text" id="S1.SS3.p1.1.3">-</span>vote can raise a post’s final score by about 25% <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib26" title="">Muchnik et al., 2013</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.SS3.p2">
+<p class="ltx_p" id="S1.SS3.p2.1">For this study, we use blinded pairwise judgements from expert designers as the primary endpoint. We omit automated image proxies as primary metrics because their alignment with human aesthetic preference is weak in our setting. For instance, though FID and CLIP are widely used automated proxies for image quality and alignment <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib16" title="">Heusel et al., 2017</a>; <a class="ltx_ref" href="#bib.bib30" title="">Radford et al., 2021</a>]</cite>, recent work shows such proxies can mis-rank or even contradict human preferences—especially for aesthetics and design-heavy images <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib18" title="">Jayasumana et al., 2024</a>; <a class="ltx_ref" href="#bib.bib19" title="">Kirstain et al., 2023</a>; <a class="ltx_ref" href="#bib.bib41" title="">Xu et al., 2023</a>; <a class="ltx_ref" href="#bib.bib21" title="">Lee et al., 2023</a>]</cite>; see §<a class="ltx_ref" href="#S2.SS3" title="2.3 Automated Aesthetic Metrics and GUI Heuristics ‣ 2 Related Work ‣ UI-Bench: A Benchmark for Evaluating Design Capabilities of AI Text-to-App Tools"><span class="ltx_text ltx_ref_tag">2.3</span></a> for a survey and scope caveats. Procedural details for our pairwise protocol and ranking appear in §<a class="ltx_ref" href="#S3" title="3 Methodology ‣ UI-Bench: A Benchmark for Evaluating Design Capabilities of AI Text-to-App Tools"><span class="ltx_text ltx_ref_tag">3</span></a>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S1.SS4">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">1.4 </span>Contributions</h3>
+<div class="ltx_para" id="S1.SS4.p1">
+<ol class="ltx_enumerate ltx_leftmargin_flush" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="ltx_text ltx_font_typewriter ltx_font_bold" id="S1.I1.i1.p1.1.1">UI-Bench</span>: a fully reproducible protocol for assessing visual design quality of AI text-to-app tools across realistic prompt categories.</p>
+</div></li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i2.p1.1.1">Statistical Framework</span>: an adapted TrueSkill model that delivers stable rankings with 95% confidence intervals from sparse pairwise votes.</p>
+</div></li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">3.</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i3.p1.1.1">Public Resources</span>: a public leaderboard.</p>
+</div></li>
+</ol>
+<p class="ltx_p" id="S1.SS4.p1.1"><span class="ltx_text ltx_font_smallcaps" id="S1.SS4.p1.1.1">UI-Bench</span> closes the gap between feature-checklist reviews and academic usability tests by supplying the first benchmark that directly measures professional-grade visual design quality in AI text-to-app tools.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.1 </span>From Ground-Truth to Preference Benchmarks</h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1"><span class="ltx_text ltx_font_bold" id="S2.SS1.p1.1.1">LLM Benchmarks.</span> Static, ground-truth benchmarks such as
+<span class="ltx_text ltx_font_smallcaps" id="S2.SS1.p1.1.2">MMLU</span> <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib13" title="">Hendrycks et al., 2021</a>]</cite>, <span class="ltx_text ltx_font_smallcaps" id="S2.SS1.p1.1.3">HellaSwag</span> <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib43" title="">Zellers et al., 2019</a>]</cite>,
+<span class="ltx_text ltx_font_smallcaps" id="S2.SS1.p1.1.4">GSM-8K</span> <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib7" title="">Cobbe et al., 2021</a>]</cite>, <span class="ltx_text ltx_font_smallcaps" id="S2.SS1.p1.1.5">FinanceQA</span> <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib24" title="">Mateega et al., 2025</a>]</cite>, <span class="ltx_text ltx_font_smallcaps" id="S2.SS1.p1.1.6">AGIEval</span> <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib45" title="">Zhong et al., 2023</a>]</cite>,
+<span class="ltx_text ltx_font_smallcaps" id="S2.SS1.p1.1.7">BIG-Bench</span> <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib35" title="">Srivastava et al., 2023</a>]</cite>, and
+<span class="ltx_text ltx_font_smallcaps" id="S2.SS1.p1.1.8">HumanEval</span> <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib4" title="">Chen et al., 2021</a>]</cite> dominate language-model
+evaluation.
+Alongside static benchmarks, recent work has relied on human or LLM-judge based pairwise evaluations: <span class="ltx_text ltx_font_smallcaps" id="S2.SS1.p1.1.9">MT-Bench</span> <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib44" title="">Zheng et al., 2023</a>]</cite> and <span class="ltx_text ltx_font_smallcaps" id="S2.SS1.p1.1.10">AlpacaEval</span>
+<cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib9" title="">Dubois et al., 2024</a>]</cite> use LLMs as judges on curated prompts, while <span class="ltx_text ltx_font_smallcaps" id="S2.SS1.p1.1.11">Chatbot Arena</span> <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib5" title="">Chiang et al., 2024</a>]</cite> aggregates crowd pairwise votes with an Bradley-Terry-style rating for leaderboards.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.2 </span>Existing Web Development Benchmarks</h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1">Most recent work targets design<math alttext="\rightarrow" class="ltx_Math" display="inline" id="S2.SS2.p1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math>code or webpage<math alttext="\rightarrow" class="ltx_Math" display="inline" id="S2.SS2.p1.m2" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math>code generation and leans on automatic checks rather than blinded expert preference on finished designs. <span class="ltx_text ltx_font_smallcaps" id="S2.SS2.p1.1.1">Web2Code</span> releases a large webpage<math alttext="\rightarrow" class="ltx_Math" display="inline" id="S2.SS2.p1.m3" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math>code dataset and evaluation suite with rendered-image comparison and GPT<span class="ltx_text" id="S2.SS2.p1.1.2">-</span>4V scoring <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib42" title="">Yun et al., 2024</a>]</cite>. <span class="ltx_text ltx_font_smallcaps" id="S2.SS2.p1.1.3">WebCode2M</span> provides 2.56M real design–code pairs and establishes a benchmark for training and evaluating models in automated webpage code generation, prioritizing scalability over aesthetic quality <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib12" title="">Gui et al., 2025</a>]</cite>.
+<span class="ltx_text ltx_font_smallcaps" id="S2.SS2.p1.1.4">DesignBench</span> frames front-end generation/edit/repair across React/Vue/Angular with programmatic evaluation <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib40" title="">Xiao et al., 2025</a>]</cite>. <span class="ltx_text ltx_font_smallcaps" id="S2.SS2.p1.1.5">FrontendBench</span> automates sandboxed tests and reports 90.45% agreement with experts on specific UI behaviors, not holistic taste <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib46" title="">Zhu et al., 2025</a>]</cite>. <span class="ltx_text ltx_font_smallcaps" id="S2.SS2.p1.1.6">WebGen<span class="ltx_text" id="S2.SS2.p1.1.6.1">-</span>Bench</span> is the closest task analogue: it generates full sites from instructions, verifies functionality via a navigation agent, and grades appearance with GPT<span class="ltx_text" id="S2.SS2.p1.1.7">-</span>4o (1–5); it does not use blinded expert pairwise judgments <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib23" title="">Lu et al., 2025</a>]</cite>. In terms of human validation, <span class="ltx_text ltx_font_smallcaps" id="S2.SS2.p1.1.8">Design2Code</span> is closest. It curates 484 webpages and validates visual-similarity metrics against human ratings, but it benchmarks multimodal language model (MLLM) capabilities by reproducing webpages from original screenshots rather than by comparing preferences between competing tools <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib34" title="">Si et al., 2025</a>]</cite>. Though existing benchmarks emphasize functionality, fidelity, and code similarity; none adopt blinded expert pairwise preference to evaluate visual design quality, and none evaluate AI text-to-app tools.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS3">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.3 </span>Automated Aesthetic Metrics and GUI Heuristics</h3>
+<div class="ltx_para" id="S2.SS3.p1">
+<p class="ltx_p" id="S2.SS3.p1.1">Generative-image quality is typically scored by Inception Score (IS) <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib33" title="">Salimans et al., 2016</a>]</cite>, Fréchet Inception Distance (FID) <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib16" title="">Heusel et al., 2017</a>]</cite>, or CLIP-based similarity <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib15" title="">Hessel et al., 2021</a>]</cite>. Classical GUI–layout heuristics compute rule-based scores for symmetry, balance, and rhythm <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib27" title="">Ngo et al., 2003</a>]</cite>; later work trains neural predictors on curated photography and poster datasets <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib22" title="">Lu et al., 2014</a>; <a class="ltx_ref" href="#bib.bib28" title="">O’Donovan et al., 2011</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p2">
+<p class="ltx_p" id="S2.SS3.p2.1">For multi-section webpages (rather than single-image quality), automated aesthetic scorers exhibit limited cross-dataset generalization. Domain-tailored predictors for webpage aesthetics can achieve promising <em class="ltx_emph ltx_font_italic" id="S2.SS3.p2.1.1">in-domain</em> correlations (e.g., Webthetics reports <math alttext="r\approx 0.85" class="ltx_Math" display="inline" id="S2.SS3.p2.m1" intent=":literal"><semantics><mrow><mi>r</mi><mo>≈</mo><mn>0.85</mn></mrow><annotation encoding="application/x-tex">r\approx 0.85</annotation></semantics></math>) <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib8" title="">Dou et al., 2019</a>]</cite>; however, correlation on a single dataset does not guarantee faithful <em class="ltx_emph ltx_font_italic" id="S2.SS3.p2.1.2">pairwise</em> rankings or robustness across datasets. Similarly, generic proxies such as FID and CLIP-based scores—while widely used <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib16" title="">Heusel et al., 2017</a>; <a class="ltx_ref" href="#bib.bib30" title="">Radford et al., 2021</a>; <a class="ltx_ref" href="#bib.bib15" title="">Hessel et al., 2021</a>]</cite>—have been shown to misalign with, and sometimes contradict, human preferences for aesthetics and design-heavy images <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib18" title="">Jayasumana et al., 2024</a>; <a class="ltx_ref" href="#bib.bib19" title="">Kirstain et al., 2023</a>; <a class="ltx_ref" href="#bib.bib41" title="">Xu et al., 2023</a>; <a class="ltx_ref" href="#bib.bib21" title="">Lee et al., 2023</a>]</cite>. We therefore treat automated scores as ancillary diagnostics, and select blinded expert pairwise judgement as our primary endpoint (see §<a class="ltx_ref" href="#S1.SS3" title="1.3 The Evaluation Challenge ‣ 1 Introduction ‣ UI-Bench: A Benchmark for Evaluating Design Capabilities of AI Text-to-App Tools"><span class="ltx_text ltx_ref_tag">1.3</span></a>).</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS4">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.4 </span>Gap</h3>
+<div class="ltx_para" id="S2.SS4.p1">
+<p class="ltx_p" id="S2.SS4.p1.1">None of the above benchmarks evaluate the holistic UI and UX quality of AI tools,
+leaving researchers and practitioners without a standard ranking metric.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">3 </span>Methodology</h2>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.1 </span>Theoretical Framework</h3>
+<section class="ltx_subsubsection" id="S3.SS1.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">3.1.1 </span>Why Pairwise Comparison</h4>
+<div class="ltx_para" id="S3.SS1.SSS1.p1">
+<p class="ltx_p" id="S3.SS1.SSS1.p1.1">We chose pairwise comparison because absolute ratings are noisy: scale interpretation and anchoring make
+designers disagree. Thurstone’s comparative-judgment theory offers a clean alternative to scaled methods, with previous deployments of adaptive comparative judgment reporting very high rank-order reliability (<math alttext="\approx" class="ltx_Math" display="inline" id="S3.SS1.SSS1.p1.m1" intent=":literal"><semantics><mo>≈</mo><annotation encoding="application/x-tex">\approx</annotation></semantics></math>0.95–0.97) <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib29" title="">Pollitt, 2012</a>; <a class="ltx_ref" href="#bib.bib38" title="">Whitehouse and Pollitt, 2012</a>]</cite>.
+Early psychometrics formalised preference as <em class="ltx_emph ltx_font_italic" id="S3.SS1.SSS1.p1.1.1">comparative judgment</em>
+<cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib36" title="">Thurstone, 1927</a>]</cite>; the Bradley–Terry model (BT) <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib3" title="">Bradley and Terry, 1952</a>]</cite>
+and Bayesian extensions such as TrueSkill <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib14" title="">Herbrich et al., 2006</a>]</cite>
+remain standard for converting pairwise outcomes into system skill estimates.
+This method also scales: Chatbot Arena logged 240k+ human comparisons and produced
+a stable BT leaderboard for 50+ LLMs <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib5" title="">Chiang et al., 2024</a>]</cite>, with
+formal convergence analysis reported in that work.
+<span class="ltx_text ltx_font_smallcaps" id="S3.SS1.SSS1.p1.1.2">UI-Bench</span> therefore collects only binary designer preferences and fits a
+TrueSkill model; implementation details are provided in §<a class="ltx_ref" href="#S3.SS2" title="3.2 Tournament Structure ‣ 3 Methodology ‣ UI-Bench: A Benchmark for Evaluating Design Capabilities of AI Text-to-App Tools"><span class="ltx_text ltx_ref_tag">3.2</span></a>.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS1.SSSx1">
+<h4 class="ltx_title ltx_title_subsubsection">Defining Design Quality</h4>
+<div class="ltx_para" id="S3.SS1.SSSx1.p1">
+<p class="ltx_p" id="S3.SS1.SSSx1.p1.1">We define design quality as the probability that a professional designer prefers layout A over layout B on the client-delivery question:</p>
+<blockquote class="ltx_quote" id="S3.SS1.SSSx1.p1.2">
+<p class="ltx_p" id="S3.SS1.SSSx1.p1.2.1"><span class="ltx_text ltx_font_italic" id="S3.SS1.SSSx1.p1.2.1.1" style="font-size:90%;">“Which project would you be more likely to deliver to a client?”<span class="ltx_text" id="S3.SS1.SSSx1.p1.2.1.1.1"></span></span></p>
+</blockquote>
+</div>
+<div class="ltx_para" id="S3.SS1.SSSx1.p2">
+<p class="ltx_p" id="S3.SS1.SSSx1.p2.1">This single forced choice captures holistic judgement across UI and UX completeness without a rigid rubric. Because professional designers are trained evaluators, aggregating their independent judgements via expert panels is a validated approach for ranking creative work <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib1" title="">Amabile, 1982</a>; <a class="ltx_ref" href="#bib.bib2" title="">Amabile, 1996</a>]</cite>. We use expert comparative judgement: designers make binary pairwise choices on the client-delivery question. This method is established in educational assessment with high reliability <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib29" title="">Pollitt, 2012</a>]</cite>, and the same pairwise-preference framing also underlies RLHF work <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib6" title="">Christiano et al., 2017</a>]</cite>.</p>
+</div>
+<section class="ltx_paragraph" id="S3.SS1.SSSx1.Px1">
+<h5 class="ltx_title ltx_title_paragraph">Evaluation Framing.</h5>
+<div class="ltx_para" id="S3.SS1.SSSx1.Px1.p1">
+<p class="ltx_p" id="S3.SS1.SSSx1.Px1.p1.1">A generic “Which one do you like more?” question risks collapsing professional standards
+into personal taste. To ensure judgments are tied to design practice, <span class="ltx_text ltx_font_smallcaps" id="S3.SS1.SSSx1.Px1.p1.1.1">UI-Bench</span> frames
+comparisons as a client-delivery question. This anchors evaluations on holistic UI and UX quality within a professional context.</p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS1.SSSx1.Px2">
+<h5 class="ltx_title ltx_title_paragraph">Design of the Evaluation Protocol.</h5>
+<div class="ltx_para" id="S3.SS1.SSSx1.Px2.p1">
+<p class="ltx_p" id="S3.SS1.SSSx1.Px2.p1.1">Our protocol incorporates several design decisions that address known shortcomings:</p>
+<ul class="ltx_itemize" id="S3.I1">
+<li class="ltx_item" id="S3.I1.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i1.p1">
+<p class="ltx_p" id="S3.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i1.p1.1.1">Full-view requirement.</span> Raters must view the entire webpage in fullscreen mode before
+voting, ensuring assessments reflect the complete composition rather than a cropped
+hero or single section.</p>
+</div></li>
+<li class="ltx_item" id="S3.I1.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i2.p1">
+<p class="ltx_p" id="S3.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i2.p1.1.1">Prompt standardization.</span> <span class="ltx_text ltx_font_smallcaps" id="S3.I1.i2.p1.1.2">UI-Bench</span> uses synthetically generated prompts across a range of situations and tasks so that
+outcomes reflect tool capability, not rater creativity in crafting prompts. See  §<a class="ltx_ref" href="#S4.SS1" title="4.1 Prompt Design and Generation ‣ 4 Experimental Setup ‣ UI-Bench: A Benchmark for Evaluating Design Capabilities of AI Text-to-App Tools"><span class="ltx_text ltx_ref_tag">4.1</span></a> for prompt generation protocol.</p>
+</div></li>
+<li class="ltx_item" id="S3.I1.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i3.p1">
+<p class="ltx_p" id="S3.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i3.p1.1.1">Blinding and quality controls.</span> Randomized left–right placement, hidden
+tool identities, and split voting sessions further reduce bias and noise relative to open
+crowd arenas.</p>
+</div></li>
+</ul>
+<p class="ltx_p" id="S3.SS1.SSSx1.Px2.p1.2">These design decisions incrementally add rigor beyond prior arena-style studies and
+establish <span class="ltx_text ltx_font_smallcaps" id="S3.SS1.SSSx1.Px2.p1.2.1">UI-Bench</span> as a reproducible standard for evaluating the visual design quality of AI
+text-to-app tools.</p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.2 </span>Tournament Structure</h3>
+<section class="ltx_paragraph" id="S3.SS2.SSS0.Px1">
+<h5 class="ltx_title ltx_title_paragraph">Randomised Pairwise Arena.</h5>
+<div class="ltx_para" id="S3.SS2.SSS0.Px1.p1">
+<p class="ltx_p" id="S3.SS2.SSS0.Px1.p1.1">We run a continuous arena where each vote compares two tools on one prompt for a single expert. Prompt selection has two phases: a base-coverage phase that shows each expert all 30 prompts exactly once (by round 30), followed by an adaptive phase that samples from the 30 prompts based on a score calculated by recency, uncertainty, and the score gap between tools. We draw uniformly from this top-5. Pair selection is not uniform: we score every candidate pair by a weighted blend of exposure balance, opponent novelty, uncertainty <math alttext="(\sigma_{a}+\sigma_{b})" class="ltx_Math" display="inline" id="S3.SS2.SSS0.Px1.p1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><mrow><msub><mi>σ</mi><mi>a</mi></msub><mo>+</mo><msub><mi>σ</mi><mi>b</mi></msub></mrow><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(\sigma_{a}+\sigma_{b})</annotation></semantics></math>, and TrueSkill match quality, then apply penalties for pairs already seen by the expert, recent cooldown, repeat-cap exceedance, and hot-tool over-exposure. We pick the highest-scoring pair with deterministic tie-breakers (lower pair count, then lower max exposure). Tools are rated per prompt; the headline score for each tool is the mean TrueSkill <math alttext="\mu" class="ltx_Math" display="inline" id="S3.SS2.SSS0.Px1.p1.m2" intent=":literal"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math> across the 30 prompts.</p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS2.SSS0.Px2">
+<h5 class="ltx_title ltx_title_paragraph">TrueSkill Rating System.</h5>
+<div class="ltx_para" id="S3.SS2.SSS0.Px2.p1">
+<p class="ltx_p" id="S3.SS2.SSS0.Px2.p1.1">For each prompt, every tool starts at <math alttext="\mu=25.0" class="ltx_Math" display="inline" id="S3.SS2.SSS0.Px2.p1.m1" intent=":literal"><semantics><mrow><mi>μ</mi><mo>=</mo><mn>25.0</mn></mrow><annotation encoding="application/x-tex">\mu=25.0</annotation></semantics></math> and <math alttext="\sigma=8.33" class="ltx_Math" display="inline" id="S3.SS2.SSS0.Px2.p1.m2" intent=":literal"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>8.33</mn></mrow><annotation encoding="application/x-tex">\sigma=8.33</annotation></semantics></math>. After each 1-v-1 outcome, we update the two prompt-specific ratings within a TrueSkill environment (no drift, no draws) <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib14" title="">Herbrich et al., 2006</a>]</cite>. The global tool score is the mean of prompt-level <math alttext="\mu" class="ltx_Math" display="inline" id="S3.SS2.SSS0.Px2.p1.m3" intent=":literal"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math> across the 30 prompts.</p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.3 </span>Expert Evaluators</h3>
+<section class="ltx_paragraph" id="S3.SS3.SSS0.Px1">
+<h5 class="ltx_title ltx_title_paragraph">Inclusion Criteria.</h5>
+<div class="ltx_para" id="S3.SS3.SSS0.Px1.p1">
+<p class="ltx_p" id="S3.SS3.SSS0.Px1.p1.1">We hand selected and invited the experts in this study on the basis of having professional UI and UX experience as a designer, web developer, researcher, or other relevant profession.</p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS3.SSS0.Px2">
+<h5 class="ltx_title ltx_title_paragraph">Demographics (N=<span class="ltx_text ltx_font_italic" id="S3.SS3.SSS0.Px2.1">194</span>).</h5>
+<div class="ltx_para" id="S3.SS3.SSS0.Px2.p1">
+<p class="ltx_p" id="S3.SS3.SSS0.Px2.p1.1">Our panel spans multiple roles (multi-select; totals exceed 100%): Designers (<span class="ltx_text ltx_font_italic" id="S3.SS3.SSS0.Px2.p1.1.1">65.5%</span>, 127), Web Developers (<span class="ltx_text ltx_font_italic" id="S3.SS3.SSS0.Px2.p1.1.2">57.2%</span>, 111), Researchers (<span class="ltx_text ltx_font_italic" id="S3.SS3.SSS0.Px2.p1.1.3">60.3%</span>, 117), Other (<span class="ltx_text ltx_font_italic" id="S3.SS3.SSS0.Px2.p1.1.4">7.2%</span>, 14). When asked whether they had previously used AI tools for creating applications or websites, <span class="ltx_text ltx_font_italic" id="S3.SS3.SSS0.Px2.p1.1.5">10.8%</span> (21) answered yes and <span class="ltx_text ltx_font_italic" id="S3.SS3.SSS0.Px2.p1.1.6">89.2%</span> (173) answered no.</p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">4 </span>Experimental Setup</h2>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.1 </span>Prompt Design and Generation</h3>
+<section class="ltx_paragraph" id="S4.SS1.SSS0.Px1">
+<h5 class="ltx_title ltx_title_paragraph">Taxonomy and Counts.</h5>
+<div class="ltx_para" id="S4.SS1.SSS0.Px1.p1">
+<p class="ltx_p" id="S4.SS1.SSS0.Px1.p1.1">We generated 30 prompts across five categories (6 per category):
+Marketing/Landing, Editorial/Blog, Portfolio/Case Study, E-commerce, and Local/Service.
+Within each category we include 4 <em class="ltx_emph ltx_font_italic" id="S4.SS1.SSS0.Px1.p1.1.1">websites</em> and 2 <em class="ltx_emph ltx_font_italic" id="S4.SS1.SSS0.Px1.p1.1.2">webapps</em>.
+Websites are read-mostly marketing or informational pages; simple forms are permitted,
+but no authentication or persistent data storage is included.
+Webapps are stateful experiences with saved data and at least two screens
+(e.g., list/table plus create/edit form), incorporating basic validation and
+empty/loading/error states. Authentication flows were excluded to avoid confounding
+design evaluation with account-management UX.</p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS1.SSS0.Px2">
+<h5 class="ltx_title ltx_title_paragraph">Authoring Model.</h5>
+<div class="ltx_para" id="S4.SS1.SSS0.Px2.p1">
+<p class="ltx_p" id="S4.SS1.SSS0.Px2.p1.1">Prompts were synthetically generated with GPT-5 (Thinking) using ChatGPT on August 20, 2025. We report the model, interface, and date to document the generation
+conditions.</p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS1.SSS0.Px3">
+<h5 class="ltx_title ltx_title_paragraph">Prompt Specification (summary).</h5>
+<div class="ltx_para" id="S4.SS1.SSS0.Px3.p1">
+<p class="ltx_p" id="S4.SS1.SSS0.Px3.p1.1">We instructed the model to:
+(i) write realistic client briefs of 150–180 words;
+(ii) specify a primary goal/CTA (lead, purchase, booking, subscribe, donate, apply, RSVP, informational);
+(iii) include a one<span class="ltx_text" id="S4.SS1.SSS0.Px3.p1.1.1">-</span>sentence brand vibe (1–2 adjectives);
+(iv) optionally add non<span class="ltx_text" id="S4.SS1.SSS0.Px3.p1.1.2">-</span>visual constraints (e.g., “include pricing tiers” or “include a contact form”);
+(v) avoid layout directives and authentication/login requirements.
+The exact authoring prompt is provided in Appendix <a class="ltx_ref" href="#A1" title="Appendix A Authoring Prompt ‣ UI-Bench: A Benchmark for Evaluating Design Capabilities of AI Text-to-App Tools"><span class="ltx_text ltx_ref_tag">A</span></a>.</p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS1.SSS0.Px4">
+<h5 class="ltx_title ltx_title_paragraph">Validation and Filtering.</h5>
+<div class="ltx_para" id="S4.SS1.SSS0.Px4.p1">
+<p class="ltx_p" id="S4.SS1.SSS0.Px4.p1.1">We applied light editorial review, requiring each prompt to be at least 150 words, maintain diverse category coverage with correct counts, and include a coherent CTA. Prompts that failed these checks were regenerated.</p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS1.SSS0.Px5">
+<h5 class="ltx_title ltx_title_paragraph">Release.</h5>
+<div class="ltx_para" id="S4.SS1.SSS0.Px5.p1">
+<p class="ltx_p" id="S4.SS1.SSS0.Px5.p1.1">We release the final prompts (title, type, sector, goal, scenario, vibe, constraints) in Appendix <a class="ltx_ref" href="#A2" title="Appendix B Tool Prompts ‣ UI-Bench: A Benchmark for Evaluating Design Capabilities of AI Text-to-App Tools"><span class="ltx_text ltx_ref_tag">B</span></a>. Future versions of this benchmark will include a scripted generation pipeline.</p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.2 </span>Tools Evaluated</h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1">We evaluated ten anonymized AI text-to-app tools, representing a mix of leading commercial platforms:
+v0 by Vercel, Bolt, Orchids, Lovable, Replit, Figma Make, Base44 by Wix, Magic Patterns, Same.new, and Create Anything.
+For consistency, all generations were produced between August 20th–22, 2025.
+Each tool was run with its default configuration settings, without manual intervention or prompt engineering.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.3 </span>UI Generation Protocol</h3>
+<section class="ltx_subsubsection" id="S4.SS3.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">4.3.1 </span>Controlled Generation</h4>
+<div class="ltx_para" id="S4.SS3.SSS1.p1">
+<p class="ltx_p" id="S4.SS3.SSS1.p1.1">The authors generated all designs with a
+60-minute time limit per prompt per tool. Each tool received up to two independent one-shot attempts per prompt. For each fresh attempt, we permitted up to two repair passes to fix blocking errors that prevented rendering. We stopped at the first usable output (the full page displaying). This lenient protocol ensured every tool produced at least one functional UI. Some tools (e.g., Same.new) intermittently stalled during generation, typically on file-read steps, consistent with brittle agent orchestration or system prompts.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS3.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">4.3.2 </span>Output standardization</h4>
+<div class="ltx_para" id="S4.SS3.SSS2.p1">
+<p class="ltx_p" id="S4.SS3.SSS2.p1.1">Websites are displayed in iFrames, with sanitized URLs to prevent tool identification.</p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S4.SS4">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.4 </span>Evaluation Interface</h3>
+<section class="ltx_subsubsection" id="S4.SS4.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">4.4.1 </span>Onboarding</h4>
+<div class="ltx_para" id="S4.SS4.SSS1.p1">
+<p class="ltx_p" id="S4.SS4.SSS1.p1.1">Experts received a special code to log in to the study, ensuring only vetted participants could participate. We collected the following from experts before allowing them to vote: first name, last name, profession (Designer, Web Developer, Researcher, or Other), and whether they have previously used an AI website generating tool before.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS4.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">4.4.2 </span>Comparison Presentation</h4>
+<figure class="ltx_figure" id="S4.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="407" id="S4.F1.g1" src="figures/screenshot.jpg" style="aspect-ratio:476/407;" width="476"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Example comparison interface used in <span class="ltx_text ltx_font_smallcaps" id="S4.F1.3">UI-Bench</span>. Raters view two webpages in a blinded layout with randomized placement and a full-view requirement.</figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S4.SS4.SSS2.p1">
+<p class="ltx_p" id="S4.SS4.SSS2.p1.1">Each comparison is presented in a controlled, blinded UI. As shown in Figure <a class="ltx_ref" href="#S4.F1" title="Figure 1 ‣ 4.4.2 Comparison Presentation ‣ 4.4 Evaluation Interface ‣ 4 Experimental Setup ‣ UI-Bench: A Benchmark for Evaluating Design Capabilities of AI Text-to-App Tools"><span class="ltx_text ltx_ref_tag">1</span></a>, we required (i) a full-view requirement, (ii) incorporate split voting sessions, (iii) hide tool identities, (iv) standardize prompts, and (v) randomize left-right placement.</p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S4.SS5">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.5 </span>The Question</h3>
+<div class="ltx_para" id="S4.SS5.p1">
+<p class="ltx_p" id="S4.SS5.p1.1">For each pair of designs generated for a prompt, raters answer a single forced-choice question as described in §<a class="ltx_ref" href="#S3.SS1.SSSx1" title="Defining Design Quality ‣ 3.1 Theoretical Framework ‣ 3 Methodology ‣ UI-Bench: A Benchmark for Evaluating Design Capabilities of AI Text-to-App Tools"><span class="ltx_text ltx_ref_tag">3.1</span></a>. The following instructions are shown to experts before they started each voting session:</p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS5.p2"><span class="ltx_inline-block"><svg class="ltx_picture" height="89.12" id="S4.SS5.p2.pic1" overflow="visible" version="1.1" viewbox="0 0 477.38 89.12" width="477.38"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,89.12) matrix(1 0 0 -1 0 0)"><g fill="#B3497E" fill-opacity="1.0" style="--ltx-fill-color:#B3497E;"><path d="M 0 4.15 L 0 84.97 C 0 87.26 1.86 89.12 4.15 89.12 L 473.23 89.12 C 475.52 89.12 477.38 87.26 477.38 84.97 L 477.38 4.15 C 477.38 1.86 475.52 0 473.23 0 L 4.15 0 C 1.86 0 0 1.86 0 4.15 Z" style="stroke:none"></path></g><g fill="#FFFFFF" fill-opacity="1.0" style="--ltx-fill-color:#FFFFFF;"><path d="M 2.08 6.23 L 2.08 82.89 C 2.08 85.18 3.93 87.04 6.23 87.04 L 471.15 87.04 C 473.44 87.04 475.3 85.18 475.3 82.89 L 475.3 6.23 C 475.3 3.93 473.44 2.08 471.15 2.08 L 6.23 2.08 C 3.93 2.08 2.08 3.93 2.08 6.23 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 21.76 16.96)"><foreignobject class="ltx_minipage" height="61.34" overflow="visible" style="--ltx-fo-width:31.36em;--ltx-fo-height:4.21em;--ltx-fo-depth:0.22em;font-size:10pt;" transform="matrix(1 0 0 -1 0 58.27)" width="29.87em"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><pre class="ltx_verbatim ltx_font_typewriter" id="S4.SS5.p2.pic1.1" style="--ltx-fg-color:#000000;">In this study, you will see two projects side by side, one on the left
+and one on the right. For each pair, vote according to this metric:
+"Which project would you be more likely to deliver to a client?"
+</pre></span></span></foreignobject></g></g></svg></span>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS5.p3">
+<p class="ltx_p" id="S4.SS5.p3.1">Responses were binary: <em class="ltx_emph ltx_font_italic" id="S4.SS5.p3.1.1">"Vote for this Project"</em> was presented under both left and right options. No tie option was provided.</p>
+</div>
+<section class="ltx_subsubsection" id="S4.SS5.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">4.5.1 </span>Quality Controls</h4>
+<div class="ltx_para" id="S4.SS5.SSS1.p1">
+<p class="ltx_p" id="S4.SS5.SSS1.p1.1">Each expert was instructed to vote on 60 matches, administered in two sessions of 30 votes each, with an optional third bonus session for up to 90 total votes. Breaks were permitted between sessions, and a one-day interval between sessions was recommended to maintain attention. As participation was voluntary, the 60-vote target served as guidance rather than a strict requirement.</p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">5 </span>Results</h2>
+<section class="ltx_subsection" id="S5.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">5.1 </span>Leaderboard Rankings</h3>
+<div class="ltx_para" id="S5.SS1.p1">
+<p class="ltx_p" id="S5.SS1.p1.1">Table <a class="ltx_ref" href="#S5.T1" title="Table 1 ‣ 5.1 Leaderboard Rankings ‣ 5 Results ‣ UI-Bench: A Benchmark for Evaluating Design Capabilities of AI Text-to-App Tools"><span class="ltx_text ltx_ref_tag">1</span></a> reports the overall leaderboard aggregated across
+<math alttext="n=4{,}075" class="ltx_Math" display="inline" id="S5.SS1.p1.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>4,075</mn></mrow><annotation encoding="application/x-tex">n=4{,}075</annotation></semantics></math> blinded pairwise matches, and <math alttext="n=8{,}150" class="ltx_Math" display="inline" id="S5.SS1.p1.m2" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>8,150</mn></mrow><annotation encoding="application/x-tex">n=8{,}150</annotation></semantics></math> unique tool comparisons. Ratings are reported as posterior means
+(<math alttext="\mu" class="ltx_Math" display="inline" id="S5.SS1.p1.m3" intent=":literal"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>) under the TrueSkill model, alongside posterior uncertainty (<math alttext="\sigma" class="ltx_Math" display="inline" id="S5.SS1.p1.m4" intent=":literal"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>),
+95% credible intervals, and empirical win rates.</p>
+</div>
+<figure class="ltx_table" id="S5.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Overall Leaderboard Results (<math alttext="n=4{,}075" class="ltx_Math" display="inline" id="S5.T1.m2" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>4,075</mn></mrow><annotation encoding="application/x-tex">n=4{,}075</annotation></semantics></math> unique matches)</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S5.T1.2">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S5.T1.2.1">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S5.T1.2.1.1">Rank</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S5.T1.2.1.2">Tool</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S5.T1.2.1.3">Rating (<math alttext="\mu" class="ltx_Math" display="inline" id="S5.T1.m3" intent=":literal"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>)</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S5.T1.2.1.4">Uncertainty + 95 % CI</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S5.T1.2.1.5">Win Rate</th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T1.2.2">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_t" id="S5.T1.2.2.1">1</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S5.T1.2.2.2">Orchids</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.2.2.3">30.12</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.2.2.4"><math alttext="\sigma=1.77" class="ltx_Math" display="inline" id="S5.T1.m4" intent=":literal"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>1.77</mn></mrow><annotation encoding="application/x-tex">\sigma=1.77</annotation></semantics></math>   [26.61, 33.55]</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.2.2.5">67.5 %</td></tr>
+<tr class="ltx_tr" id="S5.T1.2.3">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row" id="S5.T1.2.3.1">2</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T1.2.3.2">Figma Make</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.3.3">27.46</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.3.4"><math alttext="\sigma=1.71" class="ltx_Math" display="inline" id="S5.T1.m5" intent=":literal"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>1.71</mn></mrow><annotation encoding="application/x-tex">\sigma=1.71</annotation></semantics></math>   [24.11, 30.81]</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.3.5">57.1 %</td></tr>
+<tr class="ltx_tr" id="S5.T1.2.4">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row" id="S5.T1.2.4.1">3</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T1.2.4.2">Lovable</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.4.3">27.14</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.4.4"><math alttext="\sigma=1.72" class="ltx_Math" display="inline" id="S5.T1.m6" intent=":literal"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>1.72</mn></mrow><annotation encoding="application/x-tex">\sigma=1.72</annotation></semantics></math>   [23.77, 30.51]</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.4.5">54.8 %</td></tr>
+<tr class="ltx_tr" id="S5.T1.2.5">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row" id="S5.T1.2.5.1">4</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T1.2.5.2">Anything</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.5.3">25.46</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.5.4"><math alttext="\sigma=1.69" class="ltx_Math" display="inline" id="S5.T1.m7" intent=":literal"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>1.69</mn></mrow><annotation encoding="application/x-tex">\sigma=1.69</annotation></semantics></math>   [22.15, 28.77]</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.5.5">51.2 %</td></tr>
+<tr class="ltx_tr" id="S5.T1.2.6">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row" id="S5.T1.2.6.1">5</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T1.2.6.2">Bolt</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.6.3">24.44</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.6.4"><math alttext="\sigma=1.68" class="ltx_Math" display="inline" id="S5.T1.m8" intent=":literal"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>1.68</mn></mrow><annotation encoding="application/x-tex">\sigma=1.68</annotation></semantics></math>   [21.15, 27.73]</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.6.5">48.9 %</td></tr>
+<tr class="ltx_tr" id="S5.T1.2.7">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row" id="S5.T1.2.7.1">6</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T1.2.7.2">Magic Patterns</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.7.3">24.23</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.7.4"><math alttext="\sigma=1.70" class="ltx_Math" display="inline" id="S5.T1.m9" intent=":literal"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>1.70</mn></mrow><annotation encoding="application/x-tex">\sigma=1.70</annotation></semantics></math>   [20.90, 27.56]</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.7.5">47.0 %</td></tr>
+<tr class="ltx_tr" id="S5.T1.2.8">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row" id="S5.T1.2.8.1">7</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T1.2.8.2">Same.new</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.8.3">23.57</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.8.4"><math alttext="\sigma=1.70" class="ltx_Math" display="inline" id="S5.T1.m10" intent=":literal"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>1.70</mn></mrow><annotation encoding="application/x-tex">\sigma=1.70</annotation></semantics></math>   [20.24, 26.90]</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.8.5">45.8 %</td></tr>
+<tr class="ltx_tr" id="S5.T1.2.9">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row" id="S5.T1.2.9.1">8</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T1.2.9.2">Base44 by Wix</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.9.3">23.47</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.9.4"><math alttext="\sigma=1.69" class="ltx_Math" display="inline" id="S5.T1.m11" intent=":literal"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>1.69</mn></mrow><annotation encoding="application/x-tex">\sigma=1.69</annotation></semantics></math>   [20.16, 26.78]</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.9.5">47.4 %</td></tr>
+<tr class="ltx_tr" id="S5.T1.2.10">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row" id="S5.T1.2.10.1">9</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T1.2.10.2">v0</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.10.3">22.24</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.10.4"><math alttext="\sigma=1.72" class="ltx_Math" display="inline" id="S5.T1.m12" intent=":literal"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>1.72</mn></mrow><annotation encoding="application/x-tex">\sigma=1.72</annotation></semantics></math>   [18.87, 25.61]</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.10.5">41.2 %</td></tr>
+<tr class="ltx_tr" id="S5.T1.2.11">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_bb" id="S5.T1.2.11.1">10</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S5.T1.2.11.2">Replit</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T1.2.11.3">20.95</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T1.2.11.4"><math alttext="\sigma=1.73" class="ltx_Math" display="inline" id="S5.T1.m13" intent=":literal"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>1.73</mn></mrow><annotation encoding="application/x-tex">\sigma=1.73</annotation></semantics></math>   [17.56, 24.34]</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T1.2.11.5">38.9 %</td></tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S5.SS1.p2">
+<p class="ltx_p" id="S5.SS1.p2.1">Orchids leads with a mean rating of 30.12 and a 67.5% win rate,
+substantially ahead of the second-ranked system (Figma Make, <math alttext="\mu" class="ltx_Math" display="inline" id="S5.SS1.p2.m1" intent=":literal"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>=27.46,
+57.1%). Lovable rounds out the top three with <math alttext="\mu" class="ltx_Math" display="inline" id="S5.SS1.p2.m2" intent=":literal"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>=27.14 and a 54.8% win
+rate. Mid-tier tools cluster closely: Anything, Bolt, and Magic Patterns
+all exhibit overlapping credible intervals around <math alttext="\mu\approx 25" class="ltx_Math" display="inline" id="S5.SS1.p2.m3" intent=":literal"><semantics><mrow><mi>μ</mi><mo>≈</mo><mn>25</mn></mrow><annotation encoding="application/x-tex">\mu\approx 25</annotation></semantics></math>, suggesting
+no statistically significant separation among them. Lower-ranked systems
+(Base 44 by Wix, Same.new, v0, and Replit) fall below a rating of 24, indicating consistent underperformance against the stronger tools.</p>
+</div>
+<div class="ltx_para" id="S5.SS1.p3">
+<p class="ltx_p" id="S5.SS1.p3.1">These results establish a clear separation between the leading systems and
+the trailing cluster.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">6 </span>Analysis</h2>
+<section class="ltx_subsection" id="S6.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">6.1 </span>Quality-Gap Analysis</h3>
+<section class="ltx_subsubsection" id="S6.SS1.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">6.1.1 </span>Why are scores so different if tools share the same models under the hood?</h4>
+<div class="ltx_para" id="S6.SS1.SSS1.p1">
+<p class="ltx_p" id="S6.SS1.SSS1.p1.1">Several tools likely share foundation models, yet outputs diverge. Lower performers converged on generic templates, with several tools using call-to-action buttons colored in a generic blue repeated across several websites (for instance, see prompt #7 for v0, and prompt #17 for Anything in Appendix <a class="ltx_ref" href="#A4" title="Appendix D Generic Buttons ‣ UI-Bench: A Benchmark for Evaluating Design Capabilities of AI Text-to-App Tools"><span class="ltx_text ltx_ref_tag">D</span></a>), repetitive card grids, minimal interaction, weak responsiveness. Top tools showed deliberate layout planning and asset curation: distinctive typography systems, coherent color programs, higher-quality imagery, and multi-section narratives with clear flow. They also produced working controls, navigation, and subtle animations with fewer broken states. The gap points to differences in prompt handling, template libraries, agent-orchestration techniques, post-processing, and asset pipelines rather than model choice alone.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S6.SS1.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">6.1.2 </span>Common AI Failure Modes</h4>
+<div class="ltx_para" id="S6.SS1.SSS2.p1">
+<p class="ltx_p" id="S6.SS1.SSS2.p1.1">We make no claims on AI failure modes related to losses clustering around: typography, spacing, poor hierarchy, technically correct but sterile pages without brand voice, uneven padding, mixed iconography, or naive palette and contrast choices that reduce readability or appeal. Future studies will account for expert labels when judging designs.</p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S7">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">7 </span>Discussion</h2>
+<section class="ltx_subsection" id="S7.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">7.1 </span>Limitations</h3>
+<section class="ltx_paragraph" id="S7.SS1.SSS0.Px1">
+<h5 class="ltx_title ltx_title_paragraph">This study is a static shot.</h5>
+<div class="ltx_para" id="S7.SS1.SSS0.Px1.p1">
+<p class="ltx_p" id="S7.SS1.SSS0.Px1.p1.1">Experts evaluated websites and webapps generated by AI tools between a set period of dates. This benchmark covers a set of leading commercially available AI tools at the time of testing; future releases with new capabilities remain unassessed.</p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S7.SS1.SSS0.Px2">
+<h5 class="ltx_title ltx_title_paragraph">Figma Make received shorter prompts.</h5>
+<div class="ltx_para" id="S7.SS1.SSS0.Px2.p1">
+<p class="ltx_p" id="S7.SS1.SSS0.Px2.p1.1">We note that the prompts used for Figma make were not the exact same prompts as those used for all other tools. Figma’s tool has a 500 character maximum input limit, while our prompts were generally over 150+ words. We condensed all prompts via ChatGPT by asking it to "Summarize each of these prompts to 500 characters." We release all sumarized prompts given to Figma make in Appendix <a class="ltx_ref" href="#A2" title="Appendix B Tool Prompts ‣ UI-Bench: A Benchmark for Evaluating Design Capabilities of AI Text-to-App Tools"><span class="ltx_text ltx_ref_tag">B</span></a>. We included Figma’s tool despite this limitation because of its relevance among professional designers and AI developers.</p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S7.SS1.SSS0.Px3">
+<h5 class="ltx_title ltx_title_paragraph">Scope.</h5>
+<div class="ltx_para" id="S7.SS1.SSS0.Px3.p1">
+<p class="ltx_p" id="S7.SS1.SSS0.Px3.p1.1"><span class="ltx_text ltx_font_smallcaps" id="S7.SS1.SSS0.Px3.p1.1.1">UI-Bench</span> isolates <em class="ltx_emph ltx_font_italic" id="S7.SS1.SSS0.Px3.p1.1.2">visual</em> craft, which includes layout, typography, colour, hierarchy, and intentionally ignores UX metrics such as load time, accessibility, or code quality. We do not include a human-designed baseline in this release; therefore, we make no claims about parity with professional designers. Results should be interpreted as relative rankings among AI tools, not absolute judgments of human-level quality. Additionally, because the evaluator pool is dominated by English-speaking professionals, the results may reflect culturally specific aesthetics. Prompts and interfaces are English-only, potentially under-representing designs optimised for other languages or reading directions.</p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S7.SS2">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">7.2 </span>Future Work</h3>
+<div class="ltx_para" id="S7.SS2.p1">
+<p class="ltx_p" id="S7.SS2.p1.1">Our findings reflect AI tools available in <em class="ltx_emph ltx_font_italic" id="S7.SS2.p1.1.1">2025</em> and desktop layouts, so they may not generalize to future tool releases, mobile layouts, or print media. Judgements from seasoned professionals reflect industry standards of polish, but expert taste correlates only moderately with lay-user appeal <cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib27" title="">Ngo et al., 2003</a>]</cite>. Consumer perceptions can be influenced more by brand familiarity or novelty than by subtle typographic refinements. Next steps include testing AI generated designs against human-made designs to measure effect sizes versus AI, and a failure-mode dataset with a public codebook (typography, balance, color/contrast, detail work, responsiveness, brief adherence, resonance), and expert gold labels.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S8">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">8 </span>Conclusion</h2>
+<div class="ltx_para" id="S8.p1">
+<p class="ltx_p" id="S8.p1.1">In this paper, we introduce <span class="ltx_text ltx_font_smallcaps" id="S8.p1.1.1">UI-Bench</span>, a blinded, expert pairwise benchmark anchored to a client-delivery question for AI text-to-app tools. The protocol uses standardized prompts, a full-view requirement, and TrueSkill-based ranking with uncertainty. Across 4,000+ matches, we observe clear separation among tools and identify orchestration choices and potential failure modes that could explain preference gaps. We release prompts and host a public leaderboard to enable further work. Generated sites rated by participants will be released soon.</p>
+</div>
+</section>
+<section class="ltx_section" id="S9">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">9 </span>Acknowledgement</h2>
+<div class="ltx_para" id="S9.p1">
+<p class="ltx_p" id="S9.p1.1">We thank the expert panel for generously contributing their time and judgment; their participation made large-scale, blinded data collection feasible. We also appreciate the early readers &amp; researchers whose feedback improved the study and materials.</p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bib1"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Amabile [1982]</span>
+<span class="ltx_bibblock">
+Teresa M. Amabile.
+
+</span>
+<span class="ltx_bibblock">Social psychology of creativity: A consensual assessment technique.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib1.1">Journal of Personality and Social Psychology</em>, 43(5):997–1013, 1982.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1037/0022-3514.43.5.997</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib2"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Amabile [1996]</span>
+<span class="ltx_bibblock">
+Teresa M. Amabile.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib2.1">Creativity in Context: Update to the Social Psychology of Creativity</em>.
+
+</span>
+<span class="ltx_bibblock">Westview Press, Boulder, CO, 1996.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib3"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bradley and Terry [1952]</span>
+<span class="ltx_bibblock">
+Ralph A. Bradley and Milton E. Terry.
+
+</span>
+<span class="ltx_bibblock">Rank analysis of incomplete block designs.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib3.1">Biometrika</em>, 39(3-4):324–345, 1952.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1093/biomet/39.3-4.324</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib4"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen et al. [2021]</span>
+<span class="ltx_bibblock">
+Mark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan, Henrique Ponde de Oliveira Pinto, Jared Kaplan, Harri Edwards, Yuri Burda, Nicholas Joseph, Greg Brockman, et al.
+
+</span>
+<span class="ltx_bibblock">Evaluating large language models trained on code, 2021.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2107.03374" title="">https://arxiv.org/abs/2107.03374</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib5"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chiang et al. [2024]</span>
+<span class="ltx_bibblock">
+W.-L. Chiang, L. Zheng, Y. Sheng, A. N. Angelopoulos, T. Li, D. Li, H. Zhang, B. Zhu, M. I. Jordan, J. E. Gonzalez, and I. Stoica.
+
+</span>
+<span class="ltx_bibblock">Chatbot arena: An open platform for evaluating LLMs by human preference, 2024.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2403.04132" title="">https://arxiv.org/abs/2403.04132</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib6"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Christiano et al. [2017]</span>
+<span class="ltx_bibblock">
+Paul F. Christiano, Jan Leike, Tom B. Brown, Miljan Martic, Shane Legg, and Dario Amodei.
+
+</span>
+<span class="ltx_bibblock">Deep reinforcement learning from human preferences.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib6.1">Advances in Neural Information Processing Systems (NeurIPS)</em>, pages 4299–4307, 2017.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib7"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Cobbe et al. [2021]</span>
+<span class="ltx_bibblock">
+Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John Schulman.
+
+</span>
+<span class="ltx_bibblock">Training verifiers to solve math word problems, 2021.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2110.14168" title="">https://arxiv.org/abs/2110.14168</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib8"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dou et al. [2019]</span>
+<span class="ltx_bibblock">
+Qi Dou, Xiansong Zheng, Tao Sun, and Pheng-Ann Heng.
+
+</span>
+<span class="ltx_bibblock">Webthetics: Quantifying webpage aesthetics with deep learning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib8.1">International Journal of Human-Computer Studies</em>, 124:56–66, 2019.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1016/j.ijhcs.2018.11.006</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib9"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dubois et al. [2024]</span>
+<span class="ltx_bibblock">
+Yann Dubois, Balázs Galambosi, Percy Liang, and Tatsunori B. Hashimoto.
+
+</span>
+<span class="ltx_bibblock">Length-controlled AlpacaEval: A simple way to debias automatic evaluators, 2024.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2404.04475" title="">https://arxiv.org/abs/2404.04475</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib10"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dvir and Gafni [2018]</span>
+<span class="ltx_bibblock">
+Nim Dvir and Ruti Gafni.
+
+</span>
+<span class="ltx_bibblock">How content volume on landing pages influences consumer behavior: Empirical evidence.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib10.1">Proceedings of InSITE 2018</em>, pages 35–53, 2018.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.28945/4016</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib11"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Fogg et al. [2001]</span>
+<span class="ltx_bibblock">
+B. J. Fogg, Jonathan Marshall, Othman Laraki, Alex Osipovich, Chris Varma, Nicholas Fang, Jyoti Paul, Amy Rangnekar, John Shon, Peter Swani, and Marissa Treinen.
+
+</span>
+<span class="ltx_bibblock">What makes web sites credible? a report on a large quantitative study.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib11.1">Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI 2001)</em>, pages 61–68, 2001.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1145/365024.365037</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib12"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gui et al. [2025]</span>
+<span class="ltx_bibblock">
+Yi Gui, Zhen Li, Yao Wan, Yemin Shi, Hongyu Zhang, Yi Su, Bohua Chen, Dongping Chen, Siyuan Wu, Xing Zhou, Wenbin Jiang, Hai Jin, and Xiangliang Zhang.
+
+</span>
+<span class="ltx_bibblock">WebCode2M: A real-world dataset for code generation from webpage designs.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib12.1">Proceedings of The Web Conference (WWW)</em>, 2025.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib13"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hendrycks et al. [2021]</span>
+<span class="ltx_bibblock">
+Dan Hendrycks, Collin Burns, Steven Basart, Andy Zou, Mantas Mazeika, Dawn Song, and Jacob Steinhardt.
+
+</span>
+<span class="ltx_bibblock">Measuring massive multitask language understanding.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib13.1">International Conference on Learning Representations (ICLR)</em>, 2021.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2009.03300" title="">https://arxiv.org/abs/2009.03300</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib14"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Herbrich et al. [2006]</span>
+<span class="ltx_bibblock">
+Ralf Herbrich, Tom Minka, and Thore Graepel.
+
+</span>
+<span class="ltx_bibblock">TrueSkill: A Bayesian skill rating system.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib14.1">Advances in Neural Information Processing Systems (NIPS)</em>, volume 19, pages 569–576, 2006.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://papers.nips.cc/paper/3079-trueskilltm-a-bayesian-skill-rating-system.pdf" title="">https://papers.nips.cc/paper/3079-trueskilltm-a-bayesian-skill-rating-system.pdf</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib15"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hessel et al. [2021]</span>
+<span class="ltx_bibblock">
+Jack Hessel, Ari Holtzman, Maxwell Forbes, Ronan Le Bras, and Yejin Choi.
+
+</span>
+<span class="ltx_bibblock">CLIPScore: A reference-free evaluation metric for image captioning.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib15.1">Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing (EMNLP)</em>, pages 7514–7528, 2021.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.18653/v1/2021.emnlp-main.595</span>.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://aclanthology.org/2021.emnlp-main.595/" title="">https://aclanthology.org/2021.emnlp-main.595/</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib16"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Heusel et al. [2017]</span>
+<span class="ltx_bibblock">
+Martin Heusel, Hubert Ramsauer, Thomas Unterthiner, Bernhard Nessler, and Sepp Hochreiter.
+
+</span>
+<span class="ltx_bibblock">GANs trained by a two time-scale update rule converge to a local Nash equilibrium.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib16.1">Advances in Neural Information Processing Systems (NeurIPS)</em>, 2017.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/1706.08500" title="">https://arxiv.org/abs/1706.08500</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib17"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Jankowski et al. [2019]</span>
+<span class="ltx_bibblock">
+J. Jankowski, J. Hamari, and J. Wątróbski.
+
+</span>
+<span class="ltx_bibblock">A gradual approach for maximising user conversion without compromising experience with high visual intensity website elements.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib17.1">Internet Research</em>, 29(1):194–217, 2019.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1108/INTR-09-2016-0271</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib18"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Jayasumana et al. [2024]</span>
+<span class="ltx_bibblock">
+S. Jayasumana, X. Liu, X. E. Wang, L. Ma, S. Savarese, and L. El Ghaoui.
+
+</span>
+<span class="ltx_bibblock">Rethinking FID: Towards a better evaluation metric for image generation, 2024.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib19"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kirstain et al. [2023]</span>
+<span class="ltx_bibblock">
+Y. Kirstain, A. Polyak, U. Singer, S. Matiana, J. Penna, and O. Levy.
+
+</span>
+<span class="ltx_bibblock">Pick-a-pic: An open dataset of user preferences for text-to-image generation.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib19.1">Advances in Neural Information Processing Systems (NeurIPS)</em>, 2023.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://papers.neurips.cc/paper_files/paper/2023/file/73aacd8b3b05b4b503d58310b523553c-Paper-Conference.pdf" title="">https://papers.neurips.cc/paper_files/paper/2023/file/73aacd8b3b05b4b503d58310b523553c-Paper-Conference.pdf</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib20"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lavie and Tractinsky [2004]</span>
+<span class="ltx_bibblock">
+Talia Lavie and Noam Tractinsky.
+
+</span>
+<span class="ltx_bibblock">Assessing dimensions of perceived visual aesthetics of web sites.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib20.1">International Journal of Human-Computer Studies</em>, 60(3):269–298, 2004.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1016/j.ijhcs.2003.09.002</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib21"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lee et al. [2023]</span>
+<span class="ltx_bibblock">
+T. Lee, M. Yasunaga, C. Meng, Y. Mai, J. S. Park, A. Gupta, Y. Zhang, D. Narayanan, H. B. Teufel, M. Bellagente, M. Kang, T. Park, J. Leskovec, J.-Y. Zhu, F.-F. Li, J. Wu, S. Ermon, and P. Liang.
+
+</span>
+<span class="ltx_bibblock">Holistic evaluation of text-to-image models.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib21.1">Advances in Neural Information Processing Systems (NeurIPS)</em>, 2023.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2311.04287" title="">https://arxiv.org/abs/2311.04287</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib22"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lu et al. [2014]</span>
+<span class="ltx_bibblock">
+Xiaoran L. Lu, Zhe Lin, Hailin Jin, Jianchao Yang, and James Z. Wang.
+
+</span>
+<span class="ltx_bibblock">RAPID: Rating pictorial aesthetics using deep learning.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib22.1">Proceedings of ACM Multimedia</em>, pages 457–466, 2014.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1145/2647868.2654927</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib23"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lu et al. [2025]</span>
+<span class="ltx_bibblock">
+Zimu Lu, Yunqiao Yang, Houxing Ren, Han Xiao, Ke Wang, Weikang Shi, Aojun Zhou, Mingjie Zhan, and Hongsheng Li.
+
+</span>
+<span class="ltx_bibblock">WebGen-Bench: Evaluating LLMs on generating interactive and functional websites from scratch, 2025.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib24"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Mateega et al. [2025]</span>
+<span class="ltx_bibblock">
+Spencer Mateega, Carlos Georgescu, and Danny Tang.
+
+</span>
+<span class="ltx_bibblock">FinanceQA: A benchmark for evaluating financial analysis capabilities of large language models, 2025.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib25"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Moshagen and Thielsch [2010]</span>
+<span class="ltx_bibblock">
+M. Moshagen and M. T. Thielsch.
+
+</span>
+<span class="ltx_bibblock">Facets of visual aesthetics.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib25.1">International Journal of Human-Computer Studies</em>, 68(10):689–709, 2010.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1016/j.ijhcs.2010.05.006</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib26"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Muchnik et al. [2013]</span>
+<span class="ltx_bibblock">
+Lev Muchnik, Sinan Aral, and Sean J. Taylor.
+
+</span>
+<span class="ltx_bibblock">Social influence bias: A randomized experiment.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib26.1">Science</em>, 341(6146):647–651, 2013.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1126/science.1240466</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib27"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ngo et al. [2003]</span>
+<span class="ltx_bibblock">
+D. C. L. Ngo, L. S. Teo, and J. G. Byrne.
+
+</span>
+<span class="ltx_bibblock">Modelling interface aesthetics.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib27.1">Information Sciences</em>, 152:25–46, 2003.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1016/S0020-0255(02)00404-8</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib28"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">O’Donovan et al. [2011]</span>
+<span class="ltx_bibblock">
+Patrick O’Donovan, Aseem Agarwala, and Aaron Hertzmann.
+
+</span>
+<span class="ltx_bibblock">Color compatibility from large datasets.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib28.1">ACM Transactions on Graphics</em>, 30(4):63:1–63:12, 2011.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1145/2010324.1964958</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib29"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Pollitt [2012]</span>
+<span class="ltx_bibblock">
+Alastair Pollitt.
+
+</span>
+<span class="ltx_bibblock">Comparative judgement for assessment.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib29.1">International Journal of Technology and Design Education</em>, 22(2):157–170, 2012.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1007/s10798-011-9189-x</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib30"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Radford et al. [2021]</span>
+<span class="ltx_bibblock">
+Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, et al.
+
+</span>
+<span class="ltx_bibblock">Learning transferable visual models from natural language supervision.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib30.1">International Conference on Machine Learning (ICML)</em>, 2021.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2103.00020" title="">https://arxiv.org/abs/2103.00020</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib31"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Reinecke et al. [2013]</span>
+<span class="ltx_bibblock">
+Krzysztof Reinecke, Tom Yeh, Luke Miratrix, Rahmat Mardiko, Yao Zhao, Jenny Liu, and Krzysztof Z. Gajos.
+
+</span>
+<span class="ltx_bibblock">Predicting users’ first impressions of website aesthetics with a quantification of perceived visual complexity and colorfulness.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib31.1">Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI ’13)</em>, pages 2049–2058. ACM, 2013.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1145/2470654.2481281</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib32"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Robins and Holmes [2008]</span>
+<span class="ltx_bibblock">
+D. Robins and J. Holmes.
+
+</span>
+<span class="ltx_bibblock">Aesthetics and credibility in web site design.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib32.1">Information Processing &amp; Management</em>, 44(1):386–399, 2008.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1016/j.ipm.2007.02.003</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib33"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Salimans et al. [2016]</span>
+<span class="ltx_bibblock">
+Tim Salimans, Ian Goodfellow, Wojciech Zaremba, Vicki Cheung, Alec Radford, and Xi Chen.
+
+</span>
+<span class="ltx_bibblock">Improved techniques for training GANs.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib33.1">Advances in Neural Information Processing Systems (NIPS)</em>, 2016.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://proceedings.neurips.cc/paper/2016/file/8a3363abe792db2d8761d6403605aeb7-Paper.pdf" title="">https://proceedings.neurips.cc/paper/2016/file/8a3363abe792db2d8761d6403605aeb7-Paper.pdf</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib34"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Si et al. [2025]</span>
+<span class="ltx_bibblock">
+Chenglei Si, Yanzhe Zhang, Ryan Li, Zhengyuan Yang, Ruibo Liu, and Diyi Yang.
+
+</span>
+<span class="ltx_bibblock">Design2code: Benchmarking multimodal code generation for automated front-end engineering.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib34.1">Proceedings of the 2025 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT), Long Papers</em>, 2025.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib35"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Srivastava et al. [2023]</span>
+<span class="ltx_bibblock">
+Aarohi Srivastava et al.
+
+</span>
+<span class="ltx_bibblock">Beyond the imitation game: Quantifying and extrapolating the capabilities of language models (BIG-bench).
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib35.1">Transactions on Machine Learning Research</em>, 2023.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2206.04615" title="">https://arxiv.org/abs/2206.04615</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib36"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Thurstone [1927]</span>
+<span class="ltx_bibblock">
+L. L. Thurstone.
+
+</span>
+<span class="ltx_bibblock">A law of comparative judgment.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib36.1">Psychological Review</em>, 34(4):273–286, 1927.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1037/h0070288</span>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib37"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">von Wangenheim et al. [2018]</span>
+<span class="ltx_bibblock">
+C. G. von Wangenheim, J. V. A. Porto, J. C. R. Hauck, and A. F. Borgatto.
+
+</span>
+<span class="ltx_bibblock">Do we agree on user interface aesthetics of Android apps?, 2018.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib38"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Whitehouse and Pollitt [2012]</span>
+<span class="ltx_bibblock">
+C. Whitehouse and A. Pollitt.
+
+</span>
+<span class="ltx_bibblock">Using adaptive comparative judgement to obtain a highly reliable rank order in summative assessment.
+
+</span>
+<span class="ltx_bibblock">Technical report, AQA Centre for Education Research and Policy, Manchester, UK, 2012.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://filestore.aqa.org.uk/content/research/CERP_RP_CW_20062012_2.pdf" title="">https://filestore.aqa.org.uk/content/research/CERP_RP_CW_20062012_2.pdf</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib39"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Williams [2025]</span>
+<span class="ltx_bibblock">
+Owain Williams.
+
+</span>
+<span class="ltx_bibblock">The best AI website builders in 2025.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://www.techradar.com/pro/best-ai-website-builder" title="">https://www.techradar.com/pro/best-ai-website-builder</a>, 2025.
+
+</span>
+<span class="ltx_bibblock">Accessed 2025-08-10.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib40"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Xiao et al. [2025]</span>
+<span class="ltx_bibblock">
+Jingyu Xiao, Ming Wang, Man Ho Lam, Yuxuan Wan, Junliang Liu, Yintong Huo, and Michael R. Lyu.
+
+</span>
+<span class="ltx_bibblock">Designbench: A comprehensive benchmark for MLLM-based front-end code generation, 2025.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib41"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Xu et al. [2023]</span>
+<span class="ltx_bibblock">
+J. Xu, Z. Shi, Y. Wang, Y. Zhang, D. Lin, D. Zhang, and W. Zhu.
+
+</span>
+<span class="ltx_bibblock">Imagereward: Learning and evaluating human preferences for text-to-image generation.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib41.1">Advances in Neural Information Processing Systems (NeurIPS)</em>, 2023.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://papers.nips.cc/paper_files/paper/2023/file/33646ef0ed554145eab65f6250fab0c9-Paper-Conference.pdf" title="">https://papers.nips.cc/paper_files/paper/2023/file/33646ef0ed554145eab65f6250fab0c9-Paper-Conference.pdf</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib42"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yun et al. [2024]</span>
+<span class="ltx_bibblock">
+Sukmin Yun, Haokun Lin, Rusiru Thushara, Mohammad Qazim Bhat, Yongxin Wang, Zutao Jiang, Mingkai Deng, Jinhong Wang, Tianhua Tao, Junbo Li, Haonan Li, Preslav Nakov, Timothy Baldwin, Zhengzhong Liu, Eric P. Xing, Xiaodan Liang, and Zhiqiang Shen.
+
+</span>
+<span class="ltx_bibblock">Web2Code: A large-scale webpage-to-code dataset and evaluation framework for multimodal LLMs, 2024.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib43"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zellers et al. [2019]</span>
+<span class="ltx_bibblock">
+Rowan Zellers, Ari Holtzman, Yonatan Bisk, Ali Farhadi, and Yejin Choi.
+
+</span>
+<span class="ltx_bibblock">HellaSwag: Can a machine really finish your sentence?
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib43.1">Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics (ACL)</em>, pages 4791–4800, 2019.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.18653/v1/P19-1472</span>.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://aclanthology.org/P19-1472/" title="">https://aclanthology.org/P19-1472/</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib44"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zheng et al. [2023]</span>
+<span class="ltx_bibblock">
+Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric P. Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica.
+
+</span>
+<span class="ltx_bibblock">Judging LLM-as-a-judge with MT-bench and chatbot arena, 2023.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2306.05685" title="">https://arxiv.org/abs/2306.05685</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib45"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhong et al. [2023]</span>
+<span class="ltx_bibblock">
+Wanjun Zhong, Ruixiang Cui, Yiduo Guo, Yaobo Liang, Shuai Lu, Yanlin Wang, Amin Saied, Weizhu Chen, and Nan Duan.
+
+</span>
+<span class="ltx_bibblock">AGIEval: A human-centric benchmark for evaluating foundation models, 2023.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2304.06364" title="">https://arxiv.org/abs/2304.06364</a>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib46"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhu et al. [2025]</span>
+<span class="ltx_bibblock">
+Hongda Zhu, Yiwen Zhang, Bing Zhao, Jingzhe Ding, Siyao Liu, Tong Liu, Dandan Wang, Yanan Liu, and Zhaojian Li.
+
+</span>
+<span class="ltx_bibblock">Frontendbench: A benchmark for evaluating LLMs on front-end development via automatic evaluation, 2025.
+
+</span></li>
+</ul>
+</section>
+<section class="ltx_appendix" id="A1">
+<h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix A </span>Authoring Prompt</h2>
+<div class="ltx_para" id="A1.p1">
+<p class="ltx_p" id="A1.p1.1">The following is the exact prompt used to generate the synthetic client briefs in §4.1.
+We release this verbatim for reproducibility.</p>
+</div>
+<div class="ltx_para ltx_noindent" id="A1.p2"><span class="ltx_inline-block"><svg class="ltx_picture" height="696.62" id="A1.p2.pic1" overflow="visible" version="1.1" viewbox="0 0 477.38 696.62" width="477.38"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,696.62) matrix(1 0 0 -1 0 0)"><g fill="#FFFFFF" fill-opacity="1.0" style="--ltx-fill-color:#FFFFFF;"><path d="M 1.97 5.91 L 1.97 690.72 C 1.97 692.89 3.73 694.65 5.91 694.65 L 471.47 694.65 C 473.65 694.65 475.41 692.89 475.41 690.72 L 475.41 5.91 C 475.41 3.73 473.65 1.97 471.47 1.97 L 5.91 1.97 C 3.73 1.97 1.97 3.73 1.97 5.91 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 21.34 21.22)"><foreignobject class="ltx_minipage" height="660.34" overflow="visible" style="--ltx-fo-width:31.42em;--ltx-fo-height:47.5em;--ltx-fo-depth:0.22em;font-size:10pt;" transform="matrix(1 0 0 -1 0 657.27)" width="29.92em"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><pre class="ltx_verbatim ltx_font_typewriter" id="A1.p2.pic1.1" style="--ltx-fg-color:#000000;">Goal
+Write 30 realistic scenarios ("prompts") that a client might give an
+AI website builder. Produce 6 scenarios per category. In each category,
+write 4 websites and 2 webapps.
+
+Type definitions
+Website: read-mostly marketing or informational content. Simple forms
+allowed. No auth. No stored user data.
+Webapp: stateful experience with saved data and/or auth. At least 2
+screens (e.g., list/table + create/edit form). Include basic validation
+and empty/loading/error states.
+
+What to deliver (per prompt)
+Title — e.g., "Indie Coffee Launch Page"
+Type — Website or Webapp
+Sector — select from provided list: Tech &amp; SaaS (software, AI tools,
+dev platforms), Finance &amp; Fintech (banking, payments, crypto), Health
+&amp; Wellness (clinics, telehealth, fitness, mental health), Hospitality,
+Food &amp; Travel (restaurants, cafes, hotels, tourism), Retail &amp;
+E-commerce (physical/digital goods, fashion, beauty), Entertainment,
+Sports &amp; Events (artists, venues, tickets, conferences), Education &amp;
+Training (schools, courses, bootcamps), Professional Services (legal,
+accounting, consulting, agencies), Creative &amp; Media (portfolios:
+design, photo, film, content creators), Nonprofit, Community &amp; Public
+Sector (NGOs, churches, clubs, gov), Real Estate &amp; Local Services
+(listings, contractors, trades, salons, repair, pet care, cleaning),
+Industrial, Science &amp; Manufacturing (biotech, hardware, energy), Other
+/ Emerging (catch-all)
+
+Primary goal/CTA: lead / purchase / booking / subscribe / donate /
+apply / RSVP / Informational (no CTA)
+
+Scenario (120–180 words) — a client brief in plain English
+
+Brand vibe — pick 1–2 adjectives and describe it in a sentence
+(e.g., "minimal, editorial" or "bold, playful")
+
+Constraints (optional) — e.g., "Include pricing tiers" or "Include a
+contact form" (no visual or layout directives)
+
+The Five Categories:
+Marketing/Landing (conversion-oriented pages, waitlists, SaaS signups)
+Editorial/Blog (thought leadership, article hubs, newsletters)
+Portfolio/Case Study (agencies, photographers, studios)
+E-commerce (small catalogs, digital products, tiered pricing)
+Local/Service (restaurants, salons, clinics, trades)
+
+Make sure the scenarios are in the 150+ word range. Double check this
+to confirm. Think carefully as an expert designer.
+</pre></span></span></foreignobject></g></g></svg></span>
+</div>
+</section>
+<section class="ltx_appendix" id="A2">
+<h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix B </span>Tool Prompts</h2>
+<div class="ltx_para" id="A2.p1">
+<p class="ltx_p" id="A2.p1.1">The complete set of 30 prompts is released at:
+<a class="ltx_ref ltx_url ltx_font_typewriter" href="https://huggingface.co/datasets/AfterQuery/ui-bench" title="">https://huggingface.co/datasets/AfterQuery/ui-bench</a></p>
+</div>
+<div class="ltx_para" id="A2.p2">
+<p class="ltx_p" id="A2.p2.1">Below we include three illustrative examples.</p>
+</div>
+<section class="ltx_subsection" id="A2.SSx1">
+<h3 class="ltx_title ltx_title_subsection">Example 1: Marketing/Landing</h3>
+<div class="ltx_para ltx_noindent" id="A2.SSx1.p1"><span class="ltx_inline-block"><svg class="ltx_picture" height="205.35" id="A2.SSx1.p1.pic1" overflow="visible" version="1.1" viewbox="0 0 477.38 205.35" width="477.38"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,205.35) matrix(1 0 0 -1 0 0)"><g fill="#B3497E" fill-opacity="1.0" style="--ltx-fill-color:#B3497E;"><path d="M 0 4.15 L 0 201.2 C 0 203.49 1.86 205.35 4.15 205.35 L 473.23 205.35 C 475.52 205.35 477.38 203.49 477.38 201.2 L 477.38 4.15 C 477.38 1.86 475.52 0 473.23 0 L 4.15 0 C 1.86 0 0 1.86 0 4.15 Z" style="stroke:none"></path></g><g fill="#FFFFFF" fill-opacity="1.0" style="--ltx-fill-color:#FFFFFF;"><path d="M 2.08 6.23 L 2.08 199.12 C 2.08 201.41 3.93 203.27 6.23 203.27 L 471.15 203.27 C 473.44 203.27 475.3 201.41 475.3 199.12 L 475.3 6.23 C 475.3 3.93 473.44 2.08 471.15 2.08 L 6.23 2.08 C 3.93 2.08 2.08 3.93 2.08 6.23 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 21.76 15.81)"><foreignobject class="ltx_minipage" height="177.58" overflow="visible" style="--ltx-fo-width:31.36em;--ltx-fo-height:12.69em;--ltx-fo-depth:0.14em;font-size:10pt;" transform="matrix(1 0 0 -1 0 175.66)" width="29.87em"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><pre class="ltx_verbatim ltx_font_typewriter" id="A2.SSx1.p1.pic1.1" style="--ltx-fg-color:#000000;">Title: VectorPilot AI — Dev Tool Launch
+Type: Website
+Sector: Tech &amp; SaaS
+Primary goal/CTA: lead
+Scenario:
+You’re launching VectorPilot, a CLI and dashboard that auto-generates
+API clients from OpenAPI specs and keeps them in sync across repos.
+The page must explain the core value in under 8 seconds: “Ship
+integrations faster. No drift.” Include a hero with a concise promise,
+three outcome-focused benefits, and a 60-second product tour video...
+Brand vibe: Minimal and technical, expressed with clean typography,
+disciplined spacing, and terse copy.
+Constraints: Include comparison table, FAQ, and a short video embed.
+</pre></span></span></foreignobject></g></g></svg></span>
+</div>
+</section>
+<section class="ltx_subsection" id="A2.SSx2">
+<h3 class="ltx_title ltx_title_subsection">Example 2: Editorial/Blog</h3>
+<div class="ltx_para ltx_noindent" id="A2.SSx2.p1"><span class="ltx_inline-block"><svg class="ltx_picture" height="205.35" id="A2.SSx2.p1.pic1" overflow="visible" version="1.1" viewbox="0 0 477.38 205.35" width="477.38"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,205.35) matrix(1 0 0 -1 0 0)"><g fill="#B3497E" fill-opacity="1.0" style="--ltx-fill-color:#B3497E;"><path d="M 0 4.15 L 0 201.2 C 0 203.49 1.86 205.35 4.15 205.35 L 473.23 205.35 C 475.52 205.35 477.38 203.49 477.38 201.2 L 477.38 4.15 C 477.38 1.86 475.52 0 473.23 0 L 4.15 0 C 1.86 0 0 1.86 0 4.15 Z" style="stroke:none"></path></g><g fill="#FFFFFF" fill-opacity="1.0" style="--ltx-fill-color:#FFFFFF;"><path d="M 2.08 6.23 L 2.08 199.12 C 2.08 201.41 3.93 203.27 6.23 203.27 L 471.15 203.27 C 473.44 203.27 475.3 201.41 475.3 199.12 L 475.3 6.23 C 475.3 3.93 473.44 2.08 471.15 2.08 L 6.23 2.08 C 3.93 2.08 2.08 3.93 2.08 6.23 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 21.76 16.96)"><foreignobject class="ltx_minipage" height="177.58" overflow="visible" style="--ltx-fo-width:31.36em;--ltx-fo-height:12.61em;--ltx-fo-depth:0.22em;font-size:10pt;" transform="matrix(1 0 0 -1 0 174.5)" width="29.87em"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><pre class="ltx_verbatim ltx_font_typewriter" id="A2.SSx2.p1.pic1.1" style="--ltx-fg-color:#000000;">Title: The Incident Ledger
+Type: Website
+Sector: Professional Services
+Primary goal/CTA: subscribe
+Scenario:
+Publish a thought-leadership hub on reliability, incident response, and
+postmortems for CTOs and SRE leaders. The homepage features a concise
+positioning statement and top three pillar articles. Add topic filters,
+author bios, and a “How we write” style guide explaining blameless
+analysis and evidence standards...
+Brand vibe: Rigorous and transparent, with sober design and careful
+sourcing as the default.
+Constraints: Include editorial policy, glossary, and newsletter sign-up.
+</pre></span></span></foreignobject></g></g></svg></span>
+</div>
+</section>
+<section class="ltx_subsection" id="A2.SSx3">
+<h3 class="ltx_title ltx_title_subsection">Example 3: Portfolio/Case Study</h3>
+<div class="ltx_para ltx_noindent" id="A2.SSx3.p1"><span class="ltx_inline-block"><svg class="ltx_picture" height="236.63" id="A2.SSx3.p1.pic1" overflow="visible" version="1.1" viewbox="0 0 477.38 236.63" width="477.38"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,236.63) matrix(1 0 0 -1 0 0)"><g fill="#B3497E" fill-opacity="1.0" style="--ltx-fill-color:#B3497E;"><path d="M 0 4.15 L 0 232.48 C 0 234.78 1.86 236.63 4.15 236.63 L 473.23 236.63 C 475.52 236.63 477.38 234.78 477.38 232.48 L 477.38 4.15 C 477.38 1.86 475.52 0 473.23 0 L 4.15 0 C 1.86 0 0 1.86 0 4.15 Z" style="stroke:none"></path></g><g fill="#FFFFFF" fill-opacity="1.0" style="--ltx-fill-color:#FFFFFF;"><path d="M 2.08 6.23 L 2.08 230.41 C 2.08 232.7 3.93 234.56 6.23 234.56 L 471.15 234.56 C 473.44 234.56 475.3 232.7 475.3 230.41 L 475.3 6.23 C 475.3 3.93 473.44 2.08 471.15 2.08 L 6.23 2.08 C 3.93 2.08 2.08 3.93 2.08 6.23 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 21.76 13.89)"><foreignobject class="ltx_minipage" height="208.86" overflow="visible" style="--ltx-fo-width:31.36em;--ltx-fo-height:15.09em;--ltx-fo-depth:0em;font-size:10pt;" transform="matrix(1 0 0 -1 0 208.86)" width="29.87em"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><pre class="ltx_verbatim ltx_font_typewriter" id="A2.SSx3.p1.pic1.1" style="--ltx-fg-color:#000000;">Title: Forge Labs — Product Studio Cases
+Type: Website
+Sector: Professional Services
+Primary goal/CTA: lead
+Scenario:
+Forge Labs designs and ships MVPs for venture-backed startups. Build a
+portfolio site that opens with a crisp positioning line and a grid of
+selected case studies. Each case has a one-minute read: problem,
+approach, outcome, and a single metric. Include a services summary,
+an engagement model section, and a transparent “How we scope in 2
+weeks.” Add a short contact form that routes to email, no login or
+stored profiles...
+Brand vibe: Pragmatic and credible, signaling senior execution without
+theatrics.
+Constraints: Case grid, services overview, and short contact form.
+</pre></span></span></foreignobject></g></g></svg></span>
+</div>
+</section>
+</section>
+<section class="ltx_appendix" id="A3">
+<h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix C </span>Generated Sites</h2>
+<div class="ltx_para" id="A3.p1">
+<p class="ltx_p" id="A3.p1.1">The generated sites viewed by raters will be released soon.</p>
+</div>
+<div class="ltx_para" id="A3.p2">
+<p class="ltx_p" id="A3.p2.1">Below we include three illustrative examples of sites viewed by raters.</p>
+</div>
+<section class="ltx_subsection" id="A3.SSx1">
+<h3 class="ltx_title ltx_title_subsection">Example 1: Marketing/Landing</h3>
+<div class="ltx_para ltx_align_center" id="A3.SSx1.p1"><img alt="[Uncaptioned image]" class="ltx_graphics ltx_img_landscape" height="263" id="A3.SSx1.p1.g1" src="figures/image.jpg" style="aspect-ratio:476/263;" width="476"/>
+</div>
+</section>
+<section class="ltx_subsection" id="A3.SSx2">
+<h3 class="ltx_title ltx_title_subsection">Example 2: Editorial/Blog</h3>
+<div class="ltx_para ltx_align_center" id="A3.SSx2.p1"><img alt="[Uncaptioned image]" class="ltx_graphics ltx_img_landscape" height="265" id="A3.SSx2.p1.g1" src="figures/image2.jpg" style="aspect-ratio:476/265;" width="476"/>
+</div>
+</section>
+<section class="ltx_subsection" id="A3.SSx3">
+<h3 class="ltx_title ltx_title_subsection">Example 3: Portfolio/Case Study</h3>
+<div class="ltx_para ltx_align_center" id="A3.SSx3.p1"><img alt="[Uncaptioned image]" class="ltx_graphics ltx_img_landscape" height="271" id="A3.SSx3.p1.g1" src="figures/image3.jpg" style="aspect-ratio:476/271;" width="476"/>
+</div>
+</section>
+</section>
+<section class="ltx_appendix" id="A4">
+<h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix D </span>Generic Buttons</h2>
+<section class="ltx_subsection" id="A4.SSx1">
+<h3 class="ltx_title ltx_title_subsection">Create Anything, Prompt #17</h3>
+<div class="ltx_para ltx_align_center" id="A4.SSx1.p1"><img alt="[Uncaptioned image]" class="ltx_graphics ltx_img_landscape" height="282" id="A4.SSx1.p1.g1" src="figures/anything.png" style="aspect-ratio:476/282;" width="476"/>
+</div>
+</section>
+<section class="ltx_subsection" id="A4.SSx2">
+<h3 class="ltx_title ltx_title_subsection">v0, Prompt #7</h3>
+<div class="ltx_para ltx_align_center" id="A4.SSx2.p1"><img alt="[Uncaptioned image]" class="ltx_graphics ltx_img_landscape" height="282" id="A4.SSx2.p1.g1" src="figures/v0.png" style="aspect-ratio:476/282;" width="476"/>
+</div>
+</section>
+</section>
+</body></html>
+</body></html>

@@ -1,0 +1,664 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Can GPTs Evaluate Graphic Design Based on Design Principles?"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0002",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1. Overview of our study. We investigate GPT-based evaluation ability for graphic designs in three design principles “alignment,” “overlap,” and “white space.”Overview of our study."
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract."
+  },
+  {
+   "id": "b0004",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Recent advancements in foundation models show promising capability in graphic design generation. Several studies have started employing Large Multimodal Models (LMMs) to evaluate graphic designs, assu"
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "h6",
+   "en": "Keywords:"
+  },
+  {
+   "id": "b0006",
+   "t": "text",
+   "w": "h2",
+   "en": "1. Introduction"
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "p",
+   "en": "Foundation models learn from a large-scale corpus and exhibit remarkable generalization capability across various tasks, and the same is true for graphic design tasks (Chen et al., 2024; Cheng et al., 2024; Jia et al., 2023; Inoue et al., 2024). While successful in certain graphic design tasks, it is still not apparent whether foundation models, such as GPT-4o, can reliably judge the quality of graphic design. Generally, high-quality graphic designs tend to follow design principles that are the designer’s common practices, such as alignment or repetition, as described in (Graham, 2002; Williams, 2014). While humans can judge whether a given design follows these principles, human evaluation is time-consuming and not scalable. One of the early attempts in automatic evaluation is (O’Donovan et al., 2014), which introduces hand-crafted metrics for optimization. Recent studies of graphic design generation have employed Large Multimodal Models (LMMs), particularly GPT-4 (Achiam et al., 2023), to directly estimate the quality. However, these studies do not consider the viewpoints of design principles for the evaluation."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we quantitatively study the behavior of GPTs with respect to human evaluators in assessing graphic designs, as illustrated in Figure 1. To investigate the performance of GPTs, we employ heuristic metrics as baseline. We compare these approaches across three representative design principles, alignment, overlap, and white space, by manipulating graphic designs. We curate a dataset of graphic banner designs from an online service and perturb original designs to artificially generate low-quality designs for evaluation. Then, we ask human subjects to rate those designs in terms of the design principles. This human rate annotation allows us to assess which method – heuristic evaluation or GPTs – better aligns with human evaluation. We also discuss the qualitative comparison of heuristic and GPT-based evaluation."
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "We summarize our contributions in the following."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "li",
+   "en": "• We empirically study the relationship between hand-crafted and GPT-based evaluation for graphic designs with respect to human evaluation."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "li",
+   "en": "• We build a human-rated dataset of graphic designs that have varying degrees of quality to study the design quality."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "li",
+   "en": "• We find a higher correlation between human annotation and GPTs than heuristic metrics, suggesting that GPTs can give reliable judgment for graphic design quality under certain conditions."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "h2",
+   "en": "2. Graphic design principles"
+  },
+  {
+   "id": "b0014",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2. Negative examples of three design principles. This is a figure."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "Graphic design principles are the designer’s common practices to create aesthetic work (Graham, 2002; Williams, 2014). In this paper, we employ representative design principles used in several studies of graphic design generation (O’Donovan et al., 2014; Kong et al., 2022): alignment, overlap, and white space. Alignment and overlap are commonly used in evaluation for layout generation, such as (Li et al., 2020). White space is also a critical factor in graphic design generation approaches (Kong et al., 2022). We follow three design principles based on (O’Donovan et al., 2014). Below, we briefly describe each principle."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "h4",
+   "en": "Alignment"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "We consider the arrangement of elements such that their edges line up along common rows or columns to express a sense of order and structure."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "li",
+   "en": "(1) Alignment along with the horizontal and vertical direction is considered."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "li",
+   "en": "(2) The elements that align at a glance but slight misalignment are penalized because it is visually displeasing."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "li",
+   "en": "(3) Larger alignment groups (i.e., aligned elements distant from each other) are preferred as they produce simpler designs with more unity between elements."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "h4",
+   "en": "Overlap"
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "Inappropriate overlap reduces readability. We consider the following aspects."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "li",
+   "en": "(1) The three types of overlap, the overlap of elements on text, the overlap of text on graphics, and the overlap of graphics on other graphics, are considered."
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "li",
+   "en": "(2) Hard-to-read text because of insufficient color contrast between a text and the background color is penalized."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "li",
+   "en": "(3) The graphic design that includes elements extending past the boundaries is also penalized."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "h4",
+   "en": "White space"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "White space is for the appropriate amount of space in a design for better readability."
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "li",
+   "en": "(1) A large ratio of white space that is not covered by design elements (e.g., graphics and tests) is preferred."
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "li",
+   "en": "(2) However, the graphic design with a too large region of empty white space on the image is undesirable."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "li",
+   "en": "(3) The greater distance between each element is preferred."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "li",
+   "en": "(4) Uniformed vertical spacing of each text element is preferred."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "li",
+   "en": "(5) Wider border margins (i.e., the white space at the edges of the image) for each element are preferred."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "For better understanding, we show some visually unappealing examples because they violate the principles in Figure 2."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "h2",
+   "en": "3. Evaluation approach"
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we compare the evaluation metrics of the heuristic approach and the GPT-based approach. In both approaches, we input a graphic design and then obtain the score of the input. We set the lower and upper bounds for both metrics, where the higher values indicate better quality."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1. Heuristic evaluation metrics"
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "We employ the hand-crafted formulation in (O’Donovan et al., 2014) as heuristic evaluation metrics, which were originally designed for graphic design optimization. We adopt the formulas related to the alignment, overlap, and white space as evaluation metrics. These metrics directly consider the size and coordinates of text or other graphic elements. We normalize the metric range from 0 to 1."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2. GPT-based evaluation metrics"
+  },
+  {
+   "id": "b0040",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3. How to rate graphic designs by GPT and humans. The detailed input prompts for the GPT is described in the Appendix.Annotation example."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "p",
+   "en": "We give prompts to GPT-4o 11 1 https://openai.com/index/hello-gpt-4o/ and ask for scores in terms of alignment, overlap, and white space. We made the prompt based on explanations of design principles and formulas described in (O’Donovan et al., 2014). See the Appendix for more details. We render and rasterize the original design to create an input prompt. We show an example in Figure 3, where GPT-4o gives scores from 1 to 10 to the input based on a specific aspect."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "h2",
+   "en": "4. Dataset"
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "We collect graphic design templates from VistaCreate 22 2 https://create.vista.com, which hosts a large number of banner or poster designs. The templates contain coordinate and size information for graphic and text elements within a design. We randomly sampled one hundred templates from VistaCreate and perturbed coordinate and size parameters to create aesthetically inferior samples. We apply two kinds of perturbations in our experiments: ⟦SLOT_0⟧-coordinate and font size. We perturb the ⟦SLOT_1⟧-coordinate of the text position to evaluate alignment and the font size of text elements to evaluate overlap and white space. We give three ranges of perturbation, small, medium, and large, to investigate the sensitivity of metrics. We combined the 100 original samples and 600 perturbed samples to build a dataset of 700 samples."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "p",
+   "en": "For each design, we collect human scores for alignment, overlap, and white space. We recruited 60 participants via crowdsourcing and collected five annotations per graphic design, where we asked participants for scores in the 1 to 10 range, as shown in Figure 3. We use the average score of five annotations in our experiments."
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "h2",
+   "en": "5. Experiments"
+  },
+  {
+   "id": "b0047",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4. Correlation between human annotation and heuristic or GPT scores. The ⟦SLOT_2⟧ is the Pearson correlation coefficient.This is a figure."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1. Quantitative evaluation"
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "Setup For a fair comparison with human evaluation and detailed analyses, we conduct the GPT-based evaluation five times and use the average score for the GPT score. We set a sampling temperature, which controls the randomness of the GPT, to 1 (default value). Higher temperature (e.g., 0.9) shows more diverse output. Therefore, our experimental setting takes the diversity into account."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "Correlation to human evaluation To analyze the correlation between human annotation and the scores by automatic evaluation, we prepare two types of scatter plots of evaluation scores: one comparing heuristic metrics with human evaluation and the other comparing GPT-4o with human evaluation for each design principle, as shown in Figure 4. Interestingly, GPT-4o shows a better correlation with human evaluation than heuristic metrics. This may be because heuristic metrics are designed to optimize a graphic design by comparing the graphic design before and after optimization but not for comparing two totally different designs."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "We show an example of completely different graphic designs and their scores in Figure 5. According to the heuristic metrics, the order of better design is (a), (b), and (c). However, the order according to GPT-4o and human evaluation is (a), (c) (or (a) equal (c)), and (b). The heuristic evaluation quite degrades the score between (a) and (c) despite the fact that both graphic designs are created by human designers. On the other hand, GPT-4o and human evaluation are not much different. The results suggest that GPT-4o could be a suitable approach for quality evaluation for recent LMM-based generators since they generate significantly different designs by altering sampling parameters (or random seeds)."
+  },
+  {
+   "id": "b0053",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5. Graphic designs with their alignment scores.This is a figure."
+  },
+  {
+   "id": "b0055",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6. Correlation coefficient of the scores between human evaluation and each method.This is a figure."
+  },
+  {
+   "id": "b0057",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7. Box plot of the standard deviation of scores.This is a figure."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "Sensitivity We investigate whether GPT-based evaluation is effective across designs of diverse qualities by calculating the correlation coefficients for each perturbation level, as shown in Figure 6. GPT scores exhibit a stronger correlation with human annotation compared to heuristic scores across all metrics and perturbation levels. Additionally, the correlation of GPT scores tends to increase as perturbation levels rise. This implies that when perturbations are significant, such as in the case of a graphic design with a noticeably poor appearance, achieving a stable evaluation becomes easier and more efficient than humans."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "Reliability We investigate how stable the GPT scores are since running GPT multiple times may give different scores. We show the standard deviation of the GPT scores and human annotation in Figure 7. The standard deviation of GPT scores is lower than that of the human evaluation scores. This result suggests that GPT scores with a single run for each principle are practical and cost-effective evaluation metrics."
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2. Qualitative analysis"
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "We show typical cases where GPT-based evaluation succeeds while heuristic evaluation fails and vice versa. We show cases where only GPT-based evaluation succeeds in Figure 8. The design includes objects in the background, but heuristic evaluation considers the background as white space. Heuristic evaluation is difficult when assessing graphic designs that include an object embedded in the background."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "p",
+   "en": "We also show cases where only heuristic evaluation succeeds in Figure 9. Since heuristic metrics are vector-based, they can capture slight differences in the design directly from the vector values. However, GPT-based evaluation struggles to detect such differences accurately. A similar limitation of GPT has also been reported in another study (You et al., 2023)."
+  },
+  {
+   "id": "b0064",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8. A sample with a correct white space assessment by GPT.This is a figure."
+  },
+  {
+   "id": "b0066",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0067",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9. The examples of correctly assessed samples by heuristic evaluation.This is a figure."
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "h2",
+   "en": "6. Conclusion and Future Work"
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "p",
+   "en": "In this paper, we investigated the appropriateness of using heuristic evaluation metrics and GPT-4o for evaluating graphic designs focusing on design principles. To achieve this, we collected the large-scale human annotation and analyzed the correlation between the annotation and each evaluation metric. Our experiment showed that GPT-based evaluation better correlates with human annotation."
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "For future work, we will jointly evaluate several design principles to assess the overall goodness of graphic designs. Additionally, we plan to evaluate graphic designs beyond design principles, such as font choices."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "h6",
+   "en": "Acknowledgements."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0073",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Achiam et al . (2023) Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya, Florencia Leoni Aleman, Diogo Almeida, Janko Altenschmidt, Sam Altman, Shyamal Anadkat, et al . 2023. Gpt-4 "
+  },
+  {
+   "id": "b0074",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al . (2024) Jingye Chen, Yupan Huang, Tengchao Lv, Lei Cui, Qifeng Chen, and Furu Wei. 2024. TextDiffuser-2: Unleashing the Power of Language Models for Text Rendering. In ECCV ."
+  },
+  {
+   "id": "b0075",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cheng et al . (2024) Yutao Cheng, Zhao Zhang, Maoke Yang, Nie Hui, Chunyuan Li, Xinglong Wu, and Jie Shao. 2024. Graphic Design with Large Multimodal Model. arXiv preprint arXiv:2404.14368 (2024)."
+  },
+  {
+   "id": "b0076",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Graham (2002) L Graham. 2002. Basics of Design: Layout and Typography for Beginners . Delmar Cengage Learning."
+  },
+  {
+   "id": "b0077",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Inoue et al . (2024) Naoto Inoue, Kento Masui, Wataru Shimoda, and Kota Yamaguchi. 2024. OpenCOLE: Towards Reproducible Automatic Graphic Design Generation. In CVPRW ."
+  },
+  {
+   "id": "b0078",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jia et al . (2023) Peidong Jia, Chenxuan Li, Zeyu Liu, Yichao Shen, Xingru Chen, Yuhui Yuan, Yinglin Zheng, Dong Chen, Ji Li, Xiaodong Xie, et al . 2023. COLE: A Hierarchical Generation Framework for "
+  },
+  {
+   "id": "b0079",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kong et al . (2022) Wenyuan Kong, Zhaoyun Jiang, Shizhao Sun, Zhuoning Guo, Weiwei Cui, Ting Liu, Jianguang Lou, and Dongmei Zhang. 2022. Aesthetics++: Refining graphic designs by exploring design pri"
+  },
+  {
+   "id": "b0080",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al . (2020) Jianan Li, Jimei Yang, Jianming Zhang, Chang Liu, Christina Wang, and Tingfa Xu. 2020. Attribute-conditioned layout gan for automatic graphic design. IEEE TVCG 27, 10 (2020)."
+  },
+  {
+   "id": "b0081",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "O’Donovan et al . (2014) Peter O’Donovan, Aseem Agarwala, and Aaron Hertzmann. 2014. Learning layouts for single-pagegraphic designs. IEEE TVCG 20, 8 (2014)."
+  },
+  {
+   "id": "b0082",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Williams (2014) Robin Williams. 2014. Non-Designer’s Design Book . Peachpit Press."
+  },
+  {
+   "id": "b0083",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "You et al . (2023) Haoxuan You, Haotian Zhang, Zhe Gan, Xianzhi Du, Bowen Zhang, Zirui Wang, Liangliang Cao, Shih-Fu Chang, and Yinfei Yang. 2023. Ferret: Refer and ground anything anywhere at any gra"
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix A Details of design principles"
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "p",
+   "en": "We summarize the design principles used in our experiments. These design principles are based on (O’Donovan et al., 2014)."
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "h3",
+   "en": "A.1. Alignment"
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "This metric assesses the alignment of graphic and text elements and consists of three major components. First, it assesses whether there is alignment between neighboring elements. Second, it evaluates the alignment error between elements intended to be precisely aligned within a neighborhood. If the elements appear to be aligned but exhibit slight misalignment, the evaluation is based on the degree of this misalignment. Third, the metric considers alignment among distant elements. If the elements between two separated elements are aligned with these two elements, both distant elements are also considered aligned and are evaluated accordingly."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "p",
+   "en": "We transcribe the alignment principle to the prompt below."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "h3",
+   "en": "A.2. Overlap"
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "This metric primarily assesses the overlap of graphic and text elements within the background. It consists of three major components. First, it measures the color change between the target area before and after rendering texts, considering whether the text is rendered against a background of the different color. Second, it calculates the percentage of overlap for each element, accounting for overlaps not only between text elements but also between text and graphics. Third, it assesses the percentage of the elements’ area that extends beyond the canvas, measuring the extent to which text and other elements are appropriately contained within the background."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "p",
+   "en": "We transcribe the overlap principle to the prompt below."
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "h3",
+   "en": "A.3. White space"
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "This metric evaluates the appropriate amount of white space in a design and consists of five main components. First, it measures the percentage of white space in the image, determined by the proportion except for graphic and text elements relative to the overall image area. Generally, a larger amount of natural white space is considered better. Second, it includes a metric that penalizes designs where certain parts of the image have excessively large areas of white space. In contrast to the first component, this metric helps ensure a balanced distribution of white space by penalizing areas with unnatural white space. Third, the metric evaluates white space based on the distance between each element. This component considers the spacing between elements as a measure of white space adequacy. Fourth, it assesses the variance in the distance between text elements. Consistent spacing between texts is considered aesthetically pleasing and indicates uniform white space. Finally, the metric evaluates the white space at the edges of the image (i.e., border margin). An image lacking adequate white space at the edges is considered aesthetically poor."
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "We transcribe the white space principle to the prompt below."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix B Detailed prompts for GPT evaluation"
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "We create the prompt based on design principles described in (O’Donovan et al., 2014). Note that our prompts include a part of the prompt used in (Jia et al., 2023). In Section C, we also conduct a pairwise evaluation that directly compares two graphic designs and determines the superior one. Therefore, we describe the prompt for the absolute and pairwise evaluation here."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "The prompt of absolute evaluation"
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "Here, [A design principle] indicates the prompt described in Section A, [image] indicates placeholder of the input image."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "p",
+   "en": "The prompt of pairwise evaluation"
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix C Pairwise evaluation"
+  },
+  {
+   "id": "b0101",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 10. Comparison of pairwise evaluations.This is a figure."
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "p",
+   "en": "We also conduct the pairwise evaluation, which directly assesses which graphic design is better, inputting two images. Two graphic designs are input to GPT-4o, and then GPT-4o answers which graphic design is better from the perspective of a specific design principle. The choices are not limited to “yes” and “no” but also include “not sure.” Each pair is evaluated five times, and the final result is determined by voting. We also conduct a similar evaluation task for humans to obtain the annotation."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "p",
+   "en": "We compare pairwise evaluation by GPT-4o with the heuristic evaluation. In heuristic evaluation, we compare the scores of before and after perturbation and determine the better one."
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "p",
+   "en": "Figure 10 presents the pairwise evaluation results for each design principle. Across all metrics, the accuracy of GPT-4o increases progressively with the range of perturbation. For medium and large perturbations, GPT-4o performance is comparable to that of heuristic metrics, indicating that GPT-4o can distinguish between significantly poorer designs and others. However, GPT-4o performs worse than heuristic metrics for small perturbations in alignment and white space. There are two reasons for this. First, heuristic evaluation metrics are used to compare the two graphic designs before and after optimization. This is similar to the comparison of before and after perturbation designs. Second, as shown in the absolute evaluation, GPT-4o struggles to capture subtle differences in detailed design."
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 11. Examples of evaluation scores.This is a figure."
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "h2",
+   "en": "Appendix D Examples of evaluation scores"
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "p",
+   "en": "We show the examples of evaluation scores in Figure 11. From these examples, GPT-4o scores are more similar to those of a heuristic evaluation. In contrast, heuristic evaluation can be used to compare the before and after perturbation; however, comparing the different graphic designs is difficult, as described in Section 5.1."
+  }
+ ]
+}

@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>064_designprobe-a-graphic-design-benchmark-f</title>
+<script>
+window.MathJax={
+  tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']],processEscapes:true},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+body{max-width:1180px;margin:0 auto;padding:24px 20px;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+color:#1f2937;line-height:1.8;font-size:15.5px;background:#fff;}
+img{max-width:100%;height:auto;display:block;margin:12px auto;}
+table{border-collapse:collapse;margin:14px 0;font-size:14px;} td,th{border:1px solid #d8dee6;padding:6px 9px;}
+h1,h2,h3,h4{color:#1e3a8a;}
+</style></head><body>
+<html><body><h1 class="ltx_title ltx_title_document">DesignProbe: A Graphic Design Benchmark 
+<br class="ltx_break"/>for Multimodal Large Language Models</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Jieru Lin
+</span><span class="ltx_note ltx_note_frontmatter ltx_thanks_note ltx_role_thanks" id="id1"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type">thanks: </span>Work was done during the first author’s internship at Microsoft.</span></span></span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Harbin Institute of Technology, Harbin, China
+</span>
+<span class="ltx_contact ltx_role_email"><span class="ltx_contact_name">Email: </span><a href="mailto:hitjierulin@gmail.com">hitjierulin@gmail.com</a>
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Danqing Huang
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Microsoft
+</span>
+<span class="ltx_contact ltx_role_email"><span class="ltx_contact_name">Email: </span><a href="mailto:%7Bdahua">{dahua</a>
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Tiejun Zhao
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Harbin Institute of Technology, Harbin, China
+</span>
+<span class="ltx_contact ltx_role_email"><span class="ltx_contact_name">Email: </span><a href="mailto:cyl%7D@microsoft.com">cyl}@microsoft.com</a>
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Dechen Zhan
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Harbin Institute of Technology, Harbin, China
+</span>
+<span class="ltx_contact ltx_role_email"><span class="ltx_contact_name">Email: </span><a href="mailto:%7Btjzhao">{tjzhao</a>
+</span></span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Chin-Yew Lin
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Microsoft
+</span>
+<span class="ltx_contact ltx_role_email"><span class="ltx_contact_name">Email: </span><a href="mailto:dechen%7D@hit.edu.cn">dechen}@hit.edu.cn</a>
+</span></span></span></span></div>
+<div class="ltx_abstract" id="abstract1"><h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p class="ltx_p" id="abstract1.1">A well-executed graphic design typically achieves harmony in two levels, from the fine-grained design elements (color, font and layout) to the overall design. This complexity makes the comprehension of graphic design challenging, for it needs the capability to both recognize the design elements and understand the design.
+With the rapid development of Multimodal Large Language Models (MLLMs), we establish the <span class="ltx_text ltx_font_italic" id="abstract1.1.1">DesignProbe</span>, a benchmark to investigate the capability of MLLMs in design. Our benchmark includes eight tasks in total, across both the fine-grained element level and the overall design level. At design element level, we consider both the attribute recognition and semantic understanding tasks. At overall design level, we include style and metaphor. 9 MLLMs are tested and we apply GPT-4 as evaluator.
+Besides, further experiments indicates that refining prompts can enhance the performance of MLLMs. We first rewrite the prompts by different LLMs and found increased performances appear in those who self-refined by their own LLMs. We then add extra task knowledge in two different ways (text descriptions and image examples), finding that adding images boost much more performance over texts.</p>
+</div>
+<figure class="ltx_figure" id="S0.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="870" id="S0.F1.g1" src="figures/Picture12.jpg" style="aspect-ratio:1226/870;" width="1226"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>The performance of 5 MLLMs at overall design level and design element level (color, font and layout) in DesignProbe.</figcaption>
+</figure>
+<figure class="ltx_figure" id="S0.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="369" id="S0.F2.g1" src="figures/pipeline.jpg" style="aspect-ratio:620/369;" width="620"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Overview of our benchmark. It comprises a total of eight tasks to evaluate the proficiency of MLLM in design. The assessment occurs on two distinct levels: the element level and the overall design level. At the element level, it focus on three fundamental design components: color, font and layout. For each, both visual and semantic aspects are included. Each task is presented with an example.
+</figcaption>
+</figure>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1">Graphic design is essential for our daily experiences, appearing everywhere from movie posters to slides. A well-executed graphic design typically achieves dual-level harmony, weaving together fine-grained design elements such as color, font, and layout with the overall design among different types of elements <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib15" title="">Huang et al. (2023)</a></cite>.
+The fine-grained elements should not only stand alone their own aesthetic principles but also contribute to the overall design harmony. Take the basic design element as examples, colors in design need to have contrast and cooperation between them, which offering clarity and charm, and also require to align with the overall mood and style as well <cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_ref ltx_missing_citation ltx_ref_self">color?</span></cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1">The complexity inherent in design poses challenges to understanding graphic design. One must first recognize the design elements and then comprehend the overall design.
+The recognition of design elements presents a challenge to existing vision models, for lacking of the design-related data in the pertaining of these models. The different and abstract appearance of these design elements compared with the real word object may add more difficulty in recognition. Comprehending is an equally daunting task as well. They may encounter design tasks for the first time without equipping with the design knowledge, such as the contract and harmony of colors, the different clarity and symbolism carried by different font, and the purposeful arrangement within layout.
+Furthermore, there is currently limited insight into the performance of AI systems in understanding design, leaving an area ripe for exploration and advancement.</p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1">Recent advancements in the field of Multimodal Large Language Models (MLLMs) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib20" title="">Li et al. (2023c)</a>; <a class="ltx_ref" href="#bib.bib9" title="">Dai et al. (2023)</a></cite>, especially GPT-4 Vision <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib26" title="">OpenAI (2023b)</a></cite>, have demonstrated extraordinary capabilities in a wide range of image-to-text tasks.
+These models perform inspiring not only in visual recognition tasks such as object detection <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib45" title="">Zhu et al. (2020)</a></cite> but also in semantic reasoning tasks, including commonsense reasoning <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib12" title="">Fu et al. (2023)</a></cite> and answering college exam questions <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib39" title="">Yue et al. (2023)</a></cite> under a zero-shot setting. Inspired by these advancements, we introduce <span class="ltx_text ltx_font_italic" id="S1.p3.1.1">DesignProbe</span>, a benchmark designed to explore the performance of MLLMs in the field of design.</p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1">In practice, a comprehensive design task commonly need to combine of both recognition and understanding. Building upon the framework delineated in the comprehensive design survey by  <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib15" title="">Huang et al. (2023)</a></cite>, we categorize the design tasks into two distinct levels: the design element level and the overall design level. The former level focus on the detailed dimension of design and different type of elements are considered separately. In this level, our focus is centered on three fundamental components: color, typography and layout. For each, we consider both the dimensions of aesthetic harmony and semantic conveyance. While in overall design level, we focus on the overall feel of the whole design, usually consider different elements together.
+To this end, we orchestrate a comprehensive set of eight tasks, the details of which are illustrated in Figure<a class="ltx_ref" href="#S0.F2" title="Figure 2 ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">2</span></a>. For evaluation, we apply GPT-4 to evaluate results automatically, which gains similar performance with human annotators but is more stable and cheaper than human.</p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1">Besides the evaluation of existing baseline models, we delve into analytical studies to explore how prompt effect MLLMs performance.
+In order to investigate the variance in model performance with different system prompts and the prompt refinement capabilities of various LLMs, we design a experiment by employing multiple LLMs to rewrite the questions in benchmark. We find that the model with better performance in original task appears to be more robust under different prompts. Besides, refinements using the corresponding LLMs of MLLMs consistently lead to performance improvements.</p>
+</div>
+<div class="ltx_para" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1">Moreover, design knowledge is essential as training of MLLMs lacks design task related data.
+To equip MLLMs with design knowledge in simple methods, we build up experiments to introduce additional information to prompt in two distinct types: textual and visual information. The experiment results indicate that both types of information are effective, and the direct addition of visual examples leads to substantially greater enhancements in performance compared to textual descriptions alone.</p>
+</div>
+<div class="ltx_para" id="S1.p7">
+<p class="ltx_p" id="S1.p7.1">Our main contributions are listed as follow:</p>
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1">To the best of our knowledge, we are the first to conduct a detailed and comprehensive benchmark of design understanding for MLLMs. To facilitate this evaluation, we have curated and re-annotated multiple datasets, and introduce a new dataset for the recognition in layout
+to enrich the scope of assessment. We test 9 multimodal LLMs, including GPT-4 Vision, Gemini Pro Vision. For evaluation, we employ GPT-4 to measure the distance between ground truth and model outputs.</p>
+</div></li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1">We conduct multiple experiments to refine prompts within the benchmark along with two dimensions: Firstly, to explore the variance of different MLLMs and the prompt refining capability of different LLMs, we conduct a experiments by using LLMs to rewrite the questions.
+Experiment results show the robustness of better performance models under different prompts and the efficiency when refining prompt using MLLM’s own LLM.
+Secondly, we incorporate the supplementary knowledge about design tasks to the questions in both text and image types. Experiment results show that adding image type of information directly results in a higher performance gain compared to text.</p>
+</div></li>
+</ul>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.1 </span>Graphic Design</h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1">In recent years, a growing interest has emerged in graphic design. Pioneering researches conducted in this field include tasks such as layout generation <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib35" title="">Yang et al. (2021)</a>; <a class="ltx_ref" href="#bib.bib17" title="">Inoue et al. (2023)</a></cite>, color scheme suggestion <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib3" title="">Bahng et al. (2018)</a></cite>, and font extraction <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib42" title="">Zhao et al. (2018b)</a></cite>. These tasks can be divided into two distinct levels as outlined by <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib15" title="">Huang et al. (2023)</a></cite>: the element level and the overall design level. At the element level, the goal is to understand or generate a single category of elements separately, while at the overall design level, elements are considered comprehensively. For the element level, there are three basic design elements: color, font, and layout. Color theory has been widely studied, with tasks focusing on both understanding and generation <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib3" title="">Bahng et al. (2018)</a>; <a class="ltx_ref" href="#bib.bib27" title="">Qiu et al. (2022)</a></cite>. These tasks may involve building a comprehension task for understanding the color palette or automatically suggesting color palettes for a given design. Fonts are yet another critical element, with research focusing on font extraction <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib42" title="">Zhao et al. (2018b)</a></cite>, understanding <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib33" title="">Virkus (2022)</a></cite>, and generation <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib41" title="">Zhao et al. (2018a)</a></cite> tasks. For layout elements, there are numerous studies on layout generation, which aim to generate layouts that are visually appealing and convey a clear mood.</p>
+</div>
+<div class="ltx_para" id="S2.SS1.p2">
+<p class="ltx_p" id="S2.SS1.p2.1">Despite the progress in these individual areas, the challenge of capturing and combining features of different design elements remains. <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib21" title="">Lin et al. (2023)</a></cite> is the first to build a design benchmark for text-to-image tasks and show comprehensive results of Dalle-3 <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib25" title="">OpenAI (2023a)</a></cite>. The tasks (color, font, layout, and style) in their benchmark are considered and integrated into the task structure of our benchmark. Building upon this foundation, our work presents a more comprehensive image-to-text task structure by adding visual and semantic aspects.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.2 </span>Multimodal LLMs</h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1">Multimodal large language models, particularly those that integrate vision and language, such as GPT-4 Vision <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib26" title="">OpenAI (2023b)</a></cite> and Gemini <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib30" title="">Team et al. (2023)</a></cite>, have shown remarkable capabilities. These models excel not only in basic recognition tasks like object identification but also in more nuanced understanding, such as grasping the humor or sentiment behind memes.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p2">
+<p class="ltx_p" id="S2.SS2.p2.1">The landscape includes not only commercial models like GPT-4 Vision <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib26" title="">OpenAI (2023b)</a></cite> but also a burgeoning suite of open-source alternatives. The BLIP series <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib20" title="">Li et al. (2023c)</a>; <a class="ltx_ref" href="#bib.bib9" title="">Dai et al. (2023)</a></cite> and MiniGPT-4 <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib46" title="">Zhu et al. (2023)</a></cite>, which merge language models with vision encoders, have delivered promising outcomes in tasks that require visual comprehension. LLaVA <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib23" title="">Liu et al. (2023b)</a></cite>, on the other hand, has pioneered in generating data that guide models in following multimodal instructions, thereby enhancing their conversational abilities. Furthermore, models like CM3Leon <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib37" title="">Yu et al. (2023a)</a></cite>, DreamLLM <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib10" title="">Dong et al. (2023)</a></cite>, and Emu  <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib29" title="">Sun et al. (2023)</a></cite> have integrated both image understanding and generation into a unified framework. The evolution of multimodal LLMs <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib18" title="">Li et al. (2023a)</a>; <a class="ltx_ref" href="#bib.bib40" title="">Zhang et al. (2023)</a>; <a class="ltx_ref" href="#bib.bib36" title="">Ye et al. (2023)</a>; <a class="ltx_ref" href="#bib.bib4" title="">Bai et al. (2023)</a>; <a class="ltx_ref" href="#bib.bib2" title="">Awadalla et al. (2023)</a></cite> continues with improvements driven by the incorporation of grounding data, architectural refinements, and other advancements.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p3">
+<p class="ltx_p" id="S2.SS2.p3.1">This paper examines a collection of these models, spanning both open-source and proprietary frameworks, with an aim to assess their proficiency in interpreting images within the specialized context of graphic design.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p4">
+<p class="ltx_p" id="S2.SS2.p4.1">The rapid development of multimodal large language models raise the important issue of how to accurately measure their comprehension abilities. Common benchmarks such as captioning  <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib6" title="">Chen et al. (2015)</a>; <a class="ltx_ref" href="#bib.bib1" title="">Agrawal et al. (2019)</a></cite> and visual question answering <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib13" title="">Goyal et al. (2017)</a>; <a class="ltx_ref" href="#bib.bib14" title="">Gurari et al. (2018)</a>; <a class="ltx_ref" href="#bib.bib16" title="">Hudson and Manning (2019)</a></cite> have been used to gauge these models’ understanding, yet these metrics offer a somewhat limited perspective. To address this limitation, recent efforts <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib38" title="">Yu et al. (2023b)</a>; <a class="ltx_ref" href="#bib.bib12" title="">Fu et al. (2023)</a>; <a class="ltx_ref" href="#bib.bib19" title="">Li et al. (2023b)</a>; <a class="ltx_ref" href="#bib.bib24" title="">Liu et al. (2023c)</a></cite> have introduced a variety of open-ended evaluation benchmarks that challenge models from multiple dimensions, including cognition and reasoning. Despite these advancements, there remains a gap in evaluating the models’ proficiency in specific domains, such as graphic design.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p5">
+<p class="ltx_p" id="S2.SS2.p5.1">This paper aims to fill this void by proposing a new benchmark tailored to assess the ability of multimodal LLMs in understanding content within the nuanced field of graphic design, thereby providing a more detailed and domain-specific metric for evaluating the capabilities of these sophisticated models.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">3 </span>DesignProbe</h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1">The proposed benchmark comprises a total of eight tasks that evaluate the performance of Multimodal Large Language Models (MLLMs) in design. Below is a detailed introduction to the tasks and the evaluation method.</p>
+</div>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.1 </span>Tasks</h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1">In order to comprehensively assess design capabilities, we prioritize two distinct levels of design: the element level and the overall design level. At the element level, tasks are categorized into two principal aspects: (1) attribute recognition for the visual component and (2) understanding for the semantic dimension. Within each aspect, we focus on three principal design elements: color, font, and layout. Additionally, at the overall design level, we focus on the tasks of style classification and visual metaphor. Figure <a class="ltx_ref" href="#S0.F2" title="Figure 2 ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">2</span></a> depicts the framework, which includes a total of eight tasks.</p>
+</div>
+<div class="ltx_para" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.1">In the element level, we conduct attribute recognition tasks as follows:</p>
+<ul class="ltx_itemize" id="S3.I1">
+<li class="ltx_item" id="S3.I1.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i1.p1">
+<p class="ltx_p" id="S3.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i1.p1.1.1">Task #1: Color Theme.</span> The objective is to evaluate the models’ ability to identify the primary colors in a design, a critical skill for discerning color harmony and thematic color transitions. We established this task by randomly sampling 50 design instances from Crello <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib34" title="">Yamaguchi (2021)</a></cite>, computing the most frequent colors in a design, and then manually reviewing these examples. For the query structure, we compiled a set of commonly used color palettes, and the models are required to choose their output colors from this predefined selection.</p>
+</div></li>
+<li class="ltx_item" id="S3.I1.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i2.p1">
+<p class="ltx_p" id="S3.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i2.p1.1.1">Task #2: Font Extraction.</span> The task recognizes the font face from a design image where the font is outlined in red. To construct this task, we prompt the model with a single-choice question based on instances randomly sampled from CTXFont <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib42" title="">Zhao et al. (2018b)</a></cite>.</p>
+</div></li>
+<li class="ltx_item" id="S3.I1.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i3.p1">
+<p class="ltx_p" id="S3.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i3.p1.1.1">Task #3: Negative Space Detection.</span> This task focuses on the detection of negative space, which provides a clear area where elements can be placed without disrupting the visual balance within a design. The model is tasked with analyzing a background image to determine a suitable location for the title. We obtained the background images from Midjourney. After professional designers manually annotated the optimal title locations, the instances were converted into single-choice questions.</p>
+</div></li>
+</ul>
+</div>
+<div class="ltx_para" id="S3.SS1.p3">
+<p class="ltx_p" id="S3.SS1.p3.1">Semantic understanding tasks are outlined as follows:</p>
+<ul class="ltx_itemize" id="S3.I2">
+<li class="ltx_item" id="S3.I2.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i1.p1">
+<p class="ltx_p" id="S3.I2.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i1.p1.1.1">Task #4: Color Meaning.</span> Different combinations of colors can convey different meanings, and certain color palettes may symbolize specific themes or moods. For example, black is rarely found in the color palette associated with “weddings &amp; celebrations”. We utilize the PAT dataset <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib3" title="">Bahng et al. (2018)</a></cite> to evaluate this ability. We randomly sampled and manually filtered out examples with ambiguous meanings. The remaining 50 distinct examples were converted into multiple-choice questions.</p>
+</div></li>
+<li class="ltx_item" id="S3.I2.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i2.p1">
+<p class="ltx_p" id="S3.I2.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i2.p1.1.1">Task #5: Font Style.</span> In addition to recognizing font faces, we expect the model to understand the styles of the given fonts. This is crucial for ensuring that the fonts are consistent with the overall design’s mood or theme. We derived the annotations for the fonts and their styles from the Dafonts dataset <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib33" title="">Virkus (2022)</a></cite> and transformed them into a single-choice question format.</p>
+</div></li>
+<li class="ltx_item" id="S3.I2.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i3.p1">
+<p class="ltx_p" id="S3.I2.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i3.p1.1.1">Task #6: Visual Importance.</span> Understanding the visual center is essential for layout comprehension and can provide significant feedback for design generation. This task presents the model with a design image and requires it to identify the visual center of the design. We obtained the input images from the Imp-1k dataset <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib11" title="">Fosco et al. (2020)</a></cite>. Since producing a salience map is challenging for MLLMs and difficult to assess, we categorized the ground truth map into different position descriptions using a 3x3 grid. This task is also formulated as a single-choice question.</p>
+</div></li>
+</ul>
+</div>
+<div class="ltx_para" id="S3.SS1.p4">
+<p class="ltx_p" id="S3.SS1.p4.1">For overall design level:</p>
+<ul class="ltx_itemize" id="S3.I3">
+<li class="ltx_item" id="S3.I3.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I3.i1.p1">
+<p class="ltx_p" id="S3.I3.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I3.i1.p1.1.1">Task #7: Overall Style.</span> To test the overall design feel of MLLMs, this task asks models to identify the visual style of a given poster from the Poster dataset <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib43" title="">Zhao et al. (2018c)</a></cite>. We sampled 50 different examples with a uniform distribution of styles, annotated them with the help of multiple professional designers, and transformed the instances into single-choice questions.</p>
+</div></li>
+<li class="ltx_item" id="S3.I3.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I3.i2.p1">
+<p class="ltx_p" id="S3.I3.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I3.i2.p1.1.1">Task #8: Visual Metaphor.</span> This task delves deeper into understanding the semantic level of design. Visual metaphors often involve using common objects in creative and unfamiliar ways, which can make it challenging to provide the correct caption and the true metaphorical meaning. The designs and explanations were derived from the VisMet dataset <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib28" title="">Steen et al. (2010)</a></cite>. After manual filtering, these instances were transformed into open-ended questions.</p>
+</div></li>
+</ul>
+</div>
+<figure class="ltx_table" id="S3.T1">
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S3.T1.2" style="width:345.0pt;height:48.5pt;vertical-align:-21.8pt;"><span class="ltx_transformed_inner" style="transform:translate(-4.1pt,0.6pt) scale(0.976747664145704,0.976747664145704) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S3.T1.2.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T1.2.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S3.T1.2.1.1.1" rowspan="2" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T1.2.1.1.1.1">Evaluators</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="4" id="S3.T1.2.1.1.2" style="padding-left:2.8pt;padding-right:2.8pt;">Detailed</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T1.2.1.1.3" rowspan="2" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text" id="S3.T1.2.1.1.3.1">Acc.</span></th></tr>
+<tr class="ltx_tr" id="S3.T1.2.1.2">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T1.2.1.2.1" style="padding-left:2.8pt;padding-right:2.8pt;">Correct (22)</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T1.2.1.2.2" style="padding-left:2.8pt;padding-right:2.8pt;">Partially (7)</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T1.2.1.2.3" style="padding-left:2.8pt;padding-right:2.8pt;">Incorrect (20)</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T1.2.1.2.4" style="padding-left:2.8pt;padding-right:2.8pt;">Irrelevant (1)</th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T1.2.1.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T1.2.1.3.1" style="padding-left:2.8pt;padding-right:2.8pt;">GPT-3.5-turbo</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.2.1.3.2" style="padding-left:2.8pt;padding-right:2.8pt;">95.5</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.2.1.3.3" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T1.2.1.3.3.1">100.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.2.1.3.4" style="padding-left:2.8pt;padding-right:2.8pt;">10.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.2.1.3.5" style="padding-left:2.8pt;padding-right:2.8pt;">0.00</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.2.1.3.6" style="padding-left:2.8pt;padding-right:2.8pt;">60.0</td></tr>
+<tr class="ltx_tr" id="S3.T1.2.1.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S3.T1.2.1.4.1" style="padding-left:2.8pt;padding-right:2.8pt;">GPT-4</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T1.2.1.4.2" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T1.2.1.4.2.1">100.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T1.2.1.4.3" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T1.2.1.4.3.1">100.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T1.2.1.4.4" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T1.2.1.4.4.1">75.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T1.2.1.4.5" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T1.2.1.4.5.1">100.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T1.2.1.4.6" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T1.2.1.4.6.1">90.0</span></td></tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>The results(%) of GPT-4 and GPT-3.5-turbo as evaluators. Detailed accuracy of each category are shown. The number of cases for each category in the test set is indicated in parentheses following the category. GPT-4 achieves an overall accuracy of <span class="ltx_text ltx_font_bold" id="S3.T1.4">90%</span>, demonstrating its performance to be quite comparable to that of a human evaluator, while significantly reducing labor costs. </figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.2 </span>GPT-4 Evaluator</h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1">Although our questions are single-choice, the model still tends to produce open-ended responses. This makes it impractical to compute the performance by simple rules. Therefore, we introduce an automatic evaluation method using GPT-4. Given the question, the golden answer and the MLLMs’ generated output, the GPT-4 evaluator is asked to assign a grade by comparing the output with the standard answer. We set the grading scale as [“Correct”, “Partially Correct”,“Incorrect”, “Irrelevant”]. Below is the detailed descriptions of each grade:</p>
+<ul class="ltx_itemize" id="S3.I4">
+<li class="ltx_item" id="S3.I4.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I4.i1.p1">
+<p class="ltx_p" id="S3.I4.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I4.i1.p1.1.1">Correct</span> The style identified in the model’s output matches the standard answer perfectly.</p>
+</div></li>
+<li class="ltx_item" id="S3.I4.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I4.i2.p1">
+<p class="ltx_p" id="S3.I4.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I4.i2.p1.1.1">Partially Correct</span> This grade applies in two cases:</p>
+</div>
+<div class="ltx_para" id="S3.I4.i2.p2">
+<p class="ltx_p" id="S3.I4.i2.p2.1">(1) The style is correctly identified, but the model’s answer to the question is wrong.</p>
+</div>
+<div class="ltx_para" id="S3.I4.i2.p3">
+<p class="ltx_p" id="S3.I4.i2.p3.1">(2) The style is incorrectly identified, but the elements of the style are the same as those in the standard answer.</p>
+</div></li>
+<li class="ltx_item" id="S3.I4.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I4.i3.p1">
+<p class="ltx_p" id="S3.I4.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I4.i3.p1.1.1">Incorrect</span> The model’s output incorrectly identifies the style of the overall design and the elements within.</p>
+</div></li>
+<li class="ltx_item" id="S3.I4.i4" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I4.i4.p1">
+<p class="ltx_p" id="S3.I4.i4.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I4.i4.p1.1.1">Irrelevant</span> The model’s output does not address the question of style at all.</p>
+</div></li>
+</ul>
+</div>
+<div class="ltx_para" id="S3.SS2.p2">
+<p class="ltx_p" id="S3.SS2.p2.1">To better estimate the performance of the GPT-4 evaluator compared with a human, we build up a test set of 50 questions manually annotated by multiple annotators. We also test the performance of GPT-3.5-turbo with the same prompt. As shown in Table <a class="ltx_ref" href="#S3.T1" title="Table 1 ‣ 3.1 Tasks ‣ 3 DesignProbe ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">1</span></a>, GPT-4 achieves an overall accuracy of <span class="ltx_text ltx_font_bold" id="S3.SS2.p2.1.1">90%</span>, which demonstrates that GPT-4 can perform quite similarly to the human evaluator and significantly reduce expensive labor costs.</p>
+</div>
+<figure class="ltx_table" id="S3.T2">
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S3.T2.2" style="width:603.8pt;height:177.8pt;vertical-align:-86.1pt;"><span class="ltx_transformed_inner" style="transform:translate(32.9pt,-9.7pt) scale(1.12218665668193,1.12218665668193) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S3.T2.2.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T2.2.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S3.T2.2.1.1.1" rowspan="3" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.2.1.1.1.1">Models</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="6" id="S3.T2.2.1.1.2" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.2.1.1.2.1">Element</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="2" id="S3.T2.2.1.1.3" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.2.1.1.3.1">Overall Design</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.2.1.1.4" rowspan="3" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.2.1.1.4.1">Average</span></th></tr>
+<tr class="ltx_tr" id="S3.T2.2.1.2">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" colspan="3" id="S3.T2.2.1.2.1" style="padding-left:2.8pt;padding-right:2.8pt;">Recognition</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" colspan="3" id="S3.T2.2.1.2.2" style="padding-left:2.8pt;padding-right:2.8pt;">Understanding</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.2.3" rowspan="2" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text" id="S3.T2.2.1.2.3.1">#7 Style</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.2.4" rowspan="2" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text" id="S3.T2.2.1.2.4.1">#8 Metaphor</span></th></tr>
+<tr class="ltx_tr" id="S3.T2.2.1.3">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.3.1" style="padding-left:2.8pt;padding-right:2.8pt;">#1 Color</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.3.2" style="padding-left:2.8pt;padding-right:2.8pt;">#2 Font</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.3.3" style="padding-left:2.8pt;padding-right:2.8pt;">#3 Layout</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.3.4" style="padding-left:2.8pt;padding-right:2.8pt;">#4 Color</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.3.5" style="padding-left:2.8pt;padding-right:2.8pt;">#5 Font</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.3.6" style="padding-left:2.8pt;padding-right:2.8pt;">#6 Layout</th></tr>
+<tr class="ltx_tr" id="S3.T2.2.1.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_t" id="S3.T2.2.1.4.1" style="padding-left:2.8pt;padding-right:2.8pt;">random</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.4.2" style="padding-left:2.8pt;padding-right:2.8pt;">20.0</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.4.3" style="padding-left:2.8pt;padding-right:2.8pt;">25.0</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.4.4" style="padding-left:2.8pt;padding-right:2.8pt;">25.0</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.4.5" style="padding-left:2.8pt;padding-right:2.8pt;">25.0</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.4.6" style="padding-left:2.8pt;padding-right:2.8pt;">25.0</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.4.7" style="padding-left:2.8pt;padding-right:2.8pt;">25.0</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.4.8" style="padding-left:2.8pt;padding-right:2.8pt;">25.0</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.4.9" style="padding-left:2.8pt;padding-right:2.8pt;">0.0</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T2.2.1.4.10" style="padding-left:2.8pt;padding-right:2.8pt;">21.3</th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T2.2.1.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T2.2.1.5.1" style="padding-left:2.8pt;padding-right:2.8pt;">InstructBLIP</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.2.1.5.2" style="padding-left:2.8pt;padding-right:2.8pt;">8.7</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.2.1.5.3" style="padding-left:2.8pt;padding-right:2.8pt;">22.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.2.1.5.4" style="padding-left:2.8pt;padding-right:2.8pt;">20.5</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.2.1.5.5" style="padding-left:2.8pt;padding-right:2.8pt;">14.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.2.1.5.6" style="padding-left:2.8pt;padding-right:2.8pt;">31.5</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.2.1.5.7" style="padding-left:2.8pt;padding-right:2.8pt;">25.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.2.1.5.8" style="padding-left:2.8pt;padding-right:2.8pt;">78.5</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.2.1.5.9" style="padding-left:2.8pt;padding-right:2.8pt;">6.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.2.1.5.10" style="padding-left:2.8pt;padding-right:2.8pt;">25.8</td></tr>
+<tr class="ltx_tr" id="S3.T2.2.1.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.2.1.6.1" style="padding-left:2.8pt;padding-right:2.8pt;">MiniGPT-4</th>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.6.2" style="padding-left:2.8pt;padding-right:2.8pt;">34.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.6.3" style="padding-left:2.8pt;padding-right:2.8pt;">30.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.6.4" style="padding-left:2.8pt;padding-right:2.8pt;">23.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.6.5" style="padding-left:2.8pt;padding-right:2.8pt;">26.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.6.6" style="padding-left:2.8pt;padding-right:2.8pt;">26.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.6.7" style="padding-left:2.8pt;padding-right:2.8pt;">31.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.6.8" style="padding-left:2.8pt;padding-right:2.8pt;">34.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.6.9" style="padding-left:2.8pt;padding-right:2.8pt;">10.7</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.6.10" style="padding-left:2.8pt;padding-right:2.8pt;">27.0</td></tr>
+<tr class="ltx_tr" id="S3.T2.2.1.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.2.1.7.1" style="padding-left:2.8pt;padding-right:2.8pt;">Otter</th>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.7.2" style="padding-left:2.8pt;padding-right:2.8pt;">60.7</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.7.3" style="padding-left:2.8pt;padding-right:2.8pt;">25.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.7.4" style="padding-left:2.8pt;padding-right:2.8pt;">22.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.7.5" style="padding-left:2.8pt;padding-right:2.8pt;">34.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.7.6" style="padding-left:2.8pt;padding-right:2.8pt;">32.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.7.7" style="padding-left:2.8pt;padding-right:2.8pt;">28.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.7.8" style="padding-left:2.8pt;padding-right:2.8pt;">47.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.7.9" style="padding-left:2.8pt;padding-right:2.8pt;">12.7</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.7.10" style="padding-left:2.8pt;padding-right:2.8pt;">32.8</td></tr>
+<tr class="ltx_tr" id="S3.T2.2.1.8">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.2.1.8.1" style="padding-left:2.8pt;padding-right:2.8pt;">LLaMA-Adapter v2</th>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.8.2" style="padding-left:2.8pt;padding-right:2.8pt;">49.3</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.8.3" style="padding-left:2.8pt;padding-right:2.8pt;">34.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.8.4" style="padding-left:2.8pt;padding-right:2.8pt;">31.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.8.5" style="padding-left:2.8pt;padding-right:2.8pt;">30.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.8.6" style="padding-left:2.8pt;padding-right:2.8pt;">23.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.8.7" style="--ltx-bg-color:#D4E2D4;padding-left:2.8pt;padding-right:2.8pt;">35.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.8.8" style="padding-left:2.8pt;padding-right:2.8pt;">46.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.8.9" style="padding-left:2.8pt;padding-right:2.8pt;">21.3</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.8.10" style="padding-left:2.8pt;padding-right:2.8pt;">33.8</td></tr>
+<tr class="ltx_tr" id="S3.T2.2.1.9">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.2.1.9.1" style="padding-left:2.8pt;padding-right:2.8pt;">BLIP-2</th>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.9.2" style="padding-left:2.8pt;padding-right:2.8pt;">52.7</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.9.3" style="padding-left:2.8pt;padding-right:2.8pt;">35.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.9.4" style="padding-left:2.8pt;padding-right:2.8pt;">30.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.9.5" style="padding-left:2.8pt;padding-right:2.8pt;">45.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.9.6" style="padding-left:2.8pt;padding-right:2.8pt;">32.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.9.7" style="--ltx-bg-color:#FFE5E5;padding-left:2.8pt;padding-right:2.8pt;">32.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.9.8" style="--ltx-bg-color:#D4E2D4;padding-left:2.8pt;padding-right:2.8pt;">82.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.9.9" style="padding-left:2.8pt;padding-right:2.8pt;">4.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.9.10" style="padding-left:2.8pt;padding-right:2.8pt;">39.2</td></tr>
+<tr class="ltx_tr" id="S3.T2.2.1.10">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.2.1.10.1" style="padding-left:2.8pt;padding-right:2.8pt;">mPLUG-Owl2</th>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.10.2" style="padding-left:2.8pt;padding-right:2.8pt;">49.3</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.10.3" style="--ltx-bg-color:#D4E2D4;padding-left:2.8pt;padding-right:2.8pt;">40.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.10.4" style="--ltx-bg-color:#FFE5E5;padding-left:2.8pt;padding-right:2.8pt;">35.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.10.5" style="--ltx-bg-color:#FFE5E5;padding-left:2.8pt;padding-right:2.8pt;">54.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.10.6" style="padding-left:2.8pt;padding-right:2.8pt;">33.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.10.7" style="padding-left:2.8pt;padding-right:2.8pt;">28.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.10.8" style="padding-left:2.8pt;padding-right:2.8pt;">66.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.10.9" style="padding-left:2.8pt;padding-right:2.8pt;">18.7</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.10.10" style="padding-left:2.8pt;padding-right:2.8pt;">40.8</td></tr>
+<tr class="ltx_tr" id="S3.T2.2.1.11">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.2.1.11.1" style="padding-left:2.8pt;padding-right:2.8pt;">LLaVA v1.5</th>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.11.2" style="--ltx-bg-color:#FFE5E5;padding-left:2.8pt;padding-right:2.8pt;">64.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.11.3" style="padding-left:2.8pt;padding-right:2.8pt;">38.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.11.4" style="padding-left:2.8pt;padding-right:2.8pt;">28.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.11.5" style="padding-left:2.8pt;padding-right:2.8pt;">45.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.11.6" style="--ltx-bg-color:#FFE5E5;padding-left:2.8pt;padding-right:2.8pt;">43.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.11.7" style="padding-left:2.8pt;padding-right:2.8pt;">31.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.11.8" style="--ltx-bg-color:#FFE5E5;padding-left:2.8pt;padding-right:2.8pt;">82.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.11.9" style="--ltx-bg-color:#FFE5E5;padding-left:2.8pt;padding-right:2.8pt;">26.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.11.10" style="--ltx-bg-color:#FFE5E5;padding-left:2.8pt;padding-right:2.8pt;">44.8</td></tr>
+<tr class="ltx_tr" id="S3.T2.2.1.12">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.2.1.12.1" style="padding-left:2.8pt;padding-right:2.8pt;">Gemini Pro Vision</th>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.12.2" style="--ltx-bg-color:#D4E2D4;padding-left:2.8pt;padding-right:2.8pt;">65.3</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.12.3" style="--ltx-bg-color:#FFE5E5;padding-left:2.8pt;padding-right:2.8pt;">39.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.12.4" style="--ltx-bg-color:#D4E2D4;padding-left:2.8pt;padding-right:2.8pt;">50.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.12.5" style="--ltx-bg-color:#D4E2D4;padding-left:2.8pt;padding-right:2.8pt;">71.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.12.6" style="--ltx-bg-color:#E0AED0;padding-left:2.8pt;padding-right:2.8pt;">63.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.12.7" style="padding-left:2.8pt;padding-right:2.8pt;">26.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.12.8" style="padding-left:2.8pt;padding-right:2.8pt;">70.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.12.9" style="--ltx-bg-color:#D4E2D4;padding-left:2.8pt;padding-right:2.8pt;">33.3</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.2.1.12.10" style="--ltx-bg-color:#D4E2D4;padding-left:2.8pt;padding-right:2.8pt;">52.4</td></tr>
+<tr class="ltx_tr" id="S3.T2.2.1.13">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S3.T2.2.1.13.1" style="padding-left:2.8pt;padding-right:2.8pt;">GPT-4 vision</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.2.1.13.2" style="--ltx-bg-color:#E0AED0;padding-left:2.8pt;padding-right:2.8pt;">72.0</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.2.1.13.3" style="--ltx-bg-color:#E0AED0;padding-left:2.8pt;padding-right:2.8pt;">43.5</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.2.1.13.4" style="--ltx-bg-color:#E0AED0;padding-left:2.8pt;padding-right:2.8pt;">55.5</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.2.1.13.5" style="--ltx-bg-color:#E0AED0;padding-left:2.8pt;padding-right:2.8pt;">78.0</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.2.1.13.6" style="--ltx-bg-color:#D4E2D4;padding-left:2.8pt;padding-right:2.8pt;">48.5</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.2.1.13.7" style="--ltx-bg-color:#E0AED0;padding-left:2.8pt;padding-right:2.8pt;">45.0</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.2.1.13.8" style="--ltx-bg-color:#E0AED0;padding-left:2.8pt;padding-right:2.8pt;">87.5</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.2.1.13.9" style="--ltx-bg-color:#E0AED0;padding-left:2.8pt;padding-right:2.8pt;">45.3</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.2.1.13.10" style="--ltx-bg-color:#E0AED0;padding-left:2.8pt;padding-right:2.8pt;">59.4</td></tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>DesignProbe evaluation results (%) of different MLLMs. All the value in this table is normalized to 1, larger is better. The average values in last column is the average performance of the current MLLM. The table is sorted by average performance. For each column, the highest, the second, and the third highest figures are highlighted by <span class="ltx_text" id="S3.T2.6" style="--ltx-bg-color:#E0AED0;">purple</span>, <span class="ltx_text" id="S3.T2.7" style="--ltx-bg-color:#D4E2D4;">green</span> and <span class="ltx_text" id="S3.T2.8" style="--ltx-bg-color:#FFE5E5;">pink</span> backgrounds. </figcaption>
+</figure>
+<figure class="ltx_table" id="S3.T3">
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S3.T3.2" style="width:517.5pt;height:89.5pt;vertical-align:-41.7pt;"><span class="ltx_transformed_inner" style="transform:translate(46.9pt,-8.1pt) scale(1.2215277056178,1.2215277056178) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S3.T3.2.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T3.2.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S3.T3.2.1.1.1" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.2.1.1.1.1">Models</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.2.1.1.2" style="padding-left:2.8pt;padding-right:2.8pt;">based LLM</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.2.1.1.3" style="padding-left:2.8pt;padding-right:2.8pt;">Ori.</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.2.1.1.4" style="padding-left:2.8pt;padding-right:2.8pt;">LLaMA2 Re.</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.2.1.1.5" style="padding-left:2.8pt;padding-right:2.8pt;">Vicuna Re.</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.2.1.1.6" style="padding-left:2.8pt;padding-right:2.8pt;">GPT-4 Re.</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.2.1.1.7" style="padding-left:2.8pt;padding-right:2.8pt;">Gemini Re.</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.2.1.1.8" style="padding-left:2.8pt;padding-right:2.8pt;">std.</th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T3.2.1.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T3.2.1.2.1" style="padding-left:2.8pt;padding-right:2.8pt;">Otter</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.2.1.2.2" style="padding-left:2.8pt;padding-right:2.8pt;">MPT</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.2.1.2.3" style="padding-left:2.8pt;padding-right:2.8pt;">47.5</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.2.1.2.4" style="padding-left:2.8pt;padding-right:2.8pt;">38.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.2.1.2.5" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.2.1.2.5.1">52.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.2.1.2.6" style="padding-left:2.8pt;padding-right:2.8pt;">33.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.2.1.2.7" style="padding-left:2.8pt;padding-right:2.8pt;">48.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.2.1.2.8" style="padding-left:2.8pt;padding-right:2.8pt;">7.9</td></tr>
+<tr class="ltx_tr" id="S3.T3.2.1.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T3.2.1.3.1" style="padding-left:2.8pt;padding-right:2.8pt;">mPLUG-OWL2</th>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.3.2" style="padding-left:2.8pt;padding-right:2.8pt;">LLaMA2</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.3.3" style="padding-left:2.8pt;padding-right:2.8pt;">66.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.3.4" style="--ltx-bg-color:#D9D9D9;padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.2.1.3.4.1">77.0</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.3.5" style="padding-left:2.8pt;padding-right:2.8pt;">76.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.3.6" style="padding-left:2.8pt;padding-right:2.8pt;">70.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.3.7" style="padding-left:2.8pt;padding-right:2.8pt;">74.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.3.8" style="padding-left:2.8pt;padding-right:2.8pt;">4.5</td></tr>
+<tr class="ltx_tr" id="S3.T3.2.1.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T3.2.1.4.1" style="padding-left:2.8pt;padding-right:2.8pt;">LLaVA</th>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.4.2" style="padding-left:2.8pt;padding-right:2.8pt;">Vicuna v1.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.4.3" style="padding-left:2.8pt;padding-right:2.8pt;">82.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.4.4" style="padding-left:2.8pt;padding-right:2.8pt;">79.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.4.5" style="--ltx-bg-color:#D9D9D9;padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.2.1.4.5.1">83.5</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.4.6" style="padding-left:2.8pt;padding-right:2.8pt;">80.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.4.7" style="padding-left:2.8pt;padding-right:2.8pt;">81.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.4.8" style="padding-left:2.8pt;padding-right:2.8pt;">1.6</td></tr>
+<tr class="ltx_tr" id="S3.T3.2.1.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T3.2.1.5.1" style="padding-left:2.8pt;padding-right:2.8pt;">GPT-4 Vision</th>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.5.2" style="padding-left:2.8pt;padding-right:2.8pt;">/</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.5.3" style="padding-left:2.8pt;padding-right:2.8pt;">87.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.5.4" style="padding-left:2.8pt;padding-right:2.8pt;">89.5</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.5.5" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.2.1.5.5.1">90.0</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.5.6" style="--ltx-bg-color:#D9D9D9;padding-left:2.8pt;padding-right:2.8pt;">88.0</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.5.7" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.2.1.5.7.1">90.0</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.1.5.8" style="padding-left:2.8pt;padding-right:2.8pt;">1.2</td></tr>
+<tr class="ltx_tr" id="S3.T3.2.1.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S3.T3.2.1.6.1" style="padding-left:2.8pt;padding-right:2.8pt;">Gemini Pro Vision</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.2.1.6.2" style="padding-left:2.8pt;padding-right:2.8pt;">/</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.2.1.6.3" style="padding-left:2.8pt;padding-right:2.8pt;">70.0</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.2.1.6.4" style="padding-left:2.8pt;padding-right:2.8pt;">67.5</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.2.1.6.5" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.2.1.6.5.1">75.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.2.1.6.6" style="padding-left:2.8pt;padding-right:2.8pt;">69.5</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.2.1.6.7" style="--ltx-bg-color:#D9D9D9;padding-left:2.8pt;padding-right:2.8pt;">72.0</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.2.1.6.8" style="padding-left:2.8pt;padding-right:2.8pt;">2.8</td></tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>The evaluation results (%) of different MLLMs using different refined system prompts. <span class="ltx_text ltx_font_italic" id="S3.T3.8">Ori</span> represents the original questions in DesignProbe. <span class="ltx_text ltx_font_italic" id="S3.T3.9">Re.</span> is the abbreviation of “refined”. <span class="ltx_text ltx_font_italic" id="S3.T3.10">std.</span> represent the standard deviation of each row. The corresponding MLLMs with its based LLM are highlighted by <span class="ltx_text" id="S3.T3.11" style="--ltx-bg-color:#D9D9D9;">gray</span>. The best performance of each MLLMs is in <span class="ltx_text ltx_font_bold" id="S3.T3.12">bold</span>. </figcaption>
+</figure>
+<figure class="ltx_figure" id="S3.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="309" id="S3.F3.g1" src="figures/picure6.jpg" style="aspect-ratio:546/309;" width="546"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>The examples of adding example into prompt.
+</figcaption>
+</figure>
+<figure class="ltx_figure" id="S3.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="588" id="S3.F4.g1" src="figures/ablation2.jpg" style="aspect-ratio:957/588;" width="957"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>The experiment results (%) of adding additional different types of information to the questions. <span class="ltx_text ltx_font_italic" id="S3.F4.6">Ori</span> in green represents the performance under original questions in DesignProbe. <span class="ltx_text ltx_font_italic" id="S3.F4.7"> + test</span> in yellow represents adding text description to the questions. <span class="ltx_text ltx_font_italic" id="S3.F4.8"> + concated image</span> in pink represents combining multiple image examples into one image due to the unsupportment of multiple images input in LLaVA. <span class="ltx_text ltx_font_italic" id="S3.F4.9"> + image</span> means adding multiple image examples.
+</figcaption>
+</figure>
+<figure class="ltx_figure" id="S3.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="360" id="S3.F5.g1" src="figures/errorCase.png" style="aspect-ratio:318/360;" width="318"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Error cases of overall design level tasks. In case 1, the model fails to recognize the creative use of record. In case2, the model fails to recognize the abstract represent of theater seats in car.</figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">4 </span>Experiments</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1">In this section, we conduct extensive experiments on our design benchmark to evaluate a total of nine MLLMs, comprising both open-source and proprietary models.</p>
+</div>
+<div class="ltx_para" id="S4.p2">
+<p class="ltx_p" id="S4.p2.1">To mitigate any positional bias of the correct answer among the various options, we repeat each question four times with different positions of the correct answer, resulting in a total of 200 questions per task. The results presented in Table <a class="ltx_ref" href="#S3.T2" title="Table 2 ‣ 3.2 GPT-4 Evaluator ‣ 3 DesignProbe ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">2</span></a> are averaged by position. More detailed results will be provided in the Supplementary Material.</p>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.1 </span>Evaluated Models</h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1">We evaluate a total of nine MLLMs, selecting the version of each model that demonstrates the best possible performance.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p2.1.1">LLaVA v1.5</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib22" title="">Liu et al. (2023a)</a></cite> integrates vision and language capabilities through a simple projection layer. We use LLaVA v1.5, which is based on the LLM Vicuna v1.5 13B  <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib44" title="">Zheng et al. (2023)</a></cite>.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p3">
+<p class="ltx_p" id="S4.SS1.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p3.1.1">Otter</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib18" title="">Li et al. (2023a)</a></cite> facilitates multimodal in-context instruction tuning, building upon the OpenFlamingo <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib2" title="">Awadalla et al. (2023)</a></cite> model. We evaluate the “Otter-image-MPT7B” version.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p4">
+<p class="ltx_p" id="S4.SS1.p4.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p4.1.1">LLaMA-Adapter-v2</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib40" title="">Zhang et al. (2023)</a></cite> exclusively employs language data for instruction tuning and establishes a connection between vision and language in a parameter-efficient way. This model is based on LLaMA 7B <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib31" title="">Touvron et al. (2023a)</a></cite>.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p5">
+<p class="ltx_p" id="S4.SS1.p5.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p5.1.1">MiniGPT v2</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib7" title="">Chen et al. (2023)</a></cite> directly projects visual features into LLM feature space using a linear layer and employs unique identifiers for different tasks during training. We use “MiniGPT v2” version, which is based on LLaMA2 7B <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib32" title="">Touvron et al. (2023b)</a></cite>.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p6">
+<p class="ltx_p" id="S4.SS1.p6.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p6.1.1">InstructBLIP</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib9" title="">Dai et al. (2023)</a></cite> builds upon BLIP-2<cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib20" title="">Li et al. (2023c)</a></cite> and performs instruction tuning with 26 datasets. We test the model based on Vicuna v1.1 13B.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p7">
+<p class="ltx_p" id="S4.SS1.p7.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p7.1.1">mPLUG-OWL2</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib36" title="">Ye et al. (2023)</a></cite> utilizes the language decoder as a universal interface to handle different modalities through shared functional modules. We evaluate the “mplug-owl2-llama2-7b” version.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p8">
+<p class="ltx_p" id="S4.SS1.p8.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p8.1.1">BLIP2</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib20" title="">Li et al. (2023c)</a></cite> incorporates a Q-Former module to align image features with the LLM token space. This model is based on FLAN-T5-XXL <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib8" title="">Chung et al. (2022)</a></cite> with a parameter count of 12 billion.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p9">
+<p class="ltx_p" id="S4.SS1.p9.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p9.1.1">Gemini Pro Vision</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib30" title="">Team et al. (2023)</a></cite>, <span class="ltx_text ltx_font_bold" id="S4.SS1.p9.1.2">GPT-4 Vision</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib26" title="">OpenAI (2023b)</a></cite> are evaluated through their respective APIs. Gemini Pro Vision is initially trained using a combination of image and text data. GPT-4 Vision, a large-scale MLLM, performs exceptionally well across various benchmarks <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib24" title="">Liu et al. (2023c)</a>; <a class="ltx_ref" href="#bib.bib39" title="">Yue et al. (2023)</a></cite>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.2 </span>MLLM Performance in DesignProbe</h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1">Our benchmark evaluation results are listed in Table <a class="ltx_ref" href="#S3.T2" title="Table 2 ‣ 3.2 GPT-4 Evaluator ‣ 3 DesignProbe ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">2</span></a>. From these, we summarize our observations into three interesting findings.</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p2.1.1">(1) Overall: Tasks are challenging.</span>
+The highest overall average performance is achieved by GPT-4 Vision at 59.4%. Despite its significant lead over other baseline models, it is still not enough to meet the passing threshold of 60%, leaving considerable room for exploration.</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p3">
+<p class="ltx_p" id="S4.SS2.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p3.1.1">(2) Color vs. Font vs. Layout: Models may be more experienced in color than others.</span> As the results shown in column <span class="ltx_text ltx_font_italic" id="S4.SS2.p3.1.2">#1 Color</span> and <span class="ltx_text ltx_font_italic" id="S4.SS2.p3.1.3">#4 Color</span> in Table <a class="ltx_ref" href="#S3.T2" title="Table 2 ‣ 3.2 GPT-4 Evaluator ‣ 3 DesignProbe ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">2</span></a>, we observe an advantage in color-related tasks (with GPT-4 Vision scoring 72.0% and 43.5% in color and font). The challenging with font tasks for MLLMs may stem from lacking font-related data during training and instruction tuning. In terms of layout tasks, MLLMs appears to struggle with spatial relationships within design elements, which leads to the performance drop in these related tasks.</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p4">
+<p class="ltx_p" id="S4.SS2.p4.1">Interestingly, there is a performance drop between BLIP-2 and InstructBLIP in column <span class="ltx_text ltx_font_italic" id="S4.SS2.p4.1.1">#1 Color</span> and <span class="ltx_text ltx_font_italic" id="S4.SS2.p4.1.2">#4 Color</span> in Table <a class="ltx_ref" href="#S3.T2" title="Table 2 ‣ 3.2 GPT-4 Evaluator ‣ 3 DesignProbe ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">2</span></a>. Given that InstructBLIP is essentially BLIP-2 with added instructional tuning, this drop may reveals a trade off between aligning with human preferences and optimizing the model capability.</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p5">
+<p class="ltx_p" id="S4.SS2.p5.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p5.1.1">(3) Metaphor: The low performance can be primarily attributed to the models’ inability to recognize design objects accurately.</span> Task#8 Visual Metaphor is complex as it requires to recognize the abstract design elements and understanding the metaphor they represent. After error analysis, we find there are no instances of ’Correct caption, Wrong reasoning’ errors, but an 8% error rate occurred in cases of ’Correct reasoning, Wrong caption’. This suggests that the main obstacle in metaphor tasks is the models’ ability to correctly recognize design objects.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.3 </span>Exploration of Prompt Refining</h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.1">We conduct multiple experiments to refine prompts within DesignProbe along two distinct dimensions: firstly, we focus on rewriting the task description to enhance clarity and precision without introducing additional information; secondly, we enrich the prompts by providing more contextual and task-related data.</p>
+</div>
+<section class="ltx_subsubsection" id="S4.SS3.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">4.3.1 </span>Prompt Rewriting</h4>
+<div class="ltx_para" id="S4.SS3.SSS1.p1">
+<p class="ltx_p" id="S4.SS3.SSS1.p1.1">To investigate model response variance to prompts, we design an experiment involving multiple LLMs to refine the original prompt. We then verify the outcomes on <span class="ltx_text ltx_font_italic" id="S4.SS3.SSS1.p1.1.1">Task#7 Style Classification</span>. These LLMs are selected based on the underlying language models of different MLLMs. Evaluating these MLLMs with the refined prompts, we obtain the results shown in Table <a class="ltx_ref" href="#S3.T3" title="Table 3 ‣ 3.2 GPT-4 Evaluator ‣ 3 DesignProbe ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">3</span></a>. We summarize three key findings as follows:</p>
+</div>
+<div class="ltx_para" id="S4.SS3.SSS1.p2">
+<ul class="ltx_itemize" id="S4.I1">
+<li class="ltx_item" id="S4.I1.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i1.p1">
+<p class="ltx_p" id="S4.I1.i1.p1.1">The better an MLLM performs on a task, the more robust it is to different prompts. For instance, while Otter exhibits significant variance (7.9%) under different prompts, GPT-4 Vision demonstrates considerable robustness with only a 1.2% variance. Furthermore, the standard deviation can shed light on MLLM performance, as a small decrease in this variance is often caused by an unsuitable system prompt.</p>
+</div></li>
+<li class="ltx_item" id="S4.I1.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i2.p1">
+<p class="ltx_p" id="S4.I1.i2.p1.1">There is always improvement when refining prompts using MLLMs’ corresponding base LLMs. For open-source models, employing their own base LLMs yields the best performance.</p>
+</div></li>
+<li class="ltx_item" id="S4.I1.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i3.p1">
+<p class="ltx_p" id="S4.I1.i3.p1.1">Refinement in the language aspect alone generally leads to gains, while other types of refinement may not. To assess the true refinement capabilities of different LLMs, we instruct each LLM to refine questions in their preferred manner using the exact same prompt. Surprisingly, we find that Vicuna consistently performs the best, in contrast to GPT-4. Upon detailed examination of the refined questions, we notice that Vicuna simply rewrites the prompt without adding any text, whereas GPT-4 tends to include additional descriptions of steps for solving the questions. To confirm the impact of these additional texts, we remove them and discover that this action yields the best performance for LLaVA, with an 85% success rate.</p>
+</div></li>
+</ul>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS3.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection"><span class="ltx_tag ltx_tag_subsubsection">4.3.2 </span>Incorporating Supplementary Information</h4>
+<div class="ltx_para" id="S4.SS3.SSS2.p1">
+<p class="ltx_p" id="S4.SS3.SSS2.p1.1">The original prompts in DesignProbe are relatively basic and lack detailed task descriptions, potentially leading to confusion for models. To mitigate this, we introduce supplementary information to prompts. Our experiment involves the addition of two types of information: textual descriptions and visual examples. We present the examples of the enhanced prompts for each format in Figure <a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ 3.2 GPT-4 Evaluator ‣ 3 DesignProbe ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">3</span></a>. To ensure a consistent level of information gain when adding task details, we initially utilize GPT-4 Vision to generate text descriptions for the provided image examples. We then perform minimal manual refinements where necessary. The results of the experiment for <span class="ltx_text ltx_font_italic" id="S4.SS3.SSS2.p1.1.1">Task#5 Font Style</span> are illustrated in Figure <a class="ltx_ref" href="#S3.F4" title="Figure 4 ‣ 3.2 GPT-4 Evaluator ‣ 3 DesignProbe ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">4</span></a>.</p>
+</div>
+<div class="ltx_para" id="S4.SS3.SSS2.p2">
+<p class="ltx_p" id="S4.SS3.SSS2.p2.1">Below are three interesting findings from this experiment:</p>
+<ul class="ltx_itemize" id="S4.I2">
+<li class="ltx_item" id="S4.I2.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i1.p1">
+<p class="ltx_p" id="S4.I2.i1.p1.1">Incorporating textual descriptions consistently enhances performance. As demonstrated in Figure <a class="ltx_ref" href="#S3.F4" title="Figure 4 ‣ 3.2 GPT-4 Evaluator ‣ 3 DesignProbe ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">4</span></a>, there is an improvement of 3.0% for LLaVA v1.5 and 2.5% for GPT-4 Vision.</p>
+</div></li>
+<li class="ltx_item" id="S4.I2.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i2.p1">
+<p class="ltx_p" id="S4.I2.i2.p1.1">Adding visual examples directly results in a significantly higher performance gain compared to textual information. For instance, GPT-4 Vision experiences a 10.5% increase when supplemented with image examples, as opposed to a 2.5% increase with text alone.</p>
+</div></li>
+<li class="ltx_item" id="S4.I2.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i3.p1">
+<p class="ltx_p" id="S4.I2.i3.p1.1">Combining multiple image examples into a single composite image can be a potential workaround for models that only accept a single image input. While LLaVA does not support multiple images, we attempt to merge various image examples into one composite image, drawing inspiration from <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib5" title="">Bar et al. (2022)</a></cite>. However, this approach appears to be counterproductive for LLaVA, as performance decreases from 43.0% to 38.5%. Conversely, when applying this method to GPT-4 Vision, the results suggest that such a technique may be beneficial, as it exhibits an opposite effect to LLaVA. This discrepancy leads us to hypothesize that LLaVA may struggle to distinguish between different image examples within a composite image, particularly in tasks requiring spatial recognition, as evidenced by its notably poor performance in layout tasks (#3, #6), which is documented in Table<a class="ltx_ref" href="#S3.T2" title="Table 2 ‣ 3.2 GPT-4 Evaluator ‣ 3 DesignProbe ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">2</span></a>.</p>
+</div></li>
+</ul>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S4.SS4">
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.4 </span>Error Case Analysis</h3>
+<div class="ltx_para" id="S4.SS4.p1">
+<p class="ltx_p" id="S4.SS4.p1.1">In addition to the quantitative results presented earlier, we conduct a thorough analysis of error cases to identify the current limitations of MLLMs in design tasks.</p>
+</div>
+<div class="ltx_para" id="S4.SS4.p2">
+<p class="ltx_p" id="S4.SS4.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS4.p2.1.1">Significant Variance Based on the Position of the Correct Option.</span> We observe that models, such as InstructBLIP and LLaMA-Adapter v2, exhibit considerable variability in performance depending on the position of the correct option among choices A, B, C, and D. We will provide more detailed results in the supplementary materials.</p>
+</div>
+<div class="ltx_para" id="S4.SS4.p3">
+<p class="ltx_p" id="S4.SS4.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS4.p3.1.1">Deficiency in Understanding Design Elements.</span> The models may not be well-acquainted with the tasks or the concepts involved in the tasks, as most tasks within DesignProbe are not covered by the pretraining and fine-tuning datasets of MLLMs. Taking GPT-4 Vision as an example, it exhibits poor performance in <span class="ltx_text ltx_font_italic" id="S4.SS4.p3.1.2">Task# 5 Font Style</span> as shown in Table <a class="ltx_ref" href="#S3.T2" title="Table 2 ‣ 3.2 GPT-4 Evaluator ‣ 3 DesignProbe ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">2</span></a>. However, its performance improves significantly when we supplement it with additional knowledge pertinent to the task. The disparity in performance between tasks involving color and font styles further supports this observation, as evidenced in Table <a class="ltx_ref" href="#S3.T2" title="Table 2 ‣ 3.2 GPT-4 Evaluator ‣ 3 DesignProbe ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">2</span></a>. Although there are straightforward methods to enhance performance, a more comprehensive investigation is necessary to equip MLLMs with a robust understanding of design principles.</p>
+</div>
+<div class="ltx_para" id="S4.SS4.p4">
+<p class="ltx_p" id="S4.SS4.p4.1"><span class="ltx_text ltx_font_bold" id="S4.SS4.p4.1.1">Challenges in Recognizing Creative Representations within Design Imagery</span> Focusing on the general design tasks #7 and #8, models frequently struggle to generate precise captions for designs, leading to incorrect responses to subsequent questions. Design objects are often abstract and may diverge significantly from real-world imagery. For instance, as illustrated in Figure <a class="ltx_ref" href="#S3.F5" title="Figure 5 ‣ 3.2 GPT-4 Evaluator ‣ 3 DesignProbe ‣ DesignProbe: A Graphic Design Benchmark for Multimodal Large Language Models"><span class="ltx_text ltx_ref_tag">5</span></a>, in case (a), LLaVA fails to recognize the inventive representation of a record and consequently misclassifies the style; in case (b), GPT-4 Vision is unable to identify the theater seats within a car and incorrectly interprets the visual metaphor.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">5 </span>Conclusion</h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1">In this work, we have pioneered the creation of a comprehensive benchmark to assess design capabilities of Multi-Modal Language Models (MLLMs), a first in the field. Our benchmark includes eight tasks across two levels of design complexity: the element level and the overall design level. At the element level, we build up tasks that evaluate both the recognition of visual components and the understanding of semantic content. In each type of tasks, we focus on three fundamental design elements: color, font, and layout. At the overall design level, our tasks include style classification and the interpretation of visual metaphors.
+To support these tasks, we have curated and reannotated datasets to align with our novel task framework and introduced a new dataset aimed at negative space detection to extend the benchmark’s breadth. Nine MLLMs were put to the test, with GPT-4 serving as the evaluator.</p>
+</div>
+<div class="ltx_para" id="S5.p2">
+<p class="ltx_p" id="S5.p2.1">In addition, we experimented with prompt refining across two dimensions. We first introduced a experiment for prompt rewriting using LLMs corresponding to each MLLMs, revealing the robustness of better performance models under different prompts and the efficiency when refining prompt using its LLMs. We also experimented with adding additional design knowledge to prompts in both textual and visual formats, revealing that adding image information can achieve the better performance than text.
+This benchmark sets a new standard for evaluating MLLMs and opens the door for future research to expand upon the intersection of design understanding.</p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bib1"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Agrawal <span class="ltx_text ltx_font_italic" id="bib.bib1.2">et al.</span> [2019]</span>
+<span class="ltx_bibblock">
+Harsh Agrawal, Karan Desai, Yufei Wang, Xinlei Chen, Rishabh Jain, Mark Johnson, Dhruv Batra, Devi Parikh, Stefan Lee, and Peter Anderson.
+
+</span>
+<span class="ltx_bibblock">nocaps: novel object captioning at scale.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib1.3">Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)</span>, October 2019.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib2"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Awadalla <span class="ltx_text ltx_font_italic" id="bib.bib2.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Anas Awadalla, Irena Gao, Josh Gardner, Jack Hessel, Yusuf Hanafy, Wanrong Zhu, Kalyani Marathe, Yonatan Bitton, Samir Gadre, Shiori Sagawa, Jenia Jitsev, Simon Kornblith, Pang Wei Koh, Gabriel Ilharco, Mitchell Wortsman, and Ludwig Schmidt.
+
+</span>
+<span class="ltx_bibblock">Openflamingo: An open-source framework for training large autoregressive vision-language models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib2.3">arXiv preprint arXiv:2308.01390</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib3"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bahng <span class="ltx_text ltx_font_italic" id="bib.bib3.2">et al.</span> [2018]</span>
+<span class="ltx_bibblock">
+Hyojin Bahng, Seungjoo Yoo, Wonwoong Cho, David Keetae Park, Ziming Wu, Xiaojuan Ma, and Jaegul Choo.
+
+</span>
+<span class="ltx_bibblock">Coloring with words: Guiding image colorization through text-based palette generation.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib3.3">Proceedings of the european conference on computer vision (eccv)</span>, pages 431–447, 2018.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib4"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bai <span class="ltx_text ltx_font_italic" id="bib.bib4.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Jinze Bai, Shuai Bai, Shusheng Yang, Shijie Wang, Sinan Tan, Peng Wang, Junyang Lin, Chang Zhou, and Jingren Zhou.
+
+</span>
+<span class="ltx_bibblock">Qwen-vl: A versatile vision-language model for understanding, localization, text reading, and beyond.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib4.3">arXiv preprint arXiv:2308.12966</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib5"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bar <span class="ltx_text ltx_font_italic" id="bib.bib5.2">et al.</span> [2022]</span>
+<span class="ltx_bibblock">
+Amir Bar, Yossi Gandelsman, Trevor Darrell, Amir Globerson, and Alexei Efros.
+
+</span>
+<span class="ltx_bibblock">Visual prompting via image inpainting.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib5.3">Advances in Neural Information Processing Systems</span>, 35:25005–25017, 2022.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib6"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen <span class="ltx_text ltx_font_italic" id="bib.bib6.2">et al.</span> [2015]</span>
+<span class="ltx_bibblock">
+Xinlei Chen, Hao Fang, Tsung-Yi Lin, Ramakrishna Vedantam, Saurabh Gupta, Piotr Dollár, and C Lawrence Zitnick.
+
+</span>
+<span class="ltx_bibblock">Microsoft coco captions: Data collection and evaluation server.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib6.3">arXiv preprint arXiv:1504.00325</span>, 2015.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib7"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen <span class="ltx_text ltx_font_italic" id="bib.bib7.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Jun Chen, Deyao Zhu, Xiaoqian Shen, Xiang Li, Zechun Liu, Pengchuan Zhang, Raghuraman Krishnamoorthi, Vikas Chandra, Yunyang Xiong, and Mohamed Elhoseiny.
+
+</span>
+<span class="ltx_bibblock">Minigpt-v2: Large language model as a unified interface for vision-language multi-task learning.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib7.3">arXiv:2310.09478</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib8"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chung <span class="ltx_text ltx_font_italic" id="bib.bib8.2">et al.</span> [2022]</span>
+<span class="ltx_bibblock">
+Hyung Won Chung, Le Hou, Shayne Longpre, Barret Zoph, Yi Tay, William Fedus, Yunxuan Li, Xuezhi Wang, Mostafa Dehghani, Siddhartha Brahma, et al.
+
+</span>
+<span class="ltx_bibblock">Scaling instruction-finetuned language models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib8.3">arXiv preprint arXiv:2210.11416</span>, 2022.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib9"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dai <span class="ltx_text ltx_font_italic" id="bib.bib9.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+W Dai, J Li, D Li, AMH Tiong, J Zhao, W Wang, B Li, P Fung, and S Hoi.
+
+</span>
+<span class="ltx_bibblock">Instructblip: Towards general-purpose vision-language models with instruction tuning.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib9.3">arXiv preprint arXiv:2305.06500</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib10"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dong <span class="ltx_text ltx_font_italic" id="bib.bib10.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Runpei Dong, Chunrui Han, Yuang Peng, Zekun Qi, Zheng Ge, Jinrong Yang, Liang Zhao, Jianjian Sun, Hongyu Zhou, Haoran Wei, et al.
+
+</span>
+<span class="ltx_bibblock">Dreamllm: Synergistic multimodal comprehension and creation.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib10.3">arXiv preprint arXiv:2309.11499</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib11"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Fosco <span class="ltx_text ltx_font_italic" id="bib.bib11.2">et al.</span> [2020]</span>
+<span class="ltx_bibblock">
+Camilo Fosco, Vincent Casser, Amish Kumar Bedi, Peter O’Donovan, Aaron Hertzmann, and Zoya Bylinskii.
+
+</span>
+<span class="ltx_bibblock">Predicting visual importance across graphic design types.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib11.3">Proceedings of the 33rd Annual ACM Symposium on User Interface Software and Technology</span>, pages 249–260, 2020.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib12"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Fu <span class="ltx_text ltx_font_italic" id="bib.bib12.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Chaoyou Fu, Peixian Chen, Yunhang Shen, Yulei Qin, Mengdan Zhang, Xu Lin, Jinrui Yang, Xiawu Zheng, Ke Li, Xing Sun, Yunsheng Wu, and Rongrong Ji.
+
+</span>
+<span class="ltx_bibblock">Mme: A comprehensive evaluation benchmark for multimodal large language models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib12.3">arXiv preprint arXiv:2306.13394</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib13"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Goyal <span class="ltx_text ltx_font_italic" id="bib.bib13.2">et al.</span> [2017]</span>
+<span class="ltx_bibblock">
+Yash Goyal, Tejas Khot, Douglas Summers-Stay, Dhruv Batra, and Devi Parikh.
+
+</span>
+<span class="ltx_bibblock">Making the v in vqa matter: Elevating the role of image understanding in visual question answering.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib13.3">Proceedings of the IEEE conference on computer vision and pattern recognition</span>, pages 6904–6913, 2017.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib14"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gurari <span class="ltx_text ltx_font_italic" id="bib.bib14.2">et al.</span> [2018]</span>
+<span class="ltx_bibblock">
+Danna Gurari, Qing Li, Abigale J. Stangl, Anhong Guo, Chi Lin, Kristen Grauman, Jiebo Luo, and Jeffrey P. Bigham.
+
+</span>
+<span class="ltx_bibblock">Vizwiz grand challenge: Answering visual questions from blind people.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib14.3">Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)</span>, June 2018.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib15"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Huang <span class="ltx_text ltx_font_italic" id="bib.bib15.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Danqing Huang, Jiaqi Guo, Shizhao Sun, Hanling Tian, Jieru Lin, Zheng Hu, Chin-Yew Lin, Jian-Guang Lou, and Dongmei Zhang.
+
+</span>
+<span class="ltx_bibblock">A survey for graphic design intelligence.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib15.3">arXiv preprint arXiv:2309.01371</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib16"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hudson and Manning [2019]</span>
+<span class="ltx_bibblock">
+Drew A. Hudson and Christopher D. Manning.
+
+</span>
+<span class="ltx_bibblock">Gqa: A new dataset for real-world visual reasoning and compositional question answering.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib16.1">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</span>, June 2019.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib17"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Inoue <span class="ltx_text ltx_font_italic" id="bib.bib17.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Naoto Inoue, Kotaro Kikuchi, Edgar Simo-Serra, Mayu Otani, and Kota Yamaguchi.
+
+</span>
+<span class="ltx_bibblock">Layoutdm: Discrete diffusion model for controllable layout generation.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib17.3">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</span>, pages 10167–10176, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib18"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Li <span class="ltx_text ltx_font_italic" id="bib.bib18.2">et al.</span> [2023a]</span>
+<span class="ltx_bibblock">
+Bo Li, Yuanhan Zhang, Liangyu Chen, Jinghao Wang, Jingkang Yang, and Ziwei Liu.
+
+</span>
+<span class="ltx_bibblock">Otter: A multi-modal model with in-context instruction tuning.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib18.3">arXiv preprint arXiv:2305.03726</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib19"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Li <span class="ltx_text ltx_font_italic" id="bib.bib19.2">et al.</span> [2023b]</span>
+<span class="ltx_bibblock">
+Bohao Li, Rui Wang, Guangzhi Wang, Yuying Ge, Yixiao Ge, and Ying Shan.
+
+</span>
+<span class="ltx_bibblock">Seed-bench: Benchmarking multimodal llms with generative comprehension.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib19.3">arXiv preprint arXiv:2307.16125</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib20"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Li <span class="ltx_text ltx_font_italic" id="bib.bib20.2">et al.</span> [2023c]</span>
+<span class="ltx_bibblock">
+Junnan Li, Dongxu Li, Silvio Savarese, and Steven Hoi.
+
+</span>
+<span class="ltx_bibblock">Blip-2: Bootstrapping language-image pre-training with frozen image encoders and large language models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib20.3">arXiv preprint arXiv:2301.12597</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib21"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lin <span class="ltx_text ltx_font_italic" id="bib.bib21.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Kevin Lin, Zhengyuan Yang, Linjie Li, Jianfeng Wang, and Lijuan Wang.
+
+</span>
+<span class="ltx_bibblock">Designbench: Exploring and benchmarking dall-e 3 for imagining visual design.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib21.3">arXiv preprint arXiv:2310.15144</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib22"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu <span class="ltx_text ltx_font_italic" id="bib.bib22.2">et al.</span> [2023a]</span>
+<span class="ltx_bibblock">
+Haotian Liu, Chunyuan Li, Yuheng Li, and Yong Jae Lee.
+
+</span>
+<span class="ltx_bibblock">Improved baselines with visual instruction tuning, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib23"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu <span class="ltx_text ltx_font_italic" id="bib.bib23.2">et al.</span> [2023b]</span>
+<span class="ltx_bibblock">
+Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee.
+
+</span>
+<span class="ltx_bibblock">Visual instruction tuning.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib23.3">arXiv preprint arXiv:2304.08485</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib24"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu <span class="ltx_text ltx_font_italic" id="bib.bib24.2">et al.</span> [2023c]</span>
+<span class="ltx_bibblock">
+Yuan Liu, Haodong Duan, Yuanhan Zhang, Bo Li, Songyang Zhang, Wangbo Zhao, Yike Yuan, Jiaqi Wang, Conghui He, Ziwei Liu, Kai Chen, and Dahua Lin.
+
+</span>
+<span class="ltx_bibblock">Mmbench: Is your multi-modal model an all-around player?
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib24.3">arXiv:2307.06281</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib25"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">OpenAI [2023a]</span>
+<span class="ltx_bibblock">
+OpenAI.
+
+</span>
+<span class="ltx_bibblock">Dall·e 3 system card, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib26"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">OpenAI [2023b]</span>
+<span class="ltx_bibblock">
+OpenAI.
+
+</span>
+<span class="ltx_bibblock">Gpt-4 technical report.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib26.1">arXiv preprint arXiv:2303.08774</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib27"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Qiu <span class="ltx_text ltx_font_italic" id="bib.bib27.2">et al.</span> [2022]</span>
+<span class="ltx_bibblock">
+Qianru Qiu, Xueting Wang, Mayu Otani, and Yuki Iwazaki.
+
+</span>
+<span class="ltx_bibblock">Color recommendation for vector graphic documents based on multi-palette representation.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib27.3">arXiv preprint</span>, 2022.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib28"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Steen <span class="ltx_text ltx_font_italic" id="bib.bib28.2">et al.</span> [2010]</span>
+<span class="ltx_bibblock">
+Gerard Steen, Aletta G Dorst, J Berenike Herrmann, Anna Kaal, Tina Krennmayr, Trijntje Pasma, et al.
+
+</span>
+<span class="ltx_bibblock">A method for linguistic metaphor identification.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib28.3">Amsterdam: Benjamins</span>, 2010.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib29"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sun <span class="ltx_text ltx_font_italic" id="bib.bib29.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Quan Sun, Qiying Yu, Yufeng Cui, Fan Zhang, Xiaosong Zhang, Yueze Wang, Hongcheng Gao, Jingjing Liu, Tiejun Huang, and Xinlong Wang.
+
+</span>
+<span class="ltx_bibblock">Generative pretraining in multimodality.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib29.3">arXiv preprint arXiv:2307.05222</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib30"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Team <span class="ltx_text ltx_font_italic" id="bib.bib30.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Gemini Team, Rohan Anil, Sebastian Borgeaud, Yonghui Wu, Jean-Baptiste Alayrac, Jiahui Yu, Radu Soricut, Johan Schalkwyk, Andrew M Dai, Anja Hauth, et al.
+
+</span>
+<span class="ltx_bibblock">Gemini: a family of highly capable multimodal models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib30.3">arXiv preprint arXiv:2312.11805</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib31"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Touvron <span class="ltx_text ltx_font_italic" id="bib.bib31.2">et al.</span> [2023a]</span>
+<span class="ltx_bibblock">
+Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, Aurelien Rodriguez, Armand Joulin, Edouard Grave, and Guillaume Lample.
+
+</span>
+<span class="ltx_bibblock">Llama: Open and efficient foundation language models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib31.3">arXiv preprint arXiv:2302.13971</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib32"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Touvron <span class="ltx_text ltx_font_italic" id="bib.bib32.2">et al.</span> [2023b]</span>
+<span class="ltx_bibblock">
+Hugo Touvron, Louis Martin, Kevin Stone, Peter Albert, Amjad Almahairi, Yasmine Babaei, Nikolay Bashlykov, Soumya Batra, Prajjwal Bhargava, Shruti Bhosale, et al.
+
+</span>
+<span class="ltx_bibblock">Llama 2: Open foundation and fine-tuned chat models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib32.3">arXiv preprint arXiv:2307.09288</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib33"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Virkus [2022]</span>
+<span class="ltx_bibblock">
+D. Virkus.
+
+</span>
+<span class="ltx_bibblock">Dafonts free dataset, 2022.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib34"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yamaguchi [2021]</span>
+<span class="ltx_bibblock">
+Kota Yamaguchi.
+
+</span>
+<span class="ltx_bibblock">Canvasvae: Learning to generate vector graphic documents.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib34.1">ICCV</span>, 2021.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib35"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang <span class="ltx_text ltx_font_italic" id="bib.bib35.2">et al.</span> [2021]</span>
+<span class="ltx_bibblock">
+Cheng-Fu Yang, Wan-Cyuan Fan, Fu-En Yang, and Yu-Chiang Frank Wang.
+
+</span>
+<span class="ltx_bibblock">LayoutTransformer: Scene Layout Generation with Conceptual and Spatial Diversity.
+
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_font_italic" id="bib.bib35.3">2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</span>, pages 3731–3740. IEEE, June 2021.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib36"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ye <span class="ltx_text ltx_font_italic" id="bib.bib36.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Qinghao Ye, Haiyang Xu, Jiabo Ye, Ming Yan, Anwen Hu, Haowei Liu, Qi Qian, Ji Zhang, Fei Huang, and Jingren Zhou.
+
+</span>
+<span class="ltx_bibblock">mplug-owl2: Revolutionizing multi-modal large language model with modality collaboration, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib37"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yu <span class="ltx_text ltx_font_italic" id="bib.bib37.2">et al.</span> [2023a]</span>
+<span class="ltx_bibblock">
+Lili Yu, Bowen Shi, Ramakanth Pasunuru, Benjamin Muller, Olga Golovneva, Tianlu Wang, Arun Babu, Binh Tang, Brian Karrer, Shelly Sheynin, et al.
+
+</span>
+<span class="ltx_bibblock">Scaling autoregressive multi-modal models: Pretraining and instruction tuning.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib37.3">arXiv preprint arXiv:2309.02591</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib38"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yu <span class="ltx_text ltx_font_italic" id="bib.bib38.2">et al.</span> [2023b]</span>
+<span class="ltx_bibblock">
+Weihao Yu, Zhengyuan Yang, Linjie Li, Jianfeng Wang, Kevin Lin, Zicheng Liu, Xinchao Wang, and Lijuan Wang.
+
+</span>
+<span class="ltx_bibblock">Mm-vet: Evaluating large multimodal models for integrated capabilities.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib38.3">arXiv preprint arXiv:2308.02490</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib39"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yue <span class="ltx_text ltx_font_italic" id="bib.bib39.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Xiang Yue, Yuansheng Ni, Kai Zhang, Tianyu Zheng, Ruoqi Liu, Ge Zhang, Samuel Stevens, Dongfu Jiang, Weiming Ren, Yuxuan Sun, Cong Wei, Botao Yu, Ruibin Yuan, Renliang Sun, Ming Yin, Boyuan Zheng, Zhenzhu Yang, Yibo Liu, Wenhao Huang, Huan Sun, Yu Su, and Wenhu Chen.
+
+</span>
+<span class="ltx_bibblock">Mmmu: A massive multi-discipline multimodal understanding and reasoning benchmark for expert agi.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib39.3">arXiv preprint arXiv:2311.16502</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib40"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang <span class="ltx_text ltx_font_italic" id="bib.bib40.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Renrui Zhang, Jiaming Han, Chris Liu, Peng Gao, Aojun Zhou, Xiangfei Hu, Shilin Yan, Pan Lu, Hongsheng Li, and Yu Qiao.
+
+</span>
+<span class="ltx_bibblock">Llama-adapter: Efficient fine-tuning of language models with zero-init attention.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib40.3">arXiv preprint arXiv:2303.16199</span>, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib41"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhao <span class="ltx_text ltx_font_italic" id="bib.bib41.2">et al.</span> [2018a]</span>
+<span class="ltx_bibblock">
+Nanxuan Zhao, Ying Cao, and Rynson W. H. Lau.
+
+</span>
+<span class="ltx_bibblock">Modeling fonts in context: Font prediction on web designs.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib41.3">Computer Graphics Forum</span>, 2018.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib42"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhao <span class="ltx_text ltx_font_italic" id="bib.bib42.2">et al.</span> [2018b]</span>
+<span class="ltx_bibblock">
+Nanxuan Zhao, Ying Cao, and Rynson W.H. Lau.
+
+</span>
+<span class="ltx_bibblock">Modeling fonts in context: Font prediction on web designs.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib42.3">Computer Graphics Forum (Proc. Pacific Graphics 2018)</span>, 37, 2018.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib43"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhao <span class="ltx_text ltx_font_italic" id="bib.bib43.2">et al.</span> [2018c]</span>
+<span class="ltx_bibblock">
+Nanxuan Zhao, Ying Cao, and Rynson W.H. Lau.
+
+</span>
+<span class="ltx_bibblock">What characterizes personalities of graphic designs?
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib43.3">ACM Transactions on Graphics (Proc. of SIGGRAPH 2018)</span>, 37, 2018.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib44"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zheng <span class="ltx_text ltx_font_italic" id="bib.bib44.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric. P Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica.
+
+</span>
+<span class="ltx_bibblock">Judging llm-as-a-judge with mt-bench and chatbot arena, 2023.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib45"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhu <span class="ltx_text ltx_font_italic" id="bib.bib45.2">et al.</span> [2020]</span>
+<span class="ltx_bibblock">
+Xizhou Zhu, Weijie Su, Lewei Lu, Bin Li, Xiaogang Wang, and Jifeng Dai.
+
+</span>
+<span class="ltx_bibblock">Deformable detr: Deformable transformers for end-to-end object detection.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib45.3">arXiv preprint arXiv:2010.04159</span>, 2020.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib46"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhu <span class="ltx_text ltx_font_italic" id="bib.bib46.2">et al.</span> [2023]</span>
+<span class="ltx_bibblock">
+Deyao Zhu, Jun Chen, Xiaoqian Shen, Xiang Li, and Mohamed Elhoseiny.
+
+</span>
+<span class="ltx_bibblock">Minigpt-4: Enhancing vision-language understanding with advanced large language models.
+
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_font_italic" id="bib.bib46.3">arXiv preprint arXiv:2304.10592</span>, 2023.
+
+</span></li>
+</ul>
+</section>
+</body></html>
+</body></html>

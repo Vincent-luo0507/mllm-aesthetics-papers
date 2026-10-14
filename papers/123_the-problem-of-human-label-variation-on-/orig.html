@@ -1,0 +1,2080 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>123_the-problem-of-human-label-variation-on-</title>
+<script>
+window.MathJax={
+  tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']],processEscapes:true},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+<style>
+body{max-width:1180px;margin:0 auto;padding:24px 20px;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+color:#1f2937;line-height:1.8;font-size:15.5px;background:#fff;}
+img{max-width:100%;height:auto;display:block;margin:12px auto;}
+table{border-collapse:collapse;margin:14px 0;font-size:14px;} td,th{border:1px solid #d8dee6;padding:6px 9px;}
+h1,h2,h3,h4{color:#1e3a8a;}
+</style></head><body>
+<html><body><h1 class="ltx_title ltx_title_document">The “Problem” of Human Label Variation: 
+<br class="ltx_break"/>On Ground Truth in Data, Modeling and Evaluation</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Barbara Plank
+</span><span class="ltx_author_notes"><span class="ltx_author_notes_content">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Center for Information and Language Processing (CIS), MaiNLP lab, LMU Munich, Germany
+</span>
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_contact_name">Affiliation: </span>Munich Center for Machine Learning (MCML), Munich, Germany
+</span>
+<span class="ltx_contact ltx_role_email"><span class="ltx_contact_name">Email: </span><a href="mailto:"><span class="ltx_text ltx_font_typewriter" id="id1">b.plank@lmu.de</span></a>
+</span></span></span></span></div>
+<div class="ltx_abstract" id="abstract1"><h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p class="ltx_p" id="abstract1.1">Human variation in labeling is often considered noise. Annotation projects for machine learning (ML) aim at minimizing human label variation, with the assumption to maximize data quality
+and in turn optimize and maximize machine learning metrics. However, this
+conventional practice assumes that there exists a <span class="ltx_text ltx_font_italic" id="abstract1.1.1">ground truth</span>, and neglects that there exists genuine human variation in labeling due to disagreement, subjectivity in annotation or multiple plausible answers.
+In this position paper, we argue that this big open problem of <span class="ltx_text ltx_font_italic" id="abstract1.1.2">human label variation</span> persists and critically needs more attention to move our field forward. This is because human label variation impacts all stages of the ML pipeline: <span class="ltx_text ltx_font_italic" id="abstract1.1.3">data, modeling and evaluation</span>. However, few works consider all of these dimensions jointly; and existing research is fragmented. We reconcile different previously proposed notions of human label variation, provide a repository of publicly-available datasets with un-aggregated labels, depict approaches proposed so far, identify gaps and suggest ways forward. As datasets are becoming increasingly available, we hope that this synthesized view on the “problem” will lead to an open discussion on possible strategies to devise fundamentally new directions.</p>
+</div>
+<div class="ltx_para ltx_align_bottom" id="p1">
+<p class="ltx_p ltx_align_center" id="p1.1" style="width:345.0pt;"><span class="ltx_text ltx_inline-block" id="p1.1.1" style="width:0.0pt;">
+</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1">In Natural Language Processing (NLP) much progress today is driven by fine-tuning large pre-trained language models using an annotated dataset, assumed to be representative for a target language task of interest <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib83" title="">Schlangen (2021)</a></cite>. This is analogously so in Machine Learning (ML) and Computer Vision (CV), where the target tasks differ, yet the conceptual pipeline remains the same: data, modeling, evaluation. Despite the <span class="ltx_text ltx_font_italic" id="S1.p1.1.1">importance of annotated data</span>—as it fuels all steps in this pipeline—a crucial assumption of today’s learning systems is to rely on a single gold label per instance. The gold label is obtained by aggregation (e.g. majority vote)
+of labels crucially provided by <span class="ltx_text ltx_font_italic" id="S1.p1.1.2">humans</span>.</p>
+</div>
+<figure class="ltx_figure" id="S1.F1">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<div class="ltx_block ltx_figure_panel" id="S1.F1.2"><span class="ltx_ERROR ltx_centering undefined" id="S1.F1.2.1">\HyColor@XZeroOneThreeFour</span><span class="ltx_ERROR ltx_centering undefined" id="S1.F1.2.2">\pc</span>
+</div></div><div class="ltx_flex_break"></div><div class="ltx_flex_cell ltx_flex_size_1">
+<p class="ltx_p ltx_figure_panel ltx_align_center" id="S1.F1.3">@goptd@color<span class="ltx_ERROR undefined" id="S1.F1.3.1">\pc@hyenc@color</span>pdfcommentcolor<span class="ltx_ERROR undefined" id="S1.F1.3.2">\HyColor@XZeroOneThreeFour</span><span class="ltx_ERROR undefined" id="S1.F1.3.3">\pc</span>@goptd@fontcolor<span class="ltx_ERROR undefined" id="S1.F1.3.4">\pc@hyenc@fontcolor</span>pdfcommentcolor<span class="ltx_ERROR undefined" id="S1.F1.3.5">\HyColor@XZeroOneThreeFour</span><span class="ltx_ERROR undefined" id="S1.F1.3.6">\pc</span>@goptd@icolor<span class="ltx_ERROR undefined" id="S1.F1.3.7">\pc@hyenc@icolor</span>pdfcommentcolor<span class="ltx_ERROR undefined" id="S1.F1.3.8">\pdfmark</span>[<img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="142" id="S1.F1.g1" src="figures/hlv.jpg" style="aspect-ratio:471/142;" width="471"/>
+]pdfmark=/ANN,Subtype=/Widget,Raw=/TU (Screenreader caption: Schematic of human label variation vs annotation errors. Disagreement in annotation can be due to genuine annotator disagreement, subjectivity or simply because two (or more) views are plausible. <span class="ltx_ERROR undefined" id="S1.F1.3.9">\textCR</span>(<span class="ltx_ERROR undefined" id="S1.F1.3.10">\pc</span>@goptd@deadline)) /T (tooltip zref@0) /C [ ] /FT/Btn /F 768 /Ff 65536 /H/N /BS &lt;&lt; /W 0 &gt;&gt;</p></div></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>We propose the term <span class="ltx_text ltx_font_italic" id="S1.F1.5">human label variation</span> to capture the fact that inherent disagreement in annotation can be due to genuine disagreement, subjectivity or simply because two (or more) views are plausible.</figcaption>
+</figure>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1">The assumption of a <span class="ltx_text ltx_font_italic" id="S1.p2.1.1">ground truth</span> (and taking the majority vote or the ‘mode’ of the human judgement distribution) makes sense when humans involved in labeling highly agree on the answer to the questions, such as “Does this image contain a bird?”, “Is ‘learn’ a verb?”, “What is the capital of Italy?". However, this assumption often does not make sense—especially when language is involved. For example, on questions determining a word sense,
+questions such as “Is this comment toxic?” or questions involving understanding indirect answers to polar questions like “Q: Hey. Everything ok?” “A: I’m just mad at my agent” (see more examples in Figure <a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ Disagreement or variation? ‣ 2 Data and Human Label Variation ‣ The “Problem” of Human Label Variation: On Ground Truth in Data, Modeling and Evaluation"><span class="ltx_text ltx_ref_tag">2</span></a>). While some disagreement is due to human labeling errors (cf. Figure <a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ The “Problem” of Human Label Variation: On Ground Truth in Data, Modeling and Evaluation"><span class="ltx_text ltx_ref_tag">1</span></a> arrow to the left and § <a class="ltx_ref" href="#S3" title="3 Modeling and Human Label Variation ‣ The “Problem” of Human Label Variation: On Ground Truth in Data, Modeling and Evaluation"><span class="ltx_text ltx_ref_tag">3</span></a>), an increasing body of work has shown that irreconcilable variation between annotations is plausible and abundant <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib70" title="">Plank et al. (2014b)</a>; <a class="ltx_ref" href="#bib.bib4" title="">Aroyo and Welty (2015)</a>; <a class="ltx_ref" href="#bib.bib66" title="">Pavlick and Kwiatkowski (2019)</a>; <a class="ltx_ref" href="#bib.bib91" title="">Uma et al. (2021b)</a></cite> (illustrated in Figure <a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ The “Problem” of Human Label Variation: On Ground Truth in Data, Modeling and Evaluation"><span class="ltx_text ltx_ref_tag">1</span></a>). The observed variation can indeed be disagreement due to difficult cases, subjectivity or cases where multiple answers are plausible (cf. § <a class="ltx_ref" href="#S2" title="2 Data and Human Label Variation ‣ The “Problem” of Human Label Variation: On Ground Truth in Data, Modeling and Evaluation"><span class="ltx_text ltx_ref_tag">2</span></a>).
+We argue that human label variation (<span class="ltx_text ltx_font_smallcaps" id="S1.p2.1.2">Hlv</span>) provides rich information that should not be discarded.
+Critically, to rely on a ground truth means we tacitly agree to continue: i) to create datasets that encode a single ground truth, ii) to develop models that are optimized towards a single preferred output, and iii) to evaluate models against a single ground truth. By continuing to do so, we might ask ourselves if we are climbing the right hill–or whether continuing to model a single ground truth hampers progress.</p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1">In this position paper, we argue that neglecting variation in labeling is problematic, as it impacts <span class="ltx_text ltx_font_italic" id="S1.p3.1.1">all steps of the pipeline</span>. Traditionally, this variation has been considered a problem. We underline emerging works that instead believe this issue to be an opportunity. In fact, we believe it is essential to take human label variation into account for progress. Human labels are bound to be scarce yet at the same time critical as they provide human interpretations <span class="ltx_text ltx_font_italic" id="S1.p3.1.2">and values.</span> Therefore, embracing it is necessary for human-facing NLP, i.e., technology which is by and for humans; inclusive and reliable. However, the research landscape is fragmented, and approaches often focus on either steps of the pipeline. Therefore, in this paper we focus on the three core aspects of the pipeline: data, modeling and evaluation. In particular, i) we distill some of the on-going discussions in disparate (sub-)fields and propose a unified term; ii) we present and work out suggestions for each for the future; and iii) we provide a comprehensive repository of publicly-available data sets that allow studying human label variation, and invite the community to contribute.</p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">2 </span>Data and Human Label Variation</h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1">High-quality data is essential for any empirical scientific inquiry and has to satisfy the requirements of validity and reliability <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib50" title="">Krippendorff (2018)</a>; <a class="ltx_ref" href="#bib.bib74" title="">Pustejovsky and Stubbs (2012)</a>; <a class="ltx_ref" href="#bib.bib83" title="">Schlangen (2021)</a></cite>. However, for almost all tasks in NLP and CV irreconcilable disagreement between annotators has been observed <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib91" title="">Uma et al. (2021b)</a></cite>. In light of this, the original definition of data reliability is questionable—it assumes labels follow a given standard. We might ask which standard?</p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1">Human annotations are needed to ground and make sense of language, images, speech etc. However, labelling data is difficult, particularly when dealing with an object of study as complex as language. Take the illustration in Figure <a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ Disagreement or variation? ‣ 2 Data and Human Label Variation ‣ The “Problem” of Human Label Variation: On Ground Truth in Data, Modeling and Evaluation"><span class="ltx_text ltx_ref_tag">2</span></a> as example.
+While categories exist, their boundaries are fluid, or simply multiple options are plausible.</p>
+</div>
+<section class="ltx_paragraph" id="S2.SS0.SSS0.Px1">
+<h3 class="ltx_title ltx_title_paragraph">Disagreement or variation?</h3>
+<div class="ltx_para" id="S2.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S2.SS0.SSS0.Px1.p1.1">We define <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p1.1.1">human label variation</span> (<span class="ltx_text ltx_font_smallcaps" id="S2.SS0.SSS0.Px1.p1.1.2">Hlv</span>) as plausible variation in annotation, see Figure <a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ The “Problem” of Human Label Variation: On Ground Truth in Data, Modeling and Evaluation"><span class="ltx_text ltx_ref_tag">1</span></a>, to reconcile different notions found in the literature (discussed next). We prefer ‘variation’, because <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p1.1.3">‘disagreement’</span> implies that two (or more) views involved cannot all hold. In contrast, errors are annotation differences, due to amongst others attention slips. Crucially, <span class="ltx_text ltx_font_smallcaps" id="S2.SS0.SSS0.Px1.p1.1.4">Hlv</span> assumes humans usually provide their best judgements, and variation emerges due to, e.g., ambiguity of the instance, uncertainty of the annotator, genuine disagreement, or simply the fact that multiple options are correct. Aggregation obfuscates this real-world complexity.</p>
+</div>
+<figure class="ltx_figure" id="S2.F2">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<div class="ltx_block ltx_figure_panel" id="S2.F2.2"><span class="ltx_ERROR ltx_centering undefined" id="S2.F2.2.1">\HyColor@XZeroOneThreeFour</span><span class="ltx_ERROR ltx_centering undefined" id="S2.F2.2.2">\pc</span>
+</div></div><div class="ltx_flex_break"></div><div class="ltx_flex_cell ltx_flex_size_1">
+<p class="ltx_p ltx_figure_panel ltx_align_center" id="S2.F2.3">@goptd@color<span class="ltx_ERROR undefined" id="S2.F2.3.1">\pc@hyenc@color</span>pdfcommentcolor<span class="ltx_ERROR undefined" id="S2.F2.3.2">\HyColor@XZeroOneThreeFour</span><span class="ltx_ERROR undefined" id="S2.F2.3.3">\pc</span>@goptd@fontcolor<span class="ltx_ERROR undefined" id="S2.F2.3.4">\pc@hyenc@fontcolor</span>pdfcommentcolor<span class="ltx_ERROR undefined" id="S2.F2.3.5">\HyColor@XZeroOneThreeFour</span><span class="ltx_ERROR undefined" id="S2.F2.3.6">\pc</span>@goptd@icolor<span class="ltx_ERROR undefined" id="S2.F2.3.7">\pc@hyenc@icolor</span>pdfcommentcolor<span class="ltx_ERROR undefined" id="S2.F2.3.8">\pdfmark</span>[<img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="111" id="S2.F2.g1" src="figures/hardcases2.png" style="aspect-ratio:429/111;" width="429"/>]pdfmark=/ANN,Subtype=/Widget,Raw=/TU (Screenreader caption: The figure illustrates three hard cases. Case 1: What is the sentiment (positive, neutral, negative) of ‘This was an excellent offer and i didn’t not enjoy it’. Case 2: Does A entail B? ‘A: Paola drinks oat milk’ ‘B: Paolo drinks milk.’. Case 3: It shows a low-resolution image, the question is whether it is a cat or a dog or another animal.<span class="ltx_ERROR undefined" id="S2.F2.3.9">\textCR</span>(<span class="ltx_ERROR undefined" id="S2.F2.3.10">\pc</span>@goptd@deadline)) /T (tooltip zref@1) /C [ ] /FT/Btn /F 768 /Ff 65536 /H/N /BS &lt;&lt; /W 0 &gt;&gt;</p></div></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Hard cases. Image from <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib91" title="">Uma et al. (2021b)</a></cite>.</figcaption>
+</figure>
+<div class="ltx_para" id="S2.SS0.SSS0.Px1.p2">
+<p class="ltx_p" id="S2.SS0.SSS0.Px1.p2.1"><span class="ltx_text ltx_font_smallcaps" id="S2.SS0.SSS0.Px1.p2.1.1">Hlv</span> has been studied in CV, where it is dubbed <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.2">human uncertainty</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib68" title="">Peterson et al. (2019)</a></cite>, as well as in human-computer interaction (HCI) as <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.3">disagreement</span> or <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.4">contested labels</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib38" title="">Gordon et al. (2021)</a></cite>. In NLP, variation has been acknowledged as <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.5">annotator disagreement</span> already in early works on resolving disagreement <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib71" title="">Poesio and Artstein (2005)</a></cite>, particularly in pragmatics and discourse <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib24" title="">de Marneffe et al. (2012)</a>; <a class="ltx_ref" href="#bib.bib92" title="">Webber and Joshi (2012)</a>; <a class="ltx_ref" href="#bib.bib21" title="">Das et al. (2017)</a></cite>. <span class="ltx_text ltx_font_smallcaps" id="S2.SS0.SSS0.Px1.p2.1.6">Hlv</span> in NLP is discussed both from the <span class="ltx_text ltx_font_bold" id="S2.SS0.SSS0.Px1.p2.1.7">linguistic side</span> as <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.8">hard cases</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib94" title="">Zeman (2010)</a>; <a class="ltx_ref" href="#bib.bib70" title="">Plank et al. (2014b)</a></cite>, <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.9">difficult linguistic cases</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib56" title="">Manning (2011)</a></cite>, as judgements which are <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.10">not always categorical</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib24" title="">de Marneffe et al. (2012)</a></cite>,
+<span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.11">inherent disagreement</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib66" title="">Pavlick and Kwiatkowski (2019)</a>; <a class="ltx_ref" href="#bib.bib22" title="">Davani et al. (2022)</a></cite> and <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.12">justified and informative disagreement</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib87" title="">Sommerauer et al. (2020)</a></cite>.
+Variation in NLP is also discussed in connection to <span class="ltx_text ltx_font_bold" id="S2.SS0.SSS0.Px1.p2.1.13">subjectivity</span>, e.g., as <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.14">a range of reasonable interpretations</span> (CrowdTruth) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib4" title="">Aroyo and Welty (2015)</a></cite>, as <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.15">one or many beliefs</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib80" title="">Rottger et al. (2022)</a></cite>, the <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.16">social dimensions of annotators</span> like their demographic <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib81" title="">Sap et al. (2019)</a>; <a class="ltx_ref" href="#bib.bib53" title="">Larimore et al. (2021)</a>; <a class="ltx_ref" href="#bib.bib82" title="">Sap et al. (2022)</a></cite> and cultural backgrounds <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib42" title="">Hershcovich et al. (2022)</a></cite>, often discussed more generally as different perceptions in <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.17">data perspectivisim</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib7" title="">Basile et al. (2021a)</a>; <a class="ltx_ref" href="#bib.bib93" title="">Wich et al. (2021)</a></cite>.
+Moreover, there is work that acknowledges that <span class="ltx_text ltx_font_bold" id="S2.SS0.SSS0.Px1.p2.1.18">multiple plausible answers</span> are correct, such as works on the <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.19">collective human opinion</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib62" title="">Nie et al. (2020)</a></cite> influenced by seminal work that looks at the <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.20">human judgement distribution</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib66" title="">Pavlick and Kwiatkowski (2019)</a></cite> who found plausible variation in at least 20% of their data. Earlier work on veridicality also made this point <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib24" title="">de Marneffe et al. (2012)</a></cite>.
+The fact that multiple plausible annotations exist has also been put forward as <span class="ltx_text ltx_font_italic" id="S2.SS0.SSS0.Px1.p2.1.21">a range of acceptable annotations</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib63" title="">Palomaki et al. (2018)</a></cite>. The known variation in annotation for subjective tasks is at least a decade old <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib2" title="">Alm (2011)</a></cite>. They suggest that in the absence of a real ‘ground truth’, acceptability may be a more useful concept than ‘right’ and ‘wrong’. Capturing the <span class="ltx_text ltx_font_smallcaps" id="S2.SS0.SSS0.Px1.p2.1.22">Hlv</span>, instead of the global majority, aligns with this viewpoint.</p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S2.SS0.SSS0.Px2">
+<h3 class="ltx_title ltx_title_paragraph">Open issues and our suggestions</h3>
+<div class="ltx_para" id="S2.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S2.SS0.SSS0.Px2.p1.1">To make progress, we need to i) collect and release annotator-level (un-aggregated) labels, ii) document dataset creation, and iii) include as much meta-data as possible. In particular, we urge the community to release annotator-level (un-aggregated) labels–even if only for a small subset of the data–and thus we echo <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib8" title="">Basile et al. (2021b)</a></cite> and <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib73" title="">Prabhakaran et al. (2021)</a></cite> (also in <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib27" title="">Denton et al. (2021)</a></cite>) who independently raised this point as well.</p>
+</div>
+<div class="ltx_para" id="S2.SS0.SSS0.Px2.p2">
+<p class="ltx_p" id="S2.SS0.SSS0.Px2.p2.1">As a concrete starting point, we provide a comprehensive overview of existing datasets with multiple annotations in the appendix, which we release as a github repository to encourage uptake.
+Moreover, if possible to release responsibly, besides making data statements of datasets available <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib12" title="">Bender and Friedman (2018)</a></cite>, we encourage the community to include annotator-level background information <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib73" title="">Prabhakaran et al. (2021)</a></cite> and document the annotation process <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib35" title="">Geiger et al. (2020)</a></cite>. In general, we believe there is high value in releasing any meta-data available (ideally on the instance level, e.g. source, time of document, annotator ids, annotation completion time etc). For example, in a recent study we created a new relation extraction corpus with instance-level flags of annotator uncertainty proving valuable for evaluation <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib9" title="">Bassignana and Plank (2022)</a></cite>. Similarly, we asked the annotator to provide free-text rationales of relations, which recently was also put forward in <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib14" title="">Borin (2022)</a></cite>, referring to earlier work on collecting annotator rationals during annotation <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib59" title="">McDonnell et al. (2016)</a></cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS0.SSS0.Px2.p3">
+<p class="ltx_p" id="S2.SS0.SSS0.Px2.p3.1">We believe that the more, richer datasets become available, the more insights can be generated into the capabilities of models and their limitations. New algorithms may emerge capable of learning from fewer but richer sources. On a related line, collecting multiple annotations calls for research in estimating data quality and revisiting agreement measures; e.g., new measures for multiple-labels were recently proposed <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib57" title="">Marchal et al. (2022)</a></cite>.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">3 </span>Modeling and Human Label Variation</h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1">There is a growing literature on methods on how to deal with <span class="ltx_text ltx_font_smallcaps" id="S3.p1.1.1">Hlv</span> in learning. We categorize them into two camps: those that resolve variation, and those that embrace it. We will draw connections to surveys and the emerging literature, and discuss adoption of methods as well as gaps.</p>
+</div>
+<div class="ltx_para" id="S3.p2">
+<p class="ltx_p" id="S3.p2.1">The first big camp of research aims at <span class="ltx_text ltx_font_bold" id="S3.p2.1.1">resolving human label variation</span> and includes: 1) Aggregation and 2) Filtering. It considers <span class="ltx_text ltx_font_smallcaps" id="S3.p2.1.2">Hlv</span> as “problematic” or “noisy”. Consequently, a single (aggregated) label is obtained with presumably high agreement as the ground truth. <span class="ltx_text ltx_font_italic" id="S3.p2.1.3">Aggregation</span> is performed via majority voting or probabilistic aggregation methods, see <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib65" title="">Paun et al. (2022)</a></cite> for a survey and seminal works <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib23" title="">Dawid and Skene (1979)</a>; <a class="ltx_ref" href="#bib.bib75" title="">Qing et al. (2014)</a>; <a class="ltx_ref" href="#bib.bib5" title="">Artstein and Poesio (2008)</a></cite>.
+Aggregation is still the most widely-adopted solution for the problem today. However, aggregation by definition allows only <span class="ltx_text ltx_font_italic" id="S3.p2.1.4">one belief/label/category</span>. This is very limiting, as often it is not just about disagreement or matter of subjectivity, but multiple options being plausible.
+<span class="ltx_text ltx_font_italic" id="S3.p2.1.5">Filtering</span> methods are advocated by some with the idea to remove data instances with low agreement <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib76" title="">Reidsma and Carletta (2008)</a>; <a class="ltx_ref" href="#bib.bib77" title="">Reidsma and op den Akker (2008)</a>; <a class="ltx_ref" href="#bib.bib11" title="">Beigman Klebanov et al. (2008)</a>; <a class="ltx_ref" href="#bib.bib10" title="">Beigman and
+Beigman-Klebanov (2009)</a></cite>. However, only using high-agreement instances can yield worse performance <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib43" title="">Jamison and Gurevych (2015)</a></cite> and it wastes data.</p>
+</div>
+<div class="ltx_para" id="S3.p3">
+<p class="ltx_p" id="S3.p3.1">The second camp of research instead aims at <span class="ltx_text ltx_font_bold" id="S3.p3.1.1">embracing human label variation</span>. Two broad directions include: 3) Learning from un-aggregated labels (directly), or 4) Enriching gold with human label variation. With regard to <span class="ltx_text ltx_font_italic" id="S3.p3.1.2">learning from un-aggregated labels</span>, methods of varying complexity exist, from model-agnostic methods such as repeated labeling <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib84" title="">Sheng et al. (2008)</a></cite> used by e.g. <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib24" title="">de Marneffe et al. (2012)</a></cite>, to architecture-specific choices, e.g., adding a crowd layer <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib79" title="">Rodrigues and Pereira (2018)</a></cite>, learning from soft labels <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib68" title="">Peterson et al. (2019)</a></cite> and more; see the survey of <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib91" title="">Uma et al. (2021b)</a></cite>. So far learning from un-aggregated labels directly has shown greater promise in classification tasks in CV than in NLP <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib91" title="">Uma et al. (2021b)</a></cite> (evidence is scarce, see open issues). Within NLP, a more studied direction is currently <span class="ltx_text ltx_font_italic" id="S3.p3.1.3">to enrich the gold label with human label variation</span>, i.e., to learn from both the gold <span class="ltx_text ltx_font_italic" id="S3.p3.1.4">and</span> the un-aggregated labels. Methods in this category can be seen as part of the broader set of well-known regularization methods in ML, and for NLP include e.g., cost-sensitive loss weighting <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib69" title="">Plank et al. (2014a)</a></cite>, variants of multi-task learning <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib18" title="">Cohn and Specia (2013)</a>; <a class="ltx_ref" href="#bib.bib34" title="">Fornaciari et al. (2021)</a>; <a class="ltx_ref" href="#bib.bib22" title="">Davani et al. (2022)</a></cite>, or sequential fine-tuning <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib52" title="">Lalor et al. (2017)</a></cite>. These methods further differ in how they use un-aggregated labels, i.e., as confusion matrices estimated from a small sample <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib69" title="">Plank et al. (2014a)</a></cite>, as annotator-level auxiliary tasks requiring the full data with multiple labels <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib18" title="">Cohn and Specia (2013)</a>; <a class="ltx_ref" href="#bib.bib22" title="">Davani et al. (2022)</a></cite>, or as single “soft-label” auxiliary task that captures the per-instance human label distribution <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib34" title="">Fornaciari et al. (2021)</a></cite>.</p>
+</div>
+<figure class="ltx_figure" id="S3.F3">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<div class="ltx_block ltx_figure_panel" id="S3.F3.2"><span class="ltx_ERROR ltx_centering undefined" id="S3.F3.2.1">\HyColor@XZeroOneThreeFour</span><span class="ltx_ERROR ltx_centering undefined" id="S3.F3.2.2">\pc</span>
+</div></div><div class="ltx_flex_break"></div><div class="ltx_flex_cell ltx_flex_size_1">
+<p class="ltx_p ltx_figure_panel ltx_align_center" id="S3.F3.3">@goptd@color<span class="ltx_ERROR undefined" id="S3.F3.3.1">\pc@hyenc@color</span>pdfcommentcolor<span class="ltx_ERROR undefined" id="S3.F3.3.2">\HyColor@XZeroOneThreeFour</span><span class="ltx_ERROR undefined" id="S3.F3.3.3">\pc</span>@goptd@fontcolor<span class="ltx_ERROR undefined" id="S3.F3.3.4">\pc@hyenc@fontcolor</span>pdfcommentcolor<span class="ltx_ERROR undefined" id="S3.F3.3.5">\HyColor@XZeroOneThreeFour</span><span class="ltx_ERROR undefined" id="S3.F3.3.6">\pc</span>@goptd@icolor<span class="ltx_ERROR undefined" id="S3.F3.3.7">\pc@hyenc@icolor</span>pdfcommentcolor<span class="ltx_ERROR undefined" id="S3.F3.3.8">\pdfmark</span>[<img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="146" id="S3.F3.g1" src="figures/hlv-papers.png" style="aspect-ratio:476/146;" width="476"/>]pdfmark=/ANN,Subtype=/Widget,Raw=/TU (Screenreader caption: The graph shows a bar chat with counts of NLP paper per year that release unaggregated labels. The plot suggests an upward trend.<span class="ltx_ERROR undefined" id="S3.F3.3.9">\textCR</span>(<span class="ltx_ERROR undefined" id="S3.F3.3.10">\pc</span>@goptd@deadline)) /T (tooltip zref@2) /C [ ] /FT/Btn /F 768 /Ff 65536 /H/N /BS &lt;&lt; /W 0 &gt;&gt;</p></div></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>NLP Resource papers per publication year, counting publicly-available datasets released with human label variation (multiple annotator-labels per instance), cf. details in Table <a class="ltx_ref" href="#A1.T1" title="Table 1 ‣ Appendix A Datasets with Multiple Annotations ‣ The “Problem” of Human Label Variation: On Ground Truth in Data, Modeling and Evaluation"><span class="ltx_text ltx_ref_tag">1</span></a> in the Appendix.</figcaption>
+</figure>
+<section class="ltx_paragraph" id="S3.SS0.SSS0.Px1">
+<h3 class="ltx_title ltx_title_paragraph">Open issues and our suggestions</h3>
+<div class="ltx_para" id="S3.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S3.SS0.SSS0.Px1.p1.1">Undoubtedly, there is increasing interest in studying methods to learn with human label variation (see Figure <a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ 3 Modeling and Human Label Variation ‣ The “Problem” of Human Label Variation: On Ground Truth in Data, Modeling and Evaluation"><span class="ltx_text ltx_ref_tag">3</span></a> for our analysis of research papers).
+However, existing research is fragmented across (sub)-disciplines. We identify at least three diverse areas within NLP, with little to no overlap (as shown in Table <a class="ltx_ref" href="#A1.T1" title="Table 1 ‣ Appendix A Datasets with Multiple Annotations ‣ The “Problem” of Human Label Variation: On Ground Truth in Data, Modeling and Evaluation"><span class="ltx_text ltx_ref_tag">1</span></a> in the Appendix), focusing respectively on: subjectivity <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib7" title="">Basile et al. (2021a)</a></cite> (<a class="ltx_ref ltx_url ltx_font_typewriter" href="https://pdai.info" title="">pdai.info</a>, SemEval 23), natural language inference (NLI) <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib66" title="">Pavlick and Kwiatkowski (2019)</a>; <a class="ltx_ref" href="#bib.bib62" title="">Nie et al. (2020)</a></cite>, and both NLP and CV (JAIR &amp; SemEval 21). To the best of our knowledge, only the latter work and shared task so far bridges across disciplines <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib91" title="">Uma et al. (2021b)</a>; <a class="ltx_ref" href="#bib.bib89" title="">Uma et al. (2021a)</a></cite>. Still, they focus on complementary NLP tasks to the two previous initiatives. It is thus an open issue to see whether tasks might need to have specific properties to be suitable for one kind of method over another. A comprehensive evaluation is lacking. Studying transferability of methods across problems is another interesting open issue.</p>
+</div>
+<div class="ltx_para" id="S3.SS0.SSS0.Px1.p2">
+<p class="ltx_p" id="S3.SS0.SSS0.Px1.p2.1">Learning from <span class="ltx_text ltx_font_smallcaps" id="S3.SS0.SSS0.Px1.p2.1.1">Hlv</span> heavily depends on data labeled with multiple annotators. In some settings, it might be difficult to obtain sizeable amounts of such data (however, as seen in Section <a class="ltx_ref" href="#S2" title="2 Data and Human Label Variation ‣ The “Problem” of Human Label Variation: On Ground Truth in Data, Modeling and Evaluation"><span class="ltx_text ltx_ref_tag">2</span></a>, more datasets are emerging). Regarding learning, <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib52" title="">Lalor et al. (2017)</a></cite> find that even small amounts of data can be helpful in a sequential fine-tuning setup, as also early work indicates <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib69" title="">Plank et al. (2014a)</a></cite>. An open challenge is to find the right balance between the amount of data collected and the number of annotators. Overall, we hypothesize that the richness of information captured by human label variation has the potential to reduce data size requirements (possibly fewer instances but with more information captured in the human label distribution). It remains an open issue to connect with emerging works on learning with different amounts of annotation <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib96" title="">Zhang et al. (2021)</a></cite>, which can also lead to novel architectures.</p>
+</div>
+<div class="ltx_para" id="S3.SS0.SSS0.Px1.p3">
+<p class="ltx_p" id="S3.SS0.SSS0.Px1.p3.1">A related important challenge is to tease apart errors from signal <cite class="ltx_cite ltx_citemacro_cite">(<a class="ltx_ref" href="#bib.bib76" title="">Reidsma and Carletta, 2008</a>; <a class="ltx_ref" href="#bib.bib38" title="">Gordon et al., 2021</a>, e.g.)</cite>. Work on annotation error detection exists, cf. the very recent survey by <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib48" title="">Klie et al. (2022)</a></cite> or <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib97" title="">Zhang and de Marneffe (2021)</a></cite>. It is though largely overlooked. This calls further for theoretical work on the notion of an what constitutes an error versus a hard case <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib56" title="">Manning (2011)</a>; <a class="ltx_ref" href="#bib.bib92" title="">Webber and Joshi (2012)</a>; <a class="ltx_ref" href="#bib.bib70" title="">Plank et al. (2014b)</a></cite>. This bears connections to emerging work in HCI, in particular social computing <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib38" title="">Gordon et al. (2021)</a>; <a class="ltx_ref" href="#bib.bib37" title="">Gordon et al. (2022)</a></cite>, who look at the perception of system errors by humans, see also Section <a class="ltx_ref" href="#S4" title="4 Evaluation and Human Label Variation ‣ The “Problem” of Human Label Variation: On Ground Truth in Data, Modeling and Evaluation"><span class="ltx_text ltx_ref_tag">4</span></a>, and earlier work in HCI on crowdsourcing that allows for some errors <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib51" title="">Krishna et al. (2016)</a></cite>.</p>
+</div>
+<div class="ltx_para" id="S3.SS0.SSS0.Px1.p4">
+<p class="ltx_p" id="S3.SS0.SSS0.Px1.p4.1">While embracing human label variation helps to regularize learning, the connection to a broader range of ML methods such as noise labeling or calibration remains highly relevant and a source of further inspiration <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib36" title="">Goldberger and Ben-Reuven (2016)</a>; <a class="ltx_ref" href="#bib.bib41" title="">Han et al. (2018b)</a>; <a class="ltx_ref" href="#bib.bib40" title="">Han et al. (2018a)</a>; <a class="ltx_ref" href="#bib.bib60" title="">Meister et al. (2020)</a></cite>. There are some initial studies that compare human disagreement with model confidence <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib22" title="">Davani et al. (2022)</a></cite>. Overall, interest in calibration methods <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib61" title="">Naeini et al. (2015)</a>; <a class="ltx_ref" href="#bib.bib39" title="">Guo et al. (2017)</a></cite> is increasing <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib29" title="">Desai and Durrett (2020)</a>; <a class="ltx_ref" href="#bib.bib49" title="">Kong et al. (2020)</a>; <a class="ltx_ref" href="#bib.bib45" title="">Jiang et al. (2021)</a></cite> to counter overconfidence of neural classifiers <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib60" title="">Meister et al. (2020)</a></cite>. In contemporary work to this, we show that measuring calibration to human majority given inherent disagreements is theoretically and empirically problematic <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib6" title="">Baan et al. (2022)</a></cite>. As a first step, we propose instance-level measures of calibration that better capture the human label distribution. In future, it remains to be seen how to best use human label variation to make systems more trustworthy.</p>
+</div>
+<div class="ltx_para" id="S3.SS0.SSS0.Px1.p5">
+<p class="ltx_p" id="S3.SS0.SSS0.Px1.p5.1">Finally, there is relevant interesting work that more deeply looks at data during learning. In NLP, recent seminal work by <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib88" title="">Swayamdipta et al. (2020)</a></cite> proposes <span class="ltx_text ltx_font_italic" id="S3.SS0.SSS0.Px1.p5.1.1">data maps</span> to investigate the behavior of a model on individual instances during training (training dynamics). They show that training a system on <span class="ltx_text ltx_font_italic" id="S3.SS0.SSS0.Px1.p5.1.2">ambiguous</span> instances identified via data maps helps to generalizes better in out-of-distribution evaluation <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib88" title="">Swayamdipta et al. (2020)</a></cite>. Building on top of this work, <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib95" title="">Zhang and Plank (2021)</a></cite> show that the instances at the boundary of hard and ambiguous cases derived from small data maps aids active learning. This is further evidence that human uncertainty in labeling is beneficial for learning. It remains to be seen whether training dynamics can yield novel architectures for learning from <span class="ltx_text ltx_font_smallcaps" id="S3.SS0.SSS0.Px1.p5.1.3">Hlv</span>.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">4 </span>Evaluation and Human Label Variation</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1">Evaluation is of critical importance in empirical research fields such as ML, NLP and CV. It helps to choose one system over another, and to measure progress. However, current evaluation practices typically use accuracy against a gold standard. In many tasks this common practice is severely flawed. It obfuscates the truth about the state of ML models. It leaves a large gap between in-vitro and in-vivo evaluation. HCI research has shown that metrics are not aligned with reality; audits of algorithms’ performance have uncovered very poor results in practice, and that this disconnect is indicative of a larger disconnect on how ML and HCI researchers evaluate their work <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib38" title="">Gordon et al. (2021)</a></cite>. We believe this is an important take-away for NLP. We too often focus on single metrics, single components of the pipeline, in other words, on myopic <span class="ltx_text ltx_font_italic" id="S4.p1.1.1">in-vitro</span> experimentation.</p>
+</div>
+<section class="ltx_paragraph" id="S4.SS0.SSS0.Px1">
+<h3 class="ltx_title ltx_title_paragraph">Open issues and our suggestions</h3>
+<div class="ltx_para" id="S4.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S4.SS0.SSS0.Px1.p1.1">Despite the increasing body of literature on methods for learning with <span class="ltx_text ltx_font_smallcaps" id="S4.SS0.SSS0.Px1.p1.1.1">Hlv</span>, a majority of the papers introducing new methods strikingly evaluate against <span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p1.1.2">hard labels</span> (gold labels) <cite class="ltx_cite ltx_citemacro_cite">(<a class="ltx_ref" href="#bib.bib79" title="">Rodrigues and Pereira, 2018</a>; <a class="ltx_ref" href="#bib.bib34" title="">Fornaciari et al., 2021</a>, e.g.)</cite>. If we want to take human label variation seriously, we need to shift our attention to evaluation that goes beyond hard labels (accuracy). As accuracy of all models can be high (at times), looking at only one metric (and, in fact a single—argmax—prediction) gives no indication on how reasonable a model is, yet alone how confident and trustworthy it is.</p>
+</div>
+<div class="ltx_para" id="S4.SS0.SSS0.Px1.p2">
+<p class="ltx_p" id="S4.SS0.SSS0.Px1.p2.1">Research in ML, CV and NLP has started to incentivize <span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p2.1.1">hard and soft label</span> evaluation. Soft labels compare the human label distribution to model outputs. Proposed soft metrics include: <span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p2.1.2">cross entropy</span>, to capture how well the model captures humans’ assessment not just of the top label, which is used in both CV <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib68" title="">Peterson et al. (2019)</a></cite> and NLP <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib66" title="">Pavlick and Kwiatkowski (2019)</a></cite>; <span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p2.1.3">entropy correlation</span> proposed by <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib90" title="">Uma et al. (2020)</a></cite>, to compute Pearson’s correlation between instance-level entropy scores of human soft labels and model predictions; <span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p2.1.4">Kullback-Leibler divergence</span>-based evaluation <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib62" title="">Nie et al. (2020)</a></cite> (either KL or Jensen-Shannon). Others instead started to evaluate against <span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p2.1.5">individual annotators</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib78" title="">Resnick et al. (2021)</a>; <a class="ltx_ref" href="#bib.bib22" title="">Davani et al. (2022)</a></cite>, measure F1 scores against <span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p2.1.6">data splits by different annotator agreement levels</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib54" title="">Leonardelli et al. (2021)</a>; <a class="ltx_ref" href="#bib.bib20" title="">Damgaard et al. (2021)</a></cite>, data splits based on <span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p2.1.7">annotator clustering</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib7" title="">Basile et al. (2021a)</a></cite>, data splits based on <span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p2.1.8">item difficulty</span> based on entropy of the label distribution and semantic distance <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib46" title="">Jolly et al. (2021)</a></cite>, and data splits based on <span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p2.1.9">annotator uncertainty flags</span> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib9" title="">Bassignana and Plank (2022)</a></cite>. Analogously as in Section <a class="ltx_ref" href="#S3" title="3 Modeling and Human Label Variation ‣ The “Problem” of Human Label Variation: On Ground Truth in Data, Modeling and Evaluation"><span class="ltx_text ltx_ref_tag">3</span></a>, it is an open issue to see whether tasks might need to have specific properties to be more suitable for one kind of evaluation over another. In general, we need better evaluation practices (besides soft and hard evaluation), particularly in light of the complexity of human label variation—and the reasons it arises, which might be due to uncertainty, background, task complexity, intra-coder reliability etc; see <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib8" title="">Basile et al. (2021b)</a></cite> and in particular <cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib44" title="">Jiang and de Marneffe (2022)</a></cite> for a discussion on disagreement sources; the latter recently developed a taxonomy for disagreement in natural language inference data.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">5 </span>Conclusions</h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1">In this paper, we outline that human label variation impacts all steps of the traditional ML pipeline, and is an opportunity, not a problem. To move forward, we argue for a more comprehensive treatment of <span class="ltx_text ltx_font_smallcaps" id="S5.p1.1.1">Hlv</span>, which considers all steps, to enable innovation: data, modeling and evaluation. To do so, and truly move beyond the current in-vitro setups, we need an open, inter-disciplinary discussion. We hope to contribute to this discussion, and stipulate research with the released repository: <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/mainlp/awesome-human-label-variation" title="">https://github.com/mainlp/awesome-human-label-variation</a>.<span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup>
+<span class="ltx_tag ltx_tag_note">1</span>
+            
+            
+            
+          The repository contains the datasets in Appendix 1 as a starting point. This is, to the best of our knowledge, the most comprehensive list of datasets with un-aggregated labels available today. We encourage readers to contribute. They are further invited to join the SemEval 2023 shared task LeWiDi: <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://le-wi-di.github.io/" title="">https://le-wi-di.github.io/</a></span></span></span></p>
+</div>
+</section>
+<section class="ltx_section" id="Sx1">
+<h2 class="ltx_title ltx_title_section">Limitations</h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1">This position paper tries to be succinct while aiming at synthesizing a very broad notion—human label variation—that affects all steps dealing with learning from annotated data. Therefore, this position paper is necessarily incomplete, as is the dataset repository that is provided. However, we hope that the repository and paper will lead to an open discussion and community uptake, as this is a big open issue and necessitates a broader, inter-disciplinary treatment.</p>
+</div>
+</section>
+<section class="ltx_section" id="Sx2">
+<h2 class="ltx_title ltx_title_section">Ethics Statement</h2>
+<div class="ltx_para" id="Sx2.p1">
+<p class="ltx_p" id="Sx2.p1.1">Modeling human label variation is connected to social bias, as annotator backgrounds influence annotations and consequently both machine learning and evaluation. Therefore it is important to be aware of possible social implications of some of the technologies discussed here. Inevitably there is potential for dual use, as amplifying the voice of some might harm others. However, there are social opportunities, as modeling human label variation allows to include the voices of more groups, and even the very underrepresented. In a world where the majority view dominates, these would otherwise be left behind.</p>
+</div>
+</section>
+<section class="ltx_section" id="Sx3">
+<h2 class="ltx_title ltx_title_section">Acknowledgements</h2>
+<div class="ltx_para" id="Sx3.p1">
+<p class="ltx_p" id="Sx3.p1.1">We thank the reviewers for their feedback. Special thanks to Bonnie Webber, Massimo Poesio and Raffaella Bernardi for invaluable feedback on drafts of this paper and discussions on this topic, in parts at the Insights workshop@ACL 2022. Thanks to members of the NLPnorth &amp; MaiNLP lab for feedback on this paper.
+BP is supported by ERC Consolidator Grant DIALECT 101043235.</p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bib1"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Akhtar et al. (2021)</span>
+<span class="ltx_bibblock">
+Sohail Akhtar, Valerio Basile, and Viviana Patti. 2021.
+
+</span>
+<span class="ltx_bibblock">Whose opinions matter? Perspective-aware models to identify opinions
+of hate speech victims in abusive language detection.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib1.1">arXiv preprint arXiv:2106.15896</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib2"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Alm (2011)</span>
+<span class="ltx_bibblock">
+Cecilia Ovesdotter Alm. 2011.
+
+</span>
+<span class="ltx_bibblock">Subjective natural language problems: Motivations, applications,
+characterizations, and implications.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib2.1">Proceedings of the 49th Annual Meeting of the Association
+for Computational Linguistics: Human Language Technologies</em>, pages 107–112.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib3"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Almanea and Poesio (2022)</span>
+<span class="ltx_bibblock">
+Dina Almanea and Massimo Poesio. 2022.
+
+</span>
+<span class="ltx_bibblock">The ARMIS dataset of misogyny in arabic tweets.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib3.1">Proc. of LREC</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib4"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Aroyo and Welty (2015)</span>
+<span class="ltx_bibblock">
+Lora Aroyo and Chris Welty. 2015.
+
+</span>
+<span class="ltx_bibblock">Truth is a lie: Crowd truth and the seven myths of human annotation.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib4.1">AI Magazine</em>, 36(1):15–24.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib5"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Artstein and Poesio (2008)</span>
+<span class="ltx_bibblock">
+Ron Artstein and Massimo Poesio. 2008.
+
+</span>
+<span class="ltx_bibblock">Inter-coder agreement for computational linguistics.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib5.1">Computational linguistics</em>, 34(4):555–596.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib6"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Baan et al. (2022)</span>
+<span class="ltx_bibblock">
+Joris Baan, Wilker Aziz, Barbara Plank, and Raquel Fernandez. 2022.
+
+</span>
+<span class="ltx_bibblock">Stop measuring calibration when humans disagree.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib6.1">Empirical Methods of Natural Language Processing: EMNLP
+2022</em>. Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib7"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Basile et al. (2021a)</span>
+<span class="ltx_bibblock">
+Valerio Basile, Federico Cabitza, Andrea Campagner, and Michael Fell.
+2021a.
+
+</span>
+<span class="ltx_bibblock">Toward a perspectivist turn in ground truthing for predictive
+computing.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib7.1">arXiv preprint arXiv:2109.04270</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib8"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Basile et al. (2021b)</span>
+<span class="ltx_bibblock">
+Valerio Basile, Michael Fell, Tommaso Fornaciari, Dirk Hovy, Silviu Paun,
+Barbara Plank, Massimo Poesio, Alexandra Uma, et al. 2021b.
+
+</span>
+<span class="ltx_bibblock">We need to consider disagreement in evaluation.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib8.1">1st Workshop on Benchmarking: Past, Present and Future</em>,
+pages 15–21. Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib9"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bassignana and Plank (2022)</span>
+<span class="ltx_bibblock">
+Elisa Bassignana and Barbara Plank. 2022.
+
+</span>
+<span class="ltx_bibblock">CrossRE: A Cross-Domain Dataset for Relation Extraction.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib9.1">Findings of the Association for Computational Linguistics:
+EMNLP 2022</em>. Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib10"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Beigman and
+Beigman-Klebanov (2009)</span>
+<span class="ltx_bibblock">
+Eyal Beigman and Beata Beigman-Klebanov. 2009.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://www.aclweb.org/anthology/P09-1032" title="">Learning with
+annotation noise</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib10.1">Proceedings of the Joint Conference of the 47th Annual
+Meeting of the ACL and the 4th International Joint Conference on Natural
+Language Processing of the AFNLP</em>, pages 280–287, Suntec, Singapore.
+Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib11"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Beigman Klebanov et al. (2008)</span>
+<span class="ltx_bibblock">
+Beata Beigman Klebanov, Eyal Beigman, and Danie Diermaier. 2008.
+
+</span>
+<span class="ltx_bibblock">Analyzing disagreements.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib11.1">Proceedings of the Coling 2008 workshop on Human Judgements
+in Computational Linguistics</em>, pages 2–7.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib12"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bender and Friedman (2018)</span>
+<span class="ltx_bibblock">
+Emily M Bender and Batya Friedman. 2018.
+
+</span>
+<span class="ltx_bibblock">Data statements for natural language processing: Toward mitigating
+system bias and enabling better science.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib12.1">Transactions of the Association for Computational Linguistics</em>,
+6:587–604.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib13"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Berzak et al. (2016)</span>
+<span class="ltx_bibblock">
+Yevgeni Berzak, Yan Huang, Andrei Barbu, Anna Korhonen, and Boris Katz. 2016.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/D16-1239" title="">Anchoring and agreement
+in syntactic annotations</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib13.1">Proceedings of the 2016 Conference on Empirical Methods in
+Natural Language Processing</em>, pages 2215–2224, Austin, Texas. Association
+for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib14"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Borin (2022)</span>
+<span class="ltx_bibblock">
+Lars Borin. 2022.
+
+</span>
+<span class="ltx_bibblock">All that glitters… interannotator agreement in natural language
+processing.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib14.1">Morfologi, målstrev og maskinar – Trond Trosterud 60</em>,
+46(1).
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib15"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bryant and Ng (2015)</span>
+<span class="ltx_bibblock">
+Christopher Bryant and Hwee Tou Ng. 2015.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.3115/v1/P15-1068" title="">How far are we from
+fully automatic high quality grammatical error correction?</a>
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib15.1">Proceedings of the 53rd Annual Meeting of the Association
+for Computational Linguistics and the 7th International Joint Conference on
+Natural Language Processing (Volume 1: Long Papers)</em>, pages 697–707,
+Beijing, China. Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib16"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Cercas Curry et al. (2021)</span>
+<span class="ltx_bibblock">
+Amanda Cercas Curry, Gavin Abercrombie, and Verena Rieser. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.emnlp-main.587" title="">ConvAbuse: Data, analysis, and benchmarks for nuanced abuse detection in
+conversational AI</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib16.1">Proceedings of the 2021 Conference on Empirical Methods in
+Natural Language Processing</em>, pages 7388–7403, Online and Punta Cana,
+Dominican Republic. Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib17"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Cheplygina and Pluim (2018)</span>
+<span class="ltx_bibblock">
+Veronika Cheplygina and Josien PW Pluim. 2018.
+
+</span>
+<span class="ltx_bibblock">Crowd disagreement about medical images is informative.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib17.1">Intravascular imaging and computer assisted stenting and
+large-scale annotation of biomedical data and expert label synthesis</em>, pages
+105–111. Springer.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib18"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Cohn and Specia (2013)</span>
+<span class="ltx_bibblock">
+Trevor Cohn and Lucia Specia. 2013.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://www.aclweb.org/anthology/P13-1004" title="">Modelling
+annotator bias with multi-task Gaussian processes: An application to
+machine translation quality estimation</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib18.1">Proceedings of the 51st Annual Meeting of the Association
+for Computational Linguistics (Volume 1: Long Papers)</em>, pages 32–42, Sofia,
+Bulgaria. Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib19"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dagan et al. (2005)</span>
+<span class="ltx_bibblock">
+Ido Dagan, Oren Glickman, and Bernardo Magnini. 2005.
+
+</span>
+<span class="ltx_bibblock">The pascal recognising textual entailment challenge.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib19.1">Machine learning challenges workshop</em>, pages 177–190.
+Springer.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib20"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Damgaard et al. (2021)</span>
+<span class="ltx_bibblock">
+Cathrine Damgaard, Paulina Toborek, Trine Eriksen, and Barbara Plank. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.codi-main.1" title="">“I’ll be
+there for you”: The one with understanding indirect answers</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib20.1">Proceedings of the 2nd Workshop on Computational Approaches
+to Discourse</em>, pages 1–11, Punta Cana, Dominican Republic and Online.
+Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib21"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Das et al. (2017)</span>
+<span class="ltx_bibblock">
+Debopam Das, Manfred Stede, and Maite Taboada. 2017.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/W17-3602" title="">The good, the bad, and
+the disagreement: Complex ground truth in rhetorical structure analysis</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib21.1">Proceedings of the 6th Workshop on Recent Advances in RST
+and Related Formalisms</em>, pages 11–19, Santiago de Compostela, Spain.
+Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib22"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Davani et al. (2022)</span>
+<span class="ltx_bibblock">
+Aida Mostafazadeh Davani, Mark Díaz, and Vinodkumar Prabhakaran. 2022.
+
+</span>
+<span class="ltx_bibblock">Dealing with disagreements: Looking beyond the majority vote in
+subjective annotations.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib22.1">Transactions of the Association for Computational Linguistics</em>,
+10:92–110.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib23"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dawid and Skene (1979)</span>
+<span class="ltx_bibblock">
+Alexander Philip Dawid and Allan M Skene. 1979.
+
+</span>
+<span class="ltx_bibblock">Maximum likelihood estimation of observer error-rates using the em
+algorithm.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib23.1">Journal of the Royal Statistical Society: Series C (Applied
+Statistics)</em>, 28(1):20–28.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib24"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">de Marneffe et al. (2012)</span>
+<span class="ltx_bibblock">
+Marie-Catherine de Marneffe, Christopher D. Manning, and Christopher Potts.
+2012.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.1162/COLI_a_00097" title="">Did it happen? the
+pragmatic complexity of veridicality assessment</a>.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib24.1">Computational Linguistics</em>, 38(2):301–333.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib25"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">de Marneffe et al. (2019)</span>
+<span class="ltx_bibblock">
+Marie-Catherine de Marneffe, Mandy Simons, and Judith Tonhauser. 2019.
+
+</span>
+<span class="ltx_bibblock">The commitmentbank: Investigating projection in naturally occurring
+discourse.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib25.1">proceedings of Sinn und Bedeutung</em>, volume 23, pages
+107–124.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib26"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Demszky et al. (2020)</span>
+<span class="ltx_bibblock">
+Dorottya Demszky, Dana Movshovitz-Attias, Jeongwoo Ko, Alan Cowen, Gaurav
+Nemade, and Sujith Ravi. 2020.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2020.acl-main.372" title="">GoEmotions: A dataset of fine-grained emotions</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib26.1">Proceedings of the 58th Annual Meeting of the Association
+for Computational Linguistics</em>, pages 4040–4054, Online. Association for
+Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib27"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Denton et al. (2021)</span>
+<span class="ltx_bibblock">
+Emily Denton, Mark Díaz, Ian Kivlichan, Vinodkumar Prabhakaran, and Rachel
+Rosen. 2021.
+
+</span>
+<span class="ltx_bibblock">Whose ground truth? accounting for individual and collective
+identities underlying dataset annotation.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib27.1">NeurIPS workshop on Data-Centric AI</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib28"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Derczynski et al. (2016)</span>
+<span class="ltx_bibblock">
+Leon Derczynski, Kalina Bontcheva, and Ian Roberts. 2016.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://aclanthology.org/C16-1111" title="">Broad Twitter corpus: A
+diverse named entity recognition resource</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib28.1">Proceedings of COLING 2016, the 26th International
+Conference on Computational Linguistics: Technical Papers</em>, pages 1169–1179,
+Osaka, Japan. The COLING 2016 Organizing Committee.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib29"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Desai and Durrett (2020)</span>
+<span class="ltx_bibblock">
+Shrey Desai and Greg Durrett. 2020.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2020.emnlp-main.21" title="">Calibration
+of pre-trained transformers</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib29.1">Proceedings of the 2020 Conference on Empirical Methods in
+Natural Language Processing (EMNLP)</em>, pages 295–302, Online. Association for
+Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib30"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dinu et al. (2021)</span>
+<span class="ltx_bibblock">
+Liviu P. Dinu, Ioan-Bogdan Iordache, Ana Sabina Uban, and Marcos Zampieri.
+2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.findings-emnlp.296" title="">A
+computational exploration of pejorative language in social media</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib30.1">Findings of the Association for Computational Linguistics:
+EMNLP 2021</em>, pages 3493–3498, Punta Cana, Dominican Republic. Association
+for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib31"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dumitrache et al. (2018)</span>
+<span class="ltx_bibblock">
+Anca Dumitrache, Lora Aroyo, and Chris Welty. 2018.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/W18-5503" title="">Crowdsourcing semantic
+label propagation in relation classification</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib31.1">Proceedings of the First Workshop on Fact Extraction and
+VERification (FEVER)</em>, pages 16–21, Brussels, Belgium. Association for
+Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib32"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dumitrache et al. (2019)</span>
+<span class="ltx_bibblock">
+Anca Dumitrache, Lora Aroyo, and Chris Welty. 2019.
+
+</span>
+<span class="ltx_bibblock">A crowdsourced frame disambiguation corpus with ambiguity.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib32.1">Annual Conference of the North American Chapter of the
+Association for Computational Linguistics (NAACL)</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib33"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ferracane et al. (2021)</span>
+<span class="ltx_bibblock">
+Elisa Ferracane, Greg Durrett, Junyi Jessy Li, and Katrin Erk. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.naacl-main.129" title="">Did they
+answer? subjective acts and intents in conversational discourse</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib33.1">Proceedings of the 2021 Conference of the North American
+Chapter of the Association for Computational Linguistics: Human Language
+Technologies</em>, pages 1626–1644, Online. Association for Computational
+Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib34"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Fornaciari et al. (2021)</span>
+<span class="ltx_bibblock">
+Tommaso Fornaciari, Alexandra Uma, Silviu Paun, Barbara Plank, Dirk Hovy, and
+Massimo Poesio. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.naacl-main.204" title="">Beyond black
+&amp; white: Leveraging annotator disagreement via soft-label multi-task
+learning</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib34.1">Proceedings of the 2021 Conference of the North American
+Chapter of the Association for Computational Linguistics: Human Language
+Technologies</em>, pages 2591–2597, Online. Association for Computational
+Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib35"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Geiger et al. (2020)</span>
+<span class="ltx_bibblock">
+R Stuart Geiger, Kevin Yu, Yanlai Yang, Mindy Dai, Jie Qiu, Rebekah Tang, and
+Jenny Huang. 2020.
+
+</span>
+<span class="ltx_bibblock">Garbage in, garbage out? do machine learning application papers in
+social computing report where human-labeled training data comes from?
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib35.1">Proceedings of the 2020 Conference on Fairness,
+Accountability, and Transparency</em>, pages 325–336.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib36"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Goldberger and Ben-Reuven (2016)</span>
+<span class="ltx_bibblock">
+Jacob Goldberger and Ehud Ben-Reuven. 2016.
+
+</span>
+<span class="ltx_bibblock">Training deep neural-networks using a noise adaptation layer.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib36.1">ICLR 2017</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib37"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gordon et al. (2022)</span>
+<span class="ltx_bibblock">
+Mitchell L Gordon, Michelle S Lam, Joon Sung Park, Kayur Patel, Jeff Hancock,
+Tatsunori Hashimoto, and Michael S Bernstein. 2022.
+
+</span>
+<span class="ltx_bibblock">Jury learning: Integrating dissenting voices into machine learning
+models.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib37.1">CHI Conference on Human Factors in Computing Systems</em>, pages
+1–19.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib38"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gordon et al. (2021)</span>
+<span class="ltx_bibblock">
+Mitchell L Gordon, Kaitlyn Zhou, Kayur Patel, Tatsunori Hashimoto, and
+Michael S Bernstein. 2021.
+
+</span>
+<span class="ltx_bibblock">The disagreement deconvolution: Bringing machine learning performance
+metrics in line with reality.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib38.1">Proceedings of the 2021 CHI Conference on Human Factors in
+Computing Systems</em>, pages 1–14.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib39"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Guo et al. (2017)</span>
+<span class="ltx_bibblock">
+Chuan Guo, Geoff Pleiss, Yu Sun, and Kilian Q. Weinberger. 2017.
+
+</span>
+<span class="ltx_bibblock">On calibration of modern neural networks.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib39.1">Proceedings of the 34th International Conference on Machine
+Learning - Volume 70</em>, ICML’17, page 1321–1330. JMLR.org.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib40"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Han et al. (2018a)</span>
+<span class="ltx_bibblock">
+Bo Han, Jiangchao Yao, Gang Niu, Mingyuan Zhou, Ivor Tsang, Ya Zhang, and
+Masashi Sugiyama. 2018a.
+
+</span>
+<span class="ltx_bibblock">Masking: A new perspective of noisy supervision.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib40.1">Advances in Neural Information Processing Systems</em>, pages
+5836–5846.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib41"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Han et al. (2018b)</span>
+<span class="ltx_bibblock">
+Bo Han, Quanming Yao, Xingrui Yu, Gang Niu, Miao Xu, Weihua Hu, Ivor Tsang, and
+Masashi Sugiyama. 2018b.
+
+</span>
+<span class="ltx_bibblock">Co-teaching: Robust training of deep neural networks with extremely
+noisy labels.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib41.1">Advances in neural information processing systems</em>, pages
+8527–8537.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib42"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hershcovich et al. (2022)</span>
+<span class="ltx_bibblock">
+Daniel Hershcovich, Stella Frank, Heather Lent, Miryam de Lhoneux, Mostafa
+Abdou, Stephanie Brandl, Emanuele Bugliarello, Laura Cabello Piqueras, Ilias
+Chalkidis, Ruixiang Cui, Constanza Fierro, Katerina Margatina, Phillip Rust,
+and Anders Søgaard. 2022.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2022.acl-long.482" title="">Challenges and
+strategies in cross-cultural NLP</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib42.1">Proceedings of the 60th Annual Meeting of the Association
+for Computational Linguistics (Volume 1: Long Papers)</em>, pages 6997–7013,
+Dublin, Ireland. Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib43"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Jamison and Gurevych (2015)</span>
+<span class="ltx_bibblock">
+Emily Jamison and Iryna Gurevych. 2015.
+
+</span>
+<span class="ltx_bibblock">Noise or additional information? leveraging crowdsource annotation
+item agreement for natural language tasks.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib43.1">Proceedings of the 2015 Conference on Empirical Methods in
+Natural Language Processing</em>, pages 291–297.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib44"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Jiang and de Marneffe (2022)</span>
+<span class="ltx_bibblock">
+Nan-Jiang Jiang and Marie-Catherine de Marneffe. 2022.
+
+</span>
+<span class="ltx_bibblock">Investigating reasons for disagreement in natural language inference.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib44.1">Transactions of the Association for Computational Linguistics</em>,
+10:1081–1097.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib45"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Jiang et al. (2021)</span>
+<span class="ltx_bibblock">
+Zhengbao Jiang, Jun Araki, Haibo Ding, and Graham Neubig. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.1162/tacl_a_00407" title="">How Can We Know When
+Language Models Know? On the Calibration of Language Models for Question
+Answering</a>.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib45.1">Transactions of the Association for Computational Linguistics</em>,
+9:962–977.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib46"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Jolly et al. (2021)</span>
+<span class="ltx_bibblock">
+Shailza Jolly, Sandro Pezzelle, and Moin Nabi. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.naacl-main.192" title="">EaSe: A
+diagnostic tool for VQA based on answer diversity</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib46.1">Proceedings of the 2021 Conference of the North American
+Chapter of the Association for Computational Linguistics: Human Language
+Technologies</em>, pages 2407–2414, Online. Association for Computational
+Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib47"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kennedy et al. (2020)</span>
+<span class="ltx_bibblock">
+Chris J Kennedy, Geoff Bacon, Alexander Sahn, and Claudia von Vacano. 2020.
+
+</span>
+<span class="ltx_bibblock">Constructing interval variables via faceted rasch measurement and
+multitask deep learning: a hate speech application.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib47.1">arXiv preprint arXiv:2009.10277</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib48"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Klie et al. (2022)</span>
+<span class="ltx_bibblock">
+Jan-Christoph Klie, Bonnie Webber, and Iryna Gurevych. 2022.
+
+</span>
+<span class="ltx_bibblock">Annotation error detection: Analyzing the past and present for a more
+coherent future.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib48.1">Computational Linguistics</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib49"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kong et al. (2020)</span>
+<span class="ltx_bibblock">
+Lingkai Kong, Haoming Jiang, Yuchen Zhuang, Jie Lyu, Tuo Zhao, and Chao Zhang.
+2020.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2020.emnlp-main.102" title="">Calibrated
+language model fine-tuning for in- and out-of-distribution data</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib49.1">Proceedings of the 2020 Conference on Empirical Methods in
+Natural Language Processing (EMNLP)</em>, pages 1326–1340, Online. Association
+for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib50"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Krippendorff (2018)</span>
+<span class="ltx_bibblock">
+Klaus Krippendorff. 2018.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib50.1">Content analysis: An introduction to its methodology</em>.
+
+</span>
+<span class="ltx_bibblock">Sage publications.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib51"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Krishna et al. (2016)</span>
+<span class="ltx_bibblock">
+Ranjay A Krishna, Kenji Hata, Stephanie Chen, Joshua Kravitz, David A Shamma,
+Li Fei-Fei, and Michael S Bernstein. 2016.
+
+</span>
+<span class="ltx_bibblock">Embracing error to enable rapid crowdsourcing.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib51.1">Proceedings of the 2016 CHI conference on human factors in
+computing systems</em>, pages 3167–3179.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib52"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lalor et al. (2017)</span>
+<span class="ltx_bibblock">
+John P Lalor, Hao Wu, and Hong Yu. 2017.
+
+</span>
+<span class="ltx_bibblock">Soft label memorization-generalization for natural language
+inference.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib52.1">arXiv preprint arXiv:1702.08563</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib53"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Larimore et al. (2021)</span>
+<span class="ltx_bibblock">
+Savannah Larimore, Ian Kennedy, Breon Haskett, and Alina Arseniev-Koehler.
+2021.
+
+</span>
+<span class="ltx_bibblock">Reconsidering annotator disagreement about racist language: Noise or
+signal?
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib53.1">Proceedings of the Ninth International Workshop on Natural
+Language Processing for Social Media</em>, pages 81–90.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib54"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Leonardelli et al. (2021)</span>
+<span class="ltx_bibblock">
+Elisa Leonardelli, Stefano Menini, Alessio Palmero Aprosio, Marco Guerini, and
+Sara Tonelli. 2021.
+
+</span>
+<span class="ltx_bibblock">Agreeing to disagree: Annotating offensive language datasets with
+annotators’ disagreement.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib54.1">Proceedings of the 2021 Conference on Empirical Methods in
+Natural Language Processing</em>, Online and Punta Cana, Dominican Republic.
+Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib55"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu et al. (2016)</span>
+<span class="ltx_bibblock">
+Tong Liu, Christopher Homan, Cecilia Ovesdotter Alm, Megan Lytle, Ann
+Marie White, and Henry Kautz. 2016.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/P16-1099" title="">Understanding discourse
+on work and job-related well-being in public social media</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib55.1">Proceedings of the 54th Annual Meeting of the Association
+for Computational Linguistics (Volume 1: Long Papers)</em>, pages 1044–1053,
+Berlin, Germany. Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib56"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Manning (2011)</span>
+<span class="ltx_bibblock">
+Christopher D Manning. 2011.
+
+</span>
+<span class="ltx_bibblock">Part-of-speech tagging from 97% to 100%: is it time for some
+linguistics?
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib56.1">International conference on intelligent text processing and
+computational linguistics</em>, pages 171–189. Springer.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib57"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Marchal et al. (2022)</span>
+<span class="ltx_bibblock">
+Marian Marchal, Merel Scholman, Frances Yung, and Vera Demberg. 2022.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://aclanthology.org/2022.coling-1.322" title="">Establishing
+annotation quality in multi-label annotations</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib57.1">Proceedings of the 29th International Conference on
+Computational Linguistics</em>, pages 3659–3668, Gyeongju, Republic of Korea.
+International Committee on Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib58"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Martínez Alonso et al. (2016)</span>
+<span class="ltx_bibblock">
+Héctor Martínez Alonso, Anders Johannsen, and Barbara Plank. 2016.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/W16-1706" title="">Supersense tagging with
+inter-annotator disagreement</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib58.1">Proceedings of the 10th Linguistic Annotation Workshop held
+in conjunction with ACL 2016 (LAW-X 2016)</em>, pages 43–48, Berlin,
+Germany. Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib59"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">McDonnell et al. (2016)</span>
+<span class="ltx_bibblock">
+Tyler McDonnell, Matthew Lease, Mucahid Kutlu, and Tamer Elsayed. 2016.
+
+</span>
+<span class="ltx_bibblock">Why is that relevant? collecting annotator rationales for relevance
+judgments.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib59.1">Proceedings of the AAAI Conference on Human Computation and
+Crowdsourcing</em>, volume 4, pages 139–148.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib60"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Meister et al. (2020)</span>
+<span class="ltx_bibblock">
+Clara Meister, Elizabeth Salesky, and Ryan Cotterell. 2020.
+
+</span>
+<span class="ltx_bibblock">Generalized entropy regularization or: There’s nothing special about
+label smoothing.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib60.1">arXiv preprint arXiv:2005.00820</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib61"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Naeini et al. (2015)</span>
+<span class="ltx_bibblock">
+Mahdi Pakdaman Naeini, Gregory F. Cooper, and Milos Hauskrecht. 2015.
+
+</span>
+<span class="ltx_bibblock">Obtaining Well Calibrated Probabilities Using Bayesian Binning.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib61.1">Proceedings of the Twenty-Ninth AAAI Conference on
+Artificial Intelligence</em>, AAAI’15, page 2901–2907. AAAI Press.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib62"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Nie et al. (2020)</span>
+<span class="ltx_bibblock">
+Yixin Nie, Xiang Zhou, and Mohit Bansal. 2020.
+
+</span>
+<span class="ltx_bibblock">What can we learn from collective human opinions on natural language
+inference data?
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib62.1">Proceedings of the 2020 Conference on Empirical Methods in
+Natural Language Processing (EMNLP)</em>. Association for Computational
+Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib63"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Palomaki et al. (2018)</span>
+<span class="ltx_bibblock">
+Jennimaria Palomaki, Olivia Rhinehart, and Michael Tseng. 2018.
+
+</span>
+<span class="ltx_bibblock">A case for a range of acceptable annotations.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib63.1">SAD/CrowdBias@ HCOMP</em>, pages 19–31.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib64"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Passonneau et al. (2010)</span>
+<span class="ltx_bibblock">
+Rebecca J Passonneau, Ansaf Salleb-Aouissi, Vikas Bhardwaj, and Nancy Ide.
+2010.
+
+</span>
+<span class="ltx_bibblock">Word sense annotation of polysemous words by multiple annotators.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib64.1">Proceedings of the Seventh International Conference on
+Language Resources and Evaluation (LREC’10)</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib65"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Paun et al. (2022)</span>
+<span class="ltx_bibblock">
+Silviu Paun, Ron Artstein, and Massimo Poesio. 2022.
+
+</span>
+<span class="ltx_bibblock">Statistical methods for annotation analysis.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib65.1">Synthesis Lectures on Human Language Technologies</em>,
+15(1):1–217.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib66"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Pavlick and Kwiatkowski (2019)</span>
+<span class="ltx_bibblock">
+Ellie Pavlick and Tom Kwiatkowski. 2019.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/https://doi.org/10.1162/tacl_a_00293" title="">Inherent disagreements in human textual inferences</a>.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib66.1">Transactions of the Association for Computational Linguistics</em>,
+7:677–694.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib67"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Peng et al. (2022)</span>
+<span class="ltx_bibblock">
+Siyao Peng, Yang Janet Liu, and Amir Zeldes. 2022.
+
+</span>
+<span class="ltx_bibblock">Gcdt: A chinese rst treebank for multigenre and multilingual
+discourse parsing.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib67.1">Proceedings of the 2nd Conference of the Asia-Pacific
+Chapter of the Association for Computational Linguistics and the 12th
+International Joint Conference on Natural Language Processing (AACL-IJCNLP)</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib68"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Peterson et al. (2019)</span>
+<span class="ltx_bibblock">
+Joshua C. Peterson, Ruairidh M. Battleday, Thomas L. Griffiths, and Olga
+Russakovsky. 2019.
+
+</span>
+<span class="ltx_bibblock">Human uncertainty makes classification more robust.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib68.1">2019 IEEE/CVF International Conference on Computer Vision
+(ICCV)</em>, pages 9616–9625.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib69"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Plank et al. (2014a)</span>
+<span class="ltx_bibblock">
+Barbara Plank, Dirk Hovy, and Anders Søgaard. 2014a.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.3115/v1/E14-1078" title="">Learning part-of-speech
+taggers with inter-annotator agreement loss</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib69.1">Proceedings of the 14th Conference of the European Chapter
+of the Association for Computational Linguistics</em>, pages 742–751.
+Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib70"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Plank et al. (2014b)</span>
+<span class="ltx_bibblock">
+Barbara Plank, Dirk Hovy, and Anders Søgaard. 2014b.
+
+</span>
+<span class="ltx_bibblock">Linguistically debatable or just plain wrong?
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib70.1">Proceedings of the 52nd Annual Meeting of the Association
+for Computational Linguistics (Volume 2: Short Papers)</em>, pages 507–511.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib71"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Poesio and Artstein (2005)</span>
+<span class="ltx_bibblock">
+Massimo Poesio and Ron Artstein. 2005.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="http://www.aclweb.org/anthology/W05-0311" title="">The reliability of
+anaphoric annotation, reconsidered: Taking ambiguity into account</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib71.1">Proc. of ACL Workshop on Frontiers in Corpus Annotation</em>,
+pages 76–83.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib72"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Poesio et al. (2019)</span>
+<span class="ltx_bibblock">
+Massimo Poesio, Jon Chamberlain, Silviu Paun, Juntao Yu, Alexandra Uma, and Udo
+Kruschwitz. 2019.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/N19-1176" title="">A crowdsourced corpus
+of multiple judgments and disagreement on anaphoric interpretation</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib72.1">Proceedings of the 2019 Conference of the North American
+Chapter of the Association for Computational Linguistics: Human Language
+Technologies, Volume 1 (Long and Short Papers)</em>, pages 1778–1789,
+Minneapolis, Minnesota. Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib73"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Prabhakaran et al. (2021)</span>
+<span class="ltx_bibblock">
+Vinodkumar Prabhakaran, Aida Mostafazadeh Davani, and Mark Diaz. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.law-1.14" title="">On releasing
+annotator-level labels and information in datasets</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib73.1">Proceedings of The Joint 15th Linguistic Annotation Workshop
+(LAW) and 3rd Designing Meaning Representations (DMR) Workshop</em>, pages
+133–138, Punta Cana, Dominican Republic. Association for Computational
+Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib74"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Pustejovsky and Stubbs (2012)</span>
+<span class="ltx_bibblock">
+James Pustejovsky and Amber Stubbs. 2012.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib74.1">Natural Language Annotation for Machine Learning: A guide to
+corpus-building for applications</em>.
+
+</span>
+<span class="ltx_bibblock">O’Reilly Media.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib75"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Qing et al. (2014)</span>
+<span class="ltx_bibblock">
+Ciyang Qing, Ulle Endriss, Raquel Fernández, and Justin Kruger. 2014.
+
+</span>
+<span class="ltx_bibblock">Empirical analysis of aggregation methods for collective annotation.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib75.1">COLING</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib76"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Reidsma and Carletta (2008)</span>
+<span class="ltx_bibblock">
+Dennis Reidsma and Jean Carletta. 2008.
+
+</span>
+<span class="ltx_bibblock">Reliability measurement without limits.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib76.1">Computational Linguistics</em>, 34(3):319–326.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib77"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Reidsma and op den Akker (2008)</span>
+<span class="ltx_bibblock">
+Dennis Reidsma and Rieks op den Akker. 2008.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.3115/1611628.1611631" title="">Exploiting
+‘subjective’ annotations</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib77.1">Proc. of the Workshop on Human Judgments in Computational
+Linguistics</em>, pages 8–16.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib78"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Resnick et al. (2021)</span>
+<span class="ltx_bibblock">
+Paul Resnick, Yuqing Kong, Grant Schoenebeck, and Tim Weninger. 2021.
+
+</span>
+<span class="ltx_bibblock">Survey equivalence: A procedure for measuring classifier accuracy
+against human labels.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib78.1">arXiv preprint arXiv:2106.01254</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib79"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Rodrigues and Pereira (2018)</span>
+<span class="ltx_bibblock">
+Filipe Rodrigues and Francisco Pereira. 2018.
+
+</span>
+<span class="ltx_bibblock">Deep learning from crowds.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib79.1">Proceedings of the AAAI conference on artificial
+intelligence</em>, volume 32.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib80"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Rottger et al. (2022)</span>
+<span class="ltx_bibblock">
+Paul Rottger, Bertie Vidgen, Dirk Hovy, and Janet Pierrehumbert. 2022.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2022.naacl-main.13" title="">Two
+contrasting data annotation paradigms for subjective NLP tasks</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib80.1">Proceedings of the 2022 Conference of the North American
+Chapter of the Association for Computational Linguistics: Human Language
+Technologies</em>, pages 175–190, Seattle, United States. Association for
+Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib81"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sap et al. (2019)</span>
+<span class="ltx_bibblock">
+Maarten Sap, Dallas Card, Saadia Gabriel, Yejin Choi, and Noah A. Smith. 2019.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/P19-1163" title="">The risk of racial bias
+in hate speech detection</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib81.1">Proceedings of the 57th Annual Meeting of the Association
+for Computational Linguistics</em>, pages 1668–1678, Florence, Italy.
+Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib82"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sap et al. (2022)</span>
+<span class="ltx_bibblock">
+Maarten Sap, Swabha Swayamdipta, Laura Vianna, Xuhui Zhou, Yejin Choi, and
+Noah A. Smith. 2022.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2022.naacl-main.431" title="">Annotators
+with attitudes: How annotator beliefs and identities bias toxic language
+detection</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib82.1">Proceedings of the 2022 Conference of the North American
+Chapter of the Association for Computational Linguistics: Human Language
+Technologies</em>, pages 5884–5906, Seattle, United States. Association for
+Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib83"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Schlangen (2021)</span>
+<span class="ltx_bibblock">
+David Schlangen. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.acl-short.85" title="">Targeting the
+benchmark: On methodology in current natural language processing research</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib83.1">Proceedings of the 59th Annual Meeting of the Association
+for Computational Linguistics and the 11th International Joint Conference on
+Natural Language Processing (Volume 2: Short Papers)</em>, pages 670–674,
+Online. Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib84"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sheng et al. (2008)</span>
+<span class="ltx_bibblock">
+Victor S. Sheng, Foster Provost, and Panagiotis G. Ipeirotis. 2008.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.1145/1401890.1401965" title="">Get another label?
+improving data quality and data mining using multiple, noisy labelers</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib84.1">Proceedings of the 14th ACM SIGKDD International Conference
+on Knowledge Discovery and Data Mining</em>, KDD ’08, page 614–622, New York,
+NY, USA. Association for Computing Machinery.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib85"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Simpson et al. (2019)</span>
+<span class="ltx_bibblock">
+Edwin Simpson, Erik-Lân Do Dinh, Tristan Miller, and Iryna Gurevych. 2019.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/P19-1572" title="">Predicting humorousness
+and metaphor novelty with Gaussian process preference learning</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib85.1">Proceedings of the 57th Annual Meeting of the Association
+for Computational Linguistics</em>, pages 5716–5728, Florence, Italy.
+Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib86"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Snow et al. (2008)</span>
+<span class="ltx_bibblock">
+Rion Snow, Brendan O’connor, Dan Jurafsky, and Andrew Y Ng. 2008.
+
+</span>
+<span class="ltx_bibblock">Cheap and fast–but is it good? evaluating non-expert annotations for
+natural language tasks.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib86.1">Proceedings of the 2008 conference on empirical methods in
+natural language processing</em>, pages 254–263.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib87"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sommerauer et al. (2020)</span>
+<span class="ltx_bibblock">
+Pia Sommerauer, Antske Fokkens, and Piek Vossen. 2020.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2020.coling-main.422" title="">Would you
+describe a leopard as yellow? evaluating crowd-annotations with justified and
+informative disagreement</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib87.1">Proceedings of the 28th International Conference on
+Computational Linguistics</em>, pages 4798–4809, Barcelona, Spain (Online).
+International Committee on Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib88"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Swayamdipta et al. (2020)</span>
+<span class="ltx_bibblock">
+Swabha Swayamdipta, Roy Schwartz, Nicholas Lourie, Yizhong Wang, Hannaneh
+Hajishirzi, Noah A. Smith, and Yejin Choi. 2020.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2020.emnlp-main.746" title="">Dataset
+cartography: Mapping and diagnosing datasets with training dynamics</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib88.1">Proceedings of the 2020 Conference on Empirical Methods in
+Natural Language Processing (EMNLP)</em>, pages 9275–9293, Online. Association
+for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib89"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Uma et al. (2021a)</span>
+<span class="ltx_bibblock">
+Alexandra Uma, Tommaso Fornaciari, Anca Dumitrache, Tristan Miller, Jon
+Chamberlain, Barbara Plank, Edwin Simpson, and Massimo Poesio.
+2021a.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.semeval-1.41" title="">SemEval-2021 task 12: Learning with disagreements</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib89.1">Proceedings of the 15th International Workshop on Semantic
+Evaluation (SemEval-2021)</em>, pages 338–347, Online. Association for
+Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib90"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Uma et al. (2020)</span>
+<span class="ltx_bibblock">
+Alexandra Uma, Tommaso Fornaciari, Dirk Hovy, Silviu Paun, Barbara Plank, and
+Massimo Poesio. 2020.
+
+</span>
+<span class="ltx_bibblock">A case for soft-loss functions.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib90.1">Proc. of HCOMP</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib91"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Uma et al. (2021b)</span>
+<span class="ltx_bibblock">
+Alexandra Uma, Tommaso Fornaciari, Dirk Hovy, Silviu Paun, Barbara Plank, and
+Massimo Poesio. 2021b.
+
+</span>
+<span class="ltx_bibblock">Learning from disagreement: A survey.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib91.1">Journal of Artificial Intelligence Research</em>, 72:1385–1470.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib92"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Webber and Joshi (2012)</span>
+<span class="ltx_bibblock">
+Bonnie Webber and Aravind Joshi. 2012.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://aclanthology.org/W12-3205" title="">Discourse structure and
+computation: Past, present and future</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib92.1">Proceedings of the ACL-2012 Special Workshop on
+Rediscovering 50 Years of Discoveries</em>, pages 42–54, Jeju Island, Korea.
+Association for Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib93"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wich et al. (2021)</span>
+<span class="ltx_bibblock">
+Maximilian Wich, Christian Widmer, Gerhard Hagerer, and Georg Groh. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://aclanthology.org/2021.ranlp-1.170" title="">Investigating
+annotator bias in abusive language datasets</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib93.1">Proceedings of the International Conference on Recent
+Advances in Natural Language Processing (RANLP 2021)</em>, pages 1515–1525, Held
+Online. INCOMA Ltd.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib94"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zeman (2010)</span>
+<span class="ltx_bibblock">
+Daniel Zeman. 2010.
+
+</span>
+<span class="ltx_bibblock">Hard problems of tagset conversion.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib94.1">Proceedings of the Second International Conference on Global
+Interoperability for Language Resources</em>, pages 181–185.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib95"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang and Plank (2021)</span>
+<span class="ltx_bibblock">
+Mike Zhang and Barbara Plank. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.findings-emnlp.36" title="">Cartography active learning</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib95.1">Findings of the Association for Computational Linguistics:
+EMNLP 2021</em>, pages 395–406, Punta Cana, Dominican Republic. Association for
+Computational Linguistics.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib96"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang et al. (2021)</span>
+<span class="ltx_bibblock">
+Shujian Zhang, Chengyue Gong, and Eunsol Choi. 2021.
+
+</span>
+<span class="ltx_bibblock">Learning with different amounts of annotation: From zero to many
+labels.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib96.1">arXiv preprint arXiv:2109.04408</em>.
+
+</span></li>
+<li class="ltx_bibitem" id="bib.bib97"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang and de Marneffe (2021)</span>
+<span class="ltx_bibblock">
+Xinliang Frederick Zhang and Marie-Catherine de Marneffe. 2021.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.18653/v1/2021.naacl-main.390" title="">Identifying
+inherent disagreement in natural language inference</a>.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib97.1">Proceedings of the 2021 Conference of the North American
+Chapter of the Association for Computational Linguistics: Human Language
+Technologies</em>, pages 4908–4915, Online. Association for Computational
+Linguistics.
+
+</span></li>
+</ul>
+</section>
+<section class="ltx_appendix" id="A1">
+<h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix A </span>Datasets with Multiple Annotations</h2>
+<figure class="ltx_table" id="A1.T1">
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="A1.T1.2" style="width:345.0pt;height:325.5pt;vertical-align:-161.7pt;"><span class="ltx_transformed_inner" style="transform:translate(-232.2pt,219.1pt) scale(0.426205233871572,0.426205233871572) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="A1.T1.2.1">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="A1.T1.2.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_tt" id="A1.T1.2.1.1.1"><span class="ltx_text ltx_font_bold" id="A1.T1.2.1.1.1.1">Field</span></th>
+<td class="ltx_td ltx_align_left ltx_align_top ltx_border_tt" id="A1.T1.2.1.1.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.1.2.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.1.2.1.1"><span class="ltx_text ltx_font_bold" id="A1.T1.2.1.1.2.1.1.1">Reference</span></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top ltx_border_tt" id="A1.T1.2.1.1.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.1.3.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.1.3.1.1"><span class="ltx_text ltx_font_bold" id="A1.T1.2.1.1.3.1.1.1">Name/Description</span></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top ltx_border_tt" id="A1.T1.2.1.1.4">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.1.4.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.1.4.1.1"><span class="ltx_text ltx_font_bold" id="A1.T1.2.1.1.4.1.1.1">URL</span></span>
+</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="A1.T1.2.1.1.5"><span class="ltx_text ltx_font_bold" id="A1.T1.2.1.1.5.1">Jair</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="A1.T1.2.1.1.6"><span class="ltx_text ltx_font_bold" id="A1.T1.2.1.1.6.1">PDAI</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="A1.T1.2.1.1.7"><span class="ltx_text ltx_font_bold" id="A1.T1.2.1.1.7.1">SemEval21</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="A1.T1.2.1.1.8"><span class="ltx_text ltx_font_bold" id="A1.T1.2.1.1.8.1">TACL22</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="A1.T1.2.1.1.9"><span class="ltx_text ltx_font_bold" id="A1.T1.2.1.1.9.1">SemEval23</span></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t" id="A1.T1.2.1.2.1" rowspan="19"><span class="ltx_text" id="A1.T1.2.1.2.1.1">NLP</span></th>
+<td class="ltx_td ltx_align_left ltx_align_top ltx_border_t" id="A1.T1.2.1.2.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.2.2.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.2.2.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib64" title="">Passonneau et al. (2010)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top ltx_border_t" id="A1.T1.2.1.2.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.2.3.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.2.3.1.1">Word sense disambiguation (WSD)</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top ltx_border_t" id="A1.T1.2.1.2.4">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.2.4.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.2.4.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://anc.org/" title="">https://anc.org/</a></span>
+</span></td>
+<td class="ltx_td ltx_border_t" id="A1.T1.2.1.2.5"></td>
+<td class="ltx_td ltx_border_t" id="A1.T1.2.1.2.6"></td>
+<td class="ltx_td ltx_border_t" id="A1.T1.2.1.2.7"></td>
+<td class="ltx_td ltx_border_t" id="A1.T1.2.1.2.8"></td>
+<td class="ltx_td ltx_border_t" id="A1.T1.2.1.2.9"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.3">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.3.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.3.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.3.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib69" title="">Plank et al. (2014a)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.3.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.3.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.3.2.1.1">POS tagging (500 tweets from Lowlands) and Gimpel-POS dataset</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.3.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.3.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.3.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://bitbucket.org/lowlands/costsensitive-data/" title="">https://bitbucket.org/lowlands/costsensitive-data/</a> and <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://zenodo.org/record/5130737" title="">https://zenodo.org/record/5130737</a></span>
+</span></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.3.4"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m1" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.3.5"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.3.6"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m2" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.3.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.3.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.4">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.4.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.4.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.4.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib28" title="">Derczynski et al. (2016)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.4.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.4.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.4.2.1.1">NER Broad Twitter dataset</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.4.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.4.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.4.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/GateNLP/broad_twitter_corpus" title="">https://github.com/GateNLP/broad_twitter_corpus</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.4.4"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.4.5"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m3" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.4.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.4.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.4.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.5">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.5.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.5.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.5.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib79" title="">Rodrigues and Pereira (2018)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.5.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.5.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.5.2.1.1">NER dataset, re-annoted sample of CoNLL 2003</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.5.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.5.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.5.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="http://fprodrigues.com//publications/deep-crowds/" title="">http://fprodrigues.com//publications/deep-crowds/</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.5.4"></td>
+<td class="ltx_td" id="A1.T1.2.1.5.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.5.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.5.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.5.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.6">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.6.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.6.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.6.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib58" title="">Martínez Alonso et al. (2016)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.6.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.6.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.6.2.1.1">Supersense tagging</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.6.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.6.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.6.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/coastalcph/semdax" title="">https://github.com/coastalcph/semdax</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.6.4"></td>
+<td class="ltx_td" id="A1.T1.2.1.6.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.6.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.6.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.6.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.7">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.7.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.7.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.7.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib13" title="">Berzak et al. (2016)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.7.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.7.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.7.2.1.1">Dependency Parsing, WSJ-23, 4 annotators</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.7.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.7.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.7.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://people.csail.mit.edu/berzak/agreement/" title="">https://people.csail.mit.edu/berzak/agreement/</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.7.4"></td>
+<td class="ltx_td" id="A1.T1.2.1.7.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.7.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.7.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.7.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.8">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.8.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.8.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.8.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib67" title="">Peng et al. (2022)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.8.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.8.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.8.2.1.1">GCDT, Mandarin Chinese discourse treebank</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.8.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.8.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.8.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/logan-siyao-peng/GCDT/tree/main/data" title="">https://github.com/logan-siyao-peng/GCDT/tree/main/data</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.8.4"></td>
+<td class="ltx_td" id="A1.T1.2.1.8.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.8.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.8.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.8.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.9">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.9.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.9.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.9.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib15" title="">Bryant and Ng (2015)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.9.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.9.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.9.2.1.1">Grammatical error correction</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.9.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.9.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.9.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="http://www.comp.nus.edu.sg/~nlp/sw/10gec_annotations.zip" title="">http://www.comp.nus.edu.sg/~nlp/sw/10gec_annotations.zip</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.9.4"></td>
+<td class="ltx_td" id="A1.T1.2.1.9.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.9.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.9.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.9.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.10">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.10.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.10.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.10.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib72" title="">Poesio et al. (2019)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.10.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.10.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.10.2.1.1">PD (Phrase Detectives dataset): Anaphora and Information Status Classification</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.10.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.10.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.10.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/dali-ambiguity/Phrase-Detectives-Corpus-2.1.4" title="">https://github.com/dali-ambiguity/Phrase-Detectives-Corpus-2.1.4</a></span>
+</span></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.10.4"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m4" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.10.5"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.10.6"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m5" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.10.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.10.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.11">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.11.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.11.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.11.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib31" title="">Dumitrache et al. (2018)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.11.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.11.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.11.2.1.1">Medical Relation Extraction (MRE)</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.11.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.11.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.11.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/CrowdTruth/Open-Domain-Relation-Extraction" title="">https://github.com/CrowdTruth/Open-Domain-Relation-Extraction</a></span>
+</span></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.11.4"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m6" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.11.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.11.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.11.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.11.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.12">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.12.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.12.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.12.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib9" title="">Bassignana and Plank (2022)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.12.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.12.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.12.2.1.1">CrossRE, relation extraction, small doubly-annotated subset</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.12.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.12.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.12.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/mainlp/CrossRE" title="">https://github.com/mainlp/CrossRE</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.12.4"></td>
+<td class="ltx_td" id="A1.T1.2.1.12.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.12.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.12.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.12.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.13">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.13.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.13.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.13.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib32" title="">Dumitrache et al. (2019)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.13.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.13.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.13.2.1.1">Frame Disambiguation</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.13.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.13.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.13.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/CrowdTruth/FrameDisambiguation" title="">https://github.com/CrowdTruth/FrameDisambiguation</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.13.4"></td>
+<td class="ltx_td" id="A1.T1.2.1.13.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.13.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.13.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.13.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.14">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.14.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.14.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.14.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib86" title="">Snow et al. (2008)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.14.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.14.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.14.2.1.1">RTE (recognizing textual entailment; 800 hypothesis-premise pairs) collected by <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib19" title="">Dagan et al. (2005)</a></cite>, re-annotated; includes further datasets on temporal ordering, WSD, word similarity and affective text</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.14.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.14.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.14.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://sites.google.com/site/nlpannotations/" title="">https://sites.google.com/site/nlpannotations/</a></span>
+</span></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.14.4"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m7" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.14.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.14.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.14.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.14.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.15">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.15.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.15.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.15.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib66" title="">Pavlick and Kwiatkowski (2019)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.15.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.15.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.15.2.1.1">NLI (natural language inference) inherent disagreement dataset, approx. 500 RTE instances from <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib19" title="">Dagan et al. (2005)</a></cite> re-annotated by 50 annotators</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.15.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.15.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.15.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/epavlick/NLI-variation-data" title="">https://github.com/epavlick/NLI-variation-data</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.15.4"></td>
+<td class="ltx_td" id="A1.T1.2.1.15.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.15.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.15.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.15.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.16">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.16.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.16.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.16.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib62" title="">Nie et al. (2020)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.16.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.16.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.16.2.1.1">ChaosNLI, large NLI dataset re-annotated by 100 annotators</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.16.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.16.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.16.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/easonnie/ChaosNLI" title="">https://github.com/easonnie/ChaosNLI</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.16.4"></td>
+<td class="ltx_td" id="A1.T1.2.1.16.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.16.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.16.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.16.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.17">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.17.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.17.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.17.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib26" title="">Demszky et al. (2020)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.17.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.17.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.17.2.1.1">GoEmotions: reddit comments annotated for 27 emotion categories or neutral</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.17.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.17.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.17.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/google-research/google-research/tree/master/goemotions" title="">https://github.com/google-research/google-research/tree/master/goemotions</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.17.4"></td>
+<td class="ltx_td" id="A1.T1.2.1.17.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.17.6"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.17.7"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m8" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.17.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.18">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.18.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.18.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.18.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib33" title="">Ferracane et al. (2021)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.18.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.18.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.18.2.1.1">Subjective discourse: conversation acts and intents</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.18.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.18.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.18.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/elisaF/subjective_discourse" title="">https://github.com/elisaF/subjective_discourse</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.18.4"></td>
+<td class="ltx_td" id="A1.T1.2.1.18.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.18.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.18.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.18.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.19">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.19.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.19.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.19.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib20" title="">Damgaard et al. (2021)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.19.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.19.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.19.2.1.1">Understanding indirect answers to polar questions</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.19.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.19.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.19.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/friendsQIA/Friends_QIA" title="">https://github.com/friendsQIA/Friends_QIA</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.19.4"></td>
+<td class="ltx_td" id="A1.T1.2.1.19.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.19.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.19.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.19.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.20">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.20.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.20.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.20.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib25" title="">de Marneffe et al. (2019)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.20.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.20.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.20.2.1.1">CommitmentBank: 8 annotations indicating the extent to which
+the speakers are committed to the
+truth of the embedded clause</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.20.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.20.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.20.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/mcdm/CommitmentBank" title="">https://github.com/mcdm/CommitmentBank</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.20.4"></td>
+<td class="ltx_td" id="A1.T1.2.1.20.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.20.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.20.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.20.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.21">
+<th class="ltx_td ltx_th ltx_th_row ltx_border_r" id="A1.T1.2.1.21.1"></th>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.21.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.21.2.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.21.2.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib47" title="">Kennedy et al. (2020)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.21.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.21.3.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.21.3.1.1">Hate speech detection</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.21.4">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.21.4.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.21.4.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://huggingface.co/datasets/ucberkeley-dlab/measuring-hate-speech" title="">https://huggingface.co/datasets/ucberkeley-dlab/measuring-hate-speech</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.21.5"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.21.6"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m9" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.21.7"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.21.8"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m10" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.21.9"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.22">
+<th class="ltx_td ltx_th ltx_th_row ltx_border_r" id="A1.T1.2.1.22.1"></th>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.22.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.22.2.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.22.2.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib30" title="">Dinu et al. (2021)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.22.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.22.3.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.22.3.1.1">Pejorative words dataset</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.22.4">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.22.4.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.22.4.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://nlp.unibuc.ro/resources" title="">https://nlp.unibuc.ro/resources</a> or <a class="ltx_ref ltx_url ltx_font_typewriter" href="http://pdai.info/" title="">http://pdai.info/</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.22.5"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.22.6"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m11" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.22.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.22.8"></td>
+<td class="ltx_td" id="A1.T1.2.1.22.9"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.23">
+<th class="ltx_td ltx_th ltx_th_row ltx_border_r" id="A1.T1.2.1.23.1"></th>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.23.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.23.2.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.23.2.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib54" title="">Leonardelli et al. (2021)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.23.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.23.3.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.23.3.1.1">MultiDomain Agreement, Offensive language detection on Twitter, 5 offensive/non-offensive labels; also part of LeWiDi SemEval23</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.23.4">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.23.4.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.23.4.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/dhfbk/annotators-agreement-dataset/" title="">https://github.com/dhfbk/annotators-agreement-dataset/</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.23.5"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.23.6"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m12" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.23.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.23.8"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.23.9"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m13" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.24">
+<th class="ltx_td ltx_th ltx_th_row ltx_border_r" id="A1.T1.2.1.24.1"></th>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.24.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.24.2.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.24.2.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib16" title="">Cercas Curry et al. (2021)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.24.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.24.3.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.24.3.1.1">ConvAbuse, abusive language towards three conversational AI systems; also part of LeWiDi SemEval23</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.24.4">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.24.4.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.24.4.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/amandacurry/convabuse" title="">https://github.com/amandacurry/convabuse</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.24.5"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.24.6"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m14" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.24.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.24.8"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.24.9"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m15" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.25">
+<th class="ltx_td ltx_th ltx_th_row ltx_border_r" id="A1.T1.2.1.25.1"></th>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.25.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.25.2.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.25.2.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib55" title="">Liu et al. (2016)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.25.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.25.3.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.25.3.1.1">Work and Well-being Job-related Tweets, 5 annotators</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.25.4">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.25.4.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.25.4.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/Homan-Lab/pldl_data" title="">https://github.com/Homan-Lab/pldl_data</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.25.5"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.25.6"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m16" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.25.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.25.8"></td>
+<td class="ltx_td" id="A1.T1.2.1.25.9"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.26">
+<th class="ltx_td ltx_th ltx_th_row ltx_border_r" id="A1.T1.2.1.26.1"></th>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.26.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.26.2.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.26.2.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib85" title="">Simpson et al. (2019)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.26.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.26.3.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.26.3.1.1">Humour: pairwise funniness judgements</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.26.4">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.26.4.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.26.4.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://zenodo.org/record/5130737" title="">https://zenodo.org/record/5130737</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.26.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.26.6"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.26.7"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m17" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.26.8"></td>
+<td class="ltx_td" id="A1.T1.2.1.26.9"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.27">
+<th class="ltx_td ltx_th ltx_th_row ltx_border_r" id="A1.T1.2.1.27.1"></th>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.27.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.27.2.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.27.2.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib1" title="">Akhtar et al. (2021)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.27.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.27.3.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.27.3.1.1">HS-brexit; New LeWiDi-23 shared tast dataset on Abusive Language on Brexit and annotated for hate speech (HS), aggressiveness and offensiveness, 6 annotators</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.27.4">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.27.4.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.27.4.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://le-wi-di.github.io/" title="">https://le-wi-di.github.io/</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.27.5"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.27.6"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m18" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.27.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.27.8"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.27.9"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m19" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.28">
+<th class="ltx_td ltx_th ltx_th_row ltx_border_r" id="A1.T1.2.1.28.1"></th>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.28.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.28.2.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.28.2.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib3" title="">Almanea and Poesio (2022)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.28.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.28.3.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.28.3.1.1">ArMIS; New LeWiDi-23 shared tast dataset on Arabic tweets annotated for misogyny detection</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.28.4">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.28.4.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.28.4.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://le-wi-di.github.io/" title="">https://le-wi-di.github.io/</a></span>
+</span></td>
+<td class="ltx_td" id="A1.T1.2.1.28.5"></td>
+<td class="ltx_td" id="A1.T1.2.1.28.6"></td>
+<td class="ltx_td" id="A1.T1.2.1.28.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.28.8"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.28.9"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m20" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.29">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t" id="A1.T1.2.1.29.1" rowspan="2"><span class="ltx_text" id="A1.T1.2.1.29.1.1">CV</span></th>
+<td class="ltx_td ltx_align_left ltx_align_top ltx_border_t" id="A1.T1.2.1.29.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.29.2.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.29.2.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib79" title="">Rodrigues and Pereira (2018)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top ltx_border_t" id="A1.T1.2.1.29.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.29.3.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.29.3.1.1">LabelMe: Image classification dataset with 8 categories, re-annotated</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top ltx_border_t" id="A1.T1.2.1.29.4">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.29.4.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.29.4.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="http://fprodrigues.com//publications/deep-crowds/" title="">http://fprodrigues.com//publications/deep-crowds/</a></span>
+</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A1.T1.2.1.29.5"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m21" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td ltx_border_t" id="A1.T1.2.1.29.6"></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A1.T1.2.1.29.7"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m22" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td ltx_border_t" id="A1.T1.2.1.29.8"></td>
+<td class="ltx_td ltx_border_t" id="A1.T1.2.1.29.9"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.30">
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.30.1">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.30.1.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.30.1.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib68" title="">Peterson et al. (2019)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.30.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.30.2.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.30.2.1.1">Cifar10H: Image classification with 10 categories, re-annotated</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top" id="A1.T1.2.1.30.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.30.3.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.30.3.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="//github.com/jcpeterson/cifar-10h" title="">//github.com/jcpeterson/cifar-10h</a></span>
+</span></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.30.4"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m23" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.30.5"></td>
+<td class="ltx_td ltx_align_center" id="A1.T1.2.1.30.6"><math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m24" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></td>
+<td class="ltx_td" id="A1.T1.2.1.30.7"></td>
+<td class="ltx_td" id="A1.T1.2.1.30.8"></td></tr>
+<tr class="ltx_tr" id="A1.T1.2.1.31">
+<th class="ltx_td ltx_th ltx_th_row ltx_border_bb ltx_border_r" id="A1.T1.2.1.31.1"></th>
+<td class="ltx_td ltx_align_left ltx_align_top ltx_border_bb" id="A1.T1.2.1.31.2">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.31.2.1" style="width:113.8pt;">
+<span class="ltx_p" id="A1.T1.2.1.31.2.1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib17" title="">Cheplygina and Pluim (2018)</a></cite></span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top ltx_border_bb" id="A1.T1.2.1.31.3">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.31.3.1" style="width:199.2pt;">
+<span class="ltx_p" id="A1.T1.2.1.31.3.1.1">Medical lesion classification challenge, 6 annotators each</span>
+</span></td>
+<td class="ltx_td ltx_align_left ltx_align_top ltx_border_bb" id="A1.T1.2.1.31.4">
+<span class="ltx_inline-block ltx_align_top" id="A1.T1.2.1.31.4.1" style="width:156.5pt;">
+<span class="ltx_p" id="A1.T1.2.1.31.4.1.1"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://figshare.com/s/5cbbce14647b66286544" title="">https://figshare.com/s/5cbbce14647b66286544</a></span>
+</span></td>
+<td class="ltx_td ltx_border_bb" id="A1.T1.2.1.31.5"></td>
+<td class="ltx_td ltx_border_bb" id="A1.T1.2.1.31.6"></td>
+<td class="ltx_td ltx_border_bb" id="A1.T1.2.1.31.7"></td>
+<td class="ltx_td ltx_border_bb" id="A1.T1.2.1.31.8"></td>
+<td class="ltx_td ltx_border_bb" id="A1.T1.2.1.31.9"></td></tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Overview of publicly-available datasets with <span class="ltx_text ltx_font_smallcaps" id="A1.T1.4">Hlv</span> data (see repository for updates and to contribute: <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/mainlp/awesome-human-label-variation" title="">https://github.com/mainlp/awesome-human-label-variation</a>). <math alttext="\checkmark" class="ltx_Math" display="inline" id="A1.T1.m26" intent=":literal"><semantics><mi>✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math>: whether the source was used in broader empirical evaluations, e.g., the JAIR survey on learning from disagreement <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib91" title="">Uma et al. (2021b)</a></cite>, is listed on <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://pdai.info" title="">pdai.info</a> <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib7" title="">Basile et al. (2021a)</a></cite> (as of June, 2022), is part of the SemEval 2021 task on learning from disagreement <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib89" title="">Uma et al. (2021a)</a></cite>, is used in a TACL paper on learning beyond majority vote <cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib22" title="">Davani et al. (2022)</a></cite>, is used in the SemEval 2023 shared task on Learning With Disagreement LeWiDi <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://le-wi-di.github.io/" title="">https://le-wi-di.github.io/</a>.</figcaption>
+</figure>
+</section>
+</body></html>
+</body></html>

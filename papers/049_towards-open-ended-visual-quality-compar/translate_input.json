@@ -1,0 +1,1096 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Towards Open-ended Visual Quality Comparison"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract"
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Comparative settings ( e.g . pairwise choice, listwise ranking ) have been adopted by a wide range of subjective studies for image quality assessment (IQA), as it inherently standardizes the evaluatio"
+  },
+  {
+   "id": "b0003",
+   "t": "text",
+   "w": "h6",
+   "en": "Keywords:"
+  },
+  {
+   "id": "b0004",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0005",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1: The proposed Co-Instruct, first-of-its-kind open-source LMM with capability on open-question & detailed-reasoning visual quality comparison. It outperforms existing LMMs on the proposed MICBench as well as existing quality evaluation benchmarks."
+  },
+  {
+   "id": "b0006",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0007",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2: The motivation of open-ended visual quality comparison: comparative settings can effectively avoid the ambiguity on absolute evaluations for single images, and provide more clear-cut judgements to serve as downstream guidances [53, 65]."
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "h2",
+   "en": "1 Introduction"
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "p",
+   "en": "Image quality assessment (IQA) has been an important domain in visual computing, as it provides effective recommendation [57] on high-quality visual contents and valuable guidance [53, 61, 65] for potential improvements. Most recently, several pioneer studies [50, 49, 51] have explored large multi-modality models (LMMs, e.g. GPT-4V) [34, 9, 25, 56, 4, 5], on expanding IQA from giving a scalar score (e.g. 3.457) to the open-ended scenarios, that allows evaluations in response to open-range questions, and provide detailed reasonings beyond an overall score."
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "While these studies sufficiently emulate human ability on IQA, they also suffer from the same drawback as human: ambiguity on absolute evaluations. For instance, as shown in Fig. 2 (a), different human observers hold different standards on the exposure level on single images, and henceforth provide diversified absolute evaluations. Nevertheless, while asked to compare the exposure level of the images, all observers agree with the rank (1)>(2)>(3)>(4) (Fig. 2(b)); all observers also agree that (1) has the highest exposure, though not all choose the option high while evaluating it independently. Given this observation, comparison has been a traditional human study setting for quality evaluation [43] and adopted by a wide range of existing subjective studies [35, 62, 10, 53, 52]. Furthermore, to avoid the ambiguity, the comparative settings are also predomintantly adopted [65, 53] while applying IQA algorithms for improvement guidance."
+  },
+  {
+   "id": "b0011",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 3: The construction methodology of Co-Instruct-562K, a combination of (a) Merge2Compare (LLM comparison from human-labeled single image quality descriptions) and (b) Teach2Compare (GPT-4V comparison on multiple unlabeled images)."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "While comparison has widely-recognized significance for IQA, existing related datasets [35] and methods [63, 28] are generally based on overall quality comparison and have not extended to the open-ended scenarios; on the other hand, open-source LMMs [50, 25, 4] are usually only fine-tuned with single image instruction tuning datasets [26, 13, 1] and proved to lack enough capability even on two image comparison settings [67, 69]. While these gaps have clearly indicated the need of a specific instruction tuning dataset for visual quality comparison, it is too expensive to collect such a dataset from human. To avoid costly human labors, we propose an alternative strategy to collect the training dataset, named Collaborative Instruction Tuning from Weak Supervisors (Co-Instruct). Specifically, we adopt two non-perfect supervisors: 1) Merge2Compare (Fig. 3(a)). Originated from single image quality descriptions on 19K images as labeled by human in the Q-Pathway [50] dataset, we randomly match them into 100K groups (2-4 images per group) with removing the most similar descriptions with an text embedding model [44]. Then, we prompt a single-modal large language model (LLM) [16] to compare multiple human descriptions in a group, and “merge” them into 100K pseudo comparisons. 2) Teach2Compare (Fig. 3(b)). Observing that GPT-4V has especially high accuracy on pairwise settings [69, 67] among existing LMMs, following existing practices [2, 17], we leverage GPT-4V responses to further expand our dataset. We collect 9K unlabeled images and randomly match into 30K image groups (also 2-4 images per group), and obtain GPT-4V responses on both caption-like general comparisons and question-answer pairs for comparisons. By integrating Q-Instruct-200K [50] (on single images), Merge2Compare, and Teach2Compare, we construct the Co-Instruct-562K, the first instruction tuning dataset for open-ended visual quality comparison."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "p",
+   "en": "To correctly refer to each specific image during conversation, we define a specific image-text interleaved format [5] to handle multi-image cases, as follows: User: The first image: <img⟦SLOT_0⟧> The second image: <img⟦SLOT_1⟧> ... <query> Assistant: <response>"
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "p",
+   "en": "Moreover, as we need to feed multiple images together to the LLM decoder, adopting the most popular LLaVA [26, 39, 25] structure that linearly projects visual embeddings will exceed the context window of the language models [42] and cause errors. Henceforth, we adopt an alternative visual abstractor structure [56] to first reduce visual token length (from 1,025 to 65 tokens per image), and then concatenate them with text embeddings to pass to language decoders. By learning from the Co-Instruct-562K dataset and the specially-designed input structure, we present the Co-Instruct, with up to 86% improvements than its baseline [56], and 61% better than the state-of-the-art open-source LMM. More importantly, despite using GPT-4V as one of its teachers, it still surpasses the GPT-4V teacher in a variety of multi-choice question (MCQ) benchmarks, and matches GPT-4V ability in scenarios requiring detailed language reasonings."
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "After training the model Co-Instruct, our another concern is the lack of abundant evaluation settings on multi-image comparison: while Q-Bench [49, 67] series have covered multiple formats on single images and image pairs, there is no existing evaluation scenario for quality comparison beyond two images. To complement this evaluation setting, we construct the MICBench. Specifically, the MICBench contains 2,000 multi-choice questions (MCQ) comparing the quality or related attributes among a group of three or four images (each half), in which over half of the questions are Which questions (e.g. which image has highest clarity?). Aiming to extract an image with a specific quality-related appearance from a group, Which questions are the most important questions related to image comparison. Despite Which questions, the MICBench also includes Yes-or-No questions and other question types (What/How/How-Many, etc) to provide a holistic benchmark setting for multi-image quality comparison."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "In summary, we conduct a systematical study towards open-ended visual quality comparison. Our contributions can be summarized as three-fold:"
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "li",
+   "en": "1. We construct the first instruction-tuning dataset for visual quality comparison, the Co-Instruct-562K. With data collected from two “weak supervisors”, Merge2Compare (LLM-merged comparisons) and Teach2Compare (GPT-4V pseudo-labeled comparisons), our public dataset significantly expands the capabilities of open-source LMMs on visual comparative settings."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "li",
+   "en": "2. We propose the most capable model for open-ended visual comparison, the Co-Instruct. With image-text interleaved input format and fine-tuned with the Co-Instruct-562K dataset, it significantly outperforms existing methods (and even GPT-4V) in multiple open-ended visual comparison tasks. With open weights, it allows for broader application than proprietary models."
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "li",
+   "en": "3. We construct the benchmark, the MICBench, as the first benchmark to evaluate LMMs for quality comparison on multiple images (more than two). It covers 2,000 diverse-type open-range MCQs related to visual quality comparison among three or four images. The MICBench contributes to more holistic evaluation studies on the visual quality comparison problem."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "h2",
+   "en": "2 Related Works"
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1 Visual Quality Comparison"
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "p",
+   "en": "Visual quality comparison (especially paired comparison) is a widely used subjective quality assessment methodology, serving as the most reliable way to collect human opinions [31]. However, when the number of images increases, the experiments become infeasible because of the exponential growth of pairwise comparisons [14]. While many active sampling methods have been proposed to reduce the number of pairs [54, 21, 33], they are computationally expensive and unsuitable for large-scale experiments. Despite subjective studies, learning to rank quality is widely proven as effective by many objective approaches [27, 30, 8, 63, 46, 48, 64]. Nonetheless, they typically only predict a scalar score or a binary judgement for overall comparison, limiting their ability to provide meaningful feedbacks into specific types of distortions or preferences."
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2 LMMs for Visual Quality Evaluation"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "Several recent studies have explored LMMs for visual quality evaluation. The Q-Bench [49] proposes a holistic benchmark for LMMs on low-level perception (quality-related MCQs), description (quality-related captioning) and assessment (predicting scores). Following this path, Q-Instruct [50] advances the ability of LMMs with a large-scale human-annotated dataset, and Q-Align [51] designs a text-guided instruction tuning for score predictions and outperforms non-LMM approaches. However, these explorations are based on single images and have not covered comparative settings. While most recent benchmarks [67, 69] suggest that open-source LMMs trained with single image datasets cannot perform well on comparative settings, to bridge this gap, we collect the first instruction tuning dataset to teach LMMs to compare visual quality, the Co-Instruct-562K, and our model significantly improves the ability of open-source LMMs on comparative settings, moving a step forward on the basis of existing explorations."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1: Statistics of our Co-Instruct-562K dataset. ‘#’ denotes “the number of”."
+  },
+  {
+   "id": "b0027",
+   "t": "keep",
+   "w": "table",
+   "en": "Subsets Q-Instruct-200K [ 50 ] Merge2Compare Teach2Compare - general Teach2Compare - Q&A All Instruction Type Detailed Reasoning, Question Answering Detail Reasoning Detail Reasoning Question Answerin"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "h2",
+   "en": "3 Data Construction"
+  },
+  {
+   "id": "b0029",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we elaborate on the construction process of the Co-Instruct-562K dataset. Though human annotation is the most direct approach to collect data, as is widely acknowledged [21, 54], acquiring sufficient comparative data on a large set of images demands a markedly increased volume of human annotations [10, 35] in contrast to gathering opinions on the same set of individual images. To avoid this unbearable cost, we propose an alternative data construction strategy without additional human annotation, by following three key principles:"
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "li",
+   "en": "1. Convert: Utilize reliable information from existing datasets."
+  },
+  {
+   "id": "b0031",
+   "t": "text",
+   "w": "li",
+   "en": "2. Learn-from-Model: Leverage the verified capabilities of models."
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "li",
+   "en": "3. Co-Instruct: Collecting diverse subsets that complement each other."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "p",
+   "en": "Under the principles, we collect two different subsets for instruction tuning: Merge2Compare (Sec. 3.1), which converts information from human quality descriptions on single images, and the ability of single-modal LLMs on comparing and analyzing texts; and Teach2Compare (Sec. 3.2), which leverages the verified ability of GPT-4V on comparing images. Finally, we discuss how the two subsets complement each other (Sec. 3.3) under a co-instruct scheme."
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1 Merge2Compare."
+  },
+  {
+   "id": "b0035",
+   "t": "text",
+   "w": "p",
+   "en": "In this part, we define the construction process for Merge2Compare includes three steps: 1) pair/group matching; 2) top-similarity pair removal; and 3) LLM merging. An examplar illustration of the process is shown in Fig. 4."
+  },
+  {
+   "id": "b0036",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 4: The pipeline of constructing Merge2Compare: images are first matched into groups (a), and then filtered via top-similarity removal (b). After filtering, the single image quality descriptions are merged (c) into comparisons by the LLM [16]."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "h4",
+   "en": "Step 1: Pair/Group Matching (Fig. 4(a))."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "To best utilize information from existing single image quality descriptions, following the empirical rule to sample ⟦SLOT_2⟧ pairwise combinations to effectively rank among all individual items in a set [37, 45], we randomly sample 81K image pairs from all 19K images in the Q-Pathway. Despite pairs, we further sample 27K groups with three images and 18K groups with four images to cover the scenarios of more images."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "h4",
+   "en": "Step 2: Top-Similarity Pair Removal (Fig. 4(b))."
+  },
+  {
+   "id": "b0041",
+   "t": "text",
+   "w": "p",
+   "en": "The effectiveness of the merge comes from the differences among descriptions, e.g. between The quality is acceptable for <img⟦SLOT_3⟧> and The quality is poor for <img⟦SLOT_4⟧>. However, if descriptions in a pair/group contains almost the same information (e.g. both images with The clarity is good, but lighting is dark), the merged comparisons will lack enough information or even with false predictions. Henceforth, we use E5-Mistral [44] text embedding model to compute similarities among descriptions, and remove if any high-similarity description pairs exist in the group. After removal, 70K image pairs (86% of initial samples), 20K groups of three (74% of initial) and 10K groups of four (55% of initial) are preserved and fed into the LLM for merging."
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "h4",
+   "en": "Step 3: LLM Merging (Fig. 4(c))."
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "p",
+   "en": "The key step for the Merge2Compare is to prompt LLMs to convert the single image evaluations to comparative texts. Specifically, following many existing practices [26, 68, 58], we put the descriptions as alternates of images in the context. Denote the description for image <img⟦SLOT_5⟧> as <desc⟦SLOT_6⟧>, the user query for LLM merging is formulated as follows: (Pairs) The first image: <desc⟦SLOT_7⟧> The second image: <desc⟦SLOT_8⟧> Which image has better quality, and why? (Groups of Three/Four) ⟦SLOT_9⟧The ⟦SLOT_10⟧ image: <desc⟦SLOT_11⟧> ⟦SLOT_12⟧ Please rank the quality of the images and justify your rankings. where ⟦SLOT_13⟧ represents the ordinal form of ⟦SLOT_14⟧, e.g. ⟦SLOT_15⟧ is first, ⟦SLOT_16⟧ is second."
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "The merged comparisons are overall comparisons with reasonings (Fig. 4 right). To validate their reliability, we conducted a human examination on 250 random samples from Merge2Compare mixed with merged comparisons from 250 random removed groups. The correctness rate in Merge2Compare is 96%, while it is only 72% in the removed groups, demonstrating the effects of the top-similarity removal process in ensuring the quality of training data."
+  },
+  {
+   "id": "b0045",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 5: The pipeline of constructing Teach2Compare: 9K diverse images are collected and matched into 30K groups (a). The groups are then fed to GPT-4V to obtain general quality comparisons (b) and question-answering (c) related to quality comparisons."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2 Teach2Compare."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "Given existing evaluations [69, 67] suggesting that GPT-4V is decent at comparing visual quality (Tab. 2/3/4), we propose to collect GPT-4V responses as pseudo labels for quality comparison. As shown in Fig. 5, we collect diverse unlabeled images and feed them to GPT-4V with different prompts to obtain Teach2Compare-general (overall quality comparison) and Teach2Compare-Q&A (question-answer pairs related to quality comparison). Details as follows."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "h4",
+   "en": "Collection of Images (Fig. 5(a))."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "p",
+   "en": "For Teach2Compare, we collect 9K images from various sources to cover different quality concerns and visual appearances: 1) 5.4K in-the-wild images from YFCC-100M [41] database; 2) 1.8K images artificially-distorted images from COCO [3] (with 15 types of distortions via ImageCorruptions [32]) and KADIS-700K [24] (25 types of distortions); 3) 1.8K AI-generated images from ImageRewardDB [53]. These 9K diverse unlabeled images are further grouped into 18K pairs, 6K groups of three, and 6K groups of four, for GPT-4V to provide pseudo labels under two formats, as follows."
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "h4",
+   "en": "Teach2Compare-general (Fig. 5(b))."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "p",
+   "en": "Similar to Merge2Compare, the general subset also consists of overall comparison with reasonings. Specifically, we substitute the <desc⟦SLOT_17⟧> in the Merge2Compare prompt template to respective real images <img⟦SLOT_18⟧> to feed to GPT-4V. After collection, we also conduct a similar 250-sample spot check on the output pseudo labels, which reports around 94% correctness. Though slightly less accurate than Merge2Compare (96%), examiners also report that GPT-4V labels contain more content information which has been observed to enhance quality understandings of models [47, 19, 20]. The two subsets are expected to complement each other for better learning outcomes."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "h4",
+   "en": "Teach2Compare-Q&A (Fig. 5(c))."
+  },
+  {
+   "id": "b0054",
+   "t": "text",
+   "w": "p",
+   "en": "Despite general comparisons, for GPT-4V, we also collect a specific subset to improve LMM ability on responding to open-range questions. To achieve this, we first list reference aspects (clarity, lighting, color, etc) and then ask GPT-4V to generate questions (and respective correct answers, and false answers for the questions) on comparing these aspects among the images. After removing failed generations, we obtain 230K question-answers from 30K image groups. These question-answers are converted to both direct question-answering and multi-choice questions (as A-OKVQA[38]) for training."
+  },
+  {
+   "id": "b0055",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 6: The structure of Co-Instruct. (a) Images are encoded by visual embedding layers and then passsed through an abstractor module to reduce token numbers, and then (c) fused with text embeddings into under the image-text interleaved format."
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3 Rationale of Combinations."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "p",
+   "en": "As discussed in principle 3, our motivation is to collect subsets that can complement each other. This complementarity is reflected in the following two aspects. Firstly, in terms of general comparisons, Merge2Compare has higher accuracy but lacks fine-grained comparison (excluded by Top-similarity Pair Removal), while Teach2Compare-general, although slightly less accurate, offers more diverse scenarios and includes content information as background. Joint training of both contributes to a more comprehensive quality comparison by our model. Additionally, Teach2Compare includes a unique Q&A subset, which significantly enhances the model’s ability to answer open-range questions."
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "h2",
+   "en": "4 The Co-Instruct Model"
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we discuss the proposed model, Co-Instruct. Specifically, we have made two non-trivial adaptations for the multi-image comparative setting:"
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "h4",
+   "en": "Visual Token Reduction (Fig. 6 (a))."
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "Most state-of-the-art LMMs [25, 39, 5] have adopted the simple projector that keeps a large number of tokens (e.g. 1,025). This structure is not friendly to multi-image scenarios: passing only two images will exceed the max length of LLaVA [26] (2,048), and four images will exceed the context window of LLaMA-2 [42] (4,096). Thus, we adopt another widely-used abstractor [4, 55, 56] structure to reduce token numbers before feeding the visual embeddings to LLM, so as to easily adapt to multi-image scenarios."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "h4",
+   "en": "Image-text Interleaved Format (Fig. 6 (c))."
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "p",
+   "en": "Typical single-image instruction tuning usually does not care about “position of images”. Most approaches [68, 25, 4] directly pile all images before texts (<img⟦SLOT_19⟧>(<img⟦SLOT_20⟧>⟦SLOT_21⟧)<text>). Under this piling, multiple images are not separates and LMMs might confuse the information from different images and fail to compare well (see baseline result in Fig. 8). To solve this, we propose an image-text interleaved format for multi-image training, that each image is started with explicit text to identify its nominal:"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "User: The first image: <img⟦SLOT_22⟧> The second image: <img⟦SLOT_23⟧> (⟦SLOT_24⟧) <query> Assistant: <response>"
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "In our experiments, we demonstrated that this interleaved format significantly enhances the performance of Co-Instruct (Tab. 8), notably better than using learnable special tokens (<img_st> and <img_end>) to divide images."
+  },
+  {
+   "id": "b0067",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 7: Dataset Card of MICBench, made up of (a) Which questions (60%), (b) Yes-or-No questions (22%), and (c) Other types of questions (18%) on three/four images."
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "h2",
+   "en": "5 The MICBench"
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "In this section, we discuss the proposed MICBench to cover the open-ended evaluation settings on groups of three or four images, as a complementary of existing evaluation settings (Sec. 6.3). It contains 2,000 groups of open-range questions equipped with multiple candidates, with details elaborated as follows:"
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "h4",
+   "en": "Sourcing Diverse Image Groups."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "p",
+   "en": "To improve the diversity of the benchmark, in the MICBench, we sample image groups from two sources: (1) 400 groups of three and 400 groups of four from the images in LLVisionQA [49], which are originally sourced from 9 datasets [18, 66, 6, 12, 59, 7, 24, 15, 3]; (2) 600 groups of three and 600 groups of four on 1,000 random images sampled from unlabeled databases [41, 24, 3, 53] (zero overlap with training-set images). With in-total 2,000 groups, the MICBench contains a wide variety of quality issues and low-level appearances, providing a non-biased evaluation on quality comparison."
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "h4",
+   "en": "Evaluation Form: Multi-choice Questions (MCQs)."
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "As the most popular evaluation form for LLM/LMM benchmarks [11, 60, 29, 49], multi-choice question (MCQ) is adopted as the evaluation form of MICBench. As is shown in Fig. 7, each image group is associated with a expert-crafted question that compare quality or related attributes among the images. Despite common question types (Yes-or-No/What/How, etc), the MICBench also introduces a special type of question, the Which questions (Fig. 7(a)), to cover this common type of human query on comparison. In total 10 human experts participate in annotating the MICBench, and the answer of each MCQ is cross-examined by another expert. Similar as existing benchmarks [29, 49], MICBench is further divided into a dev set (1,004) for method development (answers will be public), and a test set (996) to evaluate performance of LMMs (answers will be hidden from public)."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "h2",
+   "en": "6 Evaluation"
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h3",
+   "en": "6.1 Implementation Details"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "The Co-Instruct is fine-tuned after the released checkpoint of mPLUG-Owl2 [56], with LLaMA-2 [42] as LLM and CLIP-ViT-L14 [36] as visual embedding module. Images are padded to square and then resized to ⟦SLOT_25⟧ before fed into the model. The learning rate is set as ⟦SLOT_26⟧-⟦SLOT_27⟧, with two epochs under batch size ⟦SLOT_28⟧. The final checkpoint is used for evaluation. To avoid over-fitting, only dev subsets of evaluation datasets are used to choose best training hyper-parameters, where the final reported results are from non-overlapped test subsets. All parameters are updated during training, costing in total 25 hours on 8*NVIDIA A100 GPUs."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "h3",
+   "en": "6.2 Baseline Models"
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "We choose five open-source recent state-of-the-art LMMs that supports multi-image inputs to compare with: LLaVA-v1.5-13B [25], InternLM-XComposer2 [5], BakLLaVA [39], EMU2-Chat [40], mPLUG-Owl2 [56] (baseline of Co-Instruct). Additionally, we also compare with three well-recognized proprietary close-source models: Qwen-VL-Max, Gemini-Pro, and GPT-4V (teacher of Co-Instruct)."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "h3",
+   "en": "6.3 Results on Existing Evaluation Settings"
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "Despite the MICBench (Sec. 5), we also evaluate the proposed Co-Instruct against baseline models on several existing visual quality evaluation/comparison benchmarks for LMMs. The evaluation settings and results are as follows."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2: Results on Q-Bench⟦SLOT_29⟧-A1. Co-Instruct is remarkably 51% better than the variant without comparative data, and the only LMM that surpasses human capability."
+  },
+  {
+   "id": "b0083",
+   "t": "keep",
+   "w": "table",
+   "en": "Sub-categories Question Types Low-level Concerns Pairwise Settings Overall ↑ \\uparrow Model Yes-or-No ↑ \\uparrow What ↑ \\uparrow How ↑ \\uparrow Distortion ↑ \\uparrow Other ↑ \\uparrow Compare ↑ \\uparro"
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "p",
+   "en": "Q-Bench⟦SLOT_30⟧-A1[67] is a benchmark for visual quality comparison with 1,999 expert-crafted open-range quality-related MCQs on image pairs. In Tab. 2, we compare Co-Instruct against existing open-source and proprietary models on this benchmark. Co-Instruct shows far superior accuracy than open-source LMMs: it is 64% better than its baseline (mPLUG-Owl2), 51% better than the variant without our multi-image subsets (Merge2Compare and Teach2Compare), and also 23% better than the best of them. It also outperforms Qwen-VL-Max and Gemini-Pro by a large margin (21%/33%). Additionally, though its all MCQ training data are from GPT-4V, the student (Co-Instruct) still outperforms its teacher on this MCQ evaluation set by notable 2.7%, suggesting the effectiveness of the collaborative teaching strategy. Our model is also the only LMM that surpasses the accuracy of a non-expert human (esp. on Compare subset) in this benchmark, strongly supporting the meaningful vision of using models to relieve human labors on real-world visual quality comparisons in the future."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3: Results on Q-Bench⟦SLOT_31⟧-A2. ⟦SLOT_32⟧ denotes frequency for score ⟦SLOT_33⟧ (score in ⟦SLOT_34⟧). While slightly inferior to GPT-4V, Co-Instruct has significantly improved over both the variant without comparative data (+31%), especially for Precision metric (+59%)."
+  },
+  {
+   "id": "b0086",
+   "t": "keep",
+   "w": "table",
+   "en": "Dimensions Completeness Precision Relevance Sum. ↑ \\uparrow Model P 0 P_{0} P 1 P_{1} P 2 P_{2} score ↑ \\uparrow P 0 P_{0} P 1 P_{1} P 2 P_{2} score ↑ \\uparrow P 0 P_{0} P 1 P_{1} P 2 P_{2} score ↑ \\u"
+  },
+  {
+   "id": "b0087",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 8: Qualitative Visualization on Q-Bench⟦SLOT_35⟧-A2. GPT-4V gives longest outputs and achieves high precision score even if it includes incorrect information."
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "Q-Bench⟦SLOT_36⟧-A2 is a benchmark setting for general and detailed visual quality comparison with detailed reasonings on image pairs. Consisting of 499 image pairs, it employs GPT to evaluate LMM responses against the golden expert-labeled comparisons on Completeness, Precision, and Relevance. As listed in Tab. 3, the Co-Instruct can remarkably improve the Completeness (+57%) and Precision (+59%) of the comparative outputs than the w/o comparative data version, but still falls a little bit behind GPT-4V on the quantitative metrics. This might be because outputs from GPT-4V are more than twice as long as Co-Instruct outputs, while GPT evaluation used here is observed [22] to be in favor of longer text outputs. To further analyze this potential bias, we qualitatively visualize the result of different LMMs in Fig. 8. As shown in the figure, the baseline open-source LMM even confuses the information from the two images, and Gemini-Pro makes rather poor detailed reasonings. For GPT-4V, it generates the longest outputs among all LMMs, which might be the reason that it gets a relatively high precision score even its outputs are not totally correct. In short, the capability of Co-Instruct in reasoning-related comparisons can match that of GPT-4V, while significantly surpassing other existing LMMs."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4: Results on 2AFC-LMM. ⟦SLOT_37⟧ denotes binary judgment consistency while swapping first image and second image; ⟦SLOT_38⟧ denotes Pearson’s linear correlation."
+  },
+  {
+   "id": "b0091",
+   "t": "keep",
+   "w": "table",
+   "en": "Dataset CSIQ MM21 KADID-10k LIVEC KonIQ-10k SPAQ weighted avg. Model κ \\kappa ρ \\rho κ \\kappa ρ \\rho κ \\kappa ρ \\rho κ \\kappa ρ \\rho κ \\kappa ρ \\rho κ \\kappa ρ \\rho κ \\kappa ρ \\rho ( Aug/2023 ) IDEFIC"
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "2AFC-LMM[69] is a benchmark setting for general quality comparison on image pairs. It prompts LMMs to make a two-alternative forced choice (2AFC) on a pair of images. The maximum a posterior estimation is utilized to aggregate comparative preferences to single-image quality scores [43]. Then, it computes Peason’s linear correlation (⟦SLOT_39⟧) between regressed scores and ground truth MOS. As shown in Tab. 4, Co-Instruct outperforms all existing models in 2AFC-LMM, including GPT-4V. Co-Instruct also shows very high consistency ⟦SLOT_40⟧ while swapping two images. Among all datasets, the proposed model is only inferior on the MM21 [23]. Nonetheless, we observe that the Co-Instruct has higher direct comparison accuracy than GPT-4V (Co-Instruct: 55.2%, GPT-4V: 54.4%, see supplementary for full results) on it, yet the dataset contains a large proportion of extremely similar pairs, for which Co-Instruct responds a forced choice but GPT-4V will answer “two images have similar quality” (tie), which impacts the aggregated single-image quality scores. We hope this observation can inspire further research to design better evaluation settings for fine-grained comparisons."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 5: Results on Q-Bench⟦SLOT_41⟧-A1, proving that the comparative data (Sec. 3) can also effectively boost the capability of LMMs on single image quality evaluation."
+  },
+  {
+   "id": "b0094",
+   "t": "keep",
+   "w": "table",
+   "en": "Sub-categories Question Types Quadrants of Low-level Concerns Overall ↑ \\uparrow Model Yes-or-No ↑ \\uparrow What ↑ \\uparrow How ↑ \\uparrow Distortion ↑ \\uparrow Other ↑ \\uparrow In-context In-context "
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "p",
+   "en": "Q-Bench⟦SLOT_42⟧-A1. Despite the comparative benchmarks above, we also evaluate Co-Instruct on single image MCQs from Q-Bench⟦SLOT_43⟧-A1 to verify the influences of comparative tuning on single-image quality perception. As shown in Tab. 5, Co-Instruct shows 5% improvement over the variant trained with single images only, leading GPT-4V by 4%, and marks the only LLM that surpasses non-expert human. These results have demonstrated the contribution of comparative training on general quality-related understanding of LMMs, and suggested that single-image quality evaluation does not conflict with multi-image quality comparison for LMMs and can be improved together under a unified model."
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "h3",
+   "en": "6.4 Results on MICBench"
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 6: Results on MICBench. Co-Instruct is 60% better than the variant without comparative data, and also notably better than GPT-4V (+5.7%) and human (+6.4%)."
+  },
+  {
+   "id": "b0098",
+   "t": "keep",
+   "w": "table",
+   "en": "Sub-categories Question Types Number of Images Overall ↑ \\uparrow Model Yes-or-No ↑ \\uparrow Which ↑ \\uparrow Others ↑ \\uparrow Three ↑ \\uparrow Four ↑ \\uparrow #questions 220 594 182 503 493 996 rand"
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "p",
+   "en": "As is shown in Tab. 6, Co-Instruct provides very competitive accuracy on open-question quality comparison among three/four images, 5.7% better than GPT-4V (best existing) and 6.4% more accurate than non-expert human; open-source LMMs even struggle to obtain 50% accuracy on this setting. It is also noteworthy that LLaVA series and XComposer2-VL’s original context lengths are not enough for four images as they have not reduced visual token numbers, so we have to extend their context windows to evaluate them for MICBench. Consequentially, all these models have experienced notably worse accuracy on groups of four (on extended context length) than groups of three (within original context length), as noted in * in Tab. 6. This degradation highlights the importance to reduce visual tokens (Sec. 4) to adapt to multi-image scenarios."
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "h3",
+   "en": "6.5 Ablation Studies"
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "p",
+   "en": "Ablation on Training Data. As the proposed dataset is composed of three parts, we discuss the effects on different subsets of data on the six evaluation scenarios in Tab. 8. Through the results, we have arrived at several important conclusions: A) Even with all information from Q-Instruct-200K, the incorporation of Merge2Compare (variant (2)) still notably enhances the capability across various settings; B) Only involving the Teach2Compare (i.e. GPT-4V labels, variant (5)) cannot outperform its teacher GPT-4V; C) instead, the superiority towards GPT-4V on question-answering benchmarks is benefited from the co-instruction on hetero-sourced training subsets (variants (6) and (7))."
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 7: Ablation Study on data. Abbreviation: Merge: Merge2Compare; Teach⟦SLOT_44⟧: Teach2Compare-general; Teach⟦SLOT_45⟧: Teach2Compare-Q&A; QIn: Q-Instruct-200K."
+  },
+  {
+   "id": "b0103",
+   "t": "keep",
+   "w": "table",
+   "en": "Training Subset Evaluation Scenario Variant No. QIn Merge Teach G {}^{\\textit{G}} Teach QA {}^{\\textit{QA}} Q-Bench PAIR {}^{\\texttt{PAIR}} -A1 Q-Bench PAIR {}^{\\texttt{PAIR}} -A2 Q-Bench SINGLE {}^{\\"
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 8: Ablation Study on the text-image interleaved format for the Co-Instruct."
+  },
+  {
+   "id": "b0105",
+   "t": "keep",
+   "w": "table",
+   "en": "Format Q-Bench PAIR {}^{\\texttt{PAIR}} -A1 Q-Bench PAIR {}^{\\texttt{PAIR}} -A2 Q-Bench SINGLE {}^{\\texttt{SINGLE}} -A1 2AFC-LMM MICBench <img 0 {}_{\\texttt{0}} >(<img 1 {}_{\\texttt{1}} > ...) ( baseli"
+  },
+  {
+   "id": "b0106",
+   "t": "keep",
+   "w": "img",
+   "en": ""
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 9: Effects of Data Scaling for (a) detailed reasoning and (b) question answering."
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "p",
+   "en": "Besides the composition of three subsets, we also explore the effects of data scale: in Fig. 9(a), we confirm that more general comparison data contributes to an increase in detailed reasoning capabilities, and mixed data has a better effect than homogenous data at the same scale; in Fig. 9(b), we also validate that scaling up the Q&A subset helps to improve multiple MCQ metrics."
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "p",
+   "en": "Ablation on Interleaved Format. As shown in Tab. 8, the proposed text-image interleaved format has proved non-negligible advantages than the baseline, as well as other variants without explicitly noting image orders. The results suggest the rationale of the format on multi-image comparative settings."
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "h2",
+   "en": "7 Conclusion"
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we investigate the open-ended visual quality comparison problem, with the aim of a model that provides answers and detailed reasonings on open-range questions that compares quality among multiple images. To achieve this, we collect the first instruction-tuning dataset to fine-tune large multi-modality models (LMMs) for comparison, the Co-Instruct-562K, with two subsets from human annotations on single images (merged by LLMs), and GPT-4V responses. With the dataset, we propose the Co-Instruct, which not only outperforms all existing LMMs (including its teacher, GPT-4V) on visual quality comparison, but also marks the first LMM with the capability to surpass human accuracy on related settings. We further construct the MICBench, the first benchmark that evaluates multi-image quality comparison for LMMs on three and four images. We expect our work to motivate future studies on visual quality comparison."
+  },
+  {
+   "id": "b0112",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0113",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[1] Antol, S., Agrawal, A., Lu, J., Mitchell, M., Batra, D., Zitnick, C.L., Parikh, D.: VQA: Visual Question Answering. In: IEEE ICCV. pp. 2425–2433 (2015)"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[2] Chen, L., Li, J., Dong, X., Zhang, P., He, C., Wang, J., Zhao, F., Lin, D.: ShareGPT4V: Improving large multi-modal models with better captions. CoRR abs/2311.12793 (2023)"
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[3] Chen, X., Fang, H., Lin, T.Y., Vedantam, R., Gupta, S., Dollár, P., Zitnick, C.L.: Microsoft COCO captions: Data collection and evaluation server. CoRR abs/1504.00325 (2015)"
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[4] Dai, W., Li, J., Li, D., Tiong, A.M.H., Zhao, J., Wang, W., Li, B., Fung, P., Hoi, S.: InstructBLIP: Towards general-purpose vision-language models with instruction tuning. CoRR abs/2305.06500 (20"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[5] Dong, X., Zhang, P., Zang, Y., Cao, Y., Wang, B., Ouyang, L., Wei, X., Zhang, S., Duan, H., Cao, M., Zhang, W., Li, Y., Yan, H., Gao, Y., Zhang, X., Li, W., Li, J., Chen, K., He, C., Zhang, X., Qi"
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[6] Fang, Y., Zhu, H., Zeng, Y., Ma, K., Wang, Z.: Perceptual quality assessment of smartphone photography. In: IEEE CVPR. pp. 3677–3686 (2020)"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[7] Ghadiyaram, D., Bovik, A.C.: Massive online crowdsourced study of subjective and objective picture quality. IEEE TIP 25 (1), 372–387 (2016)"
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[8] Golestaneh, S.A., Dadsetan, S., Kitani, K.M.: No-reference image quality assessment via transformers, relative ranking, and self-consistency. In: IEEE WACV. pp. 3209–3218 (2022)"
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[9] Google: Gemini Pro (2023), https://deepmind.google/technologies/gemini"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[10] Gu, J., Cai, H., Chen, H., Ye, X., Ren, J., Dong, C.: PIPAL: A large-scale image quality assessment dataset for perceptual image restoration. In: ECCV. pp. 633–651 (2020)"
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[11] Hendrycks, D., Burns, C., Basart, S., Zou, A., Mazeika, M., Song, D., Steinhardt, J.: Measuring massive multitask language understanding. In: ICLR. pp. 1–10 (2021)"
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[12] Hosu, V., Lin, H., Sziranyi, T., Saupe, D.: Koniq-10k: An ecologically valid database for deep learning of blind image quality assessment. IEEE TIP 29 , 4041–4056 (2020)"
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[13] Hudson, D.A., Manning, C.D.: GQA: A new dataset for real-world visual reasoning and compositional question answering. In: IEEE CVPR. pp. 6700–6709 (2019)"
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[14] ITU-R, B.T.: Methodology for the subjective assessment of the quality of television pictures. https://www.itu.int/rec/R-REC-BT.500 (2002)"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[15] Jayaraman, D., Mittal, A., Moorthy, A.K., Bovik, A.C.: Objective quality assessment of multiply distorted images. In: ASILOMAR. pp. 1693–1697 (2012)"
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[16] Jiang, A.Q., Sablayrolles, A., Roux, A., Mensch, A., Savary, B., Bamford, C., Chaplot, D.S., de las Casas, D., Hanna, E.B., Bressand, F., Lengyel, G., Bour, G., Lample, G., Lavaud, L.R., Saulnier"
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[17] LAION: LAION GPT-4V dataset. https://huggingface.co/datasets/laion/gpt4v-dataset (2023)"
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[18] Li, C., Zhang, Z., Wu, H., Sun, W., Min, X., Liu, X., Zhai, G., Lin, W.: AGIQA-3K: An open database for ai-generated image quality assessment. CoRR 2306.04717 (2023)"
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[19] Li, D., Jiang, T., Jiang, M.: Quality assessment of in-the-wild videos. In: ACM MM. pp. 2351–2359 (2019)"
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[20] Li, D., Jiang, T., Lin, W., Jiang, M.: Which has better visual quality: The clear blue sky or a blurry animal? IEEE TMM 21 (5), 1221–1234 (2019)"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[21] Li, J., Mantiuk, R., Wang, J., Ling, S., Le Callet, P.: Hybrid-MST: A hybrid active sampling strategy for pairwise preference aggregation. In: NeurIPS. pp. 1–11 (2018)"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[22] Li, X., Zhang, T., Dubois, Y., Taori, R., Gulrajani, I., Guestrin, C., Liang, P., Hashimoto, T.B.: AlpacaEval: An automatic evaluator of instruction-following models. https://github.com/tatsu-lab"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[23] Li, Y., Wang, S., Zhang, X., Wang, S., Ma, S., Wang, Y.: Quality assessment of end-to-end learned image compression: The benchmark and objective measure. In: ACM MM. pp. 4297–4305 (2021)"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[24] Lin, H., Hosu, V., Saupe, D.: KADID-10k: A large-scale artificially distorted iqa database. In: QoMEX. pp. 1–3 (2019)"
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[25] Liu, H., Li, C., Li, Y., Lee, Y.J.: Improved baselines with visual instruction tuning. CoRR abs/2310.03744 (2023)"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[26] Liu, H., Li, C., Wu, Q., Lee, Y.J.: Visual instruction tuning. CoRR abs/2304.08485 (2023)"
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[27] Liu, X., Van De Weijer, J., Bagdanov, A.D.: RankIQA: Learning from rankings for no-reference image quality assessment. In: IEEE ICCV. pp. 1040–1049 (2017)"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[28] Liu, X., Van De Weijer, J., Bagdanov, A.D.: Exploiting unlabeled data in cnns by self-supervised learning to rank. IEEE TPAMI 41 (8), 1862–1878 (2019)"
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[29] Liu, Y., Duan, H., Zhang, Y., Li, B., Zhang, S., Zhao, W., Yuan, Y., Wang, J., He, C., Liu, Z., Chen, K., Lin, D.: MMBench: Is your multi-modal model an all-around player? CoRR abs/2307.06281 (20"
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[30] Ma, K., Liu, W., Liu, T., Wang, Z., Tao, D.: dipIQ: Blind image quality assessment by learning-to-rank discriminable image pairs. IEEE TIP 26 (8), 3951–3964 (2017)"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[31] Mantiuk, R.K., Tomaszewska, A., Mantiuk, R.: Comparison of four subjective methods for image quality assessment. In: Computer Graphics Forum. vol. 31, pp. 2478–2491 (2012)"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[32] Michaelis, C., Mitzkus, B., Geirhos, R., Rusak, E., Bringmann, O., Ecker, A.S., Bethge, M., Brendel, W.: Benchmarking robustness in object detection: Autonomous driving when winter is coming. CoR"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[33] Mikhailiuk, A., Wilmot, C., Perez-Ortiz, M., Yue, D., Mantiuk, R.K.: Active sampling for pairwise comparisons via approximate message passing and information gain maximization. In: IEEE ICPR. pp."
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[34] OpenAI: Gpt-4 technical report (2023)"
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[35] Prashnani, E., Cai, H., Mostofi, Y., Sen, P.: PieAPP: Perceptual image-error assessment through pairwise preference. In: IEEE CVPR. pp. 1808–1817 (2018)"
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[36] Radford, A., Kim, J.W., Hallacy, C., Ramesh, A., Goh, G., Agarwal, S., Sastry, G., Askell, A., Mishkin, P., Clark, J., et al.: Learning transferable visual models from natural language supervisio"
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[37] Rajkumar, A., Agarwal, S.: When can we rank well from comparisons of o (nlog (n)) non-actively chosen pairs? In: Conference on Learning Theory. pp. 1376–1401 (2016)"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[38] Schwenk, D., Khandelwal, A., Clark, C., Marino, K., Mottaghi, R.: A-OKVQA: A benchmark for visual question answering using world knowledge. In: ECCV. pp. 146–162 (2022)"
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[39] SkunkworksAI: BakLLaVA (2024), https://github.com/SkunkworksAI/BakLLaVA"
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[40] Sun, Q., Cui, Y., Zhang, X., Zhang, F., Yu, Q., Luo, Z., Wang, Y., Rao, Y., Liu, J., Huang, T., et al.: Generative multimodal models are in-context learners. CoRR abs/2312.13286 (2023)"
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[41] Thomee, B., Shamma, D.A., Friedland, G., Elizalde, B., Ni, K., Poland, D., Borth, D., Li, L.J.: YFCC100M: The new data in multimedia research. Commun. ACM 59 (2), 64–73 (2016)"
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[42] Touvron, H., Martin, L., Stone, K., Albert, P., Almahairi, A., Babaei, Y., Bashlykov, N., Batra, S., Bhargava, P., Bhosale, S., Bikel, D., Blecher, L., Ferrer, C.C., Chen, M., Cucurull, G., Esiob"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[43] Tsukida, K., Gupta, M.R.: How to analyze paired comparison data (Technical Report UWEETR-2011-0004, University of Washington, 2011), https://api.semanticscholar.org/CorpusID:15425240"
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[44] Wang, L., Yang, N., Huang, X., Yang, L., Majumder, R., Wei, F.: Improving text embeddings with large language models. CoRR abs/2401.00368 (2024)"
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[45] Wauthier, F., Jordan, M., Jojic, N.: Efficient ranking from pairwise comparisons. In: ICML. pp. 109–117 (2013)"
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[46] Wu, H., Chen, C., Hou, J., Liao, L., Wang, A., Sun, W., Yan, Q., Lin, W.: FAST-VQA: Efficient end-to-end video quality assessment with fragment sampling. In: ECCV. pp. 538–554 (2022)"
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[47] Wu, H., Chen, C., Liao, L., Hou, J., Sun, W., Yan, Q., Gu, J., Lin, W.: Neighbourhood representative sampling for efficient end-to-end video quality assessment. IEEE TPAMI (2023)"
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[48] Wu, H., Zhang, E., Liao, L., Chen, C., Hou, J., Wang, A., Sun, W., Yan, Q., Lin, W.: Exploring video quality assessment on user generated contents from aesthetic and technical perspectives. In: I"
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[49] Wu, H., Zhang, Z., Zhang, E., Chen, C., Liao, L., Wang, A., Li, C., Sun, W., Yan, Q., Zhai, G., Lin, W.: Q-Bench: A benchmark for general-purpose foundation models on low-level vision. In: ICLR ("
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[50] Wu, H., Zhang, Z., Zhang, E., Chen, C., Liao, L., Wang, A., Xu, K., Li, C., Hou, J., Zhai, G., et al.: Q-instruct: Improving low-level visual abilities for multi-modality foundation models. CoRR "
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[51] Wu, H., Zhang, Z., Zhang, W., Chen, C., Liao, L., Li, C., Gao, Y., Wang, A., Zhang, E., Sun, W., et al.: Q-Align: Teaching lmms for visual scoring via discrete text-defined levels. CoRR abs/2312."
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[52] Wu, X., Sun, K., Zhu, F., Zhao, R., Li, H.: Better aligning text-to-image models with human preference. CoRR abs/2303.14420 (2023)"
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[53] Xu, J., Liu, X., Wu, Y., Tong, Y., Li, Q., Ding, M., Tang, J., Dong, Y.: ImageReward: Learning and evaluating human preferences for text-to-image generation. CoRR abs/2304.05977 (2023)"
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[54] Ye, P., Doermann, D.: Active sampling for subjective image quality assessment. In: IEEE CVPR. pp. 4249–4256 (2014)"
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[55] Ye, Q., Xu, H., Xu, G., Ye, J., Yan, M., Zhou, Y., Wang, J., Hu, A., Shi, P., Shi, Y., Jiang, C., Li, C., Xu, Y., Chen, H., Tian, J., Qi, Q., Zhang, J., Huang, F.: mPLUG-Owl: Modularization empow"
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[56] Ye, Q., Xu, H., Ye, J., Yan, M., Liu, H., Qian, Q., Zhang, J., Huang, F., Zhou, J.: mPLUG-Owl2: Revolutionizing multi-modal large language model with modality collaboration. CoRR abs/2311.04257 ("
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[57] Yim, J.G., Wang, Y., Birkbeck, N., Adsumilli, B.: Subjective quality assessment for youtube UGC dataset. In: IEEE ICIP. pp. 1–5 (2020)"
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[58] Yin, Z., Wang, J., Cao, J., Shi, Z., Liu, D., Li, M., Sheng, L., Bai, L., Huang, X., Wang, Z., et al.: LAMM: Language-assisted multi-modal instruction-tuning dataset, framework, and benchmark. Co"
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[59] Ying, Z., Niu, H., Gupta, P., Mahajan, D., Ghadiyaram, D., Bovik, A.: From patches to pictures (PaQ-2-PiQ): Mapping the perceptual space of picture quality. In: IEEE CVPR. pp. 3575–3585 (2020)"
+  },
+  {
+   "id": "b0172",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[60] Yue, X., Ni, Y., Zhang, K., Zheng, T., Liu, R., Zhang, G., Stevens, S., Jiang, D., Ren, W., Sun, Y., et al.: MMMU: A massive multi-discipline multimodal understanding and reasoning benchmark for "
+  },
+  {
+   "id": "b0173",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[61] Zhang, C., Su, S., Zhu, Y., Yan, Q., Sun, J., Zhang, Y.: Exploring and evaluating image restoration potential in dynamic scenes. In: IEEE CVPR. pp. 2057–2066 (2022)"
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[62] Zhang, R., Isola, P., Efros, A.A., Shechtman, E., Wang, O.: The unreasonable effectiveness of deep features as a perceptual metric. In: IEEE CVPR. pp. 586–595 (2018)"
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[63] Zhang, W., Ma, K., Zhai, G., Yang, X.: Uncertainty-aware blind image quality assessment in the laboratory and wild. IEEE TIP 30 , 3474–3486 (2021)"
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[64] Zhang, W., Zhai, G., Wei, Y., Yang, X., Ma, K.: Blind image quality assessment via vision-language correspondence: A multitask learning perspective. In: IEEE CVPR. pp. 14071–14081 (2023)"
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[65] Zhang, W., Liu, Y., Dong, C., Qiao, Y.: RankSRGan: Generative adversarial networks with ranker for image super-resolution. In: ICCV. pp. 3096–3105 (2019)"
+  },
+  {
+   "id": "b0178",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[66] Zhang, Z., Sun, W., Wang, T., Lu, W., Zhou, Q., Wang, Q., Min, X., Zhai, G., et al.: Subjective and objective quality assessment for in-the-wild computer graphics images. ACM TOMM 20 (4), 1–22 (2"
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[67] Zhang, Z., Wu, H., Zhang, E., Zhai, G., Lin, W.: A benchmark for multi-modal foundation models on low-level vision: from single images to pairs. CoRR abs/2402.07116 (2024)"
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[68] Zhu, D., Chen, J., Shen, X., Li, X., Elhoseiny, M.: MiniGPT-4: Enhancing vision-language understanding with advanced large language models. CoRR abs/2304.10592 (2023)"
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "[69] Zhu, H., Sui, X., Chen, B., Liu, X., Chen, P., Fang, Y., Wang, S.: 2AFC prompting of large multimodal models for image quality assessment. CoRR abs/2402.01162 (2024)"
+  }
+ ]
+}

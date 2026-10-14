@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GalleryGPT：用大多模态模型分析绘画作品 | 双语对照</title>
+<script>
+window.MathJax={
+  tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']],processEscapes:true},
+  svg:{fontCache:'global'},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}
+};
+</script>
+<script src="../../assets/mathjax/es5/tex-mml-chtml.js" async></script>
+<style>
+:root{--fg:#1f2937;--pri:#1e3a8a;--bd:#e2e8f0;--alt:#f8fafc;}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+color:var(--fg);background:#fff;line-height:1.85;font-size:15.5px;}
+.wrap{max-width:1500px;margin:0 auto;padding:0 20px 80px;}
+header.paperhead{border-bottom:2px solid var(--pri);padding:24px 0 18px;margin-bottom:18px;}
+.zh-title{font-size:25px;font-weight:700;color:var(--pri);line-height:1.35;margin:0 0 8px;}
+.en-title{font-size:16px;color:#4b5563;line-height:1.5;margin:0 0 12px;font-style:italic;}
+.meta{font-size:13px;color:#4b5563;display:flex;flex-wrap:wrap;gap:14px;}
+.meta a{color:#2563eb;}
+.toolbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);border-bottom:1px solid var(--bd);
+padding:9px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;backdrop-filter:blur(6px);}
+.toolbar button{border:1px solid var(--bd);background:#fff;color:var(--pri);border-radius:5px;
+padding:5px 13px;font-size:13px;cursor:pointer;font-family:inherit;}
+.toolbar button.on{background:var(--pri);color:#fff;border-color:var(--pri);}
+.toolbar .sp{flex:1;}
+.abs{background:var(--alt);border:1px solid var(--bd);border-radius:6px;padding:14px 18px;margin:16px 0 24px;font-size:14.5px;}
+.abs h4{margin:0 0 6px;font-size:14px;color:var(--pri);}
+.blk{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid #f1f5f9;}
+.blk>div{padding:10px 16px;}
+.blk>.en{border-right:1px solid var(--bd);color:#334155;}
+.blk>.zh{background:#fff;}
+.blk.atomic{grid-template-columns:1fr;background:var(--alt);}
+.blk.atomic>div{padding:12px 16px;text-align:center;}
+h1,h2,h3,h4{color:var(--pri);line-height:1.45;}
+.blk h2{font-size:19px;margin:16px 0 8px;}
+.blk h3{font-size:16.5px;margin:12px 0 6px;}
+.blk h4{font-size:15px;margin:10px 0 5px;}
+p{margin:0 0 10px;text-align:justify;}
+img{max-width:100%;height:auto;display:block;margin:10px auto;border:1px solid var(--bd);}
+table{border-collapse:collapse;margin:10px auto;font-size:13.5px;background:#fff;}
+td,th{border:1px solid #dbe2ea;padding:5px 9px;}
+figure{margin:8px 0;} figcaption{font-size:13px;color:#4b5563;text-align:center;margin-top:6px;}
+body.view-zh .blk{grid-template-columns:1fr;} body.view-zh .blk>.en{display:none;}
+body.view-en .blk{grid-template-columns:1fr;} body.view-en .blk>.zh{display:none;}
+.mathwarn{background:#fef2f2;border-left:4px solid #b91c1c;padding:8px 12px;font-size:13px;color:#7f1d1d;}
+</style>
+</head><body class="view-both">
+<div class="wrap">
+<header class="paperhead">
+<h1 class="zh-title">GalleryGPT：用大多模态模型分析绘画作品</h1>
+<p class="en-title">GalleryGPT: Analyzing Paintings with Large Multimodal Models</p>
+<div class="meta"><span>arXiv:2408.00491</span> · <span>作者：Yi Bin, Wenhao Shi, Yujuan Ding, Zhiqiang Hu, Zheng Wang, Yang Yang, See-Kiong Ng, Heng Tao Shen</span> · <span>发布：2024-08-01</span> · <a href="https://arxiv.org/abs/2408.00491" target="_blank">arXiv 页面</a> · <a href="paper.pdf" target="_blank">原版 PDF</a> · <a href="orig.html" target="_blank">原文 HTML</a></div>
+</header>
+<div class="toolbar">
+<button data-v="view-both" class="on">中英双栏</button>
+<button data-v="view-zh">仅中文</button>
+<button data-v="view-en">仅英文</button>
+<span class="sp"></span>
+<a href="../index.html" style="font-size:13px;color:#2563eb;">← 返回总目录</a>
+</div>
+<div class="abs">
+<h4>中文摘要</h4><div>艺术品分析是艺术鉴赏中一项重要而基础的技能，能够丰富个人的审美感受力并促进批判性思维能力。由于艺术品具有主观性、解读多样、视觉元素复杂，理解它们颇具挑战，需要艺术史、文化背景与美学理论方面的专业知识。然而，受数据采集与模型能力的限制，以往自动分析艺术品的工作主要集中在分类、检索等简单任务上，与人工智能的目标相去甚远。为推进该方向的研究进展，本文借助大多模态模型出色的感知与生成能力，再向前迈出一步，撰写全面的分析。具体地，我们首先提出一项为艺术品（本文指绘画）撰写段落分析的任务，只关注视觉特征，以形成对艺术品更全面的理解。为支撑形式分析的研究，我们收集了一个大规模数据集 PaintingForm，包含约 19k 幅绘画图像与 50k 条分析段落。我们进一步提出一个用于绘画分析撰写的优异大多模态模型 GalleryGPT，它在 LLaVA 架构基础上做小幅修改并利用所收集数据微调而成。我们在多个数据集上进行了形式分析生成与零样本实验，以评估模型能力。结果表明，相比强大的基线 LMM，本模型取得显著的性能提升，展现出出色的艺术分析能力与泛化能力。（代码与模型见：https://github.com/steven640pixel/GalleryGPT。）</div>
+<h4 style="margin-top:10px;">Abstract (原文)</h4><div style="color:#475569;">Artwork analysis is important and fundamental skill for art appreciation, which could enrich personal aesthetic sensibility and facilitate the critical thinking ability. Understanding artworks is challenging due to its subjective nature, diverse interpretations, and complex visual elements, requiring expertise in art history, cultural background, and aesthetic theory. However, limited by the data collection and model ability, previous works for automatically analyzing artworks mainly focus on classification, retrieval, and other simple tasks, which is far from the goal of AI. To facilitate the research progress, in this paper, we step further to compose comprehensive analysis inspired by the remarkable perception and generation ability of large multimodal models. Specifically, we first propose a task of composing paragraph analysis for artworks, i.e., painting in this paper, only focusing on visual characteristics to formulate more comprehensive understanding of artworks. To support the research on formal analysis, we collect a large dataset PaintingForm, with about 19k painting images and 50k analysis paragraphs. We further introduce a superior large multimodal model for painting analysis composing, dubbed GalleryGPT, which is slightly modified and fine-tuned based on LLaVA architecture leveraging our collected data. We conduct formal analysis generation and zero-shot experiments across several datasets to assess the capacity of our model. The results show remarkable performance improvements comparing with powerful baseline LMMs, demonstrating its superb ability of art analysis and generalization. \textcolor{blue}{The codes and model are available at: https://github.com/steven640pixel/GalleryGPT.</div>
+</div>
+<div id="body">
+<div class="blk atomic"><div><p class="ltx_p" id="abstract1.1">Artwork analysis is important and fundamental skill for art appreciation, which could enrich personal aesthetic sensibility and facilitate the critical thinking ability. Understanding artworks is challenging due to its subjective nature, diverse interpretations, and complex visual elements, requiring expertise in art history, cultural background, and aesthetic theory. However, limited by the data collection and model ability, previous works for automatically analyzing artworks mainly focus on classification, retrieval, and other simple tasks, which is far from the goal of AI. To facilitate the research progress, in this paper, we step further to compose comprehensive analysis inspired by the remarkable perception and generation ability of large multimodal models. Specifically, we first propose a task of composing paragraph analysis for artworks, <em class="ltx_emph ltx_font_italic" id="abstract1.1.1">i.e.</em>, painting in this paper, only focusing on visual characteristics to formulate more comprehensive understanding of artworks. To support the research on formal analysis, we collect a large dataset PaintingForm, with about 19k painting images and 50k analysis paragraphs. We further introduce a superior large multimodal model for painting analysis composing, dubbed GalleryGPT, which is slightly modified and fine-tuned based on LLaVA architecture leveraging our collected data. We conduct formal analysis generation and zero-shot experiments across several datasets to assess the capacity of our model. The results show remarkable performance improvements comparing with powerful baseline LMMs, demonstrating its superb ability of art analysis and generalization. <span class="ltx_text" id="abstract1.1.2" style="--ltx-fg-color:#0000FF;">The codes and model are available at: <a class="ltx_ref ltx_url ltx_font_typewriter ltx_font_italic" href="https://github.com/steven640pixel/GalleryGPT" title="">https://github.com/steven640pixel/GalleryGPT</a></span>.</p></div></div>
+<div class="blk"><div class="en"><h6 class="ltx_title ltx_title_keywords">Keywords: </h6></div><div class="zh"><h6>关键词：</h6></div></div>
+<div class="blk atomic"><div><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="173" id="S0.F1.g1" src="figures/fig1-4.jpg" style="aspect-ratio:405/173;" width="405"/></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1. </span>An example of existing LMMs for art analysis. The painting (a nameless painting to avoid the knowledge memorized in LLMs) on the left-top corner is the target image to be analyzed, and the bottom one, “The Astronomer” by Johannes Vermeer, is wrongly recognized by GPT-4V. The red texts indicate wrong analysis, mainly belong to wrong recognition by Gemini and GPT-4V. The green texts are good parts for “formal analysis”. The purple texts denote the factual description of the painting content, which is more similar with the image captioning task.</figcaption></div><div class="zh"><p>图 1. 现有 LMM 用于艺术分析的一个示例。左上角的画作（为避开 LLM 中记忆的知识，选用一幅无名画作）是待分析的目标图像；下方一幅为 Johannes Vermeer 的《The Astronomer》，被 GPT-4V 错误识别。红色文字表示错误的分析，主要来自 Gemini 与 GPT-4V 的错误识别；绿色文字是“形式分析”中较好的部分；紫色文字表示对画作内容的事实性描述，更接近图像描述任务。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">1. </span>Introduction</h2></div><div class="zh"><h2>1. 引言</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p1.1">Artwork analysis and composition are integral aspects of art appreciation and creation, often requiring a deep understanding of artistic techniques, styles, and historical contexts. In the past decades, AI systems have been evolving rapidly and demonstrating remarkable success in many fields, even surpass humans <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib3" title="">Bai et al., 2023</a>; <a class="ltx_ref" href="#bib.bib9" title="">Chen et al., 2023c</a>; <a class="ltx_ref" href="#bib.bib34" title="">Li et al., 2023</a>)</cite>. However, it still cannot understand and analyze an artwork like humans since it involves very high-level joint understanding of culture, symbolism, abstractionism, and other aesthetics knowledge, beyond the basic semantic understanding of objects, attributes and relations in natural image understanding. Motivated by the superior ability of deep learning, researchers have employed several advanced techniques, such as convolutional neural networks (CNN) <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib28" title="">Jia et al., 2014</a>; <a class="ltx_ref" href="#bib.bib32" title="">Krizhevsky et al., 2012</a>)</cite>, recurrent neural networks <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib22" title="">Hochreiter and Schmidhuber, 1997</a>)</cite>, and Transformer <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib5" title="">Bin et al., 2022</a>; <a class="ltx_ref" href="#bib.bib56" title="">Vaswani et al., 2017</a>)</cite> in style classification, object detection, multimodal retrieval, art visual question answering, and artwork captioning <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib50" title="">Sheng and Moens, 2019</a>; <a class="ltx_ref" href="#bib.bib38" title="">Liu et al., 2023</a>; <a class="ltx_ref" href="#bib.bib4" title="">Bin et al., 2021</a>)</cite>. Despite these advancements, there is still a lack of research on composing comprehensive and in-depth analysis for artworks, limited by the model capacity of visual perception and language generation.</p></div><div class="zh"><p>艺术品分析与写作是艺术鉴赏与创作不可或缺的组成部分，通常要求对艺术技法、风格与历史语境有深入理解。过去几十年中，人工智能系统快速发展并在诸多领域取得瞩目成就，甚至超越人类（Bai 等，2023；Chen 等，2023c；Li 等，2023）。然而，它仍无法像人类那样理解与分析一件艺术品，因为这涉及对文化、象征、抽象主义以及其他美学知识的高度综合理解，超出了自然图像理解中对物体、属性与关系的基本语义理解。受深度学习优越能力的驱动，研究者采用了卷积神经网络（CNN）（Jia 等，2014；Krizhevsky 等，2012）、循环神经网络（Hochreiter 和 Schmidhuber，1997）与 Transformer（Bin 等，2022；Vaswani 等，2017）等多种先进技术，用于风格分类、目标检测、多模态检索、艺术视觉问答与艺术品描述生成（Sheng 和 Moens，2019；Liu 等，2023；Bin 等，2021）。尽管取得这些进展，受限于模型的视觉感知与语言生成能力，针对艺术品撰写全面而深入的分析仍然缺乏研究。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p2.1">The emergence of large foundation models, such large language models (LLMs) <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib7" title="">Brown et al., 2020</a>; <a class="ltx_ref" href="#bib.bib16" title="">Ding et al., 2024a</a>; <a class="ltx_ref" href="#bib.bib54" title="">Touvron et al., 2023a</a>; <a class="ltx_ref" href="#bib.bib55" title="">Touvron et al., 2023b</a>)</cite> and large multimodal models (LMMs) <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib35" title="">Li et al., 2022</a>; <a class="ltx_ref" href="#bib.bib51" title="">Shi et al., 2024</a>; <a class="ltx_ref" href="#bib.bib34" title="">Li et al., 2023</a>; <a class="ltx_ref" href="#bib.bib9" title="">Chen et al., 2023c</a>)</cite>, has facilitated the progress across numerous research areas, including text summarization, open-ended question answering, and long-context reasoning, and led to significant advancements <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib16" title="">Ding et al., 2024a</a>; <a class="ltx_ref" href="#bib.bib41" title="">Nguyen et al., 2024</a>; <a class="ltx_ref" href="#bib.bib17" title="">Ding et al., 2024b</a>)</cite>. This also makes it possible to enable machine to perceive and understand visual content and generate detail descriptions, such as visual storytelling <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib24" title="">Huang et al., 2016</a>)</cite>. However, despite the achievements on natural image understanding, we observe that existing LMMs still cannot comprehend the high-level concepts and generate comprehensive analysis for artworks. As the example illustrated in Figure <a class="ltx_ref" href="#S0.F1" title="Figure 1 ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">1</span></a>, we test several powerful LMMs, <em class="ltx_emph ltx_font_italic" id="S1.p2.1.1">i.e.</em>, GPT-4V <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib27" title="">Inc, 2023b</a>)</cite>, Gemini <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib25" title="">Inc, 2023a</a>)</cite>, and ShareGPT4V <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib11" title="">Chen et al., 2023a</a>)</cite>, with a nameless painting<span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup>
+<span class="ltx_tag ltx_tag_note">1</span>
+            
+            
+            
+          We choose a nameless painting to avoid the knowledge about the painting has been seen during pre-training and Supervised-Fine-Tuning (SFT), since the knowledge about famous ones is memorized by the LLMs. This nameless painting is downloaded from: <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://darksky.org/app/uploads/2015/11/8_Florinus_Astronomy.png" title="">https://darksky.org/app/uploads/2015/11/8_Florinus_Astronomy.png</a></span></span></span> by asking them to compose a paragraph of formal analysis. From the outputs, we can observe that the GPT-4V and Gemini wrongly recognized this painting to another, and then give the analysis based on the knowledge recalled from their language-part memories, which means they function as LLMs in this part. We call this phenomenon as “<span class="ltx_text ltx_font_bold ltx_font_italic" id="S1.p2.1.2">LLM-biased visual hallucination</span>”. This phenomenon suggests that in this task, existing LMMs tend to first recognize the given painting is and then give analysis accordingly, while do not focus on the visual content of the painting at the stage of analysis generation. Such a <span class="ltx_text ltx_font_italic" id="S1.p2.1.3">recognize-then-analyze</span> procedure highly relies on the accuracy of the recognition, and will fail when the given painting is unknown.
+Although we have noticed that
+GPT-4V tries to analyze this painting based on the visual content (green part shown analysis shown in Figure <a class="ltx_ref" href="#S0.F1" title="Figure 1 ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">1</span></a>), it still cannot completely escape from the recognize-then-analyze procedure.
+Meanwhile, some effort has been devoted to enhance the visual understanding of LMMs. For example, ShareGPT4V <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib11" title="">Chen et al., 2023a</a>)</cite> contributes a dataset with high-quality image and description pairs to fine-tune the LLaVA model <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib39" title="">Liu et al., 2024</a>)</cite>.
+Despite of the effectiveness, these methods still fail to make professional artistic, aesthetic and technical analysis on artworks or paintings,
+meaning that existing LMMs so far cannot satisfy the requirements of artwork analysis. They may face particular challenges to get generalized into unknown or unseen subjects, thereby calling for better solutions.</p></div><div class="zh"><p>大语言模型（LLM）（Brown 等，2020；Ding 等，2024a；Touvron 等，2023a；Touvron 等，2023b）与大多模态模型（LMM）（Li 等，2022；Shi 等，2024；Li 等，2023；Chen 等，2023c）等大型基础模型的涌现，推动了文本摘要、开放式问答与长上下文推理等众多研究领域的进展，并带来了显著提升（Ding 等，2024a；Nguyen 等，2024；Ding 等，2024b）。这也使机器有可能感知并理解视觉内容、生成细节描述，例如视觉故事讲述（Huang 等，2016）。然而，尽管在自然图像理解上成果斐然，我们观察到现有 LMM 仍无法理解高层概念并为艺术品生成全面分析。以图 1 所示示例为例，我们测试了若干强大的 LMM，即 GPT-4V（Inc，2023b）、Gemini（Inc，2023a）与 ShareGPT4V（Chen 等，2023a），用一幅无名画作（脚注 1：我们选择一幅无名画作，以避免该画作的知识在预训练与监督微调（SFT）阶段被见过，因为著名画作的知识已被 LLM 记忆。该无名画作下载自：https://darksky.org/app/uploads/2015/11/8_Florinus_Astronomy.png）要求它们撰写一段形式分析。从输出可以看出，GPT-4V 与 Gemini 把这幅画错认成另一幅，并基于从其语言部分记忆中召回的知识给出分析，这意味着它们在此环节只是充当 LLM。我们把这一现象称为“LLM 偏置的视觉幻觉”。该现象说明，在这项任务中，现有 LMM 倾向于先识别给定画作是什么、再据此给出分析，而在分析生成阶段并不关注画作本身的视觉内容。这种“先识别再分析”的流程高度依赖识别的准确性，当给定画作不为人知时便会失效。尽管我们注意到 GPT-4V 试图基于视觉内容分析这幅画（图 1 中绿色部分所示的分析），它仍无法完全摆脱“先识别再分析”的流程。与此同时，也有一些工作致力于增强 LMM 的视觉理解。例如 ShareGPT4V（Chen 等，2023a）贡献了一个高质量图像—描述配对数据集，用于微调 LLaVA 模型（Liu 等，2024）。尽管有效，这些方法仍无法对艺术品或绘画做出专业的艺术、美学与技术分析，意味着现有 LMM 尚不能满足艺术品分析的要求。它们在泛化到未知或未见过的对象时可能面临特殊挑战，因而需要更好的解决方案。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p3.1">To fill the research gap, this paper focuses on generating <span class="ltx_text ltx_font_italic" id="S1.p3.1.1">formal analysis</span> for painting images, relying on the LMMs but pushing them to perceive and comprehend the artistic skills or other professional visual aspects shown in an artwork itself. A comprehensive artwork analysis includes many parts, <em class="ltx_emph ltx_font_italic" id="S1.p3.1.2">e.g.</em>, introduction, cultural, formal analysis, historical context, interpretation, <em class="ltx_emph ltx_font_italic" id="S1.p3.1.3">etc</em>. Although most of artwork analysis may be done relying only on the external knowledge or subjective opinions, the “form” of the artwork, including color, composition, line, shape, light and shadow, and other visual aspects , still requires vision-based understanding. Therefore, it is necessary to develop a professional LMM specialized for making formal analysis for artworks.</p></div><div class="zh"><p>为填补这一研究空白，本文聚焦于为画作图像生成形式分析，依托 LMM 但推动其去感知与理解艺术品自身所呈现的艺术技法或其他专业视觉面向。一篇完整的艺术品分析包含多个部分，例如引言、文化、形式分析、历史语境、阐释等。尽管艺术品分析的大部分内容可以只依靠外部知识或主观看法完成，但艺术品的“形式”——包括色彩、构图、线条、形状、光影以及其他视觉面向——仍需要基于视觉的理解。因此，有必要开发一个专门面向艺术品形式分析的专业 LMM。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p4.1">However, there does not exist any formal analysis dataset. It is also time- and labour-expensive to make annotations because writing a formal analysis for an painting requires professional expertise in art analyzing. Motivated by the aforementioned observed LLMs bias by GPT4 and Gemini, we try to access the knowledge memorized in LLMs to produce analyses for known artworks. Specifically, we first collect about 19k famous painting images and corresponding meta data from the Internet. Then, apply LLMs to provide a paragraph analysis only focusing on visual characteristics based on the title and artist of the painting, thereby generating the formal analysis. We also prompt the LLMs to compose the formal analysis from some specific form perspectives, such as composition, color, light and shadow, to enhance the richness and diversity of the data. We finally obtain about 50k formal analyses for the paintings we collect and name this dataset as PaintingForm.</p></div><div class="zh"><p>然而，目前并不存在任何形式分析数据集。而为一件画作撰写形式分析需要具备艺术分析的专业知识，标注既费时又费人力。受前述 GPT-4 与 Gemini 表现出的 LLM 偏置现象启发，我们尝试利用 LLM 中记忆的知识来为已知艺术品生成分析。具体而言，我们首先从互联网收集约 19k 幅著名画作图像及相应元数据；随后让 LLM 基于画作的标题与艺术家，给出只聚焦于视觉特征的段落分析，由此生成形式分析。我们还提示 LLM 从构图、色彩、光影等若干特定形式视角撰写形式分析，以提升数据的丰富度与多样性。最终我们为所收集的画作获得约 50k 条形式分析，并将该数据集命名为 PaintingForm。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p5.1">Leveraging the PaintingForm dataset, we present
+GalleryGPT, a large multi-modal model with a LLaVA architecture fine-tuned based on ShareGPT4V-7B <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib11" title="">Chen et al., 2023a</a>)</cite>. As ShareGPT4V is boosted for image understanding and performs well in visual description generation, we freeze the parameters in vision encoder to retain its superb visual perception ability. Meanwhile, we add a LoRA component to LLM to learn the specific analyzing patterns of paintings. To evaluate the effectiveness of our GalleryGPT, we conduct zero-shot learning on several classic painting analysis datasets, including AQUA <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib20" title="">Garcia et al., 2020</a>)</cite>, ArtQuest <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib6" title="">Bleidt et al., 2024</a>)</cite>, and ArtQuest-Type <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib6" title="">Bleidt et al., 2024</a>)</cite> for art visual question answering, and ArtBench <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib37" title="">Liao et al., 2022</a>)</cite> for style classification. The results show that our GalleryGPT outperforms several off-the-shelf and adaptive LMMs, demonstrating the superiority of our collected data and impressive performance of GalleryGPT.</p></div><div class="zh"><p>借助 PaintingForm 数据集，我们提出 GalleryGPT——一个基于 ShareGPT4V-7B（Chen 等，2023a）微调、采用 LLaVA 架构的大多模态模型。由于 ShareGPT4V 在图像理解上得到增强、在视觉描述生成上表现良好，我们冻结视觉编码器中的参数，以保留其出色的视觉感知能力；同时在大语言模型上加入 LoRA 组件，用于学习画作特有的分析模式。为验证 GalleryGPT 的有效性，我们在若干经典画作分析数据集上做零样本实验，包括用于艺术视觉问答的 AQUA（Garcia 等，2020）、ArtQuest（Bleidt 等，2024）与 ArtQuest-Type（Bleidt 等，2024），以及用于风格分类的 ArtBench（Liao 等，2022）。结果表明，我们的 GalleryGPT 优于若干现成的与经过适配的 LMM，显示出所收集数据的优越性与 GalleryGPT 的出色性能。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S1.p6.1">In summary, the contributions of this work are as follows:</p></div><div class="zh"><p>综上，本工作的贡献如下：</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1">We propose to empower the perception ability of LMMs for subtle and specific visual characteristics of artworks, and introduce the task of generating formal analysis to enable the ability by supervised fine-tuning.</p>
+</div></li></div><div class="zh"><p>• 我们提出增强 LMM 对艺术品细微而特定视觉特征的感知能力，并引入形式分析生成任务，通过监督微调来赋予模型这一能力。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1">To support the research, we contribute a large-scale and high-quality dataset PaintingForm, acquired by two powerful LLMs, <em class="ltx_emph ltx_font_italic" id="S1.I1.i2.p1.1.1">i.e.</em>, GPT-4 and Gemini, based on the learnt knowledge about famous paintings. To avoid the leakage of prior knowledge, we ask the LLMs only focus on visual characteristics and do not mention the title and artist in the formal analysis annotation.</p>
+</div></li></div><div class="zh"><p>• 为支撑该研究，我们贡献了一个大规模、高质量的数据集 PaintingForm，它由 GPT-4 与 Gemini 两个强大的 LLM 基于其对著名画作习得的知识生成。为避免先验知识泄露，我们要求 LLM 只关注视觉特征，且在形式分析标注中不提及标题与艺术家。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1">Leveraging the collected dataset, we devise an advanced large multimodal model for painting formal analysis generation, dubbed GalleryGPT, which employs ShareGPT4V as backbone. We evaluate its ability on several painting analysis tasks, and the results demonstrate the impressive performance of it.</p>
+</div></li></div><div class="zh"><p>• 利用所收集的数据集，我们以 ShareGPT4V 为骨干，设计了一个用于绘画形式分析生成的先进大多模态模型 GalleryGPT。我们在若干画作分析任务上评估其能力，结果证明了它的出色表现。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">2. </span>Related Works</h2></div><div class="zh"><h2>2. 相关工作</h2></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.1. </span>Large Language Models (LLMs)</h3></div><div class="zh"><h3>2.1. 大语言模型（LLM）</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS1.p1.1">In the past decade, language modelling has been evolving rapidly and achieved impressive progress <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib44" title="">Pennington et al., 2014</a>; <a class="ltx_ref" href="#bib.bib2" title="">Bahdanau et al., 2014</a>; <a class="ltx_ref" href="#bib.bib56" title="">Vaswani et al., 2017</a>; <a class="ltx_ref" href="#bib.bib15" title="">Devlin et al., 2018</a>)</cite>. Transformer <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib56" title="">Vaswani et al., 2017</a>)</cite> employed multiple attention blocks and positional embedding to accelerate the recurrent models and made breakthrough in language models. Delvin <em class="ltx_emph ltx_font_italic" id="S2.SS1.p1.1.1">et al.</em><cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib15" title="">Devlin et al., 2018</a>)</cite> designed a bidirectional transfomer to learn the contextual embedding of words and made the beginning the era of pre-training language model (PLM) <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib40" title="">Liu et al., 2019</a>; <a class="ltx_ref" href="#bib.bib33" title="">Lewis et al., 2019</a>; <a class="ltx_ref" href="#bib.bib46" title="">Radford et al., 2018</a>; <a class="ltx_ref" href="#bib.bib47" title="">Radford et al., 2019</a>; <a class="ltx_ref" href="#bib.bib48" title="">Raffel et al., 2020</a>)</cite>. With the large scale tokens pre-training, deep neural models, especially the large language models (LLMs) <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib7" title="">Brown et al., 2020</a>; <a class="ltx_ref" href="#bib.bib12" title="">Chowdhery et al., 2023</a>)</cite> based on the Transformer <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib56" title="">Vaswani et al., 2017</a>)</cite> structure, demonstrate superb understanding and generation ability, as well as generalizing to downstream tasks, even without any fine-tuning. LaMDA<cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib53" title="">Thoppilan et al., 2022</a>)</cite> focused on conversational applications and aims to generate more natural and logically-rich dialogue text. InstructGPT<cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib42" title="">Ouyang et al., 2022</a>)</cite> designed an effective fine-tuning method that allows LLMs to operate according to desired instructions, leveraging Reinforcement Learning from Human Feedback(RLHF). It incorporates humans into the training loop using carefully designed annotation strategies. With the instruction fine-tuning based on large foundation models, LLMs, especially the ChatGPT system <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib26" title="">Inc, 2022</a>)</cite> of OpenAI, also demonstrate emergent capacity of generation <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib52" title="">Team, 2023</a>; <a class="ltx_ref" href="#bib.bib54" title="">Touvron et al., 2023a</a>)</cite>. The LLaMA<cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib54" title="">Touvron et al., 2023a</a>; <a class="ltx_ref" href="#bib.bib55" title="">Touvron et al., 2023b</a>)</cite> model released by Meta, with its open-source nature and smaller parameter size, has provided an opportunity for many researchers to participate in large language model research and led to rapid research progress in LLMs.</p></div><div class="zh"><p>过去十年中，语言建模快速发展并取得令人瞩目的进展（Pennington 等，2014；Bahdanau 等，2014；Vaswani 等，2017；Devlin 等，2018）。Transformer（Vaswani 等，2017）采用多个注意力块与位置嵌入来加速循环模型，并在语言模型上取得突破。Devlin 等（Devlin 等，2018）设计了一个双向 Transformer 来学习词的上下文嵌入，开启了预训练语言模型（PLM）的时代（Liu 等，2019；Lewis 等，2019；Radford 等，2018；Radford 等，2019；Raffel 等，2020）。随着大规模词元预训练的开展，深度神经模型——尤其是基于 Transformer（Vaswani 等，2017）结构的大语言模型（LLM）（Brown 等，2020；Chowdhery 等，2023）——展现出卓越的理解与生成能力，并能泛化到下游任务，甚至无需任何微调。LaMDA（Thoppilan 等，2022）聚焦对话应用，旨在生成更自然、逻辑更丰富的对话文本。InstructGPT（Ouyang 等，2022）设计了一种有效的微调方法，利用基于人类反馈的强化学习（RLHF）使 LLM 能按期望指令运作，并通过精心设计的标注策略把人类纳入训练闭环。在基于大型基础模型的指令微调之下，LLM——尤其是 OpenAI 的 ChatGPT 系统（Inc，2022）——也展现出涌现的生成能力（Team，2023；Touvron 等，2023a）。Meta 发布的 LLaMA（Touvron 等，2023a；Touvron 等，2023b）模型凭借其开源性质与较小的参数规模，为众多研究者参与大语言模型研究提供了机会，并推动了 LLM 研究的快速进展。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.2. </span>Large Multimodal Models (LMMs)</h3></div><div class="zh"><h3>2.2. 大多模态模型（LMM）</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS2.p1.1">The blooming of large language models has attracted a great amount of research attention on vision-language interaction and injecting visual knowledge into LLMs. As a paradigm of visual language modal alignment, CLIP <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib45" title="">Radford et al., 2021</a>)</cite> implemented contrastive learning on extensive image-text pairs. Subsequent improvements <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib35" title="">Li et al., 2022</a>; <a class="ltx_ref" href="#bib.bib34" title="">Li et al., 2023</a>)</cite> over CLIP utilized enhanced data strategies with greater data diversity for basic visual tasks. Recent research has increasingly focused on pre-traning alignment and visual instruction tuning on top of the LLMs for more complex tasks such as visual question answering and reasoning. MiniGPT-4 <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib9" title="">Chen et al., 2023c</a>)</cite> demonstrated capabilities in image-text dialogues by aligning queried visual feature with text and feeding queried embedding to LLM. Other prominent examples including LLaVA <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib39" title="">Liu et al., 2024</a>)</cite>, Qwen-VL <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib3" title="">Bai et al., 2023</a>)</cite>, InstructBLIP <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib14" title="">Dai et al., 2024</a>)</cite>, and ShareGPT4V <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib11" title="">Chen et al., 2023a</a>)</cite> interacted visual features with LLM using a learnable projector or query embeddings, which focus on utilizing more and high quality pre-training and fine-tuning data to understand complex instructions. mPLUG-Owl <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib59" title="">Ye et al., 2023</a>)</cite>, Shikra <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib10" title="">Chen et al., 2023b</a>)</cite>, and KOSMOS-2 <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib43" title="">Peng et al., 2023</a>)</cite> introduced grounding data types and new modularization training to minimize hallucinations and enhance grounding ability. Despite these advancements, exploration for quality and format of images-instructions highlights a critical area for future large multimodal models improvement.</p></div><div class="zh"><p>大语言模型的蓬勃发展吸引了大量研究关注投向视觉—语言交互，以及把视觉知识注入 LLM。作为视觉语言模态对齐的范式，CLIP（Radford 等，2021）在大规模图文对上实现对比学习。在 CLIP 基础上的后续改进（Li 等，2022；Li 等，2023）采用了数据多样性更强的增强数据策略，用于基础视觉任务。近期研究越来越关注在 LLM 之上做预训练对齐与视觉指令微调，以处理视觉问答与推理等更复杂的任务。MiniGPT-4（Chen 等，2023c）通过把查询到的视觉特征与文本对齐、并将查询到的嵌入送入 LLM，展现出图文对话能力。其他代表性工作包括 LLaVA（Liu 等，2024）、Qwen-VL（Bai 等，2023）、InstructBLIP（Dai 等，2024）与 ShareGPT4V（Chen 等，2023a），它们用可学习的投影器或查询嵌入把视觉特征与 LLM 交互，侧重于用更多、更高质量的预训练与微调数据来理解复杂指令。mPLUG-Owl（Ye 等，2023）、Shikra（Chen 等，2023b）与 KOSMOS-2（Peng 等，2023）引入定位数据类型与新的模块化训练，以最小化幻觉并增强定位能力。尽管取得这些进展，对图像—指令的质量与形式的探索仍凸显出未来大多模态模型改进的一个关键方向。</p></div></div>
+<div class="blk atomic"><div><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="107" id="S2.F2.g1" src="figures/data_pipeline1.png" style="aspect-ratio:357/107;" width="357"/></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2. </span>The overall pipeline of constructing our PaintingForm collection. Our annotation process only depends on the language model, without vision information. The prompt illustrated here just a simple version for exhibition, we actually elaborately designed the prompts.</figcaption></div><div class="zh"><p>图 2. 构建 PaintingForm 数据集的整体流程。我们的标注过程只依赖语言模型，不涉及视觉信息。此处展示的提示仅为简化版，实际使用的提示经过精心设计。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">2.3. </span>AI for Art Analysis</h3></div><div class="zh"><h3>2.3. 面向艺术分析的 AI</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS3.p1.1">With the great success of deep learning in CV and NLP in the past decade, AI for art analysis has also been evolving with rapid progress. Early works most depended on hand-crafted features and explored the classification and recognition problem <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib29" title="">Johnson et al., 2008</a>; <a class="ltx_ref" href="#bib.bib31" title="">Khan et al., 2014</a>; <a class="ltx_ref" href="#bib.bib8" title="">Carneiro et al., 2012</a>; <a class="ltx_ref" href="#bib.bib49" title="">Shamir et al., 2010</a>; <a class="ltx_ref" href="#bib.bib21" title="">Gatys et al., 2016</a>)</cite>. With the great success of pre-trained language models (PLM) <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib30" title="">Kenton and Toutanova, 2019</a>; <a class="ltx_ref" href="#bib.bib58" title="">Yang et al., 2019</a>)</cite> and visual-language pre-training (VLP) <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib36" title="">Li et al., 2020</a>; <a class="ltx_ref" href="#bib.bib45" title="">Radford et al., 2021</a>)</cite>, research on artwork analysis also achieves significant progress. CLIP-Art <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib13" title="">Conde and Turgutlu, 2021</a>)</cite> leveraged the image-text pairs of artworks in SemArt <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib19" title="">Garcia and Vogiatzis, 2018</a>)</cite> to fine-tune the CLIP and gains impressive improvements. Garcia <em class="ltx_emph ltx_font_italic" id="S2.SS3.p1.1.1">et al.</em> <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib20" title="">Garcia et al., 2020</a>)</cite> contributed a dataset of art visual question answering, named AQUA, and proposed a knowledge-based VIKING model, which achieves the best performance. Bleidt <em class="ltx_emph ltx_font_italic" id="S2.SS3.p1.1.2">et al.</em> <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib6" title="">Bleidt et al., 2024</a>)</cite> pointed out there exists language bias hidden in the question-answer pair, which may induce the model to ignore the visual information. To address this issue, they further proposed a strategy to eliminate the bias and introduced an ArtQuest dataset and implemented PrefixLM to learn the patterns between paintings and questions.</p></div><div class="zh"><p>随着深度学习过去十年在 CV 与 NLP 上的巨大成功，面向艺术分析的 AI 也在快速演进。早期工作多依赖手工特征，探索分类与识别问题（Johnson 等，2008；Khan 等，2014；Carneiro 等，2012；Shamir 等，2010；Gatys 等，2016）。随着预训练语言模型（PLM）（Kenton 和 Toutanova，2019；Yang 等，2019）与视觉—语言预训练（VLP）（Li 等，2020；Radford 等，2021）的巨大成功，艺术品分析研究也取得显著进展。CLIP-Art（Conde 和 Turgutlu，2021）利用 SemArt（Garcia 和 Vogiatzis，2018）中艺术品的图文对微调 CLIP，取得了令人印象深刻的提升。Garcia 等（Garcia 等，2020）贡献了一个艺术视觉问答数据集 AQUA，并提出基于知识的 VIKING 模型，取得了最佳性能。Bleidt 等（Bleidt 等，2024）指出问答对中潜藏语言偏置，可能诱导模型忽略视觉信息。为解决该问题，他们进一步提出消除偏置的策略，引入 ArtQuest 数据集，并实现 PrefixLM 来学习画作与问题之间的模式。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S2.SS3.p2.1">Despite these simple tasks investigated in deep learning era, people also expect the AI system could provide comprehensive analysis for artworks, which may benefit the art education and assist human writing the commentary. Recently, LLMs and LMMs have been demonstrating superb understanding and generation ability in many areas, which raise the potentials to compose comprehensive analysis for artworks. However, we argue current LMMs might be biased by the knowledge memorized in language and cannot generalized to nameless artworks. In this work, we try to implement formal analysis with LLMs to make them focusing on visual elements in art analysis.</p></div><div class="zh"><p>尽管深度学习时代研究的是这些简单任务，人们仍期待 AI 系统能为艺术品提供全面分析，这有望惠及艺术教育并辅助人类撰写评论。近来，LLM 与 LMM 在诸多领域展现出卓越的理解与生成能力，为撰写全面的艺术品分析带来可能。然而我们认为，当前的 LMM 可能被语言中所记忆的知识带偏，无法泛化到无名的艺术品。本工作尝试用 LLM 实现形式分析，使其在艺术分析中聚焦于视觉要素。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">3. </span>Data Collection</h2></div><div class="zh"><h2>3. 数据采集</h2></div></div>
+<div class="blk atomic"><div><object class="ltx_graphics ltx_centering ltx_img_landscape" data="figures/crop_stat_1.svg" height="159" id="S3.F3.g1" style="aspect-ratio:429/159;" type="image/svg+xml" width="429"></object></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3. </span>An statistic illustration of the distribution of paintings by each artist in <span class="ltx_text ltx_font_italic" id="S3.F3.3">Most Popular Artists</span>. Valid paintings denote the reserved paintings after the filtering rules in Section <a class="ltx_ref" href="#S3.SS2" title="3.2. Painting Source ‣ 3. Data Collection ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">3.2</span></a>, and the invalid paintings are the discarded ones. We finally filter 769 and reserve 18,026 paintings for this part (not include the 500 most popular paintings). We do not include the 500 paintings for illustration because: 1) all the 500 popular paintings are reserved, and 2) there exist about 150 artists have only one paintings in this gallery, resulting in severe long-tail distribution here.</figcaption></div><div class="zh"><p>图 3. “最受欢迎艺术家”中各艺术家画作分布的统计示意。有效画作指经 3.2 节过滤规则后保留的画作，无效画作则为被丢弃者。我们最终在该部分过滤掉 769 幅、保留 18,026 幅画作（不含 500 幅最受欢迎画作）。我们未把这 500 幅画作纳入统计，原因有二：1）这 500 幅受欢迎画作全部被保留；2）该画廊中约有 150 位艺术家仅有一幅画作，此处呈现严重的长尾分布。</p></div></div>
+<div class="blk atomic"><div><object class="ltx_graphics ltx_centering ltx_img_landscape" data="figures/aspects_stat.svg" height="226" id="S3.F4.g1" style="aspect-ratio:381/226;" type="image/svg+xml" width="381"></object></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4. </span>Statistics of elements of formal analysis. Only very few paintings (8 in total) contain the elements <span class="ltx_text ltx_font_italic" id="S3.F4.3">Scale and Proportion</span>.</figcaption></div><div class="zh"><p>图 4. 形式分析要素的统计。只有极少数画作（共 8 幅）包含“尺度与比例”要素。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.1. </span>Primary Philosophy</h3></div><div class="zh"><h3>3.1. 基本理念</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS1.p1.1">A successful artwork analysis, as been discussed before, needs to cover multiple types of content including background introduction, formal analysis, historical context, <em class="ltx_emph ltx_font_italic" id="S3.SS1.p1.1.1">etc</em>, most of which rely on external knowledge and subjective opinions except formal analysis.
+As we have known, existing of-the-shelf LMMs have been capable of providing factual information and description with relevant knowledge while tend to ignore visual analysis, we want to enhance the existing artwork analysis models to focus more on visual elements. The research purpose in this work is to make the developed model to emphasize on visual comprehension rather than recognizing the artwork and retrieving knowledge from their language memory, in other word, to twist the <span class="ltx_text ltx_font_italic" id="S3.SS1.p1.1.2">recognize-then-analyze</span> procedure of existing LMMs on artwork analysis which may cause “<span class="ltx_text ltx_font_italic" id="S3.SS1.p1.1.3">LLM-biased visual hallucination</span>”.</p></div><div class="zh"><p>如前所述，一篇成功的艺术品分析需要涵盖背景介绍、形式分析、历史语境等多类内容，其中除形式分析外大多依赖外部知识与主观看法。我们知道，现有现成的 LMM 已能结合相关知识提供事实信息与描述，却往往忽视视觉分析；我们希望增强现有的艺术品分析模型，使其更聚焦于视觉要素。本工作的研究目的是让所开发的模型强调视觉理解，而不是去识别艺术品并从其语言记忆中检索知识；换言之，扭转现有 LMM 在艺术品分析上“先识别再分析”的流程，该流程可能导致“LLM 偏置的视觉幻觉”。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS1.p2.1">To support the development of such a professional LMM specialized for artwork analysis, we try to construct a large-scale artwork analysis dataset, including images and corresponding analysis, so that we can fine-tune the pre-trained LMMs. More importantly, to push the LMMs to focus on visual comprehending of the artworks through fine-tuning, we need high-quality formal analysis annotations in our dataset. However, manually annotating artworks with comprehensive analysis requires professional expertise in artwork analyzing and it is hard and expensive to recruit so many professional art critics. Besides, even with experts, it is still time-consuming to annotate large number of artworks.</p></div><div class="zh"><p>为支撑这样一个专门面向艺术品分析的 LMM 的开发，我们尝试构建一个大规模艺术品分析数据集，包含图像与相应分析，以便对预训练 LMM 做微调。更重要的是，为通过微调推动 LMM 聚焦于对艺术品的视觉理解，我们的数据集中需要有高质量的形式分析标注。然而，为艺术品手工标注全面分析需要具备艺术品分析的专业知识，而招募如此多的专业艺术评论家既困难又昂贵。此外，即便有专家参与，标注大量艺术品仍然耗时。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS1.p3.1">Based on these motivations and challenges, we collect a painting dataset, named PaintingForm, consisting of paintings and associated formal analyses annotations for each painting. Since manual labeling is affordably expensive in terms of both timing and economic cost,
+we elaborately leverage the powerful LLMs to produce formal analysis on famous paintings, ensuring they have enough knowledge to support them producing high-quality analysis.
+The overall pipeline of our data collection process is shown in Figure <a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ 2.2. Large Multimodal Models (LMMs) ‣ 2. Related Works ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">2</span></a> and more details are described in subsequent sections.</p></div><div class="zh"><p>基于上述动机与挑战，我们收集了一个绘画数据集，命名为 PaintingForm，由画作及每幅画作对应的形式分析标注构成。由于人工标注在时间与经济成本上都难以承受，我们精心利用强大的 LLM 为著名画作生成形式分析，确保它们有足够知识支撑其产出高质量分析。数据采集流程的整体管线如图 2 所示，更多细节见后续小节。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.2. </span>Painting Source</h3></div><div class="zh"><h3>3.2. 画作来源</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS2.p1.1">With the development of digital technology in recent years, large collections of artworks have been digitized and stored, and easily to accessed via the Internet. We focus on famous paintings and choose 1st Art Gallery<span class="ltx_note ltx_role_footnote" id="footnote2"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup>
+<span class="ltx_tag ltx_tag_note">2</span>
+<a class="ltx_ref ltx_url ltx_font_typewriter" href="https://www.1st-art-gallery.com/" title="">https://www.1st-art-gallery.com/</a></span></span></span> as our painting source. To make the LMMs, <em class="ltx_emph ltx_font_italic" id="S3.SS2.p1.1.1">e.g.</em>, GPT-4 and Gemini, able to provide accurate and comprehensive formal analyses, we choose the paintings of <span class="ltx_text ltx_font_italic" id="S3.SS2.p1.1.2">500 Most Popular Paintings<span class="ltx_note ltx_role_footnote" id="footnote3"><sup class="ltx_note_mark">3</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">3</sup>
+<span class="ltx_tag ltx_tag_note"><span class="ltx_text ltx_font_upright" id="footnote3.1">3</span></span>
+<a class="ltx_ref ltx_url ltx_font_typewriter ltx_font_upright" href="https://www.1st-art-gallery.com/most-popular-paintings.html" title="">https://www.1st-art-gallery.com/most-popular-paintings.html</a></span></span></span></span> and <span class="ltx_text ltx_font_italic" id="S3.SS2.p1.1.3">Most Popular Artists<span class="ltx_note ltx_role_footnote" id="footnote4"><sup class="ltx_note_mark">4</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">4</sup>
+<span class="ltx_tag ltx_tag_note"><span class="ltx_text ltx_font_upright" id="footnote4.1">4</span></span>
+<a class="ltx_ref ltx_url ltx_font_typewriter ltx_font_upright" href="https://www.1st-art-gallery.com/browse-by-artist-a-z.html" title="">https://www.1st-art-gallery.com/browse-by-artist-a-z.html</a><span class="ltx_text ltx_font_upright" id="footnote4.6">. Note that here we only use the most popular artists, not all, resulting in 48 artists in total.</span></span></span></span></span> to ensure the LLMs knowing the paintings. With such condition, we obtain 19,295 paintings (including 18,795 of most popular artists). To ensure the LLMs know the paintings, we first ask Gemini to answer if it knows the painting with title and artist name. We also filter out some paintings without certain title and annotated as ‘‘unknown’’, and obtain 18,526 paintings in the end. We select 5000 less popular paintings for test and reserve 13,526 for training, test samples of which are identified by the wishlist count from source website, and the distribution across artists is also considered. We illustrate the statistics of artist distribution of the Most Popular Artists<span class="ltx_note ltx_role_footnote" id="footnote5"><sup class="ltx_note_mark">5</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">5</sup>
+<span class="ltx_tag ltx_tag_note">5</span>
+              
+              
+              
+            We do not include the 500 most popular paintings in this statistics because about 150 artists only contribute one painting in the whole gallery.</span></span></span> in Figure <a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ 3. Data Collection ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">3</span></a>. From the statistics, we observe that the dataset includes most paintings of Vincent Van Gogh, resulting in 1458 retained and 225 filtered, and Jacques Louis David with the fewest paintings included in the dataset, about 100 paintings.
+We have also verified that all the paintings are free to use without copyright concerns, as provided by the website<span class="ltx_note ltx_role_footnote" id="footnote6"><sup class="ltx_note_mark">6</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">6</sup>
+<span class="ltx_tag ltx_tag_note">6</span>
+<a class="ltx_ref ltx_url ltx_font_typewriter" href="https://www.1st-art-gallery.com/copyrights.html" title="">https://www.1st-art-gallery.com/copyrights.html</a>, The copyright contents are as [Accessed on 4 April, 2024.]: “<span class="ltx_text ltx_font_typewriter" id="footnote6.2">All images on our site are either licensed or in public domain because their copyright has expired. This applies to the United States, Canada, the European Union and the countries with a copyright term of life of the author plus 70 years.</span>”</span></span></span>.</p></div><div class="zh"><p>近年来随着数字技术的发展，大量艺术品收藏已被数字化存储，并可通过互联网便捷获取。我们聚焦著名画作，选择 1st Art Gallery（脚注 2：https://www.1st-art-gallery.com/）作为画作来源。为使 GPT-4、Gemini 等 LMM 能提供准确而全面的形式分析，我们选取“500 幅最受欢迎画作”（脚注 3：https://www.1st-art-gallery.com/most-popular-paintings.html）与“最受欢迎艺术家”（脚注 4：https://www.1st-art-gallery.com/browse-by-artist-a-z.html。注意此处只取最受欢迎的艺术家而非全部，共 48 位。）中的画作，以确保 LLM 认识这些画作。在此条件下，我们获得 19,295 幅画作（其中 18,795 幅来自最受欢迎艺术家）。为确保 LLM 认识这些画作，我们首先让 Gemini 依据标题与艺术家姓名回答是否知道该画作；我们还会滤除部分没有确定标题、被标注为“unknown”的画作，最终得到 18,526 幅画作。我们选取 5000 幅较不受欢迎的画作用于测试，保留 13,526 幅用于训练；测试样本依据来源网站的收藏清单计数确定，同时也考虑了跨艺术家的分布。我们在图 3 中给出“最受欢迎艺术家”（脚注 5：我们未把 500 幅最受欢迎画作纳入该统计，因为整个画廊中约有 150 位艺术家仅贡献一幅画作。）的画家分布统计。从统计可以看出，数据集中包含最多的是 Vincent Van Gogh 的画作，保留 1458 幅、过滤 225 幅；包含最少的是 Jacques Louis David，约 100 幅。我们也已核实所有画作均可免费使用、不存在版权问题，正如网站（脚注 6：https://www.1st-art-gallery.com/copyrights.html）所声明，版权内容如下［访问日期：2024 年 4 月 4 日］：“本站所有图像均已获得授权，或因其版权已过期而进入公有领域。这适用于美国、加拿大、欧盟，以及版权期限为作者终身加 70 年的国家。”</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.3. </span>Formal Analysis Annotation</h3></div><div class="zh"><h3>3.3. 形式分析标注</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S3.SS3.p1.1">As aforementioned, we employ powerful LLMs to generate high quality formal analysis, after ensuring the paintings are known by the LLMs.
+Note that we only provide the LLMs the title and artist name of the paintings, and do not input any visual information, <em class="ltx_emph ltx_font_italic" id="S3.SS3.p1.1.1">i.e.</em>, the painting image, to the LLMs.
+Specifically, we employ two powerful LLMs, GPT-4 and Gemini in this work, to retrieve the learnt knowledge with the title and artist name of a certain painting and generate a paragraph of formal analysis only focusing on visual characteristics. To make the formal analyses more diverse, we ask the LLMs to generate two-level formal analyses: 1) overall formal analysis, and 2) formal analysis from a certain perspective, <em class="ltx_emph ltx_font_italic" id="S3.SS3.p1.1.2">e.g.</em>, color, composition, and <em class="ltx_emph ltx_font_italic" id="S3.SS3.p1.1.3">etc</em>. To avoid the “LLM-biased visual hallucination”, we ask the LLMs do not mention the title and artist name in the generated formal analysis. In other words, one cannot easily identify the corresponding painting solely depending on a specific formal analysis. For the perspective specified formal analysis annotation, we first ask GPT-4 and Gemini to provide up to 5 most important perspectives of the given painting independently, and utilize the intersection of GPT-4 and Gemini predictions as the final perspectives. The statistics of perspectives is shown in Figure <a class="ltx_ref" href="#S3.F4" title="Figure 4 ‣ 3. Data Collection ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">4</span></a>, from which we observe that <span class="ltx_text ltx_font_italic" id="S3.SS3.p1.1.4">Composition, Light and Shadow, Color Palette, Form and Shape</span> are the most common perspectives of the paintings. Finally, based on the selected perspectives, we employ LLMs to annotate the formal analysis only focusing on a specific perspectives similar with the overall setting.</p></div><div class="zh"><p>如前所述，在确认 LLM 认识这些画作之后，我们利用强大的 LLM 生成高质量的形式分析。注意我们只向 LLM 提供画作的标题与艺术家姓名，不输入任何视觉信息（即画作图像）。具体地，本文采用 GPT-4 与 Gemini 两个强大的 LLM，用某幅画作的标题与艺术家姓名检索其习得的知识，生成一段只聚焦视觉特征的形式分析。为使形式分析更多样，我们要求 LLM 生成两级形式分析：1）整体形式分析；2）从某一特定视角出发的形式分析，例如色彩、构图等。为避免“LLM 偏置的视觉幻觉”，我们要求 LLM 在生成的形式分析中不提及标题与艺术家姓名；换言之，仅凭某一条形式分析无法轻易辨认出对应的画作。对于指定视角的形式分析标注，我们首先让 GPT-4 与 Gemini 各自独立给出给定画作最多 5 个最重要的视角，并取两者预测的交集作为最终视角。视角统计如图 4 所示，从中可以看到构图、光影、配色、形态与形状是画作最常见的视角。最后，基于选定的视角，我们让 LLM 以与整体设定类似的方式，标注只聚焦某一特定视角的形式分析。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">4. </span>The Proposed GalleryGPT</h2></div><div class="zh"><h2>4. 本文提出的 GalleryGPT</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.p1.1">To verify if our proposed PaintingForm dataset could empower LMMs more superior painting analyzing ability, we develop a large multimodal model, GalleryGPT, based on ShareGPT4V-7B that has demonstrated impressive performance across several multimodal tasks. We conduct supervised fine-tuning (SFT) on our PaintingForm dataset to enable the LLMs to analyze paintings focusing on visual elements.</p></div><div class="zh"><p>为验证所提出的 PaintingForm 数据集能否赋予 LMM 更优越的画作分析能力，我们基于在多个多模态任务上表现出色的 ShareGPT4V-7B 开发了一个大多模态模型 GalleryGPT。我们在 PaintingForm 数据集上做监督微调（SFT），使模型能够聚焦于视觉要素来分析画作。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.1. </span>Architecture</h3></div><div class="zh"><h3>4.1. 架构</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS1.p1.1">As pointed out before, our goal is enabling LMMs to analyze artworks focusing more on visual elements, rather to design a new architecture or model. Therefore, we introduce the GalleryGPT employing ShareGPT4V-7B as backbone, which follows the LLaVA <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib39" title="">Liu et al., 2024</a>)</cite> architecture and consists of three components: 1) The visual encoder, which is a vision transformer (ViT) <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib18" title="">Dosovitskiy et al., 2020</a>)</cite> borrowed from the CLIP-Large <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib45" title="">Radford et al., 2021</a>)</cite>. Similar with CLIP-Large, the visual encoder takes 336*336 shape as input size and divides it into 14 patches, resulting in 576 input tokens; 2) The projector, a two-layer MLP to project the visual representation into the language semantic space, LLMs space in specific; 3) The LLM, which is based on Vicuna-v1.5 <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib52" title="">Team, 2023</a>)</cite> and LLaMA2 <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib54" title="">Touvron et al., 2023a</a>)</cite>, employing the decoder-only architecture. For the whole setting, we follow ShareGPT4V-7B focusing on the 7B model. Besides, to keep the superior visual perception and describing ability of ShareGPT4V-7B, we slightly modify the LLM in our GalleryGPT. Specifically, we add several LoRA <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib23" title="">Hu et al., 2021</a>)</cite> modules to learn the formal analysis specific patterns and freeze the LLM in ShareGPT4V-7B to keep its superb content describing ability.</p></div><div class="zh"><p>如前所述，我们的目标是让 LMM 在分析艺术品时更聚焦于视觉要素，而非设计新的架构或模型。因此，我们提出的 GalleryGPT 以 ShareGPT4V-7B 为骨干，遵循 LLaVA（Liu 等，2024）架构，包含三个组件：1）视觉编码器，是一个取自 CLIP-Large（Radford 等，2021）的视觉 Transformer（ViT）（Dosovitskiy 等，2020）；与 CLIP-Large 类似，视觉编码器以 336*336 的尺寸为输入，并将其划分为 14 个块，得到 576 个输入词元；2）投影器，一个两层 MLP，把视觉表示投影到语言语义空间，具体即 LLM 空间；3）大语言模型，基于 Vicuna-v1.5（Team，2023）与 LLaMA2（Touvron 等，2023a），采用仅解码器架构。整体设置上，我们沿用 ShareGPT4V-7B，聚焦 7B 模型。此外，为保持 ShareGPT4V-7B 出色的视觉感知与描述能力，我们对 GalleryGPT 中的大语言模型做了小幅修改：具体地，我们加入若干 LoRA（Hu 等，2021）模块来学习形式分析特有的模式，并冻结 ShareGPT4V-7B 中的大语言模型，以保留其出色的内容描述能力。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.2. </span>Supervised Fine-Tuning</h3></div><div class="zh"><h3>4.2. 监督微调</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S4.SS2.p1.1">Numbers of previous works <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib54" title="">Touvron et al., 2023a</a>; <a class="ltx_ref" href="#bib.bib42" title="">Ouyang et al., 2022</a>; <a class="ltx_ref" href="#bib.bib27" title="">Inc, 2023b</a>; <a class="ltx_ref" href="#bib.bib57" title="">Yang et al., 2023</a>; <a class="ltx_ref" href="#bib.bib52" title="">Team, 2023</a>)</cite> have demonstrated that based on billions or trillions of tokens pre-training and elaborate supervised fine-tuning, the LLMs exhibit creative emergent ability and is able to generalize to multiple tasks without further training. Following this inspiration, we implement supervised fine-tuning (SFT) with our LLM-generated formal analyses, paired with the corresponding painting.
+During SFT stage, we set the learning rate as 2e-5, batch size as 16, and fine-tune 10k steps on an A100 GPU with 80G memory. For the LoRA module, we set the lower rank as 128 and the alpha is 256.
+Since our analysis texts do not contain any identifying information of the paintings, the LMMs cannot retrieve the learnt knowledge to associate with the paintings. Instead, with our SFT optimization, the LMM tries to perceive the subtle elements and art skills presented in the painting, and matches them with the corresponding descriptions in the formal analysis. Through such fine-tuning, our GalleryGPT could be empowered artwork analyzing ability and generalized to other art analyzing tasks, <em class="ltx_emph ltx_font_italic" id="S4.SS2.p1.1.1">e.g.</em>, style classification.</p></div><div class="zh"><p>大量先前工作（Touvron 等，2023a；Ouyang 等，2022；Inc，2023b；Yang 等，2023；Team，2023）已证明，经数十亿乃至数万亿词元的预训练与精心设计的监督微调，LLM 会表现出创造性的涌现能力，并能在无需进一步训练的情况下泛化到多种任务。受此启发，我们用 LLM 生成的形式分析及其对应画作配对实施监督微调（SFT）。在 SFT 阶段，我们把学习率设为 2e-5、批量大小设为 16，在一块显存 80G 的 A100 GPU 上微调 10k 步。对于 LoRA 模块，我们把低秩设为 128、alpha 设为 256。由于我们的分析文本不包含任何可用于识别画作的信息，LMM 无法检索习得的知识来与画作关联；相反，在 SFT 优化下，LMM 会努力感知画作中呈现的细微要素与艺术技法，并将其与形式分析中相应的描述相匹配。通过这样的微调，我们的 GalleryGPT 可获得艺术品分析能力，并能泛化到风格分类等其他艺术分析任务。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">5. </span>Experiments</h2></div><div class="zh"><h2>5. 实验</h2></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">5.1. </span>Formal Analysis Generation</h3></div><div class="zh"><h3>5.1. 形式分析生成</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S5.SS1.p1.1">Since our data and optimization goal are for painting formal analysis generation, we first directly evaluate the quality of generated formal analyses on our reserved test set, with 5000 paintings. We also test with several popular and powerful open-source LMMs, including LLaVA-1.5 <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib39" title="">Liu et al., 2024</a>)</cite>, Qwen-VL-Chat <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib3" title="">Bai et al., 2023</a>)</cite>, and ShareGPT4V<span class="ltx_note ltx_role_footnote" id="footnote7"><sup class="ltx_note_mark">7</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">7</sup>
+<span class="ltx_tag ltx_tag_note">7</span>
+              
+              
+              
+            Here we implement 7B model for fair comparison for all baseline and omit 7B in the table. Note that in <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib11" title="">Chen et al., 2023a</a>)</cite>, ShareGPT4V indicates the dataset and ShareGPT4V-7B is the model, but in this table we omit 7B for unifying all the model names.</span></span></span> <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib11" title="">Chen et al., 2023a</a>)</cite>, and all the LLMs employ the same prompt: “<span class="ltx_text ltx_font_italic" id="S5.SS1.p1.1.1">Please compose a coherent paragraph of formal analysis focusing on visual characteristics</span>”. We combine the formal analyses annotated by GPT-4 and Gemini for each painting to formulate the ground truth descriptions. Finally, we employ image captioning metrics to evaluate the generated formal analyses because formal analysis is also a kind of description. As the evaluation results shown in Table <a class="ltx_ref" href="#S5.T1" title="Table 1 ‣ 5.1. Formal Analysis Generation ‣ 5. Experiments ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">1</span></a>, we observe that our GalleryGPT outperforms all the other LMMs with a remarkable improvement. Among all the baseline LLMs, LLaVA-1.5 performs the worst and is significantly lower than others, while Qwen-VL and ShareGPT4V achieve similar performance. From these observations, we can conclude that, benefiting from the SFT with PaintingForm, the GalleryGPT achieves impressive improvements comparing with ShareGPT4V-7B, which mainly focuses on natural image-text pairs (only a few art data). This verifies the effectiveness of our high quality art analysis data collections.</p></div><div class="zh"><p>由于我们的数据与优化目标面向绘画形式分析生成，我们首先在保留的测试集（5000 幅画作）上直接评估所生成形式分析的质量。我们也测试了若干流行且强大的开源 LMM，包括 LLaVA-1.5（Liu 等，2024）、Qwen-VL-Chat（Bai 等，2023）与 ShareGPT4V（脚注 7：此处为实现公平比较，所有基线均采用 7B 模型，并在表中省略 7B。注意在（Chen 等，2023a）中 ShareGPT4V 指数据集、ShareGPT4V-7B 指模型，但本表中为统一所有模型名称而省略 7B。）（Chen 等，2023a），所有模型使用相同的提示：“请撰写一段连贯的形式分析，聚焦于视觉特征”。我们把每幅画作由 GPT-4 与 Gemini 标注的形式分析合并，构成真值描述。最后，我们采用图像描述指标来评估生成的形式分析，因为形式分析本身也是一种描述。如表 1 的评估结果所示，我们的 GalleryGPT 以显著优势超过所有其他 LMM。在所有基线模型中，LLaVA-1.5 表现最差，明显低于其他模型；而 Qwen-VL 与 ShareGPT4V 表现相近。从这些观察可以得出结论：得益于用 PaintingForm 做 SFT，GalleryGPT 相比主要面向自然图文对（仅含少量艺术数据）的 ShareGPT4V-7B 取得了令人印象深刻的提升，这验证了我们高质量艺术分析数据收集的有效性。</p></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1. </span>Performance comparison of formal analysis generation measured by the captioning metrics, evaluated on our test set with 5000 paintings.</figcaption></div><div class="zh"><p>表 1. 以描述指标衡量的形式分析生成性能比较，在包含 5000 幅画作的测试集上评估。</p></div></div>
+<div class="blk atomic"><div><table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S5.T1.2">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S5.T1.2.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t" id="S5.T1.2.1.1">Model</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S5.T1.2.1.2">BLEU</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S5.T1.2.1.3">GLEU</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S5.T1.2.1.4">METEOR</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S5.T1.2.1.5">ROUGE</th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T1.2.2">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t" id="S5.T1.2.2.1">LLaVA-1.5 <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib39" title="">Liu et al., 2024</a>)</cite></th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.2.2.2">9.87</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.2.2.3">14.59</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.2.2.4">26.19</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.2.2.5">26.37</td></tr>
+<tr class="ltx_tr" id="S5.T1.2.3">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r" id="S5.T1.2.3.1">Qwen-VL-Chat <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib3" title="">Bai et al., 2023</a>)</cite></th>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.3.2">13.65</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.3.3">16.42</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.3.4">29.78</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.3.5">26.72</td></tr>
+<tr class="ltx_tr" id="S5.T1.2.4">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r" id="S5.T1.2.4.1">ShareGPT4V <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib11" title="">Chen et al., 2023a</a>)</cite></th>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.4.2">12.38</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.4.3">16.14</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.4.4">31.53</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.2.4.5">26.63</td></tr>
+<tr class="ltx_tr" id="S5.T1.2.5">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_r" id="S5.T1.2.5.1">GalleryGPT (ours)</th>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S5.T1.2.5.2"><span class="ltx_text ltx_font_bold" id="S5.T1.2.5.2.1">21.23</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S5.T1.2.5.3"><span class="ltx_text ltx_font_bold" id="S5.T1.2.5.3.1">21.68</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S5.T1.2.5.4"><span class="ltx_text ltx_font_bold" id="S5.T1.2.5.4.1">37.62</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S5.T1.2.5.5"><span class="ltx_text ltx_font_bold" id="S5.T1.2.5.5.1">31.34</span></td></tr>
+</tbody>
+</table></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2. </span>Zero-shot performance comparison on several artwork analysis tasks, including question answering and classification. SoTA-1 and SoTA-2 denote previous state of the arts without and with PLM (including fine-tuning on corresponding datasets). Both SoTA-1 and SoTA-2 denote different methods for different tasks.</figcaption></div><div class="zh"><p>表 2. 在若干艺术品分析任务（含问答与分类）上的零样本性能比较。SoTA-1 与 SoTA-2 分别表示未使用与使用预训练语言模型（PLM）（含在相应数据集上微调）的既往最先进方法。SoTA-1 与 SoTA-2 在不同任务上指代不同的方法。</p></div></div>
+<div class="blk atomic"><div><table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S5.T2.2">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S5.T2.2.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t" id="S5.T2.2.1.1" style="padding-left:2.8pt;padding-right:2.8pt;">Model</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S5.T2.2.1.2" style="padding-left:2.8pt;padding-right:2.8pt;">AQUA</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S5.T2.2.1.3" style="padding-left:2.8pt;padding-right:2.8pt;">ArtQuest</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S5.T2.2.1.4" style="padding-left:2.8pt;padding-right:2.8pt;">ArtQuest-Type</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S5.T2.2.1.5" style="padding-left:2.8pt;padding-right:2.8pt;">ArtBench</th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T2.2.2">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t" id="S5.T2.2.2.1" style="padding-left:2.8pt;padding-right:2.8pt;">SoTA-1</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.2.2.2" style="padding-left:2.8pt;padding-right:2.8pt;">22.40</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.2.2.3" style="padding-left:2.8pt;padding-right:2.8pt;">2.40</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.2.2.4" style="padding-left:2.8pt;padding-right:2.8pt;">-</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.2.2.5" style="padding-left:2.8pt;padding-right:2.8pt;">-</td></tr>
+<tr class="ltx_tr" id="S5.T2.2.3">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r" id="S5.T2.2.3.1" style="padding-left:2.8pt;padding-right:2.8pt;">SoTA-2</th>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.3.2" style="padding-left:2.8pt;padding-right:2.8pt;">55.50</td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.3.3" style="padding-left:2.8pt;padding-right:2.8pt;">50.2</td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.3.4" style="padding-left:2.8pt;padding-right:2.8pt;">81.8</td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.3.5" style="padding-left:2.8pt;padding-right:2.8pt;">-</td></tr>
+<tr class="ltx_tr" id="S5.T2.2.4">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t" id="S5.T2.2.4.1" style="padding-left:2.8pt;padding-right:2.8pt;">LLaVA-1.5</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.2.4.2" style="padding-left:2.8pt;padding-right:2.8pt;">22.13</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.2.4.3" style="padding-left:2.8pt;padding-right:2.8pt;">8.66</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.2.4.4" style="padding-left:2.8pt;padding-right:2.8pt;">34.82</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.2.4.5" style="padding-left:2.8pt;padding-right:2.8pt;">28.1</td></tr>
+<tr class="ltx_tr" id="S5.T2.2.5">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r" id="S5.T2.2.5.1" style="padding-left:2.8pt;padding-right:2.8pt;">Qwen-VL-Chat</th>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.5.2" style="padding-left:2.8pt;padding-right:2.8pt;">18.67</td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.5.3" style="padding-left:2.8pt;padding-right:2.8pt;">7.86</td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.5.4" style="padding-left:2.8pt;padding-right:2.8pt;">26.29</td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.5.5" style="padding-left:2.8pt;padding-right:2.8pt;">28.0</td></tr>
+<tr class="ltx_tr" id="S5.T2.2.6">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r" id="S5.T2.2.6.1" style="padding-left:2.8pt;padding-right:2.8pt;">ShareGPT4V</th>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.6.2" style="padding-left:2.8pt;padding-right:2.8pt;">23.62</td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.6.3" style="padding-left:2.8pt;padding-right:2.8pt;">7.91</td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.6.4" style="padding-left:2.8pt;padding-right:2.8pt;">38.07</td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.6.5" style="padding-left:2.8pt;padding-right:2.8pt;">31.7</td></tr>
+<tr class="ltx_tr" id="S5.T2.2.7">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_r" id="S5.T2.2.7.1" style="padding-left:2.8pt;padding-right:2.8pt;">GalleryGPT (ours)</th>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S5.T2.2.7.2" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S5.T2.2.7.2.1">24.08</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S5.T2.2.7.3" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S5.T2.2.7.3.1">9.51</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S5.T2.2.7.4" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S5.T2.2.7.4.1">43.94</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S5.T2.2.7.5" style="padding-left:2.8pt;padding-right:2.8pt;"><span class="ltx_text ltx_font_bold" id="S5.T2.2.7.5.1">34.0</span></td></tr>
+</tbody>
+</table></div></div>
+<div class="blk atomic"><div><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="202" id="S5.F5.g1" src="figures/case33.jpg" style="aspect-ratio:395/202;" width="395"/></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5. </span>An example for qualitative comparison of formal analysis generation by several powerful LMMs. <span class="ltx_text ltx_font_italic" id="S5.F5.5">Purple</span> texts denote the factual content description, and the <span class="ltx_text ltx_font_italic" id="S5.F5.6">Blue</span> texts are for formal analysis. The formal analysis generated by our GalleryGPT covers more visual elements, <em class="ltx_emph ltx_font_italic" id="S5.F5.7">e.g.</em>, color, light and shadow, depth, composition, and perspective, than other LLMs, even the powerful GPT-4V.</figcaption></div><div class="zh"><p>图 5. 若干强大 LMM 的形式分析生成定性比较示例。紫色文字表示事实性内容描述，蓝色文字表示形式分析。我们的 GalleryGPT 生成的形式分析比其他 LLM（甚至是强大的 GPT-4V）覆盖更多视觉要素，例如色彩、光影、纵深、构图与透视。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">5.2. </span>Generalizing to Other Art Analysis Tasks</h3></div><div class="zh"><h3>5.2. 泛化到其他艺术分析任务</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S5.SS2.p1.1">LLMs and LMMs have demonstrated superior generalizing ability to many downstream tasks. To verify the generalization of our GalleryGPT, we conduct visual question answering and style classification for paintings on several existing datasets. The details of the dataset are as following:</p></div><div class="zh"><p>LLM 与 LMM 已展现出对众多下游任务的优越泛化能力。为验证 GalleryGPT 的泛化性，我们在若干现有数据集上做绘画的视觉问答与风格分类。数据集详情如下：</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S5.I1.i1" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S5.I1.i1.p1">
+<p class="ltx_p" id="S5.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S5.I1.i1.p1.1.1">AQUA</span> <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib20" title="">Garcia et al., 2020</a>)</cite>: is an Art Question Answering dataset based on SemArt <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib19" title="">Garcia and Vogiatzis, 2018</a>)</cite>. The question-answer pairs are generated by powerful question generation models based on paintings and comments provided in SemArt. The dataset contains 29,568, 1,507, and 1,270 samples in training, validation, and test splits, respectively.</p>
+</div></li></div><div class="zh"><p>• AQUA（Garcia 等，2020）：是一个基于 SemArt（Garcia 和 Vogiatzis，2018）的艺术问答数据集。问答对由强大的问题生成模型基于 SemArt 中提供的画作与评论生成。该数据集的训练、验证与测试划分分别包含 29,568、1,507 与 1,270 个样本。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S5.I1.i2" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S5.I1.i2.p1">
+<p class="ltx_p" id="S5.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S5.I1.i2.p1.1.1">ArtQuest</span> <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib6" title="">Bleidt et al., 2024</a>)</cite>: is the debiased version of AQUA, including 6414 test cases, which mainly focuses on eliminating the bias hidden in language. With such debias operation, most question cannot be answered without visual content.</p>
+</div></li></div><div class="zh"><p>• ArtQuest（Bleidt 等，2024）：是 AQUA 的去偏版本，包含 6414 条测试用例，主要致力于消除语言中隐藏的偏置。经此去偏操作后，大多数问题在没有视觉内容的情况下无法作答。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S5.I1.i3" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S5.I1.i3.p1">
+<p class="ltx_p" id="S5.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S5.I1.i3.p1.1.1">ArtQuest-Type</span> <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib6" title="">Bleidt et al., 2024</a>)</cite>: is simple setting of ArtQuest, which requires the model only answer the type of the painting. The test set contains 1069 samples.</p>
+</div></li></div><div class="zh"><p>• ArtQuest-Type（Bleidt 等，2024）：是 ArtQuest 的简化设定，要求模型只回答画作的类型。测试集包含 1069 个样本。</p></div></div>
+<div class="blk"><div class="en"><li class="ltx_item" id="S5.I1.i4" style="list-style-type:none;"><span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S5.I1.i4.p1">
+<p class="ltx_p" id="S5.I1.i4.p1.1"><span class="ltx_text ltx_font_bold" id="S5.I1.i4.p1.1.1">ArtBench</span> <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib37" title="">Liao et al., 2022</a>)</cite>: is originally for Artwork generation. We random sample 1000 paintings from the test set (10000 paintings in total), and use the provided style labels for classification.</p>
+</div></li></div><div class="zh"><p>• ArtBench（Liao 等，2022）：原本用于艺术品生成。我们从测试集（共 10000 幅画作）中随机采样 1000 幅画作，并使用其提供的风格标签做分类。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S5.SS2.p2.1">We exhibit the results in Table <a class="ltx_ref" href="#S5.T2" title="Table 2 ‣ 5.1. Formal Analysis Generation ‣ 5. Experiments ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">2</span></a>, from which we can see that our GalleryGPT also significantly outperforms all the baseline LMMs and demonstrates its generalizing ability for downstream art analysis tasks. An interesting observation is that LLaVA-1.5 performs much better than Qwen-VL-Chat, showing an opposite result to the task of formal analysis generation. We have checked and analyzed the results, and hypothesize that may come from the output format mismatching. Since all the three QA datasets follow the open-ended answering setting, and then extract the matching strings from the outputs. Another piece of evidence is that Qwen-VL-Chat achieves similar performance to LLaVA-1.5 when the output strictly adheres to the given labels.</p></div><div class="zh"><p>我们在表 2 中展示结果，可以看到我们的 GalleryGPT 同样显著优于所有基线 LMM，展现出其在下游艺术分析任务上的泛化能力。一个有趣的观察是，LLaVA-1.5 的表现远好于 Qwen-VL-Chat，这与形式分析生成任务上的结果相反。我们核查并分析了结果，推测这可能源于输出格式不匹配：三个问答数据集都采用开放式作答设定，再从输出中抽取匹配字符串。另一个佐证是，当输出严格遵循给定标签时，Qwen-VL-Chat 能达到与 LLaVA-1.5 相近的性能。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S5.SS2.p3.1">To comprehensively analyze the ability of our GalleryGPT, we also compare it with several state of the arts and show the results in the top block in Table <a class="ltx_ref" href="#S5.T2" title="Table 2 ‣ 5.1. Formal Analysis Generation ‣ 5. Experiments ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">2</span></a>, which are specific trained on the corresponding datasets. SoTA-1 denotes the models without pre-training language model (PLM), <em class="ltx_emph ltx_font_italic" id="S5.SS2.p3.1.1">e.g.</em>, BERT, and SoTA-2 denotes the models leveraging PLM features or fine-tuning based on PLMs. From the results we can see, almost all the current LMMs only achieve the performance around SoTA-1 on AQUA, <em class="ltx_emph ltx_font_italic" id="S5.SS2.p3.1.2">i.e.</em>, specifically training on this dataset, while they can significantly outperform SoTA-1 on ArtQuest. This reason may come from the language bias hidden in AQUA dataset <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib6" title="">Bleidt et al., 2024</a>)</cite>. For all the dataset, the performances of LMMs are far from the SoTA-2, which means the generalization ability of LMMs on art analysis is still weak and there exists a large space for them to get improved. Our hypothesis on such results is that artworks may contain high-level and abstract concepts to be perceived more subtly, which also motivates us to make further endeavour on this in the future work.</p></div><div class="zh"><p>为全面分析 GalleryGPT 的能力，我们还将其与若干最先进方法比较，结果见表 2 顶部区块——这些方法是在相应数据集上专门训练的。SoTA-1 表示未使用预训练语言模型（PLM）（如 BERT）的模型，SoTA-2 表示利用 PLM 特征或在 PLM 基础上微调的模型。从结果可以看到，当前几乎所有 LMM 在 AQUA 上只达到 SoTA-1（即在该数据集上专门训练）左右的性能，而在 ArtQuest 上则能显著超过 SoTA-1。原因可能来自 AQUA 数据集中潜藏的语言偏置（Bleidt 等，2024）。在所有数据集上，LMM 的性能都远不及 SoTA-2，这意味着 LMM 在艺术分析上的泛化能力仍然较弱，还有很大提升空间。我们对这些结果的假设是：艺术品可能包含需要更细腻感知的高层抽象概念，这也激励我们在未来工作中继续投入。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">5.3. </span>Multimodal Benchmarks</h3></div><div class="zh"><h3>5.3. 多模态基准</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S5.SS3.p1.1">Since GalleryGPT is implemented based on ShareGPT4V-7B, it inherently remains an LMM. Therefore, we also conduct experiments on several LLM benchmarks and compare it with baseline LLMs<span class="ltx_note ltx_role_footnote" id="footnote8"><sup class="ltx_note_mark">8</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">8</sup>
+<span class="ltx_tag ltx_tag_note">8</span>
+              
+              
+              
+            Instead of listing all the baselines in <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib11" title="">Chen et al., 2023a</a>)</cite>, here we only list the superior and representative ones for comparison.</span></span></span> to evaluate the multimodal understanding ability. As the comparison results illustrated in Table <a class="ltx_ref" href="#S5.T3" title="Table 3 ‣ 5.3. Multimodal Benchmarks ‣ 5. Experiments ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">3</span></a>, we can see our GalleryGPT exhibits comparable performance with ShareGPT4V, <em class="ltx_emph ltx_font_italic" id="S5.SS3.p1.1.1">i.e.</em>, achieving improvements and reducements in slight fluctuations. In other words, our GalleryGPT, further fine-tuned with elaborately collected painting-analysis pairs, not only achieves better painting analysis performance, including formal analysis generation (Table <a class="ltx_ref" href="#S5.T1" title="Table 1 ‣ 5.1. Formal Analysis Generation ‣ 5. Experiments ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">1</span></a>) and other downstream tasks (Table <a class="ltx_ref" href="#S5.T2" title="Table 2 ‣ 5.1. Formal Analysis Generation ‣ 5. Experiments ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">2</span></a>), and also retains its superior multimodal understanding ability. These observations further verify the effectiveness and contributions of our collected PaintingForm and developed GalleryGPT.</p></div><div class="zh"><p>由于 GalleryGPT 基于 ShareGPT4V-7B 实现，它本质上仍是一个 LMM。因此，我们也在若干 LLM 基准上做实验，并与基线 LMM（脚注 8：我们没有列出（Chen 等，2023a）中的所有基线，此处只列出优秀且具有代表性者用于比较。）比较，以评估其多模态理解能力。如表 3 的比较结果所示，我们的 GalleryGPT 与 ShareGPT4V 表现相当，即在小幅波动中既有提升也有下降。换言之，我们的 GalleryGPT 经精心收集的绘画—分析配对进一步微调后，不仅取得了更好的绘画分析性能（包括形式分析生成（表 1）与其他下游任务（表 2）），也保留了其优越的多模态理解能力。这些观察进一步验证了所收集 PaintingForm 与所开发 GalleryGPT 的有效性与贡献。</p></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3. </span>Comparisons with powerful baselines on several LMM Benchmarks. The best and 2nd-best results are in <span class="ltx_text ltx_underline" id="S5.T3.4">bold</span> and <span class="ltx_text ltx_underline" id="S5.T3.5">underlined</span>, respectively. All the results of baselines are referred from <cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib11" title="">Chen et al., 2023a</a>)</cite>.</figcaption></div><div class="zh"><p>表 3. 在若干 LMM 基准上与强大基线的比较。最优与次优结果分别以粗体与下划线标出。所有基线结果均引自（Chen 等，2023a）。</p></div></div>
+<div class="blk atomic"><div><table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S5.T3.6">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S5.T3.6.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t" id="S5.T3.6.1.1">Model</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S5.T3.6.1.2">MMB</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S5.T3.6.1.3">LLaVA-W</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S5.T3.6.1.4">MM-Vet</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S5.T3.6.1.5">SQA</th></tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T3.6.2">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t" id="S5.T3.6.2.1">LLaVA-1.5</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T3.6.2.2">64.3</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T3.6.2.3">63.4</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T3.6.2.4">30.5</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T3.6.2.5">66.8</td></tr>
+<tr class="ltx_tr" id="S5.T3.6.3">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r" id="S5.T3.6.3.1">Qwen-VL-Chat</th>
+<td class="ltx_td ltx_align_center" id="S5.T3.6.3.2">60.6</td>
+<td class="ltx_td ltx_align_center" id="S5.T3.6.3.3">-</td>
+<td class="ltx_td ltx_align_center" id="S5.T3.6.3.4">-</td>
+<td class="ltx_td ltx_align_center" id="S5.T3.6.3.5">68.2</td></tr>
+<tr class="ltx_tr" id="S5.T3.6.4">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r" id="S5.T3.6.4.1">ShareGPT4V</th>
+<td class="ltx_td ltx_align_center" id="S5.T3.6.4.2"><span class="ltx_text ltx_underline" id="S5.T3.6.4.2.1">68.8</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T3.6.4.3"><span class="ltx_text ltx_font_bold" id="S5.T3.6.4.3.1">72.6</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T3.6.4.4"><span class="ltx_text ltx_font_bold" id="S5.T3.6.4.4.1">37.6</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T3.6.4.5"><span class="ltx_text ltx_underline" id="S5.T3.6.4.5.1">68.4</span></td></tr>
+<tr class="ltx_tr" id="S5.T3.6.5">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_r" id="S5.T3.6.5.1">GalleryGPT (ours)</th>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S5.T3.6.5.2"><span class="ltx_text ltx_font_bold" id="S5.T3.6.5.2.1">70.8</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S5.T3.6.5.3"><span class="ltx_text ltx_underline" id="S5.T3.6.5.3.1">69.9</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S5.T3.6.5.4"><span class="ltx_text ltx_underline" id="S5.T3.6.5.4.1">35.5</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S5.T3.6.5.5"><span class="ltx_text ltx_font_bold" id="S5.T3.6.5.5.1">69.1</span></td></tr>
+</tbody>
+</table></div></div>
+<div class="blk atomic"><div><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="221" id="S5.F6.g1" src="figures/chat_case1.jpg" style="aspect-ratio:405/221;" width="405"/></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6. </span>Multimodal dialogue examples with our GalleryGPT. <span class="ltx_text ltx_font_italic" id="S5.F6.3">Blue</span> texts denote high quality formal analysis. We also test dialoguing in Chinese, even we do not fine-tune GalleryGPT with Chinese painting-analysis pairs. The English translation of Chinese conversation can be found in Supplementary.</figcaption></div><div class="zh"><p>图 6. 与我们的 GalleryGPT 的多模态对话示例。蓝色文字表示高质量的形式分析。我们还测试了用中文对话，尽管我们并未用中文绘画—分析配对微调 GalleryGPT。该中文对话的英文翻译见补充材料。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">5.4. </span>Qualitative Analyses</h3></div><div class="zh"><h3>5.4. 定性分析</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S5.SS4.p1.1">To visually and straightforwardly compare our GalleryGPT with other LMMs, inncluding LLaVA-1.5, ShareGPT4V-7B, and GPT-4V, we test some unpopular paintings in our test split. As illustrated in Figure <a class="ltx_ref" href="#S5.F5" title="Figure 5 ‣ 5.1. Formal Analysis Generation ‣ 5. Experiments ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">5</span></a>, we observe that LLaVA tends to describe the factual content (in purple color) presented in the painting, and fails to analyze the paintings from the perspective of art criticism. ShareGPT4V-7B, the backbone of our model, also pays more attention on the content description, because the SFT data it utilized for fine-tuning is focusing on describing the images in detail. Thanks to the small subset of art data in ShareGPT4V, it also exhibits some capacity for art analysis, albeit limited to general analyses and overlooking the subtle visual characteristics. GPT4V, as the most famous and capable LMM at current stage, demonstrates much better analyzing ability on paintings in terms of their form, while still fails to capture some subtle artistic aspects, such as composition and depth. Obviously, our GalleryGPT demonstrates superb capability of comprehensively analyzing the artworks, which not only briefly describe the factual content of the painting, but also focuses more attention on analyzing the subtle artistic elements, including color, light and shadow, depth, composition, and perspective. These observations have definitely verified the superiority of our GalleryGPT for artwork analyzing.</p></div><div class="zh"><p>为直观、直接地把 GalleryGPT 与其他 LMM（包括 LLaVA-1.5、ShareGPT4V-7B 与 GPT-4V）做比较，我们在测试划分中选取了一些不太知名的画作进行测试。如图 5 所示，我们观察到 LLaVA 倾向于描述画作中呈现的事实性内容（紫色部分），未能从艺术批评的视角分析画作。作为本模型骨干的 ShareGPT4V-7B 也更偏重内容描述，因为其微调所用的 SFT 数据聚焦于详细描述图像；得益于 ShareGPT4V 中少量艺术数据，它也展现出一定的艺术分析能力，但仅限于泛泛而谈、忽略了细微的视觉特征。GPT-4V 作为当前最著名、能力最强的 LMM，在画作的形式分析上表现出明显更好的能力，但仍未能捕捉构图、纵深等某些细微的艺术面向。显然，我们的 GalleryGPT 展现出全面分析艺术品的出色能力：既简要描述画作的事实性内容，又把更多注意力放在分析色彩、光影、纵深、构图与透视等细微的艺术要素上。这些观察充分验证了 GalleryGPT 在艺术品分析上的优越性。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S5.SS4.p2.1">We also investigate the dialogue capability of our GalleryGPT. We show several dialogue examples in Figure <a class="ltx_ref" href="#S5.F6" title="Figure 6 ‣ 5.3. Multimodal Benchmarks ‣ 5. Experiments ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">6</span></a>. The examples demonstrate that our GalleryGPT is able to follow the user intention in the conversation. As shown in the second case, for instance, we ask it to give “essential aspects” for formal analysis, it just provides us a brief analysis with essential content, which is much shorter than the one provided in Figure <a class="ltx_ref" href="#S5.F5" title="Figure 5 ‣ 5.1. Formal Analysis Generation ‣ 5. Experiments ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">5</span></a>. Besides, we further explore the multilingual capabilities of GalleryGPT, even though we have not provided any multilingual painting analyses for supervised fine-tuning<span class="ltx_note ltx_role_footnote" id="footnote9"><sup class="ltx_note_mark">9</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">9</sup>
+<span class="ltx_tag ltx_tag_note">9</span>
+              
+              
+              
+            Actually, the foundation models, LLaMA and LLaVA, are pre-trained and fine-tuned with several multilingual corpuses.</span></span></span>. As shown at the bottom in Figure <a class="ltx_ref" href="#S5.F6" title="Figure 6 ‣ 5.3. Multimodal Benchmarks ‣ 5. Experiments ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">6</span></a>, we chat with GalleryGPT in Chinese<span class="ltx_note ltx_role_footnote" id="footnote10"><sup class="ltx_note_mark">10</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">10</sup>
+<span class="ltx_tag ltx_tag_note">10</span>
+              
+              
+              
+            A reviewer pointed out that the “前途” and “后途” are typos and should be “前景” and “后景”, since this analysis is generated by our GalleryGPT and we have not modified it. As the English translation in Figure. 6 in Supplementary, the meanings are the same with the suggestions of the reviewer. We sincerely appreciate the reviewer providing such careful and helpful comments and suggestions.</span></span></span>, it still generates high quality answer focusing on “composition” and exhibits strong multilingual ability.</p></div><div class="zh"><p>我们还考察了 GalleryGPT 的对话能力，并在图 6 中给出若干对话示例。这些示例表明 GalleryGPT 能够遵循用户在对话中的意图。例如第二个案例中，我们要求它给出形式分析的“关键面向”，它就提供了一段内容精炼的简短分析，远短于图 5 中的那一段。此外，我们进一步探索了 GalleryGPT 的多语言能力，尽管我们并未为监督微调提供任何多语言的绘画分析（脚注 9：实际上，基础模型 LLaMA 与 LLaVA 在预训练与微调时使用了若干多语语料。）。如图 6 底部所示，我们用中文与 GalleryGPT 交谈（脚注 10：一位审稿人指出“前途”与“后途”是错别字，应为“前景”与“后景”；由于该分析由我们的 GalleryGPT 生成且我们未作修改，而补充材料图 6 中的英文翻译与审稿人的建议含义一致。我们衷心感谢审稿人提出如此细致而有益的意见与建议。），它仍能生成聚焦“构图”的高质量回答，展现出较强的多语言能力。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S5.SS4.p3.1">In summary, these qualitative comparisons and dialogue examples have verified the superior art analysis ability of our GalleryGPT, as well as illustrating the quality of our PaintingForm dataset. For more examples of this part, qualitative comparison and chat conversation, could be found in Supplementary.</p></div><div class="zh"><p>总之，这些定性比较与对话示例验证了 GalleryGPT 卓越的艺术分析能力，也说明了 PaintingForm 数据集的质量。本部分更多示例、定性比较与对话内容见补充材料。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">6. </span>Conclusions and Future Works</h2></div><div class="zh"><h2>6. 结论与未来工作</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S6.p1.1">In this work, we targeted at artwork analyzing with large multimodal models (LLMs). We first tested several LLMs and pointed out that current LLMs may suffering from “LLM-biased visual hallucination” issue, resulting in weak generalization ability to nameless paintings. To make the LMMs to analyze artworks focusing on visual elements and easy to generalize, we proposed to conduct SFT of LMMs with formal analysis. To support this research, we first elaborately designed an LLM-based data collection pipeline to construct high quality painting-analysis pairs. We also employed ShareGPT4V to implement SFT on the collected data, derived our GalleryGPT. We conducted extensive experiments to verify the effectiveness regarding to formal analysis generation, generalizing to down stream tasks, and LMM benchmarking. The results demonstrated the effectiveness of the collected data and introduced GalleryGPT.</p></div><div class="zh"><p>本工作以大多模态模型（LLM）进行艺术品分析为目标。我们首先测试了若干 LLM，指出现有 LLM 可能存在“LLM 偏置的视觉幻觉”问题，导致其对无名画作的泛化能力较弱。为使 LMM 聚焦于视觉要素来分析艺术品并易于泛化，我们提出用形式分析对 LMM 做 SFT。为支撑该研究，我们首先精心设计了一条基于 LLM 的数据采集管线，用以构建高质量的绘画—分析配对；并采用 ShareGPT4V 在所收集数据上实施 SFT，得到我们的 GalleryGPT。我们开展了大量实验，从形式分析生成、泛化到下游任务以及 LMM 基准测试三方面验证有效性，结果证明了所收集数据与所提出 GalleryGPT 的有效性。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="S6.p2.1">For future works, on one hand, we will step further to investigate the generalization issue mentioned in Section <a class="ltx_ref" href="#S5.SS2" title="5.2. Generalizing to Other Art Analysis Tasks ‣ 5. Experiments ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">5.2</span></a> to explore the ability of LMMs in art analyzing. For example, devising a ChatGPT-like art assistant to help more people appreciate or learn to appreciate artworks. On the other hand, we only collect paintings in this work, while artworks consist of multiple types, <em class="ltx_emph ltx_font_italic" id="S6.p2.1.1">e.g.</em>, ceramics (paintings on a curved surface) and sculptural in 3D. Therefore, we will try to make the research more widely and empower LMMs to assist human in artwork analyzing, <em class="ltx_emph ltx_font_italic" id="S6.p2.1.2">e.g.</em>, drafting formal analysis, classifying the unseen artworks, <em class="ltx_emph ltx_font_italic" id="S6.p2.1.3">etc</em>. We also hope that our work can inspire more researchers to explore AI, especially for LMMs, within the field of art analysis.</p></div><div class="zh"><p>在未来工作中，一方面我们将进一步研究 5.2 节提到的泛化问题，探索 LMM 在艺术分析中的能力，例如打造一个类似 ChatGPT 的艺术助手，帮助更多人欣赏或学会欣赏艺术品。另一方面，本工作只收集了绘画，而艺术品包含多种类型，例如瓷器（曲面上的绘画）与三维雕塑。因此，我们将努力把研究拓展得更广，使 LMM 能辅助人类进行艺术品分析，例如起草形式分析、对未见过的艺术品分类等。我们也希望本工作能激励更多研究者探索艺术分析领域中的 AI，尤其是 LMM。</p></div></div>
+<div class="blk"><div class="en"><h6 class="ltx_title ltx_title_acknowledgements">Acknowledgements.</h6></div><div class="zh"><h6>致谢。</h6></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_bibliography">References</h2></div><div class="zh"><h2>参考文献</h2></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib2"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bahdanau et al<span class="ltx_text" id="bib.bib2.2">.</span> (2014)</span>
+<span class="ltx_bibblock">
+Dzmitry Bahdanau, Kyunghyun Cho, and Yoshua Bengio. 2014.
+
+</span>
+<span class="ltx_bibblock">Neural machine translation by jointly learning to align and translate.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib2.3">arXiv preprint arXiv:1409.0473</em> (2014).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib3"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bai et al<span class="ltx_text" id="bib.bib3.2">.</span> (2023)</span>
+<span class="ltx_bibblock">
+Jinze Bai, Shuai Bai, Shusheng Yang, Shijie Wang, Sinan Tan, Peng Wang, Junyang Lin, Chang Zhou, and Jingren Zhou. 2023.
+
+</span>
+<span class="ltx_bibblock">Qwen-vl: A versatile vision-language model for understanding, localization, text reading, and beyond.
+
+</span>
+<span class="ltx_bibblock">(2023).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib4"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bin et al<span class="ltx_text" id="bib.bib4.2">.</span> (2021)</span>
+<span class="ltx_bibblock">
+Yi Bin, Xindi Shang, Bo Peng, Yujuan Ding, and Tat-Seng Chua. 2021.
+
+</span>
+<span class="ltx_bibblock">Multi-perspective video captioning. In <em class="ltx_emph ltx_font_italic" id="bib.bib4.3">Proceedings of the 29th ACM International Conference on Multimedia</em>. 5110–5118.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib5"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bin et al<span class="ltx_text" id="bib.bib5.2">.</span> (2022)</span>
+<span class="ltx_bibblock">
+Yi Bin, Wenhao Shi, Jipeng Zhang, Yujuan Ding, Yang Yang, and Heng Tao Shen. 2022.
+
+</span>
+<span class="ltx_bibblock">Non-autoregressive cross-modal coherence modelling. In <em class="ltx_emph ltx_font_italic" id="bib.bib5.3">Proceedings of the 30th ACM International Conference on Multimedia</em>. 3253–3261.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib6"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bleidt et al<span class="ltx_text" id="bib.bib6.2">.</span> (2024)</span>
+<span class="ltx_bibblock">
+Tibor Bleidt, Sedigheh Eslami, and Gerard de Melo. 2024.
+
+</span>
+<span class="ltx_bibblock">ArtQuest: Countering Hidden Language Biases in ArtVQA. In <em class="ltx_emph ltx_font_italic" id="bib.bib6.3">Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision</em>. 7326–7335.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib7"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Brown et al<span class="ltx_text" id="bib.bib7.2">.</span> (2020)</span>
+<span class="ltx_bibblock">
+Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al<span class="ltx_text" id="bib.bib7.3">.</span> 2020.
+
+</span>
+<span class="ltx_bibblock">Language models are few-shot learners.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib7.4">Advances in neural information processing systems</em> 33 (2020), 1877–1901.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib8"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Carneiro et al<span class="ltx_text" id="bib.bib8.2">.</span> (2012)</span>
+<span class="ltx_bibblock">
+Gustavo Carneiro, Nuno Pinho Da Silva, Alessio Del Bue, and João Paulo Costeira. 2012.
+
+</span>
+<span class="ltx_bibblock">Artistic image classification: An analysis on the printart database. In <em class="ltx_emph ltx_font_italic" id="bib.bib8.3">Computer Vision–ECCV 2012: 12th European Conference on Computer Vision, Florence, Italy, October 7-13, 2012, Proceedings, Part IV 12</em>. Springer, 143–157.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib9"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen et al<span class="ltx_text" id="bib.bib9.2">.</span> (2023c)</span>
+<span class="ltx_bibblock">
+Jun Chen, Deyao Zhu, Xiaoqian Shen, Xiang Li, Zechun Liu, Pengchuan Zhang, Raghuraman Krishnamoorthi, Vikas Chandra, Yunyang Xiong, and Mohamed Elhoseiny. 2023c.
+
+</span>
+<span class="ltx_bibblock">Minigpt-v2: large language model as a unified interface for vision-language multi-task learning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib9.3">arXiv preprint arXiv:2310.09478</em> (2023).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib10"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen et al<span class="ltx_text" id="bib.bib10.2">.</span> (2023b)</span>
+<span class="ltx_bibblock">
+Keqin Chen, Zhao Zhang, Weili Zeng, Richong Zhang, Feng Zhu, and Rui Zhao. 2023b.
+
+</span>
+<span class="ltx_bibblock">Shikra: Unleashing Multimodal LLM’s Referential Dialogue Magic.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib10.3">arXiv preprint arXiv:2306.15195</em> (2023).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib11"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen et al<span class="ltx_text" id="bib.bib11.2">.</span> (2023a)</span>
+<span class="ltx_bibblock">
+Lin Chen, Jisong Li, Xiaoyi Dong, Pan Zhang, Conghui He, Jiaqi Wang, Feng Zhao, and Dahua Lin. 2023a.
+
+</span>
+<span class="ltx_bibblock">Sharegpt4v: Improving large multi-modal models with better captions.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib11.3">arXiv preprint arXiv:2311.12793</em> (2023).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib12"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chowdhery et al<span class="ltx_text" id="bib.bib12.2">.</span> (2023)</span>
+<span class="ltx_bibblock">
+Aakanksha Chowdhery, Sharan Narang, Jacob Devlin, Maarten Bosma, Gaurav Mishra, Adam Roberts, Paul Barham, Hyung Won Chung, Charles Sutton, Sebastian Gehrmann, et al<span class="ltx_text" id="bib.bib12.3">.</span> 2023.
+
+</span>
+<span class="ltx_bibblock">Palm: Scaling language modeling with pathways.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib12.4">Journal of Machine Learning Research</em> 24, 240 (2023), 1–113.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib13"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Conde and Turgutlu (2021)</span>
+<span class="ltx_bibblock">
+Marcos V Conde and Kerem Turgutlu. 2021.
+
+</span>
+<span class="ltx_bibblock">CLIP-Art: Contrastive pre-training for fine-grained art classification. In <em class="ltx_emph ltx_font_italic" id="bib.bib13.1">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</em>. 3956–3960.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib14"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dai et al<span class="ltx_text" id="bib.bib14.2">.</span> (2024)</span>
+<span class="ltx_bibblock">
+Wenliang Dai, Junnan Li, Dongxu Li, Anthony Meng Huat Tiong, Junqi Zhao, Weisheng Wang, Boyang Li, Pascale N Fung, and Steven Hoi. 2024.
+
+</span>
+<span class="ltx_bibblock">Instructblip: Towards general-purpose vision-language models with instruction tuning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib14.3">Advances in Neural Information Processing Systems</em> 36 (2024).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib15"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Devlin et al<span class="ltx_text" id="bib.bib15.2">.</span> (2018)</span>
+<span class="ltx_bibblock">
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2018.
+
+</span>
+<span class="ltx_bibblock">Bert: Pre-training of deep bidirectional transformers for language understanding.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib15.3">arXiv preprint arXiv:1810.04805</em> (2018).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib16"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ding et al<span class="ltx_text" id="bib.bib16.2">.</span> (2024a)</span>
+<span class="ltx_bibblock">
+Yujuan Ding, Wenqi Fan, Liangbo Ning, Shijie Wang, Hengyun Li, Dawei Yin, Tat-Seng Chua, and Qing Li. 2024a.
+
+</span>
+<span class="ltx_bibblock">A survey on rag meets llms: Towards retrieval-augmented large language models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib16.3">arXiv preprint arXiv:2405.06211</em> (2024).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib17"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ding et al<span class="ltx_text" id="bib.bib17.2">.</span> (2024b)</span>
+<span class="ltx_bibblock">
+Yujuan Ding, Yunshan Ma, Wenqi Fan, Yige Yao, Tat-Seng Chua, and Qing Li. 2024b.
+
+</span>
+<span class="ltx_bibblock">Fashionregen: Llm-empowered fashion report generation. In <em class="ltx_emph ltx_font_italic" id="bib.bib17.3">Companion Proceedings of the ACM on Web Conference 2024</em>. 991–994.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib18"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dosovitskiy et al<span class="ltx_text" id="bib.bib18.2">.</span> (2020)</span>
+<span class="ltx_bibblock">
+Alexey Dosovitskiy, Lucas Beyer, Alexander Kolesnikov, Dirk Weissenborn, Xiaohua Zhai, Thomas Unterthiner, Mostafa Dehghani, Matthias Minderer, Georg Heigold, Sylvain Gelly, et al<span class="ltx_text" id="bib.bib18.3">.</span> 2020.
+
+</span>
+<span class="ltx_bibblock">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale. In <em class="ltx_emph ltx_font_italic" id="bib.bib18.4">International Conference on Learning Representations</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib19"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Garcia and Vogiatzis (2018)</span>
+<span class="ltx_bibblock">
+Noa Garcia and George Vogiatzis. 2018.
+
+</span>
+<span class="ltx_bibblock">How to read paintings: semantic art understanding with multi-modal retrieval. In <em class="ltx_emph ltx_font_italic" id="bib.bib19.1">Proceedings of the European Conference on Computer Vision (ECCV) Workshops</em>. 0–0.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib20"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Garcia et al<span class="ltx_text" id="bib.bib20.2">.</span> (2020)</span>
+<span class="ltx_bibblock">
+Noa Garcia, Chentao Ye, Zihua Liu, Qingtao Hu, Mayu Otani, Chenhui Chu, Yuta Nakashima, and Teruko Mitamura. 2020.
+
+</span>
+<span class="ltx_bibblock">A dataset and baselines for visual question answering on art. In <em class="ltx_emph ltx_font_italic" id="bib.bib20.3">Computer Vision–ECCV 2020 Workshops: Glasgow, UK, August 23–28, 2020, Proceedings, Part II 16</em>. Springer, 92–108.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib21"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gatys et al<span class="ltx_text" id="bib.bib21.2">.</span> (2016)</span>
+<span class="ltx_bibblock">
+Leon Gatys, Alexander Ecker, and Matthias Bethge. 2016.
+
+</span>
+<span class="ltx_bibblock">A Neural Algorithm of Artistic Style.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib21.3">Journal of Vision</em> 16, 12 (2016), 326–326.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib22"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hochreiter and Schmidhuber (1997)</span>
+<span class="ltx_bibblock">
+Sepp Hochreiter and Jürgen Schmidhuber. 1997.
+
+</span>
+<span class="ltx_bibblock">Long short-term memory.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib22.1">Neural computation</em> 9, 8 (1997), 1735–1780.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib23"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hu et al<span class="ltx_text" id="bib.bib23.2">.</span> (2021)</span>
+<span class="ltx_bibblock">
+Edward J Hu, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen, et al<span class="ltx_text" id="bib.bib23.3">.</span> 2021.
+
+</span>
+<span class="ltx_bibblock">LoRA: Low-Rank Adaptation of Large Language Models. In <em class="ltx_emph ltx_font_italic" id="bib.bib23.4">International Conference on Learning Representations</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib24"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Huang et al<span class="ltx_text" id="bib.bib24.2">.</span> (2016)</span>
+<span class="ltx_bibblock">
+Ting-Hao Huang, Francis Ferraro, Nasrin Mostafazadeh, Ishan Misra, Aishwarya Agrawal, Jacob Devlin, Ross Girshick, Xiaodong He, Pushmeet Kohli, Dhruv Batra, et al<span class="ltx_text" id="bib.bib24.3">.</span> 2016.
+
+</span>
+<span class="ltx_bibblock">Visual storytelling. In <em class="ltx_emph ltx_font_italic" id="bib.bib24.4">Proceedings of the 2016 conference of the North American chapter of the association for computational linguistics: Human language technologies</em>. 1233–1239.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib25"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Inc (2023a)</span>
+<span class="ltx_bibblock">
+Google Inc. 2023a.
+
+</span>
+<span class="ltx_bibblock">Gemini.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+<span class="ltx_bibblock">
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://gemini.google.com" title="">https://gemini.google.com</a> [Accessed: 4 Feb, 2024].
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib26"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Inc (2022)</span>
+<span class="ltx_bibblock">
+OpenAI Inc. 2022.
+
+</span>
+<span class="ltx_bibblock">ChatGPT.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+<span class="ltx_bibblock">
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://chat.openai.com" title="">https://chat.openai.com</a> [Accessed: 4 Feb, 2024].
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib27"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Inc (2023b)</span>
+<span class="ltx_bibblock">
+OpenAI Inc. 2023b.
+
+</span>
+<span class="ltx_bibblock">GPT-4V(ision).
+
+</span>
+<span class="ltx_bibblock">
+</span>
+<span class="ltx_bibblock">
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://openai.com/research/gpt-4v-system-card" title="">https://openai.com/research/gpt-4v-system-card</a> [Accessed: 4 Feb, 2024].
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib28"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Jia et al<span class="ltx_text" id="bib.bib28.2">.</span> (2014)</span>
+<span class="ltx_bibblock">
+Yangqing Jia, Evan Shelhamer, Jeff Donahue, Sergey Karayev, Jonathan Long, Ross Girshick, Sergio Guadarrama, and Trevor Darrell. 2014.
+
+</span>
+<span class="ltx_bibblock">Caffe: Convolutional architecture for fast feature embedding. In <em class="ltx_emph ltx_font_italic" id="bib.bib28.3">Proceedings of the 22nd ACM international conference on Multimedia</em>. 675–678.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib29"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Johnson et al<span class="ltx_text" id="bib.bib29.2">.</span> (2008)</span>
+<span class="ltx_bibblock">
+C Richard Johnson, Ella Hendriks, Igor J Berezhnoy, Eugene Brevdo, Shannon M Hughes, Ingrid Daubechies, Jia Li, Eric Postma, and James Z Wang. 2008.
+
+</span>
+<span class="ltx_bibblock">Image processing for artist identification.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib29.3">IEEE Signal Processing Magazine</em> 25, 4 (2008), 37–48.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib30"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kenton and Toutanova (2019)</span>
+<span class="ltx_bibblock">
+Jacob Devlin Ming-Wei Chang Kenton and Lee Kristina Toutanova. 2019.
+
+</span>
+<span class="ltx_bibblock">BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. In <em class="ltx_emph ltx_font_italic" id="bib.bib30.1">Proceedings of NAACL-HLT</em>. 4171–4186.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib31"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Khan et al<span class="ltx_text" id="bib.bib31.2">.</span> (2014)</span>
+<span class="ltx_bibblock">
+Fahad Shahbaz Khan, Shida Beigpour, Joost Van de Weijer, and Michael Felsberg. 2014.
+
+</span>
+<span class="ltx_bibblock">Painting-91: a large scale database for computational painting categorization.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib31.3">Machine vision and applications</em> 25 (2014), 1385–1397.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib32"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Krizhevsky et al<span class="ltx_text" id="bib.bib32.2">.</span> (2012)</span>
+<span class="ltx_bibblock">
+Alex Krizhevsky, Ilya Sutskever, and Geoffrey E Hinton. 2012.
+
+</span>
+<span class="ltx_bibblock">Imagenet classification with deep convolutional neural networks.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib32.3">Advances in neural information processing systems</em> 25 (2012).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib33"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lewis et al<span class="ltx_text" id="bib.bib33.2">.</span> (2019)</span>
+<span class="ltx_bibblock">
+Mike Lewis, Yinhan Liu, Naman Goyal, Marjan Ghazvininejad, Abdelrahman Mohamed, Omer Levy, Ves Stoyanov, and Luke Zettlemoyer. 2019.
+
+</span>
+<span class="ltx_bibblock">Bart: Denoising sequence-to-sequence pre-training for natural language generation, translation, and comprehension.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib33.3">arXiv preprint arXiv:1910.13461</em> (2019).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib34"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Li et al<span class="ltx_text" id="bib.bib34.2">.</span> (2023)</span>
+<span class="ltx_bibblock">
+Junnan Li, Dongxu Li, Silvio Savarese, and Steven Hoi. 2023.
+
+</span>
+<span class="ltx_bibblock">Blip-2: Bootstrapping language-image pre-training with frozen image encoders and large language models. In <em class="ltx_emph ltx_font_italic" id="bib.bib34.3">International conference on machine learning</em>. PMLR, 19730–19742.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib35"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Li et al<span class="ltx_text" id="bib.bib35.2">.</span> (2022)</span>
+<span class="ltx_bibblock">
+Junnan Li, Dongxu Li, Caiming Xiong, and Steven Hoi. 2022.
+
+</span>
+<span class="ltx_bibblock">Blip: Bootstrapping language-image pre-training for unified vision-language understanding and generation. In <em class="ltx_emph ltx_font_italic" id="bib.bib35.3">International conference on machine learning</em>. PMLR, 12888–12900.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib36"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Li et al<span class="ltx_text" id="bib.bib36.2">.</span> (2020)</span>
+<span class="ltx_bibblock">
+Xiujun Li, Xi Yin, Chunyuan Li, Pengchuan Zhang, Xiaowei Hu, Lei Zhang, Lijuan Wang, Houdong Hu, Li Dong, Furu Wei, et al<span class="ltx_text" id="bib.bib36.3">.</span> 2020.
+
+</span>
+<span class="ltx_bibblock">Oscar: Object-semantics aligned pre-training for vision-language tasks. In <em class="ltx_emph ltx_font_italic" id="bib.bib36.4">Computer Vision–ECCV 2020: 16th European Conference, Glasgow, UK, August 23–28, 2020, Proceedings, Part XXX 16</em>. Springer, 121–137.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib37"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liao et al<span class="ltx_text" id="bib.bib37.2">.</span> (2022)</span>
+<span class="ltx_bibblock">
+Peiyuan Liao, Xiuyu Li, Xihui Liu, and Kurt Keutzer. 2022.
+
+</span>
+<span class="ltx_bibblock">The artbench dataset: Benchmarking generative models with artworks.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib37.3">arXiv preprint arXiv:2206.11404</em> (2022).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib38"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu et al<span class="ltx_text" id="bib.bib38.2">.</span> (2023)</span>
+<span class="ltx_bibblock">
+Fang Liu, Mohan Zhang, Baoying Zheng, Shenglan Cui, Wentao Ma, and Zhixiong Liu. 2023.
+
+</span>
+<span class="ltx_bibblock">Feature fusion via multi-target learning for ancient artwork captioning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib38.3">Information Fusion</em> 97 (2023), 101811.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib39"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu et al<span class="ltx_text" id="bib.bib39.2">.</span> (2024)</span>
+<span class="ltx_bibblock">
+Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. 2024.
+
+</span>
+<span class="ltx_bibblock">Visual instruction tuning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib39.3">Advances in neural information processing systems</em> 36 (2024).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib40"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu et al<span class="ltx_text" id="bib.bib40.2">.</span> (2019)</span>
+<span class="ltx_bibblock">
+Yinhan Liu, Myle Ott, Naman Goyal, Jingfei Du, Mandar Joshi, Danqi Chen, Omer Levy, Mike Lewis, Luke Zettlemoyer, and Veselin Stoyanov. 2019.
+
+</span>
+<span class="ltx_bibblock">Roberta: A robustly optimized bert pretraining approach.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib40.3">arXiv preprint arXiv:1907.11692</em> (2019).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib41"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Nguyen et al<span class="ltx_text" id="bib.bib41.2">.</span> (2024)</span>
+<span class="ltx_bibblock">
+Thong Nguyen, Yi Bin, Junbin Xiao, Leigang Qu, Yicong Li, Jay Zhangjie Wu, Cong-Duy Nguyen, See-Kiong Ng, and Luu Anh Tuan. 2024.
+
+</span>
+<span class="ltx_bibblock">Video-Language Understanding: A Survey from Model Architecture, Model Training, and Data Perspectives.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib41.3">arXiv preprint arXiv:2406.05615</em> (2024).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib42"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ouyang et al<span class="ltx_text" id="bib.bib42.2">.</span> (2022)</span>
+<span class="ltx_bibblock">
+Long Ouyang, Jeffrey Wu, Xu Jiang, Diogo Almeida, Carroll Wainwright, Pamela Mishkin, Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, et al<span class="ltx_text" id="bib.bib42.3">.</span> 2022.
+
+</span>
+<span class="ltx_bibblock">Training language models to follow instructions with human feedback.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib42.4">Advances in neural information processing systems</em> 35 (2022), 27730–27744.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib43"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Peng et al<span class="ltx_text" id="bib.bib43.2">.</span> (2023)</span>
+<span class="ltx_bibblock">
+Zhiliang Peng, Wenhui Wang, Li Dong, Yaru Hao, Shaohan Huang, Shuming Ma, and Furu Wei. 2023.
+
+</span>
+<span class="ltx_bibblock">Kosmos-2: Grounding multimodal large language models to the world.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib43.3">arXiv preprint arXiv:2306.14824</em> (2023).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib44"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Pennington et al<span class="ltx_text" id="bib.bib44.2">.</span> (2014)</span>
+<span class="ltx_bibblock">
+Jeffrey Pennington, Richard Socher, and Christopher D Manning. 2014.
+
+</span>
+<span class="ltx_bibblock">Glove: Global vectors for word representation. In <em class="ltx_emph ltx_font_italic" id="bib.bib44.3">Proceedings of the 2014 conference on empirical methods in natural language processing (EMNLP)</em>. 1532–1543.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib45"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Radford et al<span class="ltx_text" id="bib.bib45.2">.</span> (2021)</span>
+<span class="ltx_bibblock">
+Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al<span class="ltx_text" id="bib.bib45.3">.</span> 2021.
+
+</span>
+<span class="ltx_bibblock">Learning transferable visual models from natural language supervision. In <em class="ltx_emph ltx_font_italic" id="bib.bib45.4">International conference on machine learning</em>. PMLR, 8748–8763.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib46"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Radford et al<span class="ltx_text" id="bib.bib46.2">.</span> (2018)</span>
+<span class="ltx_bibblock">
+Alec Radford, Karthik Narasimhan, Tim Salimans, Ilya Sutskever, et al<span class="ltx_text" id="bib.bib46.3">.</span> 2018.
+
+</span>
+<span class="ltx_bibblock">Improving language understanding by generative pre-training.
+
+</span>
+<span class="ltx_bibblock">(2018).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib47"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Radford et al<span class="ltx_text" id="bib.bib47.2">.</span> (2019)</span>
+<span class="ltx_bibblock">
+Alec Radford, Jeffrey Wu, Rewon Child, David Luan, Dario Amodei, Ilya Sutskever, et al<span class="ltx_text" id="bib.bib47.3">.</span> 2019.
+
+</span>
+<span class="ltx_bibblock">Language models are unsupervised multitask learners.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib47.4">OpenAI blog</em> 1, 8 (2019), 9.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib48"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Raffel et al<span class="ltx_text" id="bib.bib48.2">.</span> (2020)</span>
+<span class="ltx_bibblock">
+Colin Raffel, Noam Shazeer, Adam Roberts, Katherine Lee, Sharan Narang, Michael Matena, Yanqi Zhou, Wei Li, and Peter J Liu. 2020.
+
+</span>
+<span class="ltx_bibblock">Exploring the limits of transfer learning with a unified text-to-text transformer.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib48.3">Journal of machine learning research</em> 21, 140 (2020), 1–67.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib49"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Shamir et al<span class="ltx_text" id="bib.bib49.2">.</span> (2010)</span>
+<span class="ltx_bibblock">
+Lior Shamir, Tomasz Macura, Nikita Orlov, D Mark Eckley, and Ilya G Goldberg. 2010.
+
+</span>
+<span class="ltx_bibblock">Impressionism, expressionism, surrealism: Automated recognition of painters and schools of art.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib49.3">ACM Transactions on Applied Perception (TAP)</em> 7, 2 (2010), 1–17.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib50"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sheng and Moens (2019)</span>
+<span class="ltx_bibblock">
+Shurong Sheng and Marie-Francine Moens. 2019.
+
+</span>
+<span class="ltx_bibblock">Generating captions for images of ancient artworks. In <em class="ltx_emph ltx_font_italic" id="bib.bib50.1">Proceedings of the 27th ACM international conference on multimedia</em>. 2478–2486.
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib51"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Shi et al<span class="ltx_text" id="bib.bib51.2">.</span> (2024)</span>
+<span class="ltx_bibblock">
+Wenhao Shi, Zhiqiang Hu, Yi Bin, Junhua Liu, Yang Yang, See-Kiong Ng, Lidong Bing, and Roy Ka-Wei Lee. 2024.
+
+</span>
+<span class="ltx_bibblock">Math-LLaVA: Bootstrapping Mathematical Reasoning for Multimodal Large Language Models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib51.3">arXiv preprint arXiv:2406.17294</em> (2024).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib52"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Team (2023)</span>
+<span class="ltx_bibblock">
+The Vicuna Team. 2023.
+
+</span>
+<span class="ltx_bibblock">Vicuna: An open-source chatbot impressing gpt-4 with 90%* chatgpt quality.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+<span class="ltx_bibblock">
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://lmsys.org/blog/2023-03-30-vicuna" title="">https://lmsys.org/blog/2023-03-30-vicuna</a> [Accessed: 4 Feb, 2024].
+
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib53"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Thoppilan et al<span class="ltx_text" id="bib.bib53.2">.</span> (2022)</span>
+<span class="ltx_bibblock">
+Romal Thoppilan, Daniel De Freitas, Jamie Hall, Noam Shazeer, Apoorv Kulshreshtha, Heng-Tze Cheng, Alicia Jin, Taylor Bos, Leslie Baker, Yu Du, et al<span class="ltx_text" id="bib.bib53.3">.</span> 2022.
+
+</span>
+<span class="ltx_bibblock">Lamda: Language models for dialog applications.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib53.4">arXiv preprint arXiv:2201.08239</em> (2022).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib54"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Touvron et al<span class="ltx_text" id="bib.bib54.2">.</span> (2023a)</span>
+<span class="ltx_bibblock">
+Hugo Touvron, Louis Martin, Kevin Stone, Peter Albert, Amjad Almahairi, Yasmine Babaei, Nikolay Bashlykov, Soumya Batra, Prajjwal Bhargava, Shruti Bhosale, et al<span class="ltx_text" id="bib.bib54.3">.</span> 2023a.
+
+</span>
+<span class="ltx_bibblock">Llama 2: Open foundation and fine-tuned chat models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib54.4">arXiv preprint arXiv:2307.09288</em> (2023).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib55"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Touvron et al<span class="ltx_text" id="bib.bib55.2">.</span> (2023b)</span>
+<span class="ltx_bibblock">
+Hugo Touvron, Louis Martin, Kevin Stone, Peter Albert, Amjad Almahairi, Yasmine Babaei, Nikolay Bashlykov, Soumya Batra, Prajjwal Bhargava, Shruti Bhosale, et al<span class="ltx_text" id="bib.bib55.3">.</span> 2023b.
+
+</span>
+<span class="ltx_bibblock">Llama 2: Open foundation and fine-tuned chat models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib55.4">arXiv preprint arXiv:2307.09288</em> (2023).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib56"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Vaswani et al<span class="ltx_text" id="bib.bib56.2">.</span> (2017)</span>
+<span class="ltx_bibblock">
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. 2017.
+
+</span>
+<span class="ltx_bibblock">Attention is all you need.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib56.3">Advances in neural information processing systems</em> 30 (2017).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib57"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang et al<span class="ltx_text" id="bib.bib57.2">.</span> (2023)</span>
+<span class="ltx_bibblock">
+Aiyuan Yang, Bin Xiao, Bingning Wang, Borong Zhang, Ce Bian, Chao Yin, Chenxu Lv, Da Pan, Dian Wang, Dong Yan, et al<span class="ltx_text" id="bib.bib57.3">.</span> 2023.
+
+</span>
+<span class="ltx_bibblock">Baichuan 2: Open large-scale language models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib57.4">arXiv preprint arXiv:2309.10305</em> (2023).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib58"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang et al<span class="ltx_text" id="bib.bib58.2">.</span> (2019)</span>
+<span class="ltx_bibblock">
+Zhilin Yang, Zihang Dai, Yiming Yang, Jaime Carbonell, Russ R Salakhutdinov, and Quoc V Le. 2019.
+
+</span>
+<span class="ltx_bibblock">Xlnet: Generalized autoregressive pretraining for language understanding.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib58.3">Advances in neural information processing systems</em> 32 (2019).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk atomic"><div><li class="ltx_bibitem" id="bib.bib59"><span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ye et al<span class="ltx_text" id="bib.bib59.2">.</span> (2023)</span>
+<span class="ltx_bibblock">
+Qinghao Ye, Haiyang Xu, Guohai Xu, Jiabo Ye, Ming Yan, Yiyang Zhou, Junyang Wang, Anwen Hu, Pengcheng Shi, Yaya Shi, et al<span class="ltx_text" id="bib.bib59.3">.</span> 2023.
+
+</span>
+<span class="ltx_bibblock">mplug-owl: Modularization empowers large language models with multimodality.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib59.4">arXiv preprint arXiv:2304.14178</em> (2023).
+
+</span>
+<span class="ltx_bibblock">
+</span></li></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix A </span>Introduction</h2></div><div class="zh"><h2>附录 A 引言</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A1.p1.1">Due to the page limit, we omit some details in the main paper, <em class="ltx_emph ltx_font_italic" id="A1.p1.1.1">e.g.</em>, the detail prompts for data collection, and only illustrate one example for some parts.
+In this supplementary materials, we will first give the prompting details and then illustrate more examples to make the qualitative analysis more comprehensive and convincing.</p></div><div class="zh"><p>受篇幅限制，我们在正文中省略了部分细节（例如数据采集所用的详细提示），部分内容只给出了一个示例。在本补充材料中，我们将首先给出提示的细节，然后展示更多示例，以使定性分析更加全面、更具说服力。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix B </span>Detail Prompts for Data Collection</h2></div><div class="zh"><h2>附录 B 数据采集的详细提示</h2></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.p1.1">As described in Section 3.1 and the pipeline shown in Figure 2, our formal analysis annotation process consists of three stages: 1) verifying if the LLMs know the painting, 2) extracting essential elements presented in the painting, and 3) generating a paragraph formal analysis for each painting. For each stage, we use different instructions to prompt the LLMs. Limited by the space, we omit the details prompts in the main part, and illustrate them here for details. For the third stage, we ask the LLMs to annotate two kinds of formal analysis: overall formal analysis (prompt for stage 3-1) and specified aspect formal analysis (prompt for stage 3-2).
+
+<br class="ltx_break"/></p></div><div class="zh"><p>如 3.1 节所述以及图 2 所示管线，我们的形式分析标注过程包含三个阶段：1）验证 LLM 是否知道该画作；2）提取画作中呈现的关键要素；3）为每幅画作生成一段形式分析。每个阶段我们使用不同的指令来提示 LLM。受篇幅限制，正文省略了详细的提示，此处逐一给出。在第三阶段，我们要求 LLM 标注两类形式分析：整体形式分析（阶段 3-1 的提示）与指定面向的形式分析（阶段 3-2 的提示）。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.p2.1">
+<span class="ltx_inline-block ltx_parbox ltx_align_middle ltx_framed ltx_framed_rectangle" id="A2.p2.1.1" style="width:293.3pt;">
+<span class="ltx_p" id="A2.p2.1.1.1"><span class="ltx_text ltx_font_bold" id="A2.p2.1.1.1.1">Prompt for Stage 1:
+<br class="ltx_break"/></span>You are a professional art critic.</span>
+<span class="ltx_p" id="A2.p2.1.1.2">Do you know the painting titled [<span class="ltx_text" id="A2.p2.1.1.2.1" style="--ltx-fg-color:#0000FF;">Painting Title</span>] by [<span class="ltx_text" id="A2.p2.1.1.2.2" style="--ltx-fg-color:#0000FF;">Artist Name</span>]? Respond with only ’YES’ or ’NO’.</span>
+</span></p></div><div class="zh"><p>阶段 1 的提示：你是一位专业的艺术评论家。你是否知道由［艺术家姓名］创作的题为［画作标题］的画作？请只回答“是”或“否”。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.p3.1">
+<span class="ltx_inline-block ltx_parbox ltx_align_middle ltx_framed ltx_framed_rectangle" id="A2.p3.1.1" style="width:293.3pt;">
+<span class="ltx_p" id="A2.p3.1.1.1"><span class="ltx_text ltx_font_bold" id="A2.p3.1.1.1.1">Prompt for Stage 2:
+<br class="ltx_break"/></span>You are a professional art critic.</span>
+<span class="ltx_p" id="A2.p3.1.1.2">Please select up to five essential aspects for the formal analysis of the [<span class="ltx_text" id="A2.p3.1.1.2.1" style="--ltx-fg-color:#0000FF;">Painting Title</span>] by [<span class="ltx_text" id="A2.p3.1.1.2.2" style="--ltx-fg-color:#0000FF;">Artist Name</span>] from the provided list. You may choose fewer if preferred.</span>
+<span class="ltx_p" id="A2.p3.1.1.3">The list is: ["Composition", "Color Palette", "Line Quality", "Texture", "Light and Shadow", "Perspective", "Form and Shape", "Movement and Gesture", "Symbolism and Iconography", "Scale and Proportion"].</span>
+<span class="ltx_p" id="A2.p3.1.1.4">Please list the aspects in descending order of importance in a LIST.
+Your output should be in the format: "The essential aspects are: [YOUR SELECTED CHARACTERISTICS].</span>
+</span></p></div><div class="zh"><p>阶段 2 的提示：你是一位专业的艺术评论家。请从下列清单中为［艺术家姓名］的《［画作标题］》的形式分析选取至多五个关键面向，也可以少选。清单为：［“构图”、“配色”、“线条质量”、“质感”、“光影”、“透视”、“形态与形状”、“动态与姿态”、“象征与图像志”、“尺度与比例”］。请以列表形式按重要性降序列出这些面向。输出格式为：“关键面向为：［你所选择的特征］。”</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.p4.1">
+<span class="ltx_inline-block ltx_parbox ltx_align_middle ltx_framed ltx_framed_rectangle" id="A2.p4.1.1" style="width:293.3pt;">
+<span class="ltx_p" id="A2.p4.1.1.1"><span class="ltx_text ltx_font_bold" id="A2.p4.1.1.1.1">Prompt for Stage 3-1:
+<br class="ltx_break"/></span><span class="ltx_text ltx_font_italic" id="A2.p4.1.1.1.2">Overall formal analysis annotation:
+<br class="ltx_break"/></span>You are a professional art critic.</span>
+<span class="ltx_p" id="A2.p4.1.1.2">Please compose a coherent paragraph, approximately [<span class="ltx_text" id="A2.p4.1.1.2.1" style="--ltx-fg-color:#0000FF;">Number of Words</span>] words, providing a professional formal analysis of the [<span class="ltx_text" id="A2.p4.1.1.2.2" style="--ltx-fg-color:#0000FF;">Painting Title</span>] by [<span class="ltx_text" id="A2.p4.1.1.2.3" style="--ltx-fg-color:#0000FF;">Artist Name</span>] ONLY focusing on the VISUAL CHARACTERISTICS of this painting.</span>
+<span class="ltx_p" id="A2.p4.1.1.3">DO NOT mention the painting title and artist’s name in your analysis.</span>
+<span class="ltx_p" id="A2.p4.1.1.4">You may use conjunctions as needed to ensure coherence in semantics and logic in your analysis.</span>
+</span></p></div><div class="zh"><p>阶段 3-1 的提示：整体形式分析标注：你是一位专业的艺术评论家。请撰写一段约［词数］词的连贯段落，对［艺术家姓名］的《［画作标题］》给出专业的形式分析，只聚焦于该画作的视觉特征。分析中不要提及画作标题与艺术家姓名。可按需使用连接词，以保证分析在语义与逻辑上的连贯。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A2.p5.1">
+<span class="ltx_inline-block ltx_parbox ltx_align_middle ltx_framed ltx_framed_rectangle" id="A2.p5.1.1" style="width:293.3pt;">
+<span class="ltx_p" id="A2.p5.1.1.1"><span class="ltx_text ltx_font_bold" id="A2.p5.1.1.1.1">Prompt for Stage 3-2:
+<br class="ltx_break"/></span><span class="ltx_text ltx_font_italic" id="A2.p5.1.1.1.2">Specified aspect formal analysis annotation:
+<br class="ltx_break"/></span>You are a professional art critic.</span>
+<span class="ltx_p" id="A2.p5.1.1.2">Please write a paragraph about [<span class="ltx_text" id="A2.p5.1.1.2.1" style="--ltx-fg-color:#0000FF;">Number of Words</span>] words of formal analysis of the [<span class="ltx_text" id="A2.p5.1.1.2.2" style="--ltx-fg-color:#0000FF;">Painting Title</span>] by [<span class="ltx_text" id="A2.p5.1.1.2.3" style="--ltx-fg-color:#0000FF;">Artist Name</span>] ONLY focusing on the [<span class="ltx_text" id="A2.p5.1.1.2.4" style="--ltx-fg-color:#0000FF;">Specified Aspect</span>].</span>
+<span class="ltx_p" id="A2.p5.1.1.3">DO NOT mention the painting title and artist’s name in your analysis.</span>
+</span></p></div><div class="zh"><p>阶段 3-2 的提示：指定面向的形式分析标注：你是一位专业的艺术评论家。请撰写一段约［词数］词的形式分析，针对［艺术家姓名］的《［画作标题］》，只聚焦于［指定面向］。分析中不要提及画作标题与艺术家姓名。</p></div></div>
+<div class="blk"><div class="en"><h2 class="ltx_title ltx_title_appendix"><span class="ltx_tag ltx_tag_appendix">Appendix C </span>More Cases for Qualitative Analysis</h2></div><div class="zh"><h2>附录 C 定性分析的更多案例</h2></div></div>
+<div class="blk atomic"><div><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="238" id="A3.F7.g1" src="figures/case_cliff3.jpg" style="aspect-ratio:476/238;" width="476"/></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 7. </span>Example for qualitative comparison of formal analysis generation by several powerful LMMs. <span class="ltx_text ltx_font_italic" id="A3.F7.4">Purple</span> texts denote the factual content description, and the <span class="ltx_text ltx_font_italic" id="A3.F7.5">Blue</span> texts are for formal analysis.</figcaption></div><div class="zh"><p>图 7. 若干强大 LMM 的形式分析生成定性比较示例。紫色文字表示事实性内容描述，蓝色文字表示形式分析。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">C.1. </span>More Cases for Comparison</h3></div><div class="zh"><h3>C.1. 更多比较案例</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A3.SS1.p1.1">We first illustrate more cases for comparison with other LMMs in Figure <a class="ltx_ref" href="#A3.F7" title="Figure 7 ‣ Appendix C More Cases for Qualitative Analysis ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">7</span></a>, Figure <a class="ltx_ref" href="#A3.F8" title="Figure 8 ‣ C.2. The English Translation for The Chinese Case ‣ Appendix C More Cases for Qualitative Analysis ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">8</span></a>, and a failure case in Figure <a class="ltx_ref" href="#A3.F9" title="Figure 9 ‣ C.2. The English Translation for The Chinese Case ‣ Appendix C More Cases for Qualitative Analysis ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">9</span></a>. From the former two cases, we can see the similar observations in Figure 5 in main part. Here we focus on the failure case in Figure <a class="ltx_ref" href="#A3.F9" title="Figure 9 ‣ C.2. The English Translation for The Chinese Case ‣ Appendix C More Cases for Qualitative Analysis ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">9</span></a>, from which we can observe that our GalleryGPT incorrectly recognized a vase as a candlestick (text with red color in Figure <a class="ltx_ref" href="#A3.F9" title="Figure 9 ‣ C.2. The English Translation for The Chinese Case ‣ Appendix C More Cases for Qualitative Analysis ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">9</span></a>). This implies that the vision perceptron in our GalleryGPT needs to be improved to ensure the accurate visual encoding.</p></div><div class="zh"><p>我们首先在图 7、图 8 中给出更多与其他 LMM 的比较案例，并在图 9 中给出一个失败案例。从前两个案例中可以看到与正文图 5 相似的观察。这里重点看图 9 的失败案例：我们的 GalleryGPT 把一个花瓶错误地识别为烛台（图 9 中红色文字）。这说明 GalleryGPT 中的视觉感知部分有待改进，以保证准确的视觉编码。</p></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A3.SS1.p2.1">Then we illustrate more dialogue case with our GalleryGPT in Figure <a class="ltx_ref" href="#A3.F10" title="Figure 10 ‣ C.2. The English Translation for The Chinese Case ‣ Appendix C More Cases for Qualitative Analysis ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">10</span></a> and  <a class="ltx_ref" href="#A3.F11" title="Figure 11 ‣ C.2. The English Translation for The Chinese Case ‣ Appendix C More Cases for Qualitative Analysis ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">11</span></a>. From Figure <a class="ltx_ref" href="#A3.F10" title="Figure 10 ‣ C.2. The English Translation for The Chinese Case ‣ Appendix C More Cases for Qualitative Analysis ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">10</span></a>, we can see that when the GalleryGPT is generating overall formal analysis, it would briefly analyze the main visual elements in the painting, while when we ask it to generate formal analysis focusing on specific aspect, <em class="ltx_emph ltx_font_italic" id="A3.SS1.p2.1.1">e.g.</em>, <span class="ltx_text ltx_font_italic" id="A3.SS1.p2.1.2">Light and Shadow</span> in Figure <a class="ltx_ref" href="#A3.F10" title="Figure 10 ‣ C.2. The English Translation for The Chinese Case ‣ Appendix C More Cases for Qualitative Analysis ‣ GalleryGPT: Analyzing Paintings with Large Multimodal Models"><span class="ltx_text ltx_ref_tag">10</span></a>, it could give more in-depth analysis from this aspect and also consistent with the brief one.</p></div><div class="zh"><p>随后我们在图 10 与图 11 中给出更多与 GalleryGPT 的对话案例。从图 10 可以看到，当 GalleryGPT 生成整体形式分析时，它会简要分析画作中的主要视觉要素；而当我们要求它生成聚焦特定面向（例如图 10 中的光影）的形式分析时，它能就该面向给出更深入的分析，且与简要版本保持一致。</p></div></div>
+<div class="blk"><div class="en"><h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">C.2. </span>The English Translation for The Chinese Case</h3></div><div class="zh"><h3>C.2. 中文案例的英文翻译</h3></div></div>
+<div class="blk"><div class="en"><p class="ltx_p" id="A3.SS2.p1.1">Finally, we give the English translation for the case in Chinese illustrated in Figure 6. To further investigate the multilingual capacity, we also test the same chat content in English with our GalleryGPT, and it outputs similar formal analysis in high-level semantics and concepts, but very different words and aspects in low-level semantics. This implies that our GalleryGPT is able to understand and generate the formal analysis with multiple languages.</p></div><div class="zh"><p>最后，我们给出图 6 中所示中文案例的英文翻译。为进一步考察多语言能力，我们还用相同的聊天内容以英文测试了 GalleryGPT，它输出的形式分析在高层语义与概念上相似，但在低层语义上的用词与面向差别很大。这说明我们的 GalleryGPT 能够理解并以多种语言生成形式分析。</p></div></div>
+<div class="blk atomic"><div><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="227" id="A3.F8.g1" src="figures/case_horse.jpg" style="aspect-ratio:476/227;" width="476"/></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 8. </span>Example for qualitative comparison of formal analysis generation by several powerful LMMs. <span class="ltx_text ltx_font_italic" id="A3.F8.4">Purple</span> texts denote the factual content description, and the <span class="ltx_text ltx_font_italic" id="A3.F8.5">Blue</span> texts are for formal analysis. </figcaption></div><div class="zh"><p>图 8. 若干强大 LMM 的形式分析生成定性比较示例。紫色文字表示事实性内容描述，蓝色文字表示形式分析。</p></div></div>
+<div class="blk atomic"><div><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="253" id="A3.F9.g1" src="figures/case_table.jpg" style="aspect-ratio:476/253;" width="476"/></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 9. </span>A failure case of our GalleryGPT. <span class="ltx_text ltx_font_italic" id="A3.F9.5">Purple</span> texts denote the factual content description, and the <span class="ltx_text ltx_font_italic" id="A3.F9.6">Blue</span> texts are for formal analysis. <span class="ltx_text ltx_font_italic" id="A3.F9.7">Red</span> texts denote the wrong analyses.</figcaption></div><div class="zh"><p>图 9. 我们 GalleryGPT 的一个失败案例。紫色文字表示事实性内容描述，蓝色文字表示形式分析，红色文字表示错误的分析。</p></div></div>
+<div class="blk atomic"><div><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="185" id="A3.F10.g1" src="figures/chat_river.jpg" style="aspect-ratio:476/185;" width="476"/></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 10. </span>Multimodal dialogue examples with our GalleryGPT. <span class="ltx_text ltx_font_italic" id="A3.F10.3">Blue</span> texts denote high quality formal analysis. We also test dialoguing in Chinese, even we do not fine-tune GalleryGPT with Chinese painting-analysis pairs. The English translation of Chinese conversation can be found in Supplementary.</figcaption></div><div class="zh"><p>图 10. 与我们的 GalleryGPT 的多模态对话示例。蓝色文字表示高质量的形式分析。我们还测试了用中文对话，尽管我们并未用中文绘画—分析配对微调 GalleryGPT。该中文对话的英文翻译见补充材料。</p></div></div>
+<div class="blk atomic"><div><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="218" id="A3.F11.g1" src="figures/chat_woman2.png" style="aspect-ratio:476/218;" width="476"/></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 11. </span>Multimodal dialogue examples with our GalleryGPT. <span class="ltx_text ltx_font_italic" id="A3.F11.3">Blue</span> texts denote high quality formal analysis. We also test dialoguing in Chinese, even we do not fine-tune GalleryGPT with Chinese painting-analysis pairs. The English translation of Chinese conversation can be found in Supplementary.</figcaption></div><div class="zh"><p>图 11. 与我们的 GalleryGPT 的多模态对话示例。蓝色文字表示高质量的形式分析。我们还测试了用中文对话，尽管我们并未用中文绘画—分析配对微调 GalleryGPT。该中文对话的英文翻译见补充材料。</p></div></div>
+<div class="blk atomic"><div><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="213" id="A3.F12.g1" src="figures/chat_eng.jpg" style="aspect-ratio:476/213;" width="476"/></div></div>
+<div class="blk"><div class="en"><figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 12. </span>English Translation of Figure 6 in main part and the output of directly chatting with our GalleryGPT in English.</figcaption></div><div class="zh"><p>图 12. 正文图 6 的英文翻译，以及直接用英文与我们的 GalleryGPT 对话的输出。</p></div></div>
+</div></div>
+<script>
+document.querySelectorAll('.toolbar button').forEach(function(b){{
+  b.addEventListener('click',function(){{
+    document.querySelectorAll('.toolbar button').forEach(function(x){{x.classList.remove('on');}});
+    b.classList.add('on');
+    document.body.className=b.dataset.v;
+  }});
+}});
+</script>
+</body></html>

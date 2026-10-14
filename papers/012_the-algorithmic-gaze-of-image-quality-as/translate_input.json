@@ -1,0 +1,1366 @@
+{
+ "blocks": [
+  {
+   "id": "b0000",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "The Algorithmic Gaze of Image Quality Assessment: An Audit and Trace Ethnography of the LAION-Aesthetics Predictor"
+  },
+  {
+   "id": "b0001",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0002",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0003",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0004",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0005",
+   "t": "keep",
+   "w": "svg",
+   "en": ""
+  },
+  {
+   "id": "b0006",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abstract."
+  },
+  {
+   "id": "b0007",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Visual generative AI models are trained using a one-size-fits-all measure of aesthetic appeal. However, what is deemed “aesthetic” is inextricably linked to personal taste and cultural values, raising"
+  },
+  {
+   "id": "b0008",
+   "t": "text",
+   "w": "h6",
+   "en": "Keywords:"
+  },
+  {
+   "id": "b0009",
+   "t": "text",
+   "w": "h2",
+   "en": "1. Introduction"
+  },
+  {
+   "id": "b0010",
+   "t": "text",
+   "w": "p",
+   "en": "Although artistic taste is deeply subjective and highly political (Bourdieu, 1984), AI researchers often attempt to quantify the aesthetic quality of media (Tjandra et al., 2025; Huang et al., 2024). While aesthetic quality assessment (AQA) has been a topic of research in the computer vision community for decades (Datta et al., 2006; Murray et al., 2012), this task is particularly important to examine in light of the rapid growth in visual generative AI. Not only are AQA models used to curate the training data for visual generative AI models (Chen et al., 2024), but they are also used to assess the quality of AI-generated images (Gao and Liu, 2024). As generative AI models are trained on datasets scraped from across the web, researchers rely on computational methods to filter out “low-quality” data. Prior work has called attention to myriad gender and cultural biases in common dataset filtering techniques—such as blocklists (Dodge et al., 2021) and image-text similarity metrics (Hong et al., 2024)—but the consequences of aesthetic filtering has yet to be explored in detail."
+  },
+  {
+   "id": "b0011",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we investigate an AQA model—the LAION-Aesthetics Predictor (LAP)—that has been widely influential in visual generative AI research and commercial development. For example, LAP was used to curate the open-source LAION-Aesthetics Dataset from which Stability AI pre-trained the earliest versions of Stable Diffusion (Schuhmann, 2022). Additionally, LAP is often used to evaluate the quality of AI-generated images (Ding et al., 2024; Fong and See, 2024; Gao and Liu, 2024; He et al., 2023). Despite its far-reaching impact, the LAP itself has yet to be explored in detail."
+  },
+  {
+   "id": "b0012",
+   "t": "text",
+   "w": "p",
+   "en": "Due to the subjectivity of aesthetic evaluation, we first explored (RQ1) what the LAP model determines to be a “high-quality” image using three datasets. First, we examined the impact of aesthetic filtering on the LAION-Aesthetics Dataset (⟦SLOT_0⟧1.2B images), which was curated using LAP. We find that the LAP disproportionally filters in images with captions mentioning women, while filtering out images with captions mentioning men or LGBTQ+ people. Then, we used LAP to score ⟦SLOT_1⟧330k images across two art datasets, finding the model rates realistic images of landscapes, cityscapes, and portraits from western and Japanese artists most highly. In other words, the algorithmic gaze of LAP reproduces the male gaze within western art history (Berger, 2008). To understand where these biases may have originated, we performed a trace ethnography of public materials to examine (RQ2) how LAP was developed. We find that LAP’s development reflects the biases from our audits, such as the aesthetic scores used to train LAP primarily coming from English-speaking photographers and western AI-enthusiasts."
+  },
+  {
+   "id": "b0013",
+   "t": "text",
+   "w": "p",
+   "en": "In light of our findings, we call on AI researchers to contend with aesthetics as a site of cultural representation. Simultaneously, we caution that greater “inclusion” in visual generative AI training data risks exacerbating the harms of these technologies. Additionally, we call on developers to shift away from prescriptive, universalist measures of “aesthetics” toward more descriptive, pluralistic evaluations. Finally, we discuss how future FAccT researchers might also combine audits and ethnographies of algorithmic systems."
+  },
+  {
+   "id": "b0014",
+   "t": "text",
+   "w": "h2",
+   "en": "2. Background & Related Work"
+  },
+  {
+   "id": "b0015",
+   "t": "text",
+   "w": "h3",
+   "en": "2.1. Background on LAION-Aesthetics"
+  },
+  {
+   "id": "b0016",
+   "t": "text",
+   "w": "p",
+   "en": "LAION (Large-Scale Artificial Intelligence Open Network) is a non-profit founded in 2021 by Christoph Schuhmann, a German high school teacher, with the goal of creating open-source datasets and machine learning models (Newman and Cantrill, 2023). Despite its humble origins, LAION has highly influenced generative image model development. Stability AI researchers used the LAION-Aesthetics Dataset to pre-train the earliest versions of Stable Diffusion (Rombach et al., 2022). Unfortunately, the extent to which contemporary generative image models rely on the LAION datasets can be challenging to asses because developers have become cautious of disclosing their training data. While Stability AI shared that early versions of Stable Diffusion were trained using LAION datasets, the model card for their 2024 model Stable Diffusion 3.5-Large vaguely says it was ‘‘trained on a wide variety of data, including synthetic data and filtered publicly available data.’’11 1 https://huggingface.co/stabilityai/stable-diffusion-3.5-large This secrecy may be due to the increased scrutiny faced by LAION and generative AI developers (Reisner, 2023; Reisner and Gilbertson, 2024), which we will describe below."
+  },
+  {
+   "id": "b0017",
+   "t": "text",
+   "w": "p",
+   "en": "LAION has faced substantial criticism from both AI researchers and artists. LAION researchers compiled the 5.86 billion image-text pairs of the LAION-5B dataset by extracting image links and alternative text descriptions from the IMG HTML tags of websites archived by the Common Crawl, a US-based non-profit that has scraped publicly available websites since 2008 (Reisner, 2025; Baack, 2024b). Due to LAION researchers’ indiscriminate data collection practices, researchers found that LAION-5B contained over a thousand images of child sexual abuse material (CSAM) (Thiel, 2023). In addition to containing CSAM, LAION-5B contains millions of copyrighted images, leading to numerous lawsuits against LAION (Filikhina and Elsaß, 2025) and Stability AI (Tobin, 2025). Furthermore, Birhane et al. found that the image descriptions in LAION-400M and the English language subset of LAION-5B (LAION-2B-en) often contain hate speech (Birhane et al., 2023)."
+  },
+  {
+   "id": "b0018",
+   "t": "text",
+   "w": "p",
+   "en": "Although prior research has examined biases in LAION datasets (Birhane et al., 2023; Hong et al., 2024), the LAION-Aesthetics Dataset and the LAION-Aesthetics Predictor (LAP) model22 2 https://github.com/christophschuhmann/improved-aesthetic-predictor used to curate this dataset are underexplored. Not only is the LAION-Aesthetics Dataset widely used to pre-train and fine-tune visual generative AI models, but the LAP model used to to curate this dataset has also been used to curate internal corporate datasets (Chen et al., 2024) and to evaluate the performance of visual generative AI models (Ding et al., 2024; Fong and See, 2024; Gao and Liu, 2024; He et al., 2023). Although some humanistic research has critiqued how LAP was trained (Itävuori, 2025; Vianna, 2025), researchers have not yet empirically investigated what this image quality assessment model measures in practice. In doing so, we contribute both to scholarship on art and AI as well as, more broadly, AI evaluation and alignment practices. In the following sections, we briefly describe each of these contexts in greater detail."
+  },
+  {
+   "id": "b0019",
+   "t": "text",
+   "w": "h3",
+   "en": "2.2. AI Evaluation & Alignment"
+  },
+  {
+   "id": "b0020",
+   "t": "text",
+   "w": "p",
+   "en": "AI researchers are increasingly critiquing the measurements used to train and evaluate AI models. For example, benchmarks often claim to measure concepts with no agreed upon definition, such as “intelligence” (Bean et al., 2025). Researchers have also criticized the notion of universal “gold standards” in data annotation (Wang et al., 2024). While researchers often treat annotator disagreement as noise to be filtered out, disagreements can stem from annotators’ differing lived experiences (Wang et al., 2024; Sap et al., 2022). In response, researchers have called for distinguishing between datasets intended to represent different beliefs or encode one specific belief (Röttger et al., 2022). AI alignment research focuses on normative evaluations where people can reasonably disagree about how a model should behave. For instance, LLMs tend to reflect social values more commonly held in western countries according to national value surveys (Tao et al., 2024). At the same time, this methodology can flatten intra-cultural differences (AlKhamissi et al., 2025). Instead of choosing one set of values to reflect, researchers have increasingly called for designing AI systems more pluralistically (Sorensen et al., 2024a; Sorensen et al., 2024b). In this work, we contend with “aesthetics” as an underexamined axis of alignment."
+  },
+  {
+   "id": "b0021",
+   "t": "text",
+   "w": "p",
+   "en": "Prior work has found that the design of visual generative AI models often harms marginalized communities. Text-to-image (T2I) models stereotype or poorly represent women (Bianchi et al., 2023), LGBTQ+ people (Ungless et al., 2023; Taylor et al., 2025), people of color (Wolfe and Caliskan, 2022), and non-western cultures (Fu et al., 2024; Mim et al., 2024; Qadri et al., 2025; Yerukola et al., 2025). T2I models made by western tech companies tend to perform worse in languages other than English, such as Farsi (Qadri et al., 2025) or Bangla (Mim et al., 2024). This linguistic bias can also be seen in a dataset we examine in this study: the LAION-Aesthetics Dataset is restricted to images with English captions (Schuhmann, 2022). HCI researchers have found that artists often enjoy the glitches and strangeness of T2I models (Chang et al., 2023), leading some to critique the stylistic bias toward realism in newer models (Taylor et al., 2025). In light of this concern, Taylor et al. have called for future research “examining measurements of aesthetic quality in popular datasets” (Taylor et al., 2025), which we take up in this work."
+  },
+  {
+   "id": "b0022",
+   "t": "text",
+   "w": "p",
+   "en": "While the artistic consequences of aesthetic evaluation are underexamined, aesthetic quality assessment (AQA) has been a subject of research in the computer vision community for decades (Murray et al., 2012; Datta et al., 2006). In this work, researchers formulate AQA as a regression problem predicting a numerical aesthetic score. At the same time, this de-contextualized measurement of aesthetic quality has been critiqued (Goree et al., 2025; Huang et al., 2024). Goree et al. (2025) highlight value misalignments between various AQA models and human-preferences by developing an aesthetic evaluation mobile camera application. Like ourselves, Li et al. (2025) recently advocated for investigating aesthetic biases as an underexamined form of representational harms in mulit-modal LLMs. However, the authors conceptualize aesthetic biases as a distributional alignment problem wherein aesthetic evaluation models may privilege the values of one demographic group over others, examining age, gender and education. We extend this work by studying the broader cultural consequences of AQA on data curation and model evaluation, grounding the task within art history."
+  },
+  {
+   "id": "b0023",
+   "t": "text",
+   "w": "h2",
+   "en": "3. Auditing the LAION-Aesthetics Predictor Model"
+  },
+  {
+   "id": "b0024",
+   "t": "text",
+   "w": "h3",
+   "en": "3.1. Audit Methodology"
+  },
+  {
+   "id": "b0025",
+   "t": "text",
+   "w": "p",
+   "en": "We audited LAP using three datasets. First, we examine the LAION-Aesthetics Dataset curated from LAION-5B by LAP. We then audited LAP using two art datasets with robust metadata on the artists, cultures, styles, and mediums associated with each image. The first dataset consists of 249,351 public-domain images from the Metropolitan Museum of Art (MET).33 3 https://www.metmuseum.org/hubs/open-access Located in New York City, the MET is the fourth largest museum in the world and its collection spans over 5,000 years (Tapia, 2021). While the MET dataset contains images from a wide breadth of art across various cultures and time periods, few images are of modern or contemporary art (only 865 images). Therefore, we evaluated LAP on the WikiArt dataset (Saleh and Elgammal, 2015) of 81,444 images of visual art by 129 primarily modern (mid-1800s to mid-1900s) artists. WikiArt is a community edited visual art encyclopedia commonly studied in digital humanities research (Mohamed et al., 2022; Fu and Razmjooy, 2025)."
+  },
+  {
+   "id": "b0026",
+   "t": "text",
+   "w": "p",
+   "en": "Across each datasets, our analyses primarily focus on understanding differences between images rated above and below an aesthetics score of 6.5. We chose this threshold because it is commonly used in computer vision research to represent high-quality images. The LAION-Aesthetics Dataset was released in multiple subsets based on different aesthetic thresholds, with images scored 4.5+ (⟦SLOT_2⟧ 1.2B images) being the lowest rated dataset and 6.5+ (⟦SLOT_3⟧ 625k images) being the highest rated. The LAD 6.5+ is widely used by computer vision researchers to fine-tune generative image models (Guo et al., 2024; Castells et al., 2024), evaluate new training methods (Luo et al., 2023; Fan et al., 2024), and create new datasets (Tudosiu et al., 2024; Li et al., 2024a). Additionally, Ding et al. measure the effectiveness of data poisoning attacks on text-to-image models by defining “generation aesthetics” as the “% of images with [LAP] aesthetics > 6.5” (Ding et al., 2024). In Tables 1 and 2 we also show the number of images rated 6+ to demonstrate that the aesthetic biases we identify across the 6.5+ threshold can also be seen across the 6+ threshold."
+  },
+  {
+   "id": "b0027",
+   "t": "text",
+   "w": "h3",
+   "en": "3.2. Findings: The LAION-Aesthetics Dataset"
+  },
+  {
+   "id": "b0028",
+   "t": "text",
+   "w": "p",
+   "en": "LAD consists of all images from LAION-5B with English captions that LAP rated at least 4.5. In LAD, images are not stored directly. Rather, the dataset contains URLs to images hosted on websites across the internet. Most relevant for our findings, the metadata for each image in LAD contains its LAP predicted aesthetic score and a caption derived from the scraped image’s alternative text. We find that LAP rates images from independent visual artists and photographers highly. Also, images with captions mentioning women, Hindus, and Christians are more likely to be included in LAP 6.5+, while images with captions mentioning men, Jews, or Muslims are more likely to be filtered out."
+  },
+  {
+   "id": "b0029",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0030",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 1. Top 25 domains of images in the LAION-Aesthetics Dataset rated 6.5+ by the LAION-Aesthetics Prediction model."
+  },
+  {
+   "id": "b0031",
+   "t": "keep",
+   "w": "object",
+   "en": ""
+  },
+  {
+   "id": "b0032",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Figure 2. Pointwise Mutual Information (PMI) between regex and images being included in the 6.5+ subset of the LAION-Aesthetics Dataset. Terms with higher PMI (e.g., wom[ae]n) have higher likelihood of being included. The exact regex for each identity term was of the form \\b(?i)gays\\b."
+  },
+  {
+   "id": "b0033",
+   "t": "text",
+   "w": "h4",
+   "en": "3.2.1. The LAION-Aesthetics Predictor highly rates images from websites used by independent visual artists and photographers"
+  },
+  {
+   "id": "b0034",
+   "t": "text",
+   "w": "p",
+   "en": "We find substantial differences between the URLs of images below and above the 6.5 aesthetic threshold. In LAD 4.5+, the top 25 most common domains account for about 36% of all the images in the dataset. These domains are primarily from e-commerce websites (e.g., Shopify), stock image sites (e.g., Getty Images), and web hosts (e.g., Wordpress). For LAD 6.5+, the top 25 image domains account for proximately 52% of the dataset, meaning a majority of the images in this dataset come from the handful of websites in Figure 1. Of these 25 domains, 13 were also in the top 25 domains for LAD 4.5+. However, the other domains are primarily from smaller websites where independent visual artists (e.g., Redbubble, DeviantArt) and photographers (e.g., SmugMug, Flikr, 500px) share or sell their work. Additionally, the 25th most common source of images in LAD 6.5+ are from a small nature photography agency, robertharding.com. This indicates that LAP may rate photographic images more highly."
+  },
+  {
+   "id": "b0035",
+   "t": "keep",
+   "w": "table",
+   "en": "Department Name Median Score Num Images Scored ≥ \\geq 6.5 Num Images Scored ≥ \\geq 6 Num Images European Paintings 5.73 35 483 2,289 Photographs 5.40 15 548 6,685 Drawings & Prints 5.06 13 435 60,889 "
+  },
+  {
+   "id": "b0036",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 1. Predicted aesthetic score of images from the Metropolitan Museum of Art by department."
+  },
+  {
+   "id": "b0037",
+   "t": "text",
+   "w": "h4",
+   "en": "3.2.2. The LAION-Aesthetics Predictor is more likely to rate images with descriptions mentioning woman ⟦SLOT_4⟧ 6.5, while those mentioning men or LGBTQ+ people are more likely to be filtered out."
+  },
+  {
+   "id": "b0038",
+   "t": "text",
+   "w": "p",
+   "en": "To understand the content of images in LAD, we compared the frequencies of words in image captions above and below the 6.5 aesthetics score threshold. Similar to Dodge et al.’s prior audits of generative AI dataset filtering (Dodge et al., 2021), we computed the pointwise mutual information (PMI) (Church and Hanks, 1990) of a regular expression (regex) appearing in the 6.5+ subset of images in LAD. At a high level, PMI in this case measures the probability of observing a search term in the description for an image rated 6.5+ relative to chance. Therefore, a PMI much greater than 0 suggests the search term appears more often than by chance and a PMI much less than 0 suggests the regex occurs less often than expected. Building on identity-related regexes used in prior audits (Dodge et al., 2021; Hong et al., 2024), we computed the PMI of the regexes in Figure 2 appearing in LAD 6.5+ image descriptions."
+  },
+  {
+   "id": "b0039",
+   "t": "text",
+   "w": "p",
+   "en": "We find that images with descriptions mentioning women are more likely to be included in LAD 6.5+, while images mentioning men or LGBTQ+ communities are more likely to be excluded. Also, images with descriptions mentioning Hindu, Buddhist, or Christian communities are more likely to be included in LAD 6.5+, while images with descriptions mentioning Jews or Muslims are more likely to be filtered out. Images mentioning Asian or African communities are more likely to be included in LAD 6.5+ than those mentioning Latinx/e, Caucasian, or European communities. This may suggest that LAP more highly rates images of Asian and African communities than European communities. Alternatively, images containing Caucasians or Europeans may not mention this detail in their captions because whiteness is an unmarked racial category (Brekhus, 1998)."
+  },
+  {
+   "id": "b0040",
+   "t": "text",
+   "w": "p",
+   "en": "As PMI is a relative measure, one must also consider the absolute number of image descriptions per regex. For example, the PMI of ‘whites?’ and ‘latin[oaxe]s?’ are both -0.95. However, there are 9,617 images in LAD 6.5+ with ‘whites?’ in their description but only 26 images for ther regex ‘latin[oaxe]s?’. Not only does ‘wom[ae]n’ have the highest PMI but the regex also appears in more image descriptions in LAD 6.5+ than any other regex in Figure 2 (15,706). Meanwhile, regexes associated with LGBTQ+ identities are far rarer in LAD 6.5+ image descriptions: ‘gays?’ (102), ‘lesbians?’ (20), ‘transgenders?’ (9), ‘bi-?sexuals?’ (2), and ‘non[ -]?binary’ (0). Understanding the cultural implications of aesthetic evaluation requires considering more than the representation of identity groups (Taylor et al., 2025). Below, we explore aesthetic filtering in greater detail by examining how LAP rates art from various cultures."
+  },
+  {
+   "id": "b0041",
+   "t": "keep",
+   "w": "table",
+   "en": "Median Score Num Images Scored ≥ \\geq 6.5 Num Images Scored ≥ \\geq 6 Num Images Genre Cityscape 5.97 539 2,151 4,602 Portrait 5.90 693 5,616 14,112 Landscape 5.87 505 4,637 13,358 … … … … … Illustrati"
+  },
+  {
+   "id": "b0042",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 2. A representative selection of the highest and lowest scored genres, styles, and artists in WikiArt. The full results per genre, style, and artist can be downloaded at https://github.com/jtaylor351/laion_aesthetics_audit_data/tree/main"
+  },
+  {
+   "id": "b0043",
+   "t": "text",
+   "w": "h3",
+   "en": "3.3. Findings: The Metropolitan Museum of Art Dataset"
+  },
+  {
+   "id": "b0044",
+   "t": "text",
+   "w": "p",
+   "en": "To examine how the LAP evaluates art across different mediums and cultures, we scored the 249,351 images from the MET dataset using LAP. We find LAP rates two-dimensional art by western or Japanese artists most highly."
+  },
+  {
+   "id": "b0045",
+   "t": "text",
+   "w": "h4",
+   "en": "3.3.1. The LAION-Aesthetics Predictor rates western art more highly than art from the Majority World"
+  },
+  {
+   "id": "b0046",
+   "t": "text",
+   "w": "p",
+   "en": "As seen in Table 1, the departments with images scored ⟦SLOT_5⟧ 6.5 are primarily European Paintings, Photographs and Drawing & Prints as well as art from Europe, Asia, and America. On the other hand, not a single piece of African, Native American, Oceanian, Egyptian, Islamic, Ancient West Asian, and Greek & Roman Art was rated 6.5+. This bias is even more apparent when looking at the images rated 6+. Approximately 97% of all images scored 6+ from the MET (3180 of 3284) come from only five departments: (1) Asian Art, (2) Photographs, (3) European Paintings, (4) The American Wing, and (5) Drawing and Prints. This may be partially because the LAP privileges figurative, two-dimensional art, which would also explain why more abstract art (Modern & Contemporary Art) and physical artifacts (European Sculpture & Decorative Arts) scored lower."
+  },
+  {
+   "id": "b0047",
+   "t": "text",
+   "w": "h4",
+   "en": "3.3.2. The LAION-Aesthetics Predictor rates paintings and photographs by western or Japanese artists most highly."
+  },
+  {
+   "id": "b0048",
+   "t": "text",
+   "w": "p",
+   "en": "Across the 249,351 images corresponding to 37,878 unique mediums and 14,946 known artists in the MET dataset, only 177 images across 35 mediums and 99 known artists were rated as ⟦SLOT_6⟧ 6.5 by LAP. After manually combining similar mediums (e.g., ‘watercolor’ and ‘watercolor on paper’ ), we found that the MET images rated ⟦SLOT_7⟧ 6.5 come from only 5 mediums: 72 oil paintings, 60 Japanese woodblock prints, 26 watercolor paintings, 15 photographs, 2 drawings, 1 piece of stained glass, and 1 tempera painting (a predecessor to oil paint). A total of 14 artists had more than one piece rated ⟦SLOT_8⟧ 6.5, accounting for 88 (50%) of the 177 top rated images."
+  },
+  {
+   "id": "b0049",
+   "t": "text",
+   "w": "p",
+   "en": "A manual inspection indicates that images rated ⟦SLOT_9⟧ 6.5 are typically two-dimensional realistic representations of landscapes (e.g., paintings of mountains) or portraits (e.g., photographs or paintings of people). This can also be seen in the artists with multiple images in the top 177. The top two artists with the most images rated ⟦SLOT_10⟧ 6.5, Katsushika Hokusai (32) and Utagawa Hiroshige (23), are mid-19th century ukiyo-e woodblock print artists who focus on Japanese landscapes (Kafū et al., 2012). Likewise, the artists with the third and sixth most images rated ⟦SLOT_11⟧ 6.5 are the landscape painters William Trost Richards (6) and Albert Bierstadt (3). The artists with the fourth (Southworth and Hawes, 4) and fifth (Suzuki Shin’ichi, 4) most images in the top 177 are portrait photographers. While the MET dataset contains a broad range of art across cultures and mediums, those that LAP rated ⟦SLOT_12⟧ 6.5 were mostly paintings, prints, or photographs by western or Japanese artists. In the next section, we examine how LAP evaluates paintings in greater detail through the WikiArt dataset."
+  },
+  {
+   "id": "b0050",
+   "t": "text",
+   "w": "h3",
+   "en": "3.4. Findings: The WikiArt Dataset"
+  },
+  {
+   "id": "b0051",
+   "t": "text",
+   "w": "p",
+   "en": "The WikiArt dataset consists of 81,444 pieces of visual art from 128 known artists (excluding unknown artists), primarily western artists from the mid-1800s to mid-1900s. Each piece is assigned one of 27 styles across 10 genres. Genres describe the content of a piece (e.g., landscape or portrait) meanwhile style describes the piece’s form (e.g., realism or impressionism)."
+  },
+  {
+   "id": "b0052",
+   "t": "text",
+   "w": "h4",
+   "en": "3.4.1. The LAION-Aesthetics Predictor more highly rates realistic images of cityscapes, landscapes, and portraits, while less realistic art was rated lower."
+  },
+  {
+   "id": "b0053",
+   "t": "text",
+   "w": "p",
+   "en": "As seen in Table 2, we find that LAP highly rates visual art of Cityscapes, Landscapes, and Portraits. These three genres account for 39% of all images in WikiArt, but these genres make up 73% of all images rated 6.5+. Likewise, we found that more realistic and representational styles, such as Realism, Romanticism, and Impressionism were highly rated. Here, both style and genre are linked as portraits, landscapes, and cityscape are common subjects in realist, romantic, and impressionistic art. On the other hand, LAP rates less representational art, such as cubism or abstract art, lower. The consequences of this aesthetic bias can be seen across artists. Nearly every piece by the french cityscape artists Edouard Cortès (208 of 214) and Antoine Blanchard (168 of 170) were rated 6.5+. In contrast, more influential but less realistic artists—Pablo Picasso, Andy Warhol, and Salvador Dalí—were rated lower."
+  },
+  {
+   "id": "b0054",
+   "t": "keep",
+   "w": "table",
+   "en": "Aesthetics Score Range LAION-Aesthetics Dataset Met Dataset WikiArt Dataset 6.5 ≤ \\leq score A Mountain A photo of a mountain and a lake A Japanese Landscape A Japanese woodblock print of a river with"
+  },
+  {
+   "id": "b0055",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 3. A selection of images across the three datasets showing that realistic images of landscapes and cities are most highly rated."
+  },
+  {
+   "id": "b0056",
+   "t": "text",
+   "w": "h3",
+   "en": "3.5. Findings: Qualitative Visual Analysis"
+  },
+  {
+   "id": "b0057",
+   "t": "text",
+   "w": "p",
+   "en": "To augment our quantitative analysis, we randomly sampled 5 images from each dataset in the ranges of: [7,), [6.5, 7.0) … [4.5, 5.0), (, 4.5). Given no images in LAD are rated ⟦SLOT_13⟧ 4.5 and two images in the MET were rated ⟦SLOT_14⟧ 7, this yielded 30 images from LAD, 32 images from the MET, and 35 images from WikiArt. A representative image from each dataset across different score ranges can be seen in Table 3. Our inspection of these images further suggests that LAP tends to rates realistic images of cityscapes, landscapes, and people higher than images of three-dimensional objects or abstract art. Among the images rated 6.5+ across the datasets, all are of landscapes/nature (11/27), cityscapes (9/27), or people (7/27). Between 5.5 and 6.5, most images are of people (20/30) or landscapes/nature (5/30). The images scored below 5.5 are primarily of inanimate objects (20/40), people (10/40), or abstract art (7/40)."
+  },
+  {
+   "id": "b0058",
+   "t": "text",
+   "w": "h2",
+   "en": "4. How the LAION-Aesthetics Predictor was Made"
+  },
+  {
+   "id": "b0059",
+   "t": "text",
+   "w": "p",
+   "en": "Seaver (2017) suggests that audits can demonstrate the existence of biases, but “what [audits] cannot do is explain conclusively how that disparate impact came about.” In this section, we explore the potential origins of the aesthetic biases described above by conducting a trace ethnography of how the LAP was made."
+  },
+  {
+   "id": "b0060",
+   "t": "text",
+   "w": "h3",
+   "en": "4.1. Trace Ethnographic Methodology"
+  },
+  {
+   "id": "b0061",
+   "t": "text",
+   "w": "p",
+   "en": "Ethnography is a qualitative method from anthropology seeking to explain how groups of people interpret and act in the world (Dourish, 2014). Ethnographic research typically involves extended participant observation and interviews within physical field-sites, ranging from remote villages (Geertz, 1973) to AI research labs (Forsythe, 2001). While ethnography began within physical field sites, the 1990s saw a proliferation of multi-sited ethnographic research due to the rise of globalization and the internet (Marcus, 1995). Within this paradigm, Geiger and Ribes (2011) propose trace ethnography as “a powerful and flexible methodology, able to turn thin documentary traces into ‘thick descriptions’ (Geertz, 1973) of actors and events that are often invisible in today’s distributed, networked environments.” For example, Geiger and Ribes (2011) reconstruct the blocking of a Wikipedia vandal by drawing on thin documentary traces of edit history."
+  },
+  {
+   "id": "b0062",
+   "t": "text",
+   "w": "p",
+   "en": "We conducted a trace ethnography of the development of the LAION-Aesthetics Predictor by leveraging a variety of digital documents. Specifically, we draw on: (1) the LAION-Aesthetics announcement blog post (Schuhmann, 2022), (2) the code and data repositories hosting the LAP model,44 4 https://github.com/christophschuhmann/improved-aesthetic-predictor SAC dataset,55 5 https://github.com/JD-P/simulacra-aesthetic-captions AVA dataset,66 6 https://github.com/imfing/ava_downloader and LAION-Logos dataset,77 7 https://huggingface.co/datasets/ChristophSchuhmann/aesthetic-logo-ratings (3) the academic paper for the AVA dataset (Murray et al., 2012), and (4) a ⟦SLOT_15⟧10 minute YouTube video explaining how LAP was made.88 8 https://www.youtube.com/watch?v=OZ3krwyoeWw Our analysis (summarized in Table 4) focused on understanding how LAP and its training data were created and where the images and annotations in LAP’s training data come from."
+  },
+  {
+   "id": "b0063",
+   "t": "text",
+   "w": "h3",
+   "en": "4.2. Findings: How the LAION-Aesthetics Predictor was Created"
+  },
+  {
+   "id": "b0064",
+   "t": "text",
+   "w": "h4",
+   "en": "4.2.1. Model development choices were made according to the individual taste of LAION’s founder"
+  },
+  {
+   "id": "b0065",
+   "t": "text",
+   "w": "p",
+   "en": "According to the aforementioned YouTube video, the founder of LAION (Christoph Schuhmann) created LAP on his own. LAP is a multi-layer perceptron model with linear layers trained to predict the aesthetic score of an image based on a CLIP embedding.99 9 CLIP models are commonly used in computer vision to semantically represent both texts and images in the same vector space (Radford et al., 2021) Although he experimented with other models, Schuhmann chose this architecture because “for [his] use case the simple linear layer worked best just from visual inspection.” Schuhmann trained LAP using three distinct datasets, each of which measures the aesthetic quality of an image on a scale from 1 to 10: (1) Aesthetic Visual Analysis (AVA), (2) Simulacra Aesthetic Captions (SAC), and (3) LAION-Logos. Once again, Schuhmann explains that he chose to weight each dataset equally in the training process because “from [his] subjective taste it was best to just have every dataset once in the training data.” In other words, Schuhmann decided how to train LAP based largely on his individual taste."
+  },
+  {
+   "id": "b0066",
+   "t": "text",
+   "w": "p",
+   "en": "Schuhmann seems to recognize various limitations of LAP. He encourages others to “experiment” with different model architectures, newer CLIP embedding models, and larger aesthetic evaluation datasets. Additionally, Schuhmann asks for volunteers to reproduce the training data curation steps described in the video because “[he] had some ugly code somewhere but [he] can’t find it anymore.” He also asks for volunteers in the last comment of the explainer video: “This is all an ongoing area of research and it would be really cool to have someone working on this.” Schuhmann appears to recognize the slapdash way LAP was made and expects that it will be improved upon in the future. However, at the time of our writing in January 2026, LAION has not released a new aesthetic evaluation model."
+  },
+  {
+   "id": "b0067",
+   "t": "keep",
+   "w": "table",
+   "en": "AVA SAC LAION-Logos Year Released 2012 2022 2022 Number of Images 255,530 146,372 26,730 Mean Ratings per Image 210.1 1.2 1.48 Median Ratings per Image 201 1 1 Images data consent No Yes No Ratings da"
+  },
+  {
+   "id": "b0068",
+   "t": "text",
+   "w": "figcaption",
+   "en": "Table 4. Comparison of Datasets Used to Train the LAION-Aesthetics Predictor"
+  },
+  {
+   "id": "b0069",
+   "t": "text",
+   "w": "h4",
+   "en": "4.2.2. Training datasets are inconsistently documented"
+  },
+  {
+   "id": "b0070",
+   "t": "text",
+   "w": "p",
+   "en": "AVA is an influential predecessor to the LAION-Aesthetics dataset within the computer vision community (Ramesh et al., 2022; Wang et al., 2023; Khosla et al., 2015; Lu et al., 2014). The computer vision researchers Murray et al. collected AVA by scraping images and ratings from an online photography competition website (www.dpchallenge.com) in 2012 (Murray et al., 2012). SAC was released in July of 2022 by John David Pressman, a Stability AI researcher at the time (Pressman et al., 2022). Pressman collected this dataset using a Discord bot shared in AI-art communities that allowed volunteers to generate images and vote on their perceived aesthetic quality. Although we were able to find the content of each dataset, the quality of their documentation varies widely. AVA was the most well documented because it was published at a computer vision conference (Murray et al., 2012). While SAC was not formally published in an academic setting, its GitHub repository has an extensive README.md file that functions as a data card (Pushkarna et al., 2022). As we will describe next, LAION-Logos had little documentation."
+  },
+  {
+   "id": "b0071",
+   "t": "text",
+   "w": "p",
+   "en": "We initially struggled to find LAION-Logos. While AVA and SAC are linked in the LAION-Aesthetics blog post, LAION-Logos is not. Searching ‘‘LAION-Logos’’ on Google yielded only websites and academic articles alluding to the original blog. In response, we searched the public LAION Discord, eventually finding an unlisted YouTube video posted by Schuhmann in 2022.1010 10 https://www.youtube.com/watch?v=OZ3krwyoeWw Because this video is unlisted, it is not searchable on YouTube or indexed by search engines. In the video, Schuhmann explains that LAION-Logos is located on Hugging Face.1111 11 https://huggingface.co/datasets/ChristophSchuhmann/aesthetic-logo-ratings LAION-Logos is sparsely documented with a one sentence explanation and rarely used, downloaded only 40 times in the month prior at the time of our writing. While LAION-Logos is technically publicly available, our challenges finding the dateset suggests that it has been de facto private. To the best of our knowledge, we are the first to document LAION-Logos."
+  },
+  {
+   "id": "b0072",
+   "t": "text",
+   "w": "h4",
+   "en": "4.2.3. Training datasets were created for different purposes across different time periods"
+  },
+  {
+   "id": "b0073",
+   "t": "text",
+   "w": "p",
+   "en": "LAION-Logos and SAC were created to improve generative image models. LAION-Logos was collected to “improve the [LAION aesthetic prediction] models abilities to evaluate images with more or less aesthetic texts in them” (Schuhmann, 2022) While the SAC documentation says the dateset can be used in multiple ways, like “Filtering Datasets” and “Alignment Research,” its documentation indicates that SAC was primarily collected for LAION-Aesthetics. This is evident in the acknowledgment: “Special thanks to [name] for his early feedback and suggestions on the bot, as well as writing the initial public domain prompt and rating dataset that allowed us to make LAION-aesthetic as early as we did”"
+  },
+  {
+   "id": "b0074",
+   "t": "text",
+   "w": "p",
+   "en": "In contrast, AVA was collected a decade prior to the popularization of generative AI research. To motivate the construction of AVA, Murray et al. (2012) suggest that “With the ever-expanding volume of visual content available, the ability to organize and navigate such content by aesthetic preference is becoming increasingly important.” The authors position AVA as a solution to the problem of information overload, a common refrain in recommendation research (Seaver, 2022). Perhaps because AVA was created within a personalization paradigm, AVA embodies a more pluralistic conception of aesthetics than the universalism of LAION-Logos and SAC. We describe these competing conceptions of aesthetics below in greater detail."
+  },
+  {
+   "id": "b0075",
+   "t": "text",
+   "w": "h3",
+   "en": "4.3. Limitations of the Images and Aesthetic Annotations Used to Train the LAION-Aesthetics Predictor"
+  },
+  {
+   "id": "b0076",
+   "t": "text",
+   "w": "h4",
+   "en": "4.3.1. Images and aesthetic annotations were collected with mixed levels of consent"
+  },
+  {
+   "id": "b0077",
+   "t": "text",
+   "w": "p",
+   "en": "These datasets were collected with varying levels of consent (Table 4). Neither the images nor the ratings in AVA were collected with the consent of dpchallenge.com members. For LAION-Logos, annotators likely knew their ratings would be used to create a dataset, but image creators did not consent. For SAC, the AI enthusiasts generating and annotating images consented to their images and annotations being used to create an aesthetic evaluation dataset."
+  },
+  {
+   "id": "b0078",
+   "t": "text",
+   "w": "h4",
+   "en": "4.3.2. The images used to train LAION-Aesthetics Predictor are primarily photographs."
+  },
+  {
+   "id": "b0079",
+   "t": "text",
+   "w": "p",
+   "en": "Of the 428,632 images used to train LAP, 255,530 (⟦SLOT_16⟧60%) come from AVA, 146,372 (⟦SLOT_17⟧34%) from SAC, and 26,730 (⟦SLOT_18⟧6%) from LAION-Logos. Both the images and ratings from AVA are from photographers who participated in the English-language online art competition website dpchallenge.com between its founding in 2002 and its scraping in 2012. The images in SAC were generated and rated by a handful of AI enthusiasts in 2022 using an early version of Stable Diffusion, with the top 50 most active volunteers accounting for 87.4% of all ratings. Finally, the images in LAION-Logos from LAION-5B were scraped from the internet no later than early 2022 and rated by only 18 LAION volunteers. The images used to train LAP have a number of limitations. Temporally, most images are from before 2012, meaning newer content may be underrepresented. Also, the over-representation of photographs in LAP’s training data may explain why the model highly rates photorealism."
+  },
+  {
+   "id": "b0080",
+   "t": "text",
+   "w": "h4",
+   "en": "4.3.3. Annotators are primarily English-speaking photographers or western AI-enthusiasts."
+  },
+  {
+   "id": "b0081",
+   "t": "text",
+   "w": "p",
+   "en": "When the AVA data was created (2002 - 2012), the World Bank estimate that less than 33% of the world’s population used the internet, most of whom were in western countries.1212 12 https://data.worldbank.org/indicator/IT.NET.USER.ZS Therefore, the images and ratings posted on the English-language website dpchallenge.com at the time likely reflect the tastes of western photographers. The SAC README cautions: “Participants in [SAC] are largely WEIRD, or Western, Educated, Industrialized, Rich, and Democratic. This means that the aesthetic preferences recorded are not universal among humanity. While we didn’t take a survey of the demographic makeup of SimulacraBot users, it can be assumed they largely reside in the United States and Europe.” The README also warns that participants were “mostly open source AI developers and enthusiasts,” so “their aesthetic feedback is going to lean STEM, fantasy, nerdy, esoteric, etc.” While the identity of LAION-Logos annotators is unclear, we expect they share similar biases to SAC. Moreover, a majority of the ratings in SAC and LAION-Logos were chosen by a single person (Table 4)."
+  },
+  {
+   "id": "b0082",
+   "t": "text",
+   "w": "h4",
+   "en": "4.3.4. The LAION-Aesthetics Predictor was trained by conflating different measurements of aesthetics across the datasets."
+  },
+  {
+   "id": "b0083",
+   "t": "text",
+   "w": "p",
+   "en": "Per the LAION-Aesthetics blog, LAP was trained to “predict the rating people gave when they were asked ’How much do you like this image on a scale from 1 to 10?”’ (Schuhmann, 2022). While SAC and LAION-Logos measure aesthetics absolutely, AVA measures aesthetics relatively. Votes on dpchallenge do not measure the aesthetic quality of a de-contextualized image but rather the quality of an image relative to a topic, like skyscapes. As prizes are award to images based on the average final ranking of aesthetic votes for a challenge, votes are comparable within a topic but not between topics. Murray et al. (2012) find that images in challenges with negative affective valences, like fear, tend to receive lower absolute scores. This implies that a model built on absolute scores rather than relative scores within challenges may be confounded by the emotional valence of an image."
+  },
+  {
+   "id": "b0084",
+   "t": "text",
+   "w": "p",
+   "en": "Murray et al. (2012) are highly critical of de-contextualized aesthetic scores: “The interpretation of these aesthetic judgments [in prior aesthetic datasets], expressed under the form of numeric scores, has always been taken for granted. Yet a deeper analysis of the context in which these judgments are given is essential. The result of this lack of context is that it is difficult to understand what the aesthetic classifiers really model when trained with such datasets.” This is why AVA represents aesthetic scores as a distribution of votes, allowing one to examine not only the mean aesthetic vote but also the variance. The authors found that images with high variance, or greater disagreement between voters in the image competition, tended to be “non-conventional,” such as “innovative application of photographic techniques.” This nuance, however, is lost because LAP is trained by averaging the aesthetic scores."
+  },
+  {
+   "id": "b0085",
+   "t": "text",
+   "w": "h2",
+   "en": "5. Discussion"
+  },
+  {
+   "id": "b0086",
+   "t": "text",
+   "w": "h3",
+   "en": "5.1. The Algorithmic Gaze"
+  },
+  {
+   "id": "b0087",
+   "t": "text",
+   "w": "p",
+   "en": "Western art has historically been made to please white, western, heterosexual, men (Berger, 2008; Mulvey, 1975; Kaplan, 2012). Similarly, we found that LAP was designed to the taste of one particular white, western, man: the founder of LAION. Perhaps as a result, LAP is aesthetically biased toward realistic images of western and Japanese art. Also, images with captions mentioning women in the LAION-Aesthetics Dataset were more likely to be rated 6.5+ than those mentioning men or LGBTQ+ people. Below, we discuss LAP’s imperial, realist, and male algorithmic gaze."
+  },
+  {
+   "id": "b0088",
+   "t": "text",
+   "w": "h4",
+   "en": "5.1.1. The Imperial Gaze"
+  },
+  {
+   "id": "b0089",
+   "t": "text",
+   "w": "p",
+   "en": "In our analysis of art from the MET, all of the images rated 6.5+ were paintings, photographs and prints from western or Japanese artists. Not a single piece of African, Oceanian, Native American, Islamic, Egyptian, or West Asian art was rated 6.5+. While the highly-rated Japanese art may seem like an outlier, western artists have been influenced by a racist fascination with “eastern” (Said, 1979) aesthetics for centuries (Porter, 1999). LAP embodies what Kaplan (2012) refers to as the imperial gaze, wherein art is judged according white, western tastes. Due to the imperial gaze of LAP, the widespread use of this model to curate training data may exacerbate existing multi-modal biases, like struggling to generate Native American (Taylor et al., 2025) or Persian (Qadri et al., 2025) art."
+  },
+  {
+   "id": "b0090",
+   "t": "text",
+   "w": "p",
+   "en": "Similar to prior work on biases in data “quality” filtering (Dodge et al., 2021; Hong et al., 2024), our findings demonstrate that aesthetic evaluations may lead to representational harms by filtering out non-western art. We encourage future research into how other image evaluation methods, such as FID scores (Heusel et al., 2017) or CLIP similarity (Radford et al., 2021), asses non-western art. At the same time, we encourage researchers to explore aesthetic biases outside of western ontologies. Notably, none of the images in the MET department of “Africa, the Ancient Americas, and Oceania” scored 6+ (Table 1). However, the consolidation of art from different continents and time periods into one department is a vestige of the colonialist category of “primitive art” (Price, 2001). By using the MET to evaluate LAP, our analysis inherits this coloniality. In calling for a research agenda focused on aesthetic biases, we caution against reinscribing the imperial gaze embedded in western art history."
+  },
+  {
+   "id": "b0091",
+   "t": "text",
+   "w": "h4",
+   "en": "5.1.2. The Realist Gaze"
+  },
+  {
+   "id": "b0092",
+   "t": "text",
+   "w": "p",
+   "en": "We found that LAP highly rates realistic and figurative images, such as landscape paintings. For centuries, one of the primary criteria for evaluating western visual art was how well it imitates reality (Potolsky, 2006). However, the modern art diverged from this tradition by focusing on the ideas and emotions behind art (Fry, 1920), often drawing inspiration from less realistic non-western art (Harney and Phillips, 2018). LAP’s realism bias risks devaluing both modern and non-western artistic cultures and parallels troubling historical precedents. Famously, the Degenerate Art Exhibition under Nazi Germany encouraged visitors to mock modern art (Smee, 2025; Morrison, 2025). Echoing this sensibility, some of the styles and artists from this exhibition, like Picasso, were among the lowest rated in WikiArt."
+  },
+  {
+   "id": "b0093",
+   "t": "text",
+   "w": "p",
+   "en": "Realist biases can also limit the creative potential of visual generative AI. A throughline in HCI research on visual generative AI models is that artists often enjoy the glitches or surrealism of text-to-image (T2I) models (Shelby et al., 2024; Taylor et al., 2025; Chang et al., 2023), leading visual artists to critique the increasing realism of newer T2I models (Taylor et al., 2025). It follows that, aesthetic evaluation models that privilege realism may poorly align with the taste of some visual artists."
+  },
+  {
+   "id": "b0094",
+   "t": "text",
+   "w": "p",
+   "en": "So far, we discussed the harms of being excluded by LAP’s algorithmic gaze. However, realism biases can also lead to harm through non-consensual inclusion. We found that the LAION-Aesthetics 6.5+ Dataset is disproportionally made of images from independent visual artists and photographers. Not only have these communities lost jobs due to visual generative AI (Merchant, 2025; Jiang et al., 2026), but this suggests that their art may be driving the development of these technologies. As increasing photorealism has the potential to exacerbate the greatest harms of visual generative AI—like deepfakes (Mink et al., 2024), job replacement (Jiang et al., 2023), and sexual abuse imagery (Abdulla, 2025)—we encourage researchers to reconsider the value placed on realism in visual evaluation."
+  },
+  {
+   "id": "b0095",
+   "t": "text",
+   "w": "h4",
+   "en": "5.1.3. The Male Gaze"
+  },
+  {
+   "id": "b0096",
+   "t": "text",
+   "w": "p",
+   "en": "We found that images with captions mentioning women were more likely to included in the LAION-Aesthetics 6.5+ Dataset, while those mentioning men or LGBTQ+ people were more likely to be excluded. It follows that datasets curated and models evaluated with LAP may also reflect these biases. In doing so, LAP reinforces the heterosexual male gaze in western visual art history (Mulvey, 1975; Berger, 2008) at scale. According to Berger (2008), “Women [in western art] are depicted in a quite different way from men — not because the feminine is different from the masculine — but because the ideal spectator is always assumed to be male and the image of the woman is designed to flatter him.” We found that LAP was designed according to the taste of one man: LAION’s founder."
+  },
+  {
+   "id": "b0097",
+   "t": "text",
+   "w": "p",
+   "en": "The male gaze is not new to computer vision. In 1973, male researchers at the University of Southern California digitized an image of the Playboy model Lena Forsén to test image compression techniques (Mulvin, 2021). The “Lena image” became ubiquitous in computer vision research. Despite decades of criticism that the Lena image perpetuates misogyny (Chang, 2019; Munson, 1996), IEEE publications did not prohibit its use until 2024 (Hern, 2024). Much like Lena’s image circulated without her consent among computer vision researchers for decades, images of (disproportionally) women now similarly circulate among computer vision researchers through the LAION-Aesthetics 6.5+ Dataset."
+  },
+  {
+   "id": "b0098",
+   "t": "text",
+   "w": "p",
+   "en": "Although AI fairness researchers often critique data exclusions, Hoffmann (2021) critiques including marginalized communities in oppressive technologies. Recently, women have been immensely harmed by the proliferation of visual generative AI models. The United Nations has warned that generative AI is a major contributor to violence against women (Carmo, 2025). This violence has been facilitated by a rise of commercial AI-based nudification apps, often specifically designed to create nude images of women (Gibson et al., 2025). However, this problem is not unique to dedicated nudification apps. At the time of our writing, thousands of men on X (formerly Twitter) have began using Grok to create and share NCII and CSAM of women and girls (McMahon and Cress, 2026). Of course, we cannot know whether these proprietary models rely on the LAION-Aesthetics Predictor or Datasets. Nevertheless, we expect that aesthetic evaluation models that increase the likelihood of women being included in AI training data risks exacerbating these harms. Much like recent work on how concept filtering impacts T2I CSAM generation (Cretu et al., 2025), we encourage future research on the relationship between aesthetic filtering and the generation of sexual imagery."
+  },
+  {
+   "id": "b0099",
+   "t": "text",
+   "w": "h3",
+   "en": "5.2. Reevaluating Evaluation"
+  },
+  {
+   "id": "b0100",
+   "t": "text",
+   "w": "h4",
+   "en": "5.2.1. Pluralistic Aesthetic Evaluation"
+  },
+  {
+   "id": "b0101",
+   "t": "text",
+   "w": "p",
+   "en": "We found numerous aesthetic biases in the behavior and design of LAP. However, in raising these issues, we do not advocate for designing “better” universal aesthetic evaluation models or datasets. As assessing the visual aesthetic quality of an image is deeply subjective and value-laden (Bourdieu, 1984), any attempt to represent the aesthetic quality of an image with a single number will be deeply flawed. As an alternative to this normative problem formulation, we encourage researchers to make use of more descriptive evaluating metrics (Röttger et al., 2022). Although LAP is often used as a general measure of aesthetic quality (Ding et al., 2024; Fong and See, 2024; Gao and Liu, 2024; He et al., 2023), we found that it could be more accurately described as a measure of photorealism. As described above, there are a number of limitations to using realism to assess the quality of an image. However, a model that measures photorealism is not in-and-of-itself harmful. Rather, we caution researchers against treating photorealism as a prescriptive rather than descriptive property of images, conflating how images ought to be with merely how images can be."
+  },
+  {
+   "id": "b0102",
+   "t": "text",
+   "w": "p",
+   "en": "To support more pluralistic AI alignment (Sorensen et al., 2024b), we encourage the use of descriptive measurements when evaluating visual generative AI model outputs and training data. Abandoning the flawed construct of universal “aesthetics” would allow researchers to more clearly articulate which aesthetic values their visual generative AI models prioritize, such as photorealism or particular visual cultures. For instance, Tencent’s Hunyuan-DiT T2I model is specifically designed to improve Chinese visual element understanding (Li et al., 2024b). In addition to improving transparency, more descriptive evaluations may help artists choose models that better align with their tastes, perhaps addressing artists’ critique of increasing T2I photorealism (Shelby et al., 2024; Taylor et al., 2025). The seeds of more descriptive aesthetic evaluation can actually be seen in the 2012 AVA dataset itself (Murray et al., 2012). Recognizing the limits of de-contextualized aesthetic evaluation, Murray et al. grouped similar photography challenges to measure 14 different photographic styles, such as “motion blur” and “long exposure.”"
+  },
+  {
+   "id": "b0103",
+   "t": "text",
+   "w": "p",
+   "en": "The companies developing T2I models may have little incentive to shift from prescriptive to descriptive aesthetic evaluations. For-profit companies go to great lengths arguing that their models supplant competitors’ models. For instance, Meta researchers manipulated benchmarks to give an inflated impression of Llama 4’s performance (Cranz, 2025). Acknowledging that different T2I models may be better in different contexts undermines companies’ efforts to prove that their models are uniquely “state-of-the-art.” Much like corporate AI rhetoric, academic AI research is increasingly driven by benchmark competition (Gururaja et al., 2023; Orr and Kang, 2024), often without questioning the assumptions embedded in said benchmarks (Raji et al., 2021). We encourage future researchers to examine what the universal aesthetics measurements used by companies and AI researchers actually measure."
+  },
+  {
+   "id": "b0104",
+   "t": "text",
+   "w": "h4",
+   "en": "5.2.2. Combining an Audit and Trace Ethnography"
+  },
+  {
+   "id": "b0105",
+   "t": "text",
+   "w": "p",
+   "en": "In this work, we were able to examine upstream design decisions contributing to downstream biases by combining an audit and trace ethnography. Auditing is a core FAccT methodology, with the regex “audit*” appearing in nearly half of all FAccT publications. With some notable exceptions (Miceli et al., 2021; Marda and Narayan, 2020; Riley, 2024; Scheuerman, 2024; Passi and Barocas, 2019; Baack, 2024a), ethnography is far less common at FAccT. As Seaver (2017) argues, audits can help identify the existence of algorithmic biases while ethnographies can help explain where these biases may have originated by focusing on the people behind the algorithm. In addition to focusing on the harms of AI models themselves, responsible AI researchers are increasingly advocating for “studying up” the powerful people behind AI development and deployment (Barabas et al., 2020; Kawakami et al., 2024). In service of these goals, we advocate for combining audits and ethnographies as a socio-technical method for evaluating algorithmic systems."
+  },
+  {
+   "id": "b0106",
+   "t": "text",
+   "w": "p",
+   "en": "Trace ethnographies can be a powerful tool for studying AI development. While FAccT researchers do not need permission from developers to audit an algorithmic systems, one would likely need permission to conduct participant observations (Scheuerman, 2024). For example, prior ethnographic FAccT research has relied on access to field sites like tech companies (Scheuerman, 2024; Passi and Barocas, 2019) or a police headquarters (Marda and Narayan, 2020). However, maintaining access can limit critical scholarship (Scheuerman, 2024). Even in the case of “open” models, development practices may be opaque (Widder et al., 2024). We were only able to understand out how LAP was made by finding an explainer video in an old Discord message. Herein lies a lesson for future ethnographic FAccT research. As Seaver (2017) suggests, ethnographies of algorithms may require “scavenging” for diverse materials, including formal documentation, datasets, academic papers, and social media conversations. Nevertheless, this scavenging may pose ethical challenges. For example, studying an unlisted YouTube video—even if posted in a public Discord—could raise ethical concerns. We have chosen to include this video in our analysis due to LAION’s advocacy for data scraping and refusal to remove artists’ work from their datasets (Filikhina and Elsaß, 2025). That said, the “public-ness” of data does not always make its analysis ethical (Zimmer, 2010)."
+  },
+  {
+   "id": "b0107",
+   "t": "text",
+   "w": "p",
+   "en": "Finally, we caution that trace ethnographies are no substitute for more traditional ethnographic approaches, like extended participant observation and interviews. In our study, for instance, questions remain as to why the founder of LAION chose the datasets from which he built LAP. Likewise, it is not clear how members of LAION make sense of the widespread circulation of LAP. While our trace ethnography presents an account of how LAP was developed, extended participant observation would likely be needed to understand the culture of LAION within which LAP is situated. While we see potential for trace ethnographies to complement audits in FAccT research by embodying AI developers, this is not the only potential contribution of ethnographic analyses. Similar to Forsythe (2001)’s research on how expert system developers conceptualize “experts,” for example, we call for future ethnographic research into the how aesthetic evaluation researchers conceptualize “aesthetics.”"
+  },
+  {
+   "id": "b0108",
+   "t": "text",
+   "w": "h2",
+   "en": "6. Conclusion"
+  },
+  {
+   "id": "b0109",
+   "t": "text",
+   "w": "p",
+   "en": "Generative AI models and algorithmic systems are increasingly mediating our media, art, and culture. Therefore, it is imperative to understand for whose taste these systems are designed. In this work, we audited the LAION-Aesthetics Predictor (LAP) model, finding that LAP reflects imperial, realist, and male aesthetic sensibilities. Through a trace ethnography of public materials, we found that the development of LAP reflects similar biases. In light of these findings, we call for greater attention to aesthetic biases as a source of representational harm and advocate for more pluralistic evaluations. Much like we examine the algorithmic gaze of LAP, we encourage future research into the cultural consequences of algorithmic “quality” assessment."
+  },
+  {
+   "id": "b0110",
+   "t": "text",
+   "w": "h2",
+   "en": "7. Generative AI Usage Statement"
+  },
+  {
+   "id": "b0111",
+   "t": "text",
+   "w": "p",
+   "en": "No generative AI tools were used to write this manuscript."
+  },
+  {
+   "id": "b0112",
+   "t": "text",
+   "w": "h6",
+   "en": "Acknowledgements."
+  },
+  {
+   "id": "b0113",
+   "t": "text",
+   "w": "h2",
+   "en": "References"
+  },
+  {
+   "id": "b0114",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Abdulla (2025) S. M. Abdulla Are deepfakes “ab” normal enough? on using norm shifts in gender and sexuality safety measures . IEEE Security & Privacy 23 ( 4 ), pp. 15–20 . Cited by: §5.1.2 ."
+  },
+  {
+   "id": "b0115",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "AlKhamissi et al. (2025) M. AlKhamissi, Y. Xiao, B. AlKhamissi, and M. Diab Hire your anthropologist! rethinking culture benchmarks through an anthropological lens . arXiv preprint arXiv:2510.05931 . "
+  },
+  {
+   "id": "b0116",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Baack (2024a) S. Baack A critical analysis of the largest source for generative ai training data: common crawl . In Proceedings of the 2024 ACM Conference on Fairness, Accountability, and Transparency"
+  },
+  {
+   "id": "b0117",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Baack (2024b) S. Baack Training data for the price of a sandwich: common crawl’s impact on generative ai.(feb. 2024) . Mozilla Insights . Cited by: §2.1 ."
+  },
+  {
+   "id": "b0118",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Barabas et al. (2020) C. Barabas, C. Doyle, J. Rubinovitz, and K. Dinakar Studying up: reorienting the study of algorithmic fairness around issues of power . In Proceedings of the 2020 Conference on F"
+  },
+  {
+   "id": "b0119",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bean et al. (2025) A. M. Bean, R. O. Kearns, A. Romanou, F. S. Hafner, H. Mayne, J. Batzner, N. Foroutan, C. Schmitz, K. Korgul, H. Batra, et al. Measuring what matters: construct validity in large la"
+  },
+  {
+   "id": "b0120",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Berger (2008) J. Berger Ways of seeing . Penguin uK . Cited by: §1 , §5.1.3 , §5.1 ."
+  },
+  {
+   "id": "b0121",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bianchi et al. (2023) F. Bianchi, P. Kalluri, E. Durmus, F. Ladhak, M. Cheng, D. Nozza, T. Hashimoto, D. Jurafsky, J. Zou, and A. Caliskan Easily accessible text-to-image generation amplifies demograp"
+  },
+  {
+   "id": "b0122",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Birhane et al. (2023) A. Birhane, S. Han, V. Boddeti, S. Luccioni, et al. Into the laion’s den: investigating hate in multimodal datasets . Advances in Neural Information Processing Systems 36 , pp. 2"
+  },
+  {
+   "id": "b0123",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Bourdieu (1984) P. Bourdieu Distinction: a social critique of the judgement of taste . Harvard University Press . Cited by: §1 , §5.2.1 ."
+  },
+  {
+   "id": "b0124",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Brekhus (1998) W. Brekhus A sociology of the unmarked: redirecting our focus . Sociological theory 16 ( 1 ), pp. 34–51 . Cited by: §3.2.2 ."
+  },
+  {
+   "id": "b0125",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Carmo (2025) A. Carmo Ai and anonymity fuel surge in digital violence against women | un news . United Nations . External Links: Link Cited by: §5.1.3 ."
+  },
+  {
+   "id": "b0126",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Castells et al. (2024) T. Castells, H. Song, B. Kim, and S. Choi Ld-pruner: efficient pruning of latent diffusion models using task-agnostic insights . In Proceedings of the IEEE/CVF Conference on Com"
+  },
+  {
+   "id": "b0127",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chang (2019) E. Chang Brotopia: breaking up the boys’ club of silicon valley . Penguin . Cited by: §5.1.3 ."
+  },
+  {
+   "id": "b0128",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chang et al. (2023) M. Chang, S. Druga, A. J. Fiannaca, P. Vergani, C. Kulkarni, C. J. Cai, and M. Terry The prompt artists . In Proceedings of the 15th Conference on Creativity and Cognition , pp. 75"
+  },
+  {
+   "id": "b0129",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Chen et al. (2024) J. Chen, C. Ge, E. Xie, Y. Wu, L. Yao, X. Ren, Z. Wang, P. Luo, H. Lu, and Z. Li Pixart- σ \\sigma : weak-to-strong training of diffusion transformer for 4k text-to-image generation "
+  },
+  {
+   "id": "b0130",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Church and Hanks (1990) K. Church and P. Hanks Word association norms, mutual information, and lexicography . Computational linguistics 16 ( 1 ), pp. 22–29 . Cited by: §3.2.2 ."
+  },
+  {
+   "id": "b0131",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cranz (2025) A. Cranz Meta cheated on ai benchmarks and it’s a glimpse into a new golden age . External Links: Link Cited by: §5.2.1 ."
+  },
+  {
+   "id": "b0132",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Cretu et al. (2025) A. Cretu, K. Kireev, A. Abdalla, W. Obinna, R. Meier, S. A. Bargal, E. M. Redmiles, and C. Troncoso Evaluating concept filtering defenses against child sexual abuse material genera"
+  },
+  {
+   "id": "b0133",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Datta et al. (2006) R. Datta, D. Joshi, J. Li, and J. Z. Wang Studying aesthetics in photographic images using a computational approach . In European conference on computer vision , pp. 288–301 . Cite"
+  },
+  {
+   "id": "b0134",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ding et al. (2024) W. Ding, C. Y. Li, S. Shan, B. Y. Zhao, and H. Zheng Understanding implosion in text-to-image generative models . In Proceedings of the 2024 on ACM SIGSAC Conference on Computer and"
+  },
+  {
+   "id": "b0135",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dodge et al. (2021) J. Dodge, M. Sap, A. Marasović, W. Agnew, G. Ilharco, D. Groeneveld, M. Mitchell, and M. Gardner Documenting large webtext corpora: a case study on the colossal clean crawled corpu"
+  },
+  {
+   "id": "b0136",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Dourish (2014) P. Dourish Reading and interpreting ethnography . In Ways of Knowing in HCI , pp. 1–23 . Cited by: §4.1 ."
+  },
+  {
+   "id": "b0137",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fan et al. (2024) Z. Fan, X. Li, K. Nag, C. Fang, T. Biswas, J. Xu, and K. Achan Prompt optimizer of text-to-image diffusion models for abstract concept understanding . In Companion Proceedings of the"
+  },
+  {
+   "id": "b0138",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Filikhina and Elsaß (2025) E. Filikhina and L. Elsaß Robert kneschke v. laion: judgment of 10 december 2025 (ref.: 5 u 104/24) . External Links: Link Cited by: §2.1 , §5.2.2 ."
+  },
+  {
+   "id": "b0139",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fong and See (2024) B. Q. Fong and J. See Branddiffusion: multimodal personalized marketing visual content generation . In Proceedings of the 2nd International Workshop on Multimedia Content Generatio"
+  },
+  {
+   "id": "b0140",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Forsythe (2001) D. Forsythe Studying those who study us: an anthropologist in the world of artificial intelligence . Stanford University Press . Cited by: §4.1 , §5.2.2 ."
+  },
+  {
+   "id": "b0141",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fry (1920) R. Fry An essay in aesthetics . In Vision and Design , pp. 11–26 . Cited by: §5.1.2 ."
+  },
+  {
+   "id": "b0142",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fu et al. (2024) K. Fu, R. Wu, Y. Tang, Y. Chen, B. Liu, and R. LC \" Being eroded, piece by piece\": enhancing engagement and storytelling in cultural heritage dissemination by exhibiting genai co-crea"
+  },
+  {
+   "id": "b0143",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Fu and Razmjooy (2025) X. Fu and N. Razmjooy Preserving and enhancing cultural heritage through art design using feature pyramid network optimized by modified builder optimization algorithm . Scientif"
+  },
+  {
+   "id": "b0144",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gao and Liu (2024) X. Gao and J. Liu Fbsdiff: plug-and-play frequency band substitution of diffusion features for highly controllable text-driven image translation . In Proceedings of the 32nd ACM Int"
+  },
+  {
+   "id": "b0145",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Geertz (1973) C. Geertz The interpretation of cultures . Vol. 5019 , Basic books . Cited by: §4.1 ."
+  },
+  {
+   "id": "b0146",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Geiger and Ribes (2011) R. S. Geiger and D. Ribes Trace ethnography: following coordination through documentary practices . In 2011 44th Hawaii international conference on system sciences , pp. 1–10 ."
+  },
+  {
+   "id": "b0147",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gibson et al. (2025) C. Gibson, D. Olszewski, N. G. Brigham, A. Crowder, K. R. Butler, P. Traynor, E. M. Redmiles, and T. Kohno Analyzing the { \\{ ai } \\} nudification application ecosystem . In 34th "
+  },
+  {
+   "id": "b0148",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Goree et al. (2025) S. Goree, J. Domingo, and D. Crandall Human-centered evaluation of aesthetic quality assessment models using a smartphone camera application . In Proceedings of the 2025 ACM Confer"
+  },
+  {
+   "id": "b0149",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Guo et al. (2024) J. Guo, X. Xu, Y. Pu, Z. Ni, C. Wang, M. Vasu, S. Song, G. Huang, and H. Shi Smooth diffusion: crafting smooth latent spaces in diffusion models . In Proceedings of the IEEE/CVF Conf"
+  },
+  {
+   "id": "b0150",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Gururaja et al. (2023) S. Gururaja, A. Bertsch, C. Na, D. Widder, and E. Strubell To build our future, we must know our past: contextualizing paradigm shifts in natural language processing . In Procee"
+  },
+  {
+   "id": "b0151",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Harney and Phillips (2018) E. Harney and R. B. Phillips Mapping modernisms: art, indigeneity, colonialism . Duke University Press . Cited by: §5.1.2 ."
+  },
+  {
+   "id": "b0152",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "He et al. (2023) H. He, T. Wang, H. Yang, J. Fu, N. J. Yuan, J. Yin, H. Chao, and Q. Zhang Learning profitable nft image diffusions via multiple visual-policy guided reinforcement learning . In Procee"
+  },
+  {
+   "id": "b0153",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hern (2024) A. Hern Institute bans use of playboy test image in engineering journals . Guardian News and Media . External Links: Link Cited by: §5.1.3 ."
+  },
+  {
+   "id": "b0154",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Heusel et al. (2017) M. Heusel, H. Ramsauer, T. Unterthiner, B. Nessler, and S. Hochreiter Gans trained by a two time-scale update rule converge to a local nash equilibrium . Advances in neural inform"
+  },
+  {
+   "id": "b0155",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hoffmann (2021) A. L. Hoffmann Terms of inclusion: data, discourse, violence . New Media & Society 23 ( 12 ), pp. 3539–3556 . Cited by: §5.1.3 ."
+  },
+  {
+   "id": "b0156",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Hong et al. (2024) R. Hong, W. Agnew, T. Kohno, and J. Morgenstern Who’s in and who’s out? a case study of multimodal clip-filtering in datacomp . In Proceedings of the 4th ACM Conference on Equity an"
+  },
+  {
+   "id": "b0157",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Huang et al. (2024) Y. Huang, Q. Yuan, X. Sheng, Z. Yang, H. Wu, P. Chen, Y. Yang, L. Li, and W. Lin Aesbench: an expert benchmark for multimodal large language models on image aesthetics perception ."
+  },
+  {
+   "id": "b0158",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Itävuori (2025) S. P. Itävuori The computational approach to aesthetics: value alignment and the political economy of attention in museums and text-to-image generator stable diffusion . A Peer-Reviewe"
+  },
+  {
+   "id": "b0159",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jiang et al. (2023) H. H. Jiang, L. Brown, J. Cheng, M. Khan, A. Gupta, D. Workman, A. Hanna, J. Flowers, and T. Gebru AI art and its impact on artists . In Proceedings of the 2023 AAAI/ACM Conference"
+  },
+  {
+   "id": "b0160",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Jiang et al. (2026) H. H. Jiang, J. Taylor, and W. Agnew How professional visual artists are negotiating generative ai in the workplace . arXiv preprint arXiv:2603.04537 . Cited by: §5.1.2 ."
+  },
+  {
+   "id": "b0161",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kafū et al. (2012) N. Kafū, K. Selden, and A. Freedman Ukiyo-e landscapes and edo scenic places (1914) . Review of Japanese Culture and Society 24 , pp. 210–232 . Cited by: §3.3.2 ."
+  },
+  {
+   "id": "b0162",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kaplan (2012) E. A. Kaplan Looking for the other: feminism, film and the imperial gaze . Routledge . Cited by: §5.1.1 , §5.1 ."
+  },
+  {
+   "id": "b0163",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Kawakami et al. (2024) A. Kawakami, A. Coston, H. Heidari, K. Holstein, and H. Zhu Studying up public sector ai: how networks of power relations shape agency decisions around ai design and use . Proce"
+  },
+  {
+   "id": "b0164",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Khosla et al. (2015) A. Khosla, A. S. Raju, A. Torralba, and A. Oliva Understanding and predicting image memorability at a large scale . In Proceedings of the IEEE international conference on computer"
+  },
+  {
+   "id": "b0165",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2025) K. Li, L. M. Po, H. Yang, X. Xu, K. Liu, and Y. Zhao AesBiasBench: evaluating bias and alignment in multimodal language models for personalized image aesthetic assessment . In Proceed"
+  },
+  {
+   "id": "b0166",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024a) Z. Li, C. Meng, Y. Li, L. Yang, S. Zhang, J. Ma, J. Li, G. Yang, C. Yang, Z. Yang, et al. Laion-sg: an enhanced large-scale dataset for training complex image-text models with struct"
+  },
+  {
+   "id": "b0167",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Li et al. (2024b) Z. Li, J. Zhang, Q. Lin, J. Xiong, Y. Long, X. Deng, Y. Zhang, X. Liu, M. Huang, Z. Xiao, et al. Hunyuan-dit: a powerful multi-resolution diffusion transformer with fine-grained chin"
+  },
+  {
+   "id": "b0168",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Lu et al. (2014) X. Lu, Z. Lin, H. Jin, J. Yang, and J. Z. Wang Rapid: rating pictorial aesthetics using deep learning . In Proceedings of the 22nd ACM international conference on Multimedia , pp. 457"
+  },
+  {
+   "id": "b0169",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Luo et al. (2023) S. Luo, Y. Tan, L. Huang, J. Li, and H. Zhao Latent consistency models: synthesizing high-resolution images with few-step inference . arXiv preprint arXiv:2310.04378 . Cited by: §3.1"
+  },
+  {
+   "id": "b0170",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Marcus (1995) G. E. Marcus Ethnography in/of the world system: the emergence of multi-sited ethnography . Annual review of anthropology 24 ( 1 ), pp. 95–117 . Cited by: §4.1 ."
+  },
+  {
+   "id": "b0171",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Marda and Narayan (2020) V. Marda and S. Narayan Data in new delhi’s predictive policing system . In Proceedings of the 2020 conference on fairness, accountability, and transparency , pp. 317–324 . Ci"
+  },
+  {
+   "id": "b0172",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "McMahon and Cress (2026) L. McMahon and L. Cress X could face uk ban over deepfakes, minister says . External Links: Link Cited by: §5.1.3 ."
+  },
+  {
+   "id": "b0173",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Merchant (2025) B. Merchant What’s really going on with ai and jobs? . Blood in the Machine . External Links: Link Cited by: §5.1.2 ."
+  },
+  {
+   "id": "b0174",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Miceli et al. (2021) M. Miceli, T. Yang, L. Naudts, M. Schuessler, D. Serbanescu, and A. Hanna Documenting computer vision datasets: an invitation to reflexive data practices . In Proceedings of the 2"
+  },
+  {
+   "id": "b0175",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mim et al. (2024) N. J. Mim, D. Nandi, S. S. Khan, A. Dey, and S. I. Ahmed In-between visuals and visible: the impacts of text-to-image generative ai tools on digital image-making practices in the glo"
+  },
+  {
+   "id": "b0176",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mink et al. (2024) J. Mink, M. Wei, C. W. Munyendo, K. Hugenberg, T. Kohno, E. M. Redmiles, and G. Wang It’s trying too hard to look real: deepfake moderation mistakes and identity-based bias . In Pro"
+  },
+  {
+   "id": "b0177",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mohamed et al. (2022) Y. Mohamed, M. Abdelfattah, S. Alhuwaider, F. Li, X. Zhang, K. Church, and M. Elhoseiny Artelingo: a million emotion annotations of wikiart with emphasis on diversity over langua"
+  },
+  {
+   "id": "b0178",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Morrison (2025) P. Morrison ‘Degenerate’ or ‘woke,’ paris museum exhibit shows what happens to art in the crosshairs of politics . External Links: Link Cited by: §5.1.2 ."
+  },
+  {
+   "id": "b0179",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mulvey (1975) L. Mulvey Visual pleasure and narrative cinema . Screen 16 ( 3 ), pp. 6–18 . External Links: ISSN 0036-9543 , Link , Document Cited by: §5.1.3 , §5.1 ."
+  },
+  {
+   "id": "b0180",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Mulvin (2021) D. Mulvin Proxies: the cultural work of standing in . MIT Press . Cited by: §5.1.3 ."
+  },
+  {
+   "id": "b0181",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Munson (1996) D. C. Munson A note on lena . IEEE Transactions on Image Processing 5 ( 1 ), pp. 3–3 . Cited by: §5.1.3 ."
+  },
+  {
+   "id": "b0182",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Murray et al. (2012) N. Murray, L. Marchesotti, and F. Perronnin AVA: a large-scale database for aesthetic visual analysis . In 2012 IEEE conference on computer vision and pattern recognition , pp. 24"
+  },
+  {
+   "id": "b0183",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Newman and Cantrill (2023) M. Newman and A. Cantrill The future of ai relies on a high school teacher’s free database . External Links: Link Cited by: §2.1 ."
+  },
+  {
+   "id": "b0184",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Orr and Kang (2024) W. Orr and E. B. Kang AI as a sport: on the competitive epistemologies of benchmarking . In Proceedings of the 2024 ACM Conference on Fairness, Accountability, and Transparency , p"
+  },
+  {
+   "id": "b0185",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Passi and Barocas (2019) S. Passi and S. Barocas Problem formulation and fairness . In Proceedings of the conference on fairness, accountability, and transparency , pp. 39–48 . Cited by: §5.2.2 , §5.2"
+  },
+  {
+   "id": "b0186",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Porter (1999) D. Porter Chinoiserie and the aesthetics of illegitimacy . Studies in Eighteenth-Century Culture 28 ( 1 ), pp. 27–54 . Cited by: §5.1.1 ."
+  },
+  {
+   "id": "b0187",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Potolsky (2006) M. Potolsky Mimesis . Routledge . Cited by: §5.1.2 ."
+  },
+  {
+   "id": "b0188",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Pressman et al. (2022) J. D. Pressman, K. Crowson, and S. C. Contributors Simulacra aesthetic captions . Technical Report Version 1.0 , Stability AI . External Links: Link Cited by: §4.2.2 ."
+  },
+  {
+   "id": "b0189",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Price (2001) S. Price Primitive art in civilized places . University of Chicago Press . Cited by: §5.1.1 ."
+  },
+  {
+   "id": "b0190",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Pushkarna et al. (2022) M. Pushkarna, A. Zaldivar, and O. Kjartansson Data cards: purposeful and transparent dataset documentation for responsible ai . In Proceedings of the 2022 ACM Conference on Fai"
+  },
+  {
+   "id": "b0191",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Qadri et al. (2025) R. Qadri, P. Mirowski, and R. Denton AI and non-western art worlds: reimagining critical ai futures through artistic inquiry and situated dialogue . In Proceedings of the 2025 CHI "
+  },
+  {
+   "id": "b0192",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Radford et al. (2021) A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark, et al. Learning transferable visual models from natural language sup"
+  },
+  {
+   "id": "b0193",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Raji et al. (2021) I. D. Raji, E. M. Bender, A. Paullada, E. Denton, and A. Hanna AI and the everything in the whole wide world benchmark . arXiv preprint arXiv:2111.15366 . Cited by: §5.2.1 ."
+  },
+  {
+   "id": "b0194",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ramesh et al. (2022) A. Ramesh, P. Dhariwal, A. Nichol, C. Chu, and M. Chen Hierarchical text-conditional image generation with clip latents . arXiv preprint arXiv:2204.06125 1 ( 2 ), pp. 3 . Cited by"
+  },
+  {
+   "id": "b0195",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Reisner and Gilbertson (2024) A. Reisner and A. Gilbertson Apple, nvidia, anthropic used thousands of swiped youtube videos to train ai . Conde Nast . External Links: Link Cited by: §2.1 ."
+  },
+  {
+   "id": "b0196",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Reisner (2023) A. Reisner Revealed: the authors whose pirated books are powering generative ai . The Atlantic 19 . Cited by: §2.1 ."
+  },
+  {
+   "id": "b0197",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Reisner (2025) A. Reisner The company quietly funneling paywalled articles to ai developers . Atlantic . Cited by: §2.1 ."
+  },
+  {
+   "id": "b0198",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Riley (2024) S. Riley Overriding (in) justice: pretrial risk assessment administration on the frontlines . In Proceedings of the 2024 ACM Conference on Fairness, Accountability, and Transparency , pp."
+  },
+  {
+   "id": "b0199",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Rombach et al. (2022) R. Rombach, A. Blattmann, D. Lorenz, P. Esser, and B. Ommer High-resolution image synthesis with latent diffusion models . In Proceedings of the IEEE/CVF conference on computer v"
+  },
+  {
+   "id": "b0200",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Röttger et al. (2022) P. Röttger, B. Vidgen, D. Hovy, and J. Pierrehumbert Two contrasting data annotation paradigms for subjective nlp tasks . In Proceedings of the 2022 conference of the North Ameri"
+  },
+  {
+   "id": "b0201",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Said (1979) E. W. Said Orientalism . Vintage . Cited by: §5.1.1 ."
+  },
+  {
+   "id": "b0202",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Saleh and Elgammal (2015) B. Saleh and A. Elgammal Large-scale classification of fine-art paintings: learning the right metric on the right feature . arXiv preprint arXiv:1505.00855 . Cited by: §3.1 ."
+  },
+  {
+   "id": "b0203",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sap et al. (2022) M. Sap, S. Swayamdipta, L. Vianna, X. Zhou, Y. Choi, and N. A. Smith Annotators with attitudes: how annotator beliefs and identities bias toxic language detection . In Proceedings of"
+  },
+  {
+   "id": "b0204",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Scheuerman (2024) M. K. Scheuerman In the walled garden: challenges and opportunities for research on the practices of the ai tech industry . In Proceedings of the 2024 ACM Conference on Fairness, Acc"
+  },
+  {
+   "id": "b0205",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Schuhmann (2022) C. Schuhmann LAION-aesthetics . External Links: Link Cited by: §1 , §2.2 , §4.1 , §4.2.3 , §4.3.4 ."
+  },
+  {
+   "id": "b0206",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Seaver (2017) N. Seaver Algorithms as culture: some tactics for the ethnography of algorithmic systems . Big data & society 4 ( 2 ), pp. 2053951717738104 . Cited by: §4 , §5.2.2 , §5.2.2 ."
+  },
+  {
+   "id": "b0207",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Seaver (2022) N. Seaver Computing taste: algorithms and the makers of music recommendation . In Computing Taste , Cited by: §4.2.3 ."
+  },
+  {
+   "id": "b0208",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Shelby et al. (2024) R. Shelby, S. Rismani, and N. Rostamzadeh Generative ai in creative practice: ml-artist folk theories of t2i use, harm, and harm-reduction . In Proceedings of the 2024 CHI Confere"
+  },
+  {
+   "id": "b0209",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Smee (2025) S. Smee The nazis’ war on ‘degenerate art’ was modern art’s greatest crisis . External Links: Link Cited by: §5.1.2 ."
+  },
+  {
+   "id": "b0210",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sorensen et al. (2024a) T. Sorensen, L. Jiang, J. D. Hwang, S. Levine, V. Pyatkin, P. West, N. Dziri, X. Lu, K. Rao, C. Bhagavatula, et al. Value kaleidoscope: engaging ai with pluralistic human value"
+  },
+  {
+   "id": "b0211",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Sorensen et al. (2024b) T. Sorensen, J. Moore, J. Fisher, M. Gordon, N. Mireshghallah, C. M. Rytting, A. Ye, L. Jiang, X. Lu, N. Dziri, et al. A roadmap to pluralistic alignment . arXiv preprint arXiv"
+  },
+  {
+   "id": "b0212",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tao et al. (2024) Y. Tao, O. Viberg, R. S. Baker, and R. F. Kizilcec Cultural bias and cultural alignment of large language models . PNAS nexus 3 ( 9 ), pp. pgae346 . Cited by: §2.2 ."
+  },
+  {
+   "id": "b0213",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tapia (2021) A. Tapia The 20 biggest museums in the world . External Links: Link Cited by: §3.1 ."
+  },
+  {
+   "id": "b0214",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Taylor et al. (2025) J. Taylor, J. Mire, F. Spektor, A. DeVrio, M. Sap, H. Zhu, and S. E. Fox Un-straightening generative ai: how queer artists surface and challenge model normativity . In Proceedings"
+  },
+  {
+   "id": "b0215",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Thiel (2023) D. Thiel Identifying and eliminating csam in generative ml training data and models . Stanford Internet Observatory, Cyber Policy Center, December 23 , pp. 3 . Cited by: §2.1 ."
+  },
+  {
+   "id": "b0216",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tjandra et al. (2025) A. Tjandra, Y. Wu, B. Guo, J. Hoffman, B. Ellis, A. Vyas, B. Shi, S. Chen, M. Le, N. Zacharov, et al. Meta audiobox aesthetics: unified automatic quality assessment for speech, m"
+  },
+  {
+   "id": "b0217",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tobin (2025) S. Tobin Getty images largely loses landmark uk lawsuit over ai image generator . External Links: Link Cited by: §2.1 ."
+  },
+  {
+   "id": "b0218",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Tudosiu et al. (2024) P. Tudosiu, Y. Yang, S. Zhang, F. Chen, S. McDonagh, G. Lampouras, I. Iacobacci, and S. Parisot Mulan: a multi layer annotated dataset for controllable text-to-image generation ."
+  },
+  {
+   "id": "b0219",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Ungless et al. (2023) E. L. Ungless, B. Ross, and A. Lauscher Stereotypes and smut: the (mis) representation of non-cisgender identities by text-to-image models . arXiv preprint arXiv:2305.17072 . Cit"
+  },
+  {
+   "id": "b0220",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Vianna (2025) B. C. Vianna Aesthetic biases and opacity tactics in the training of visual artificial intelligence models . In International Conference on Computational Intelligence in Music, Sound, Ar"
+  },
+  {
+   "id": "b0221",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2024) D. Wang, M. Díaz, A. Parrish, L. Aroyo, C. Homan, G. Serapio-García, V. Prabhakaran, and A. S. Taylor A case for moving beyond “gold data” in ai safety evaluation . In Proceedings o"
+  },
+  {
+   "id": "b0222",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wang et al. (2023) J. Wang, K. C. Chan, and C. C. Loy Exploring clip for assessing the look and feel of images . In Proceedings of the AAAI conference on artificial intelligence , Vol. 37 , pp. 2555–2"
+  },
+  {
+   "id": "b0223",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Widder et al. (2024) D. G. Widder, M. Whittaker, and S. M. West Why ‘open’ai systems are actually closed, and why this matters . Nature 635 ( 8040 ), pp. 827–833 . Cited by: §5.2.2 ."
+  },
+  {
+   "id": "b0224",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Wolfe and Caliskan (2022) R. Wolfe and A. Caliskan American== white in multimodal language-and-image ai . In Proceedings of the 2022 AAAI/ACM Conference on AI, Ethics, and Society , pp. 800–812 . Cite"
+  },
+  {
+   "id": "b0225",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Yerukola et al. (2025) A. Yerukola, S. Gabriel, N. Peng, and M. Sap Mind the gesture: evaluating ai sensitivity to culturally offensive non-verbal gestures . In ACL , External Links: Link Cited by: §2"
+  },
+  {
+   "id": "b0226",
+   "t": "keep",
+   "w": "verbatim",
+   "en": "Zimmer (2010) M. Zimmer “But the data is already public”: on the ethics of research in facebook . Ethics and information technology 12 ( 4 ), pp. 313–325 . Cited by: §5.2.2 ."
+  }
+ ]
+}
